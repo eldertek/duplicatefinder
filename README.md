@@ -12,8 +12,6 @@ You can either use the command or the cron job to do a full scan.
 Each time a new file is uploaded or a file is changed the app automatically checks if a duplicate of this file exists.
 
 ## Usage
-
-Beginning with version 0.0.7 the detection of duplicates has changed. If you're updating from an older version you don't have to do anything special.
 There are three possible ways duplicates can be detected.
 1. Event-based-detection
    For every new or changed file, Nextcloud creates an internal event. The app is listening to these and analyse if the file has a duplicate
