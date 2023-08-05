@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <!--
+    SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
+    SPDX-License-Identifier: CC0-1.0
+    -->
+    <id>duplicatefindx</id>
+    <name>Duplicate Findx</name>
+    <summary>Save some space by finding your duplicate files</summary>
+    <description>Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?</description>
+    <version>0.0.1</version>
+    <licence>agpl</licence>
+    <author mail="andrelauret@eclipse-technology.eu" >André Théo LAURET</author>
+    <namespace>DuplicateFindx</namespace>
+    <category>tools</category>
+    <bugs>https://github.com/eldertek/duplicatefindx/issues</bugs>
+    <dependencies>
+        <nextcloud min-version="26" max-version="28"/>
+    </dependencies>
+    <background-jobs>
+        <job>OCA\DuplicateFindx\BackgroundJob\FindDuplicates</job>
+        <job>OCA\DuplicateFindx\BackgroundJob\CleanUpDB</job>
+    </background-jobs>
+    <repair-steps>
+        <post-migration>
+            <step>OCA\DuplicateFindx\Migration\RepairFileInfos</step>
+        </post-migration>
+    </repair-steps>
+    <commands>
+        <command>OCA\DuplicateFindx\Command\FindDuplicates</command>
+        <command>OCA\DuplicateFindx\Command\ListDuplicates</command>
+        <command>OCA\DuplicateFindx\Command\ClearDuplicates</command>
+        </commands>
+        <settings>
+            <admin>OCA\DuplicateFindx\Settings\Admin</admin>
+            <admin-section>OCA\DuplicateFindx\Settings\Section</admin-section>
+        </settings>
+    <navigations>
+        <navigation>
+        <name>Duplicate Findx</name>
+        <route>duplicatefindx.page.index</route>
+        </navigation>
+    </navigations>
+</info>
