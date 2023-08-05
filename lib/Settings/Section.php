@@ -31,7 +31,7 @@ class Section implements IIconSection
 
     public function getName() : string
     {
-        return $this->l->t('Duplicate Finder');
+        return $this->l->t('Duplicate Findx');
     }
 
     public function getPriority()
