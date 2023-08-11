@@ -74,11 +74,11 @@ source:
 	mkdir -p $(source_build_directory)
 	tar cvzf $(source_package_name).tar.gz ../$(app_name) \
 	--exclude-vcs \
-	--exclude="../$(app_name)/build" \
-	--exclude="../$(app_name)/js/node_modules" \
-	--exclude="../$(app_name)/node_modules" \
-	--exclude="../$(app_name)/*.log" \
-	--exclude="../$(app_name)/js/*.log" \
+	--exclude="/build" \
+	--exclude="/js/node_modules" \
+	--exclude="/node_modules" \
+	--exclude="/*.log" \
+	--exclude="/js/*.log" \
 
 # Builds the source package for the app store, ignores php and js tests
 .PHONY: appstore
@@ -86,26 +86,27 @@ appstore:
 	rm -rf $(source_build_directory)
 	mkdir -p $(sign_dir)
 	rsync -a \
-	--exclude="../$(app_name)/build" \
-	--exclude="../$(app_name)/tests" \
-	--exclude="../$(app_name)/Makefile" \
-	--exclude="../$(app_name)/*.log" \
-	--exclude="../$(app_name)/phpunit*xml" \
-	--exclude="../$(app_name)/composer.*" \
-	--exclude="../$(app_name)/js/node_modules" \
-	--exclude="../$(app_name)/js/tests" \
-	--exclude="../$(app_name)/js/test" \
-	--exclude="../$(app_name)/js/*.log" \
-	--exclude="../$(app_name)/js/package.json" \
-	--exclude="../$(app_name)/js/bower.json" \
-	--exclude="../$(app_name)/js/karma.*" \
-	--exclude="../$(app_name)/js/protractor.*" \
-	--exclude="../$(app_name)/package.json" \
-	--exclude="../$(app_name)/bower.json" \
-	--exclude="../$(app_name)/karma.*" \
-	--exclude="../$(app_name)/protractor\.*" \
-	--exclude="../$(app_name)/.*" \
-	--exclude="../$(app_name)/js/.*" \
+	--exclude="/.git" \
+	--exclude="/build" \
+	--exclude="/tests" \
+	--exclude="Makefile" \
+	--exclude="/*.log" \
+	--exclude="phpunit*xml" \
+	--exclude="/composer.*" \
+	--exclude="/js/node_modules" \
+	--exclude="/js/tests" \
+	--exclude="/js/test" \
+	--exclude="/js/*.log" \
+	--exclude="/js/package.json" \
+	--exclude="/js/bower.json" \
+	--exclude="/js/karma.*" \
+	--exclude="/js/protractor.*" \
+	--exclude="/package.json" \
+	--exclude="/bower.json" \
+	--exclude="/karma.*" \
+	--exclude="/protractor\.*" \
+	--exclude="/.*" \
+	--exclude="/js/.*" \
 	$(project_dir)/  $(sign_dir)/$(app_name)
 	@if [ -f $(cert_dir)/$(app_name).key ]; then \
 		echo "Signing app files…"; \
