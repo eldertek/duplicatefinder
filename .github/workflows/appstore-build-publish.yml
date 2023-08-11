@@ -87,29 +87,9 @@ jobs:
         if: ${{ steps.versions.outputs.nodeVersion }}
         run: |
           cd ${{ env.APP_NAME }}
-          npm ci
-          npm run build
-
-      - name: Check Krankerl config
-        id: krankerl
-        uses: andstor/file-existence-action@20b4d2e596410855db8f9ca21e96fbe18e12930b # v2
-        with:
-          files: ${{ env.APP_NAME }}/krankerl.toml
-
-      - name: Install Krankerl
-        if: steps.krankerl.outputs.files_exists == 'true'
-        run: |
-          wget https://github.com/ChristophWurst/krankerl/releases/download/v0.14.0/krankerl_0.14.0_amd64.deb
-          sudo dpkg -i krankerl_0.14.0_amd64.deb
-
-      - name: Package ${{ env.APP_NAME }} ${{ env.APP_VERSION }} with krankerl
-        if: steps.krankerl.outputs.files_exists == 'true'
-        run: |
-          cd ${{ env.APP_NAME }}
-          krankerl package
+          make build
 
       - name: Package ${{ env.APP_NAME }} ${{ env.APP_VERSION }} with makefile
-        if: steps.krankerl.outputs.files_exists != 'true'
         run: |
           cd ${{ env.APP_NAME }}
           make appstore
