@@ -3,15 +3,15 @@ declare(strict_types=1);
 // SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-namespace OCA\DuplicateFindx\Tests\Integration\Controller;
+namespace OCA\DuplicateFinder\Tests\Integration\Controller;
 
 use OCP\AppFramework\App;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 
-use OCA\DuplicateFindx\Db\Note;
-use OCA\DuplicateFindx\Db\NoteMapper;
-use OCA\DuplicateFindx\Controller\NoteController;
+use OCA\DuplicateFinder\Db\Note;
+use OCA\DuplicateFinder\Db\NoteMapper;
+use OCA\DuplicateFinder\Controller\NoteController;
 
 class NoteIntegrationTest extends TestCase {
 	private NoteController $controller;
@@ -19,7 +19,7 @@ class NoteIntegrationTest extends TestCase {
 	private string $userId = 'john';
 
 	public function setUp(): void {
-		$app = new App('duplicatefindx');
+		$app = new App('duplicatefinder');
 		$container = $app->getContainer();
 
 		// only replace the user id

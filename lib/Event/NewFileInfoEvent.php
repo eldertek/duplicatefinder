@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Event;
+namespace OCA\DuplicateFinder\Event;
 
 class NewFileInfoEvent extends AbstractFileInfoEvent
 {

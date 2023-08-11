@@ -3,7 +3,7 @@ declare(strict_types=1);
 // SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-namespace OCA\DuplicateFindx\Migration;
+namespace OCA\DuplicateFinder\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
@@ -22,8 +22,8 @@ class Version000000Date20181013124731 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		if (!$schema->hasTable('duplicatefindx')) {
-			$table = $schema->createTable('duplicatefindx');
+		if (!$schema->hasTable('duplicatefinder')) {
+			$table = $schema->createTable('duplicatefinder');
 			$table->addColumn('id', 'integer', [
 				'autoincrement' => true,
 				'notnull' => true,
@@ -42,7 +42,7 @@ class Version000000Date20181013124731 extends SimpleMigrationStep {
 			]);
 
 			$table->setPrimaryKey(['id']);
-			$table->addIndex(['user_id'], 'duplicatefindx_user_id_index');
+			$table->addIndex(['user_id'], 'duplicatefinder_user_id_index');
 		}
 		return $schema;
 	}

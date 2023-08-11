@@ -3,16 +3,16 @@ declare(strict_types=1);
 // SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-namespace OCA\DuplicateFindx\Tests\Unit\Controller;
+namespace OCA\DuplicateFinder\Tests\Unit\Controller;
 
 use PHPUnit\Framework\TestCase;
 
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 
-use OCA\DuplicateFindx\Service\NoteNotFound;
-use OCA\DuplicateFindx\Service\NoteService;
-use OCA\DuplicateFindx\Controller\NoteController;
+use OCA\DuplicateFinder\Service\NoteNotFound;
+use OCA\DuplicateFinder\Service\NoteService;
+use OCA\DuplicateFinder\Controller\NoteController;
 
 class NoteControllerTest extends TestCase {
 	protected NoteController $controller;

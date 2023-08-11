@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Command;
+namespace OCA\DuplicateFinder\Command;
 
 use OC\Core\Command\Base;
 use OCP\Encryption\IManager;
@@ -11,10 +11,10 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use OCA\DuplicateFindx\AppInfo\Application;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Service\FileDuplicateService;
-use OCA\DuplicateFindx\Utils\CMDUtils;
+use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Utils\CMDUtils;
 
 class FindDuplicates extends Base
 {

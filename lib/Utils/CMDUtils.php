@@ -1,8 +1,8 @@
 <?php
-namespace OCA\DuplicateFindx\Utils;
+namespace OCA\DuplicateFinder\Utils;
 
 use Symfony\Component\Console\Output\OutputInterface;
-use OCA\DuplicateFindx\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
 
 class CMDUtils
 {
@@ -34,7 +34,7 @@ class CMDUtils
     }
 
     /**
-     * @param array<\OCA\DuplicateFindx\Db\FileInfo> $files
+     * @param array<\OCA\DuplicateFinder\Db\FileInfo> $files
      */
     private static function showFiles(OutputInterface $output, array $files) : void
     {
@@ -42,7 +42,7 @@ class CMDUtils
         $hiddenPaths = 0;
         $indent = '     ';
         foreach ($files as $file) {
-            if ($file instanceof \OCA\DuplicateFindx\Db\FileInfo) {
+            if ($file instanceof \OCA\DuplicateFinder\Db\FileInfo) {
                 if (!isset($shownPaths[$file->getPath()])) {
                     $output->writeln($indent.$file->getPath());
                     $shownPaths[$file->getPath()] = 1;

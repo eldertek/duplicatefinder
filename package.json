@@ -1,11 +1,11 @@
 {
-  "name": "duplicatefindx",
+  "name": "duplicatefinder",
   "description": "Save some space by finding your duplicate files",
   "version": "0.0.1",
   "author": "André Théo LAURET <andrelauret@eclipse-technology.eu>",
   "contributors": [],
   "bugs": {
-    "url": "https://github.com/eldertek/duplicatefindx/issues"
+    "url": "https://github.com/eldertek/duplicatefinder/issues"
   },
   "license": "agpl",
   "private": true,

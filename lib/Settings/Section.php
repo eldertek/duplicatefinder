@@ -1,11 +1,11 @@
 <?php
-namespace OCA\DuplicateFindx\Settings;
+namespace OCA\DuplicateFinder\Settings;
 
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Settings\IIconSection;
 
-use OCA\DuplicateFindx\AppInfo\Application;
+use OCA\DuplicateFinder\AppInfo\Application;
 
 class Section implements IIconSection
 {
@@ -31,7 +31,7 @@ class Section implements IIconSection
 
     public function getName() : string
     {
-        return $this->l->t('Duplicate Findx');
+        return $this->l->t('Duplicate Finder');
     }
 
     public function getPriority()

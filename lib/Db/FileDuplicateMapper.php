@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Db;
+namespace OCA\DuplicateFinder\Db;
 
 use OCP\IDBConnection;
 use OCP\AppFramework\Db\QBMapper;
@@ -13,7 +13,7 @@ class FileDuplicateMapper extends EQBMapper
 
     public function __construct(IDBConnection $db)
     {
-        parent::__construct($db, 'duplicatefindx_dups', FileDuplicate::class);
+        parent::__construct($db, 'duplicatefinder_dups', FileDuplicate::class);
     }
 
     public function find(string $hash, string $type = 'file_hash'): FileDuplicate

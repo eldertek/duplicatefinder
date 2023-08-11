@@ -9,7 +9,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 /* global OC, fetch */
 (function () {
-  var baseUrl = OC.generateUrl('/apps/duplicatefindx/api');
+  var baseUrl = OC.generateUrl('/apps/duplicatefinder/api');
   var element = document.getElementById('container');
   var loader = document.getElementById('loader-container');
   var loaderBtn = document.getElementById('loader-btn');
@@ -264,7 +264,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
             case 17:
               _context.prev = 17;
               _context.t0 = _context["catch"](2);
-              console.error('duplicatefindx: API Fetching', _context.t0, response);
+              console.error('duplicatefinder: API Fetching', _context.t0, response);
               loader.style.display = 'none';
               errorElement = document.createElement('div');
               errorElement.innerHTML = 'Failed to load duplicates';

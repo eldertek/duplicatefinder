@@ -1,6 +1,6 @@
 <?php
-script('duplicatefindx', 'settings');
-style('duplicatefindx', 'style');
+script('duplicatefinder', 'settings');
+style('duplicatefinder', 'style');
 ?>
-<div id="duplicatefindx-settings">
+<div id="duplicatefinder-settings">
 </div>

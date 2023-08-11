@@ -1,7 +1,7 @@
 <?php
 
 
-namespace OCA\DuplicateFindx\Exception;
+namespace OCA\DuplicateFinder\Exception;
 
 use Throwable;
 

@@ -1,14 +1,14 @@
 <?php
-namespace OCA\DuplicateFindx\Listener;
+namespace OCA\DuplicateFinder\Listener;
 
 use Psr\Log\LoggerInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
-use OCA\DuplicateFindx\AppInfo\Application;
-use OCA\DuplicateFindx\Db\FileInfo;
-use OCA\DuplicateFindx\Event\CalculatedHashEvent;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Service\FileDuplicateService;
+use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Db\FileInfo;
+use OCA\DuplicateFinder\Event\CalculatedHashEvent;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
 
 /**
  * @template T of Event

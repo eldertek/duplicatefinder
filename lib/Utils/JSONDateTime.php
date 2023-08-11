@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Utils;
+namespace OCA\DuplicateFinder\Utils;
 
 class JSONDateTime extends \DateTime implements \JsonSerializable
 {

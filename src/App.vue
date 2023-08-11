@@ -3,18 +3,18 @@
     SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
     SPDX-License-Identifier: AGPL-3.0-or-later
     -->
-	<div id="content" class="app-duplicatefindx">
+	<div id="content" class="app-duplicatefinder">
 		<AppNavigation>
 			<AppNavigationNew v-if="!loading"
-				:text="t('duplicatefindx', 'New note')"
+				:text="t('duplicatefinder', 'New note')"
 				:disabled="false"
-				button-id="new-duplicatefindx-button"
+				button-id="new-duplicatefinder-button"
 				button-class="icon-add"
 				@click="newNote" />
 			<ul>
 				<AppNavigationItem v-for="note in notes"
 					:key="note.id"
-					:title="note.title ? note.title : t('duplicatefindx', 'New note')"
+					:title="note.title ? note.title : t('duplicatefinder', 'New note')"
 					:class="{active: currentNoteId === note.id}"
 					@click="openNote(note)">
 					<template slot="actions">
@@ -22,13 +22,13 @@
 							icon="icon-close"
 							@click="cancelNewNote(note)">
 							{{
-							t('duplicatefindx', 'Cancel note creation') }}
+							t('duplicatefinder', 'Cancel note creation') }}
 						</ActionButton>
 						<ActionButton v-else
 							icon="icon-delete"
 							@click="deleteNote(note)">
 							{{
-							 t('duplicatefindx', 'Delete note') }}
+							 t('duplicatefinder', 'Delete note') }}
 						</ActionButton>
 					</template>
 				</AppNavigationItem>
@@ -43,14 +43,14 @@
 				<textarea ref="content" v-model="currentNote.content" :disabled="updating" />
 				<input type="button"
 					class="primary"
-					:value="t('duplicatefindx', 'Save')"
+					:value="t('duplicatefinder', 'Save')"
 					:disabled="updating || !savePossible"
 					@click="saveNote">
 			</div>
 			<div v-else id="emptycontent">
 				<div class="icon-file" />
 				<h2>{{
-				 t('duplicatefindx', 'Create a note to get started') }}</h2>
+				 t('duplicatefinder', 'Create a note to get started') }}</h2>
 			</div>
 		</AppContent>
 	</div>
@@ -110,7 +110,7 @@ export default {
 	 */
 	async mounted() {
 		try {
-			const response = await axios.get(generateUrl('/apps/duplicatefindx/notes'))
+			const response = await axios.get(generateUrl('/apps/duplicatefinder/notes'))
 			this.notes = response.data
 		} catch (e) {
 			console.error(e)
@@ -176,7 +176,7 @@ export default {
 		async createNote(note) {
 			this.updating = true
 			try {
-				const response = await axios.post(generateUrl('/apps/duplicatefindx/notes'), note)
+				const response = await axios.post(generateUrl('/apps/duplicatefinder/notes'), note)
 				const index = this.notes.findIndex((match) => match.id === this.currentNoteId)
 				this.$set(this.notes, index, response.data)
 				this.currentNoteId = response.data.id
@@ -193,7 +193,7 @@ export default {
 		async updateNote(note) {
 			this.updating = true
 			try {
-				await axios.put(generateUrl(`/apps/duplicatefindx/notes/${note.id}`), note)
+				await axios.put(generateUrl(`/apps/duplicatefinder/notes/${note.id}`), note)
 			} catch (e) {
 				console.error(e)
 				showError(t('notestutorial', 'Could not update the note'))
@@ -206,15 +206,15 @@ export default {
 		 */
 		async deleteNote(note) {
 			try {
-				await axios.delete(generateUrl(`/apps/duplicatefindx/notes/${note.id}`))
+				await axios.delete(generateUrl(`/apps/duplicatefinder/notes/${note.id}`))
 				this.notes.splice(this.notes.indexOf(note), 1)
 				if (this.currentNoteId === note.id) {
 					this.currentNoteId = null
 				}
-				showSuccess(t('duplicatefindx', 'Note deleted'))
+				showSuccess(t('duplicatefinder', 'Note deleted'))
 			} catch (e) {
 				console.error(e)
-				showError(t('duplicatefindx', 'Could not delete the note'))
+				showError(t('duplicatefinder', 'Could not delete the note'))
 			}
 		},
 	},

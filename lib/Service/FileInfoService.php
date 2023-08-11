@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Service;
+namespace OCA\DuplicateFinder\Service;
 
 use Psr\Log\LoggerInterface;
 use OCP\IDBConnection;
@@ -9,16 +9,16 @@ use OCP\Files\NotFoundException;
 use OC\User\NoUserException;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use OCA\DuplicateFindx\AppInfo\Application;
-use OCA\DuplicateFindx\Db\FileInfo;
-use OCA\DuplicateFindx\Db\FileInfoMapper;
-use OCA\DuplicateFindx\Event\CalculatedHashEvent;
-use OCA\DuplicateFindx\Event\UpdatedFileInfoEvent;
-use OCA\DuplicateFindx\Event\NewFileInfoEvent;
-use OCA\DuplicateFindx\Exception\ForcedToIgnoreFileException;
-use OCA\DuplicateFindx\Exception\UnableToCalculateHash;
-use OCA\DuplicateFindx\Utils\CMDUtils;
-use OCA\DuplicateFindx\Utils\ScannerUtil;
+use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Db\FileInfo;
+use OCA\DuplicateFinder\Db\FileInfoMapper;
+use OCA\DuplicateFinder\Event\CalculatedHashEvent;
+use OCA\DuplicateFinder\Event\UpdatedFileInfoEvent;
+use OCA\DuplicateFinder\Event\NewFileInfoEvent;
+use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
+use OCA\DuplicateFinder\Exception\UnableToCalculateHash;
+use OCA\DuplicateFinder\Utils\CMDUtils;
+use OCA\DuplicateFinder\Utils\ScannerUtil;
 
 class FileInfoService
 {

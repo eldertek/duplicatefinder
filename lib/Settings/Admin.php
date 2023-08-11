@@ -1,10 +1,10 @@
 <?php
-namespace OCA\DuplicateFindx\Settings;
+namespace OCA\DuplicateFinder\Settings;
 
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Settings\ISubAdminSettings;
 
-use OCA\DuplicateFindx\AppInfo\Application;
+use OCA\DuplicateFinder\AppInfo\Application;
 
 class Admin implements ISubAdminSettings
 {

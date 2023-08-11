@@ -1,12 +1,12 @@
 <?php
-namespace OCA\DuplicateFindx\Controller;
+namespace OCA\DuplicateFinder\Controller;
 
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use OCP\AppFramework\Http\JSONResponse;
-use OCA\DuplicateFindx\Exception\UnableToParseException;
-use OCA\DuplicateFindx\Service\ConfigService;
+use OCA\DuplicateFinder\Exception\UnableToParseException;
+use OCA\DuplicateFinder\Service\ConfigService;
 
 class FilterApiController extends AbstractAPIController
 {

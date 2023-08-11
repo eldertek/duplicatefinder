@@ -1,5 +1,5 @@
 {
-	"name": "nextcloud/duplicatefindx",
+	"name": "nextcloud/duplicatefinder",
 	"description": "Save some space by finding your duplicate files",
 	"type": "project",
 	"license": "AGPL-3.0-or-later",

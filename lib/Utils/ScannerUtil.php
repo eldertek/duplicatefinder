@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Utils;
+namespace OCA\DuplicateFinder\Utils;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -8,11 +8,11 @@ use OCP\IDBConnection;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\NotFoundException;
 
-use OCA\DuplicateFindx\AppInfo\Application;
-use OCA\DuplicateFindx\Exception\ForcedToIgnoreFileException;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Service\ShareService;
-use OCA\DuplicateFindx\Utils\CMDUtils;
+use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\ShareService;
+use OCA\DuplicateFinder\Utils\CMDUtils;
 
 class ScannerUtil
 {

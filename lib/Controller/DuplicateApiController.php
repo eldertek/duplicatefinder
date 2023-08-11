@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Controller;
+namespace OCA\DuplicateFinder\Controller;
 
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -7,11 +7,11 @@ use Psr\Log\LoggerInterface;
 use OCP\AppFramework\ApiController;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCA\DuplicateFindx\AppInfo\Application;
-use OCA\DuplicateFindx\Exception\NotAuthenticatedException;
-use OCA\DuplicateFindx\Service\FileDuplicateService;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Utils\JSONResponseTrait;
+use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Exception\NotAuthenticatedException;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Utils\JSONResponseTrait;
 
 class DuplicateApiController extends AbstractAPIController
 {

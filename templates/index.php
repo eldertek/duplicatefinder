@@ -1,6 +1,6 @@
 <?php
-script('duplicatefindx', 'script');
-style('duplicatefindx', 'style');
+script('duplicatefinder', 'script');
+style('duplicatefinder', 'style');
 ?>
 
 <div id="app">

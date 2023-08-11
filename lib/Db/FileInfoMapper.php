@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Db;
+namespace OCA\DuplicateFinder\Db;
 
 use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -12,7 +12,7 @@ class FileInfoMapper extends EQBMapper
 
     public function __construct(IDBConnection $db)
     {
-        parent::__construct($db, 'duplicatefindx_finfo', FileInfo::class);
+        parent::__construct($db, 'duplicatefinder_finfo', FileInfo::class);
     }
 
   /**

@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\BackgroundJob;
+namespace OCA\DuplicateFinder\BackgroundJob;
 
 use OC\Files\Utils\Scanner;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -7,8 +7,8 @@ use Psr\Log\LoggerInterface;
 use OCP\IUserManager;
 use OCP\IUser;
 use OCP\IDBConnection;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Service\ConfigService;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\ConfigService;
 
 class FindDuplicates extends \OC\BackgroundJob\TimedJob
 {

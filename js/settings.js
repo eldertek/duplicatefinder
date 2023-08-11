@@ -4371,7 +4371,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  appID: 'duplicatefindx'
+  appID: 'duplicatefinder'
 });
 
 /***/ }),
@@ -4408,7 +4408,7 @@ function AppProivder(props) {
 
   return (0,_emotion_react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(nextcloud_react__WEBPACK_IMPORTED_MODULE_1__.SettingsFrame, {
     children: [(0,_emotion_react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(nextcloud_react__WEBPACK_IMPORTED_MODULE_1__.SettingsPageTitle, {
-      help: "https://github.com/eldertek/duplicatefindx",
+      help: "https://github.com/eldertek/duplicatefinder",
       label: '(' + (0,nextcloud_react__WEBPACK_IMPORTED_MODULE_1__.gettext)('Version: ') + (viewData.settings.installed_version || 'n.a.') + ')',
       description: (0,nextcloud_react__WEBPACK_IMPORTED_MODULE_1__.gettext)('Adjust these settings to make the process of finding duplicates your own.'),
       children: (0,nextcloud_react__WEBPACK_IMPORTED_MODULE_1__.gettext)('Duplicate Finder')
@@ -4705,7 +4705,7 @@ function loadSettings() {
 
         case 3:
           _context6.next = 5;
-          return nextcloud_react__WEBPACK_IMPORTED_MODULE_2__.API.get('duplicatefindx', 'Settings');
+          return nextcloud_react__WEBPACK_IMPORTED_MODULE_2__.API.get('duplicatefinder', 'Settings');
 
         case 5:
           response = _context6.sent;
@@ -4785,7 +4785,7 @@ function saveSetting(key, value, oldValue) {
           config = {};
           config[key] = value;
           _context7.next = 4;
-          return nextcloud_react__WEBPACK_IMPORTED_MODULE_2__.API.patch('duplicatefindx', 'Settings', undefined, {
+          return nextcloud_react__WEBPACK_IMPORTED_MODULE_2__.API.patch('duplicatefinder', 'Settings', undefined, {
             config: config
           });
 
@@ -44120,7 +44120,7 @@ react_dom__WEBPACK_IMPORTED_MODULE_1__.render((0,_emotion_react_jsx_runtime__WEB
     store: _store__WEBPACK_IMPORTED_MODULE_5__["default"],
     children: [(0,_emotion_react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(_App__WEBPACK_IMPORTED_MODULE_4__["default"], {}), (0,_emotion_react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(nextcloud_react__WEBPACK_IMPORTED_MODULE_3__.ToastContainer, {})]
   })
-}), document.getElementById('duplicatefindx-settings'));
+}), document.getElementById('duplicatefinder-settings'));
 })();
 
 /******/ })()

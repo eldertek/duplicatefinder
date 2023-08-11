@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Migration;
+namespace OCA\DuplicateFinder\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
@@ -19,16 +19,16 @@ class Version0006Date20211023151500 extends SimpleMigrationStep
     {
       /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
-        if ($schema->hasTable('duplicatefindx_finfo')) {
-            $table = $schema->getTable('duplicatefindx_finfo');
+        if ($schema->hasTable('duplicatefinder_finfo')) {
+            $table = $schema->getTable('duplicatefinder_finfo');
             if (!$table->hasColumn('ignored')) {
                 $table->addColumn('ignored', 'boolean', [
                 'notnull' => false,
                 'default' => false
                 ]);
             }
-            if (!$table->hasIndex('duplicatefindx_i_idx')) {
-                $table->addIndex(['ignored'], 'duplicatefindx_i_idx');
+            if (!$table->hasIndex('duplicatefinder_i_idx')) {
+                $table->addIndex(['ignored'], 'duplicatefinder_i_idx');
             }
             return $schema;
         }

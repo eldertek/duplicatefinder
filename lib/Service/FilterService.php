@@ -1,12 +1,12 @@
 <?php
-namespace OCA\DuplicateFindx\Service;
+namespace OCA\DuplicateFinder\Service;
 
 use Psr\Log\LoggerInterface;
 use OCP\Files\Node;
 
-use OCA\DuplicateFindx\Db\FileInfo;
-use OCA\DuplicateFindx\Exception\ForcedToIgnoreFileException;
-use OCA\DuplicateFindx\Service\ConfigService;
+use OCA\DuplicateFinder\Db\FileInfo;
+use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
+use OCA\DuplicateFinder\Service\ConfigService;
 
 class FilterService
 {

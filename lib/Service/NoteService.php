@@ -3,15 +3,15 @@ declare(strict_types=1);
 // SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-namespace OCA\DuplicateFindx\Service;
+namespace OCA\DuplicateFinder\Service;
 
 use Exception;
 
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 
-use OCA\DuplicateFindx\Db\Note;
-use OCA\DuplicateFindx\Db\NoteMapper;
+use OCA\DuplicateFinder\Db\Note;
+use OCA\DuplicateFinder\Db\NoteMapper;
 
 class NoteService {
 	private NoteMapper $mapper;

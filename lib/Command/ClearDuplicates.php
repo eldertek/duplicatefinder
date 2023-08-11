@@ -1,13 +1,13 @@
 <?php
-namespace OCA\DuplicateFindx\Command;
+namespace OCA\DuplicateFinder\Command;
 
 use OC\Core\Command\Base;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
 
 class ClearDuplicates extends Base
 {

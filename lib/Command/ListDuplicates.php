@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Command;
+namespace OCA\DuplicateFinder\Command;
 
 use OC\Core\Command\Base;
 use OCP\Encryption\IManager;
@@ -8,9 +8,9 @@ use OCP\IUserManager;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Service\FileDuplicateService;
-use OCA\DuplicateFindx\Utils\CMDUtils;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Utils\CMDUtils;
 
 class ListDuplicates extends Base
 {

@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Migration;
+namespace OCA\DuplicateFinder\Migration;
 
 use Closure;
 use Doctrine\DBAL\Types\Type;
@@ -23,10 +23,10 @@ class Version0003Date20210715132400 extends SimpleMigrationStep
     {
       /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
-        if ($schema->hasTable('duplicatefindx_finfo')) {
-            $table = $schema->getTable('duplicatefindx_finfo');
-            if ($table->hasIndex('duplicatefindx_path_idx')) {
-                $table->dropIndex('duplicatefindx_path_idx');
+        if ($schema->hasTable('duplicatefinder_finfo')) {
+            $table = $schema->getTable('duplicatefinder_finfo');
+            if ($table->hasIndex('duplicatefinder_path_idx')) {
+                $table->dropIndex('duplicatefinder_path_idx');
             }
             if (!$table->hasColumn('path_hash')) {
                 $table->addColumn('path_hash', 'string', [
@@ -34,8 +34,8 @@ class Version0003Date20210715132400 extends SimpleMigrationStep
                   'length' => 40,
                 ]);
             }
-            if (!$table->hasIndex('duplicatefindx_ph_idx')) {
-                $table->addIndex(['path_hash'], 'duplicatefindx_ph_idx');
+            if (!$table->hasIndex('duplicatefinder_ph_idx')) {
+                $table->addIndex(['path_hash'], 'duplicatefinder_ph_idx');
             }
             return $schema;
         }

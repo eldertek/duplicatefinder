@@ -1,13 +1,13 @@
 <?php
-namespace OCA\DuplicateFindx\Service;
+namespace OCA\DuplicateFinder\Service;
 
 use OCP\Files\Node;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 
-use OCA\DuplicateFindx\Utils\PathConversionUtils;
-use OCA\DuplicateFindx\Db\FileInfo;
+use OCA\DuplicateFinder\Utils\PathConversionUtils;
+use OCA\DuplicateFinder\Db\FileInfo;
 
 class FolderService
 {

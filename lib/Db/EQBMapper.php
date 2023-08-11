@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Db;
+namespace OCA\DuplicateFinder\Db;
 
 use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Doctrine\DBAL\Platforms\PostgreSQL94Platform;

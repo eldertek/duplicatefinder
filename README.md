@@ -3,8 +3,8 @@ SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
 SPDX-License-Identifier: CC0-1.0
 -->
 
-# Duplicate Findx
-Install app using the Nextcloud App Store inside your Nextcloud. See https://apps.nextcloud.com/apps/duplicatefindx
+# Duplicate Finder
+Install app using the Nextcloud App Store inside your Nextcloud. See https://apps.nextcloud.com/apps/duplicatefinder
 
 Click on the icon and find if you have duplicate files.
 
@@ -57,7 +57,7 @@ All settings should be modified only through UI. If this doesn't work for you, y
 
 ## Preview
 
-![Preview of the GUI](https://raw.githubusercontent.com/eldertek/duplicatefindx/master/img/preview.png)
+![Preview of the GUI](https://raw.githubusercontent.com/eldertek/duplicatefinder/master/img/preview.png)
 
 ## Special thanks
 

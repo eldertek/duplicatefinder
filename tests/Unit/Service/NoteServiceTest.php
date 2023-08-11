@@ -3,16 +3,16 @@ declare(strict_types=1);
 // SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-namespace OCA\DuplicateFindx\Tests\Unit\Service;
+namespace OCA\DuplicateFinder\Tests\Unit\Service;
 
-use OCA\DuplicateFindx\Service\NoteNotFound;
+use OCA\DuplicateFinder\Service\NoteNotFound;
 use PHPUnit\Framework\TestCase;
 
 use OCP\AppFramework\Db\DoesNotExistException;
 
-use OCA\DuplicateFindx\Db\Note;
-use OCA\DuplicateFindx\Service\NoteService;
-use OCA\DuplicateFindx\Db\NoteMapper;
+use OCA\DuplicateFinder\Db\Note;
+use OCA\DuplicateFinder\Service\NoteService;
+use OCA\DuplicateFinder\Db\NoteMapper;
 
 class NoteServiceTest extends TestCase {
 	private NoteService $service;

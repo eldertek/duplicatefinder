@@ -1,14 +1,14 @@
 <?php
-namespace OCA\DuplicateFindx\Migration;
+namespace OCA\DuplicateFinder\Migration;
 
 use \Psr\Log\LoggerInterface;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use OCP\Files\NotFoundException;
-use OCA\DuplicateFindx\AppInfo\Application;
-use OCA\DuplicateFindx\Service\ConfigService;
-use OCA\DuplicateFindx\Service\FileInfoService;
+use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Service\ConfigService;
+use OCA\DuplicateFinder\Service\FileInfoService;
 
 class RepairFileInfos implements IRepairStep
 {
@@ -98,7 +98,7 @@ class RepairFileInfos implements IRepairStep
     {
         $qb = $this->connection->getQueryBuilder();
         $qb->select('*')
-            ->from('duplicatefindx_finfo')
+            ->from('duplicatefinder_finfo')
             ->where($qb->expr()->isNull('path_hash'))
             ->orWhere($qb->expr()->eq('path_hash', $qb->createNamedParameter('')));
         $qb = $qb->execute();

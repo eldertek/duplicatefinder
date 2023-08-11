@@ -1,11 +1,11 @@
 <?php
-namespace OCA\DuplicateFindx\Listener;
+namespace OCA\DuplicateFinder\Listener;
 
 use Psr\Log\LoggerInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
-use OCA\DuplicateFindx\Event\AbstractFileInfoEvent;
-use OCA\DuplicateFindx\Service\FileInfoService;
+use OCA\DuplicateFinder\Event\AbstractFileInfoEvent;
+use OCA\DuplicateFinder\Service\FileInfoService;
 
 /**
  * @template T of Event

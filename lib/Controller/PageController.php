@@ -1,10 +1,10 @@
 <?php
-namespace OCA\DuplicateFindx\Controller;
+namespace OCA\DuplicateFinder\Controller;
 
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Controller;
-use OCA\DuplicateFindx\AppInfo\Application;
+use OCA\DuplicateFinder\AppInfo\Application;
 
 class PageController extends Controller
 {

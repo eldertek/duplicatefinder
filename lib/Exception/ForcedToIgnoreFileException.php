@@ -1,8 +1,8 @@
 <?php
 
-namespace OCA\DuplicateFindx\Exception;
+namespace OCA\DuplicateFinder\Exception;
 
-use OCA\DuplicateFindx\Db\FileInfo;
+use OCA\DuplicateFinder\Db\FileInfo;
 
 class ForcedToIgnoreFileException extends \Exception
 {

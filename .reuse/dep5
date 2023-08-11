@@ -1,5 +1,5 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Duplicate Findx
+Upstream-Name: Duplicate Finder
 Upstream-Contact: André Théo LAURET <andrelauret@eclipse-technology.eu>
 Source: https://github.com/nextcloud/profiler
 

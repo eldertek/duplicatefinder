@@ -1,9 +1,9 @@
 <?php
-namespace OCA\DuplicateFindx\Db;
+namespace OCA\DuplicateFinder\Db;
 
 use JsonSerializable;
 use OCP\AppFramework\Db\Entity;
-use OCA\DuplicateFindx\Utils\JSONDateTime;
+use OCA\DuplicateFinder\Utils\JSONDateTime;
 
 class EEntity extends Entity implements JsonSerializable
 {

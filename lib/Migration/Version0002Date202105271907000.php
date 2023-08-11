@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Migration;
+namespace OCA\DuplicateFinder\Migration;
 
 use Closure;
 use Doctrine\DBAL\Types\Type;
@@ -23,8 +23,8 @@ class Version0002Date202105271907000 extends SimpleMigrationStep
     {
       /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
-        if ($schema->hasTable('duplicatefindx_finfo')) {
-            $table = $schema->getTable('duplicatefindx_finfo');
+        if ($schema->hasTable('duplicatefinder_finfo')) {
+            $table = $schema->getTable('duplicatefinder_finfo');
             if ($table->hasColumn('size')) {
                 $pathColumn = $table->getColumn('size');
                 $pathColumn->setType(Type::getType(Types::BIGINT));

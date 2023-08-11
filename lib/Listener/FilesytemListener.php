@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Listener;
+namespace OCA\DuplicateFinder\Listener;
 
 use Psr\Log\LoggerInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -9,10 +9,10 @@ use OCP\Files\Node;
 use OCP\Files\Events\Node\NodeDeletedEvent;
 use OCP\Files\Events\Node\NodeRenamedEvent;
 use OCP\Files\Events\Node\AbstractNodeEvent;
-use OCA\DuplicateFindx\Service\ConfigService;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Service\FileDuplicateService;
-use OCA\DuplicateFindx\Exception\ForcedToIgnoreFileException;
+use OCA\DuplicateFinder\Service\ConfigService;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
 
 /**
  * @template T of Event

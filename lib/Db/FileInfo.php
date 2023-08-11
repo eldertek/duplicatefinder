@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Db;
+namespace OCA\DuplicateFinder\Db;
 
 /**
  * @method void setOwner(string $s)

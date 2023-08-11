@@ -1,8 +1,8 @@
 <?php
-namespace OCA\DuplicateFindx\Event;
+namespace OCA\DuplicateFinder\Event;
 
 use OCP\EventDispatcher\Event;
-use OCA\DuplicateFindx\Db\FileInfo;
+use OCA\DuplicateFinder\Db\FileInfo;
 
 abstract class AbstractFileInfoEvent extends Event
 {

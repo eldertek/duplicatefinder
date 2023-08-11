@@ -1,11 +1,11 @@
 <?php
-namespace OCA\DuplicateFindx\BackgroundJob;
+namespace OCA\DuplicateFinder\BackgroundJob;
 
 use Psr\Log\LoggerInterface;
 use OCP\Files\NotFoundException;
-use OCA\DuplicateFindx\Service\FileInfoService;
-use OCA\DuplicateFindx\Service\ConfigService;
-use OCA\DuplicateFindx\Service\FolderService;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\ConfigService;
+use OCA\DuplicateFinder\Service\FolderService;
 
 class CleanUpDB extends \OC\BackgroundJob\TimedJob
 {

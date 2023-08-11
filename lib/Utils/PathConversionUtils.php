@@ -1,11 +1,11 @@
 <?php
-namespace OCA\DuplicateFindx\Utils;
+namespace OCA\DuplicateFinder\Utils;
 
 use OCP\Files\Node;
 use OCP\Files\Folder;
 use OCP\Share\IShare;
-use OCA\DuplicateFindx\Db\FileInfo;
-use OCA\DuplicateFindx\Exception\UnknownOwnerException;
+use OCA\DuplicateFinder\Db\FileInfo;
+use OCA\DuplicateFinder\Exception\UnknownOwnerException;
 
 class PathConversionUtils
 {

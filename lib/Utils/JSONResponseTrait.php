@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\DuplicateFindx\Utils;
+namespace OCA\DuplicateFinder\Utils;
 
 use \OCP\AppFramework\Http\JSONResponse;
 

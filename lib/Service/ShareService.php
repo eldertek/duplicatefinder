@@ -1,7 +1,7 @@
 <?php
-namespace OCA\DuplicateFindx\Service;
+namespace OCA\DuplicateFinder\Service;
 
-use OCA\DuplicateFindx\Utils\PathConversionUtils;
+use OCA\DuplicateFinder\Utils\PathConversionUtils;
 use OCP\Share\IShare;
 use Psr\Log\LoggerInterface;
 use OCP\Files\Node;

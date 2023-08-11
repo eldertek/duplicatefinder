@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\AppInfo;
+namespace OCA\DuplicateFinder\AppInfo;
 
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -11,16 +11,16 @@ use OCP\Files\Events\Node\NodeCopiedEvent;
 use OCP\Files\Events\Node\NodeCreatedEvent;
 use OCP\Files\Events\Node\NodeWrittenEvent;
 use OCP\Files\Events\Node\NodeTouchedEvent;
-use OCA\DuplicateFindx\Event\CalculatedHashEvent;
-use OCA\DuplicateFindx\Event\NewFileInfoEvent;
-use OCA\DuplicateFindx\Event\UpdatedFileInfoEvent;
-use OCA\DuplicateFindx\Listener\FilesytemListener;
-use OCA\DuplicateFindx\Listener\NewHashListener;
-use OCA\DuplicateFindx\Listener\FileInfoListener;
+use OCA\DuplicateFinder\Event\CalculatedHashEvent;
+use OCA\DuplicateFinder\Event\NewFileInfoEvent;
+use OCA\DuplicateFinder\Event\UpdatedFileInfoEvent;
+use OCA\DuplicateFinder\Listener\FilesytemListener;
+use OCA\DuplicateFinder\Listener\NewHashListener;
+use OCA\DuplicateFinder\Listener\FileInfoListener;
 
 class Application extends App implements IBootstrap
 {
-    public const ID = 'duplicatefindx';
+    public const ID = 'duplicatefinder';
 
     public function __construct()
     {

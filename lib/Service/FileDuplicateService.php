@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Service;
+namespace OCA\DuplicateFinder\Service;
 
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
@@ -7,11 +7,11 @@ use OCP\AppFramework\Db\Entity;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotFoundException;
 
-use OCA\DuplicateFindx\AppInfo\Application;
-use OCA\DuplicateFindx\Db\FileInfo;
-use OCA\DuplicateFindx\Db\FileDuplicate;
-use OCA\DuplicateFindx\Db\FileDuplicateMapper;
-use OCA\DuplicateFindx\Service\FileInfoService;
+use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Db\FileInfo;
+use OCA\DuplicateFinder\Db\FileDuplicate;
+use OCA\DuplicateFinder\Db\FileDuplicateMapper;
+use OCA\DuplicateFinder\Service\FileInfoService;
 
 class FileDuplicateService
 {

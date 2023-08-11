@@ -1,10 +1,10 @@
 <?php
-namespace OCA\DuplicateFindx\Service;
+namespace OCA\DuplicateFinder\Service;
 
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
-use OCA\DuplicateFindx\AppInfo\Application;
-use OCA\DuplicateFindx\Exception\UnableToParseException;
+use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Exception\UnableToParseException;
 
 class ConfigService
 {

@@ -1,5 +1,5 @@
 <?php
-namespace OCA\DuplicateFindx\Migration;
+namespace OCA\DuplicateFinder\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
@@ -20,8 +20,8 @@ class Version0000Date20210325183200 extends SimpleMigrationStep
       /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
 
-        if (!$schema->hasTable('duplicatefindx_finfo')) {
-            $table = $schema->createTable('duplicatefindx_finfo');
+        if (!$schema->hasTable('duplicatefinder_finfo')) {
+            $table = $schema->createTable('duplicatefinder_finfo');
             $table->addColumn('id', 'integer', [
             'autoincrement' => true,
             'notnull' => true,
@@ -65,8 +65,8 @@ class Version0000Date20210325183200 extends SimpleMigrationStep
             $table->setPrimaryKey(['id']);
             //On some db versions index on a text column leads to an error
             //To avoid this a the next db migration changes the type to a varchar and creates the index
-            //$table->addIndex(['path'], 'duplicatefindx_path_idx');
-            $table->addIndex(['file_hash'], 'duplicatefindx_hashes_idx');
+            //$table->addIndex(['path'], 'duplicatefinder_path_idx');
+            $table->addIndex(['file_hash'], 'duplicatefinder_hashes_idx');
         }
         $schema = $this->createDuplicatesTable($schema);
         $schema = $this->createDuplicatesRelationTable($schema);
@@ -75,8 +75,8 @@ class Version0000Date20210325183200 extends SimpleMigrationStep
 
     private function createDuplicatesTable(ISchemaWrapper $schema):ISchemaWrapper
     {
-        if (!$schema->hasTable('duplicatefindx_dups')) {
-            $table = $schema->createTable('duplicatefindx_dups');
+        if (!$schema->hasTable('duplicatefinder_dups')) {
+            $table = $schema->createTable('duplicatefinder_dups');
             $table->addColumn('id', 'integer', [
             'autoincrement' => true,
             'notnull' => true,
@@ -90,15 +90,15 @@ class Version0000Date20210325183200 extends SimpleMigrationStep
             'length' => 200
             ]);
             $table->setPrimaryKey(['id']);
-            $table->addIndex(['type','hash'], 'duplicatefindx_dh_idx');
+            $table->addIndex(['type','hash'], 'duplicatefinder_dh_idx');
         }
         return $schema;
     }
 
     private function createDuplicatesRelationTable(ISchemaWrapper $schema):ISchemaWrapper
     {
-        if (!$schema->hasTable('duplicatefindx_dups_f')) {
-            $table = $schema->createTable('duplicatefindx_dups_f');
+        if (!$schema->hasTable('duplicatefinder_dups_f')) {
+            $table = $schema->createTable('duplicatefinder_dups_f');
             $table->addColumn('id', 'integer', [
             'notnull' => true,
             ]);
