@@ -5,6 +5,7 @@
 # Composer.
 #
 app_name=$(notdir $(CURDIR))
+project_dir=$(CURDIR)/../$(app_name)
 build_tools_directory=$(CURDIR)/build/tools
 source_build_directory=$(CURDIR)/build/artifacts/source
 sign_dir=$(source_build_directory)/sign
