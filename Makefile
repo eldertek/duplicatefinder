@@ -8,6 +8,7 @@ app_name=$(notdir $(CURDIR))
 project_dir=$(CURDIR)/../$(app_name)
 build_tools_directory=$(CURDIR)/build/tools
 source_build_directory=$(CURDIR)/build/artifacts/source
+build_dir=$(CURDIR)/build/artifacts
 sign_dir=$(source_build_directory)/sign
 source_package_name=$(source_build_directory)/$(app_name)
 appstore_build_directory=$(CURDIR)/build/artifacts/appstore
