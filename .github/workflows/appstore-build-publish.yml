@@ -9,6 +9,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+
 env:
   PHP_VERSION: 8.1
 
