@@ -19,19 +19,19 @@ composer=$(shell which composer 2> /dev/null)
 
 all: build
 
-# Fetches the PHP and JS dependencies and compiles the JS. If no composer.json
-# is present, the composer step is skipped, if no package.json or js/package.json
-# is present, the npm step is skipped
+# Installs npm dependencies
+.PHONY: npm
+npm:
+	npm install
+	npm run build
+
 .PHONY: build
 build:
 ifneq (,$(wildcard $(CURDIR)/composer.json))
-#	make composer
+	make composer
 endif
 ifneq (,$(wildcard $(CURDIR)/package.json))
-#	make npm
-endif
-ifneq (,$(wildcard $(CURDIR)/js/package.json))
-#	make npm
+	make npm
 endif
 
 # Installs and updates the composer dependencies. If composer is not installed
