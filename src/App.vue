@@ -108,14 +108,21 @@ export default {
 			this.currentDuplicateId = duplicate.id
 		},
 		async deleteDuplicate(item) {
+			const fileClient = OC.Files.getClient();
 			try {
-				await axios.delete(generateUrl(`/apps/duplicatefinder/api/v1/duplicates/${item.id}`));
+				await fileClient.remove(this.normalizeItemPath(item.path));
 				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
+				// Remove the deleted item from the duplicates list in the UI
+				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
+				if (index !== -1) {
+					this.currentDuplicate.files.splice(index, 1);
+				}
 			} catch (e) {
 				console.error(e);
-				showError(t('duplicatefinder', 'Could not delete the duplicate'));
+				showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
 			}
 		}
+
 	},
 }
 

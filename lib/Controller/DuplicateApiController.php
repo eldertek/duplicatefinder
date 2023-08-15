@@ -47,22 +47,4 @@ class DuplicateApiController extends AbstractAPIController
             return $this->handleException($e);
         }
     }
-
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function delete(int $id): JSONResponse
-    {
-        try {
-            $this->fileDuplicateService->deleteDuplicate($id);
-            return new JSONResponse([
-                'status' => 'success',
-                'data' => null
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('An unknown exception occurred', ['app' => Application::ID, 'exception' => $e]);
-            return $this->handleException($e);
-        }
-    }
 }

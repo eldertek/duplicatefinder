@@ -143,27 +143,6 @@ class FileDuplicateService
             return null;
         }
     }
-    public function deleteDuplicate(int $id): ?FileDuplicate
-    {
-        try {
-            $fileDuplicate = $this->mapper->find($id);
-            $fileInfo = $this->fileInfoService->find($fileDuplicate->getFileId());
-
-            // Get the file's path using the enrich function
-            $enrichedFileInfo = $this->fileInfoService->enrich($fileInfo);
-            $filePath = $enrichedFileInfo->getPath();
-
-            // Use Nextcloud helper to delete the file
-            $userFolder = \OC::$server->getUserFolder($fileInfo->getUserId());
-            $file = $userFolder->get($filePath);
-            $file->delete();
-
-            $this->mapper->delete($fileDuplicate);
-            return null;
-        } catch (DoesNotExistException $e) {
-            return null;
-        }
-    }
 
     public function clear(): void
     {
