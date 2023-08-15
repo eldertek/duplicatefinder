@@ -7,6 +7,7 @@
 					:title="entity.hash"
 					:class="{active: currentDuplicateId === entity.id}"
 					@click="openDuplicate(entity)">
+					@mounted="logEntity(entity)">
 				</AppNavigationItem>
 			</ul>
 		</AppNavigation>
@@ -71,6 +72,9 @@ export default {
 		this.loading = false
 	},
 	methods: {
+		logEntity(entity) {
+			console.log(entity)
+		},
 		openDuplicate(duplicate) {
 			this.currentDuplicateId = duplicate.id
 		},
