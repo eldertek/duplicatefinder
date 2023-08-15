@@ -1,28 +1,29 @@
 <template>
-	<div id="content" class="app-duplicatefinder">
-		<AppNavigation>
-			<ul>
-				<AppNavigationItem v-for="duplicate in duplicates"
-					:key="duplicate.id"
-					:title="duplicate.hash"
-					:class="{active: currentDuplicateId === duplicate.id}"
-					@click="openDuplicate(duplicate)">
-				</AppNavigationItem>
-			</ul>
-		</AppNavigation>
-		<AppContent>
-			<div v-if="currentDuplicate">
-				<p>Hash: {{ currentDuplicate.hash }}</p>
-				<p>Path: {{ currentDuplicate.path }}</p>
-				<button @click="deleteDuplicate(currentDuplicate)">Delete</button>
-			</div>
-			<div v-else id="emptycontent">
-				<div class="icon-file" />
-				<h2>{{
-				 t('duplicatefinder', 'No duplicates found') }}</h2>
-			</div>
-		</AppContent>
-	</div>
+    <div id="content" class="app-duplicatefinder">
+        <AppNavigation>
+            <ul>
+                <AppNavigationItem v-for="duplicate in duplicates"
+                    :key="duplicate.id"
+                    :title="duplicate.hash"
+                    :class="{active: currentDuplicateId === duplicate.id}"
+                    @click="openDuplicate(duplicate)">
+                </AppNavigationItem>
+            </ul>
+        </AppNavigation>
+        <AppContent>
+            <div v-if="currentDuplicate && currentDuplicate.files.length > 0">
+                <div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
+                    <p>File {{ index + 1 }}:</p>
+                    <p>Hash: {{ file.fileHash }}</p>
+                    <p>Path: {{ file.path }}</p>
+                </div>
+            </div>
+            <div v-else id="emptycontent">
+                <div class="icon-file" />
+                <h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+            </div>
+        </AppContent>
+    </div>
 </template>
 
 <script>
@@ -109,4 +110,11 @@ export default {
 		flex-grow: 1;
 		width: 100%;
 	}
+
+    .file-display {
+        width: 50%;
+        float: left;
+        padding: 20px;
+        box-sizing: border-box;
+    }
 </style>
