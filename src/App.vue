@@ -70,7 +70,7 @@ export default {
 	},
 	async mounted() {
 		try {
-			const response = await axios.get(generateUrl('/apps/duplicatefinder/duplicates'))
+			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/duplicates'))
 			this.duplicates = response.data
 		} catch (e) {
 			console.error(e)
@@ -84,7 +84,7 @@ export default {
 		},
 		async deleteDuplicate(duplicate) {
 			try {
-				await axios.delete(generateUrl(`/apps/duplicatefinder/duplicates/${duplicate.id}`))
+				await axios.delete(generateUrl(`/apps/duplicatefinder/api/v1/duplicates/${duplicate.id}`))
 				this.duplicates.splice(this.duplicates.indexOf(duplicate), 1)
 				if (this.currentDuplicateId === duplicate.id) {
 					this.currentDuplicateId = null
