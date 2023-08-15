@@ -109,30 +109,13 @@ export default {
 		},
 		async deleteDuplicate(item, e) {
 			try {
-				function deleteDuplicate(item, e) {
-					const fileClient = OC.Files.getClient();
-					let iconEl;
-					if (e.target.className === 'icon icon-delete') {
-						iconEl = e.target;
-					} else {
-						iconEl = e.target.getElementsByClassName('icon-delete')[0];
-					}
-					iconEl.classList.replace('icon-delete', 'icon-loading');
-
-					fileClient.remove(normalizeItemPath(item.path)).then(function () {
-						groupedResult.groupedItems.forEach(cleanGroupItems.bind(undefined, item));
-						updateTitleWithStats();
-					}).fail(function () {
-						iconEl.classList.replace('icon-loading', 'icon-delete');
-						OC.dialogs.alert('Error deleting the file: ' + normalizeItemPath(item.path), 'Error');
-					});
-				}
-				showSuccess(t('duplicatefinder', 'Duplicate deleted'))
+				await axios.delete(generateUrl(`/apps/duplicatefinder/api/v1/duplicates/${item.hash}/${item.type}`));
+				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
 			} catch (e) {
-				console.error(e)
-				showError(t('duplicatefinder', 'Could not delete the duplicate'))
+				console.error(e);
+				showError(t('duplicatefinder', 'Could not delete the duplicate'));
 			}
-		},
+		}
 	},
 }
 

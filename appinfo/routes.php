@@ -11,6 +11,7 @@ return [
     'routes' => [
         ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'duplicate_api#list', 'url' => '/api/{apiVersion}/duplicates', 'verb' => 'GET', 'requirements' => ['apiVersion' => 'v1']],
+        ['name' => 'duplicate_api#delete', 'url' => '/api/{apiVersion}/duplicates/{hash}/{type}', 'verb' => 'DELETE', 'requirements' => ['apiVersion' => 'v1', 'hash' => '[a-zA-Z0-9]+', 'type' => '[a-zA-Z_]+']],
         ['name' => 'settings_api#list', 'url' => '/api/{apiVersion}/settings', 'verb' => 'GET', 'requirements' => ['apiVersion' => 'v1']],
         ['name' => 'settings_api#save', 'url' => '/api/{apiVersion}/settings', 'verb' => 'PATCH', 'requirements' => ['apiVersion' => 'v1']],
         ['name' => 'filter_api#list', 'url' => '/api/{apiVersion}/filters', 'verb' => 'GET', 'requirements' => ['apiVersion' => 'v1']],
