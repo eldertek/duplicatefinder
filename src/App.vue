@@ -1,52 +1,33 @@
 <template>
 	<div id="content" class="app-duplicatefinder">
 		<AppNavigation>
-			<AppNavigationNew v-if="!loading"
-				:text="t('duplicatefinder', 'New note')"
-				:disabled="false"
-				button-id="new-duplicatefinder-button"
-				button-class="icon-add"
-				@click="newNote" />
 			<ul>
-				<AppNavigationItem v-for="note in notes"
-					:key="note.id"
-					:title="note.title ? note.title : t('duplicatefinder', 'New note')"
-					:class="{active: currentNoteId === note.id}"
-					@click="openNote(note)">
+				<AppNavigationItem v-for="duplicate in duplicates"
+					:key="duplicate.id"
+					:title="duplicate.hash"
+					:class="{active: currentDuplicateId === duplicate.id}"
+					@click="openDuplicate(duplicate)">
 					<template slot="actions">
-						<ActionButton v-if="note.id === -1"
-							icon="icon-close"
-							@click="cancelNewNote(note)">
-							{{
-							t('duplicatefinder', 'Cancel note creation') }}
-						</ActionButton>
-						<ActionButton v-else
+						<ActionButton
 							icon="icon-delete"
-							@click="deleteNote(note)">
+							@click="deleteDuplicate(duplicate)">
 							{{
-							 t('duplicatefinder', 'Delete note') }}
+							 t('duplicatefinder', 'Delete duplicate') }}
 						</ActionButton>
 					</template>
 				</AppNavigationItem>
 			</ul>
 		</AppNavigation>
 		<AppContent>
-			<div v-if="currentNote">
-				<input ref="title"
-					v-model="currentNote.title"
-					type="text"
-					:disabled="updating">
-				<textarea ref="content" v-model="currentNote.content" :disabled="updating" />
-				<input type="button"
-					class="primary"
-					:value="t('duplicatefinder', 'Save')"
-					:disabled="updating || !savePossible"
-					@click="saveNote">
+			<div v-if="currentDuplicate">
+				<p>Hash: {{ currentDuplicate.hash }}</p>
+				<p>Path: {{ currentDuplicate.path }}</p>
+				<button @click="deleteDuplicate(currentDuplicate)">Delete</button>
 			</div>
 			<div v-else id="emptycontent">
 				<div class="icon-file" />
 				<h2>{{
-				 t('duplicatefinder', 'Create a note to get started') }}</h2>
+				 t('duplicatefinder', 'No duplicates found') }}</h2>
 			</div>
 		</AppContent>
 	</div>
@@ -57,7 +38,6 @@ import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
 import AppContent from '@nextcloud/vue/dist/Components/AppContent'
 import AppNavigation from '@nextcloud/vue/dist/Components/AppNavigation'
 import AppNavigationItem from '@nextcloud/vue/dist/Components/AppNavigationItem'
-import AppNavigationNew from '@nextcloud/vue/dist/Components/AppNavigationNew'
 
 import '@nextcloud/dialogs/styles/toast.scss'
 import { generateUrl } from '@nextcloud/router'
@@ -71,151 +51,54 @@ export default {
 		AppContent,
 		AppNavigation,
 		AppNavigationItem,
-		AppNavigationNew,
 	},
 	data() {
 		return {
-			notes: [],
-			currentNoteId: null,
+			duplicates: [],
+			currentDuplicateId: null,
 			updating: false,
 			loading: true,
 		}
 	},
 	computed: {
-		/**
-		 * Return the currently selected note object
-		 * @returns {Object|null}
-		 */
-		currentNote() {
-			if (this.currentNoteId === null) {
+		currentDuplicate() {
+			if (this.currentDuplicateId === null) {
 				return null
 			}
-			return this.notes.find((note) => note.id === this.currentNoteId)
-		},
-
-		/**
-		 * Returns true if a note is selected and its title is not empty
-		 * @returns {Boolean}
-		 */
-		savePossible() {
-			return this.currentNote && this.currentNote.title !== ''
+			return this.duplicates.find((duplicate) => duplicate.id === this.currentDuplicateId)
 		},
 	},
-	/**
-	 * Fetch list of notes when the component is loaded
-	 */
 	async mounted() {
 		try {
-			const response = await axios.get(generateUrl('/apps/duplicatefinder/notes'))
-			this.notes = response.data
+			const response = await axios.get(generateUrl('/apps/duplicatefinder/duplicates'))
+			this.duplicates = response.data
 		} catch (e) {
 			console.error(e)
-			showError(t('notestutorial', 'Could not fetch notes'))
+			showError(t('duplicatefinder', 'Could not fetch duplicates'))
 		}
 		this.loading = false
 	},
-
 	methods: {
-		/**
-		 * Create a new note and focus the note content field automatically
-		 * @param {Object} note Note object
-		 */
-		openNote(note) {
-			if (this.updating) {
-				return
-			}
-			this.currentNoteId = note.id
-			this.$nextTick(() => {
-				this.$refs.content.focus()
-			})
+		openDuplicate(duplicate) {
+			this.currentDuplicateId = duplicate.id
 		},
-		/**
-		 * Action tiggered when clicking the save button
-		 * create a new note or save
-		 */
-		saveNote() {
-			if (this.currentNoteId === -1) {
-				this.createNote(this.currentNote)
-			} else {
-				this.updateNote(this.currentNote)
-			}
-		},
-		/**
-		 * Create a new note and focus the note content field automatically
-		 * The note is not yet saved, therefore an id of -1 is used until it
-		 * has been persisted in the backend
-		 */
-		newNote() {
-			if (this.currentNoteId !== -1) {
-				this.currentNoteId = -1
-				this.notes.push({
-					id: -1,
-					title: '',
-					content: '',
-				})
-				this.$nextTick(() => {
-					this.$refs.title.focus()
-				})
-			}
-		},
-		/**
-		 * Abort creating a new note
-		 */
-		cancelNewNote() {
-			this.notes.splice(this.notes.findIndex((note) => note.id === -1), 1)
-			this.currentNoteId = null
-		},
-		/**
-		 * Create a new note by sending the information to the server
-		 * @param {Object} note Note object
-		 */
-		async createNote(note) {
-			this.updating = true
+		async deleteDuplicate(duplicate) {
 			try {
-				const response = await axios.post(generateUrl('/apps/duplicatefinder/notes'), note)
-				const index = this.notes.findIndex((match) => match.id === this.currentNoteId)
-				this.$set(this.notes, index, response.data)
-				this.currentNoteId = response.data.id
-			} catch (e) {
-				console.error(e)
-				showError(t('notestutorial', 'Could not create the note'))
-			}
-			this.updating = false
-		},
-		/**
-		 * Update an existing note on the server
-		 * @param {Object} note Note object
-		 */
-		async updateNote(note) {
-			this.updating = true
-			try {
-				await axios.put(generateUrl(`/apps/duplicatefinder/notes/${note.id}`), note)
-			} catch (e) {
-				console.error(e)
-				showError(t('notestutorial', 'Could not update the note'))
-			}
-			this.updating = false
-		},
-		/**
-		 * Delete a note, remove it from the frontend and show a hint
-		 * @param {Object} note Note object
-		 */
-		async deleteNote(note) {
-			try {
-				await axios.delete(generateUrl(`/apps/duplicatefinder/notes/${note.id}`))
-				this.notes.splice(this.notes.indexOf(note), 1)
-				if (this.currentNoteId === note.id) {
-					this.currentNoteId = null
+				await axios.delete(generateUrl(`/apps/duplicatefinder/duplicates/${duplicate.id}`))
+				this.duplicates.splice(this.duplicates.indexOf(duplicate), 1)
+				if (this.currentDuplicateId === duplicate.id) {
+					this.currentDuplicateId = null
 				}
-				showSuccess(t('duplicatefinder', 'Note deleted'))
+				showSuccess(t('duplicatefinder', 'Duplicate deleted'))
 			} catch (e) {
 				console.error(e)
-				showError(t('duplicatefinder', 'Could not delete the note'))
+				showError(t('duplicatefinder', 'Could not delete the duplicate'))
 			}
 		},
 	},
 }
 </script>
+
 <style scoped>
 	#app-content > div {
 		width: 100%;

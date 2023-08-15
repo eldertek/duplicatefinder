@@ -22,6 +22,6 @@ class PageController extends Controller
     public function index(): TemplateResponse
     {
         //
-        return new TemplateResponse(Application::ID, 'index');  // templates/index.php
+        return new TemplateResponse(Application::ID, 'App');
     }
 }
