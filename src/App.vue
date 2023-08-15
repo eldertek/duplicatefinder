@@ -12,10 +12,11 @@
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
 					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
 					<div class="file-details">
-						<p>File {{ index + 1 }}:</p>
-						<p>Hash: {{ file.fileHash }}</p>
-						<p>Path: {{ file.path }}</p>
+						<p><strong>File {{ index + 1 }}:</strong></p>
+						<p><strong>Hash:</strong> {{ file.fileHash }}</p>
+						<p><strong>Path:</strong> {{ file.path }}</p>
 					</div>
+					<button @click="deleteDuplicate(duplicate)" class="delete-button">Delete</button>
 				</div>
 			</div>
 			<div v-else id="emptycontent">
@@ -51,6 +52,14 @@ export default {
 			currentDuplicateId: null,
 			updating: false,
 			loading: true,
+
+			groupedResult: {
+				groupedItems: [],
+				totalSize: 0,
+				itemCount: 0,
+				uniqueTotalSize: 0
+			},
+
 		}
 	},
 	computed: {
@@ -98,12 +107,25 @@ export default {
 		openDuplicate(duplicate) {
 			this.currentDuplicateId = duplicate.id
 		},
-		async deleteDuplicate(duplicate) {
+		async deleteItem(item, e) {
 			try {
-				await axios.delete(generateUrl(`/apps/duplicatefinder/api/v1/duplicates/${duplicate.id}`))
-				this.duplicates.splice(this.duplicates.indexOf(duplicate), 1)
-				if (this.currentDuplicateId === duplicate.id) {
-					this.currentDuplicateId = null
+				function deleteItem(item, e) {
+					const fileClient = OC.Files.getClient();
+					let iconEl;
+					if (e.target.className === 'icon icon-delete') {
+						iconEl = e.target;
+					} else {
+						iconEl = e.target.getElementsByClassName('icon-delete')[0];
+					}
+					iconEl.classList.replace('icon-delete', 'icon-loading');
+
+					fileClient.remove(normalizeItemPath(item.path)).then(function () {
+						groupedResult.groupedItems.forEach(cleanGroupItems.bind(undefined, item));
+						updateTitleWithStats();
+					}).fail(function () {
+						iconEl.classList.replace('icon-loading', 'icon-delete');
+						OC.dialogs.alert('Error deleting the file: ' + normalizeItemPath(item.path), 'Error');
+					});
 				}
 				showSuccess(t('duplicatefinder', 'Duplicate deleted'))
 			} catch (e) {
@@ -113,6 +135,7 @@ export default {
 		},
 	},
 }
+
 </script>
 
 <style scoped>
@@ -135,38 +158,66 @@ textarea {
 }
 
 .file-display {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    border: 1px solid #e0e0e0;
-    padding: 10px;
-    border-radius: 5px;
+	display: flex;
+	align-items: center;
+	margin-bottom: 20px;
+	border: 1px solid #e0e0e0;
+	padding: 10px;
+	border-radius: 5px;
 }
 
 .thumbnail {
-    width: 80px;  /* Width of the thumbnail */
-    height: 80px; /* Height of the thumbnail */
-    background-size: cover;
-    background-position: center;
-    margin-right: 20px; /* Space between thumbnail and details */
-    border-radius: 5px;
-    flex-shrink: 0; /* Prevent thumbnail from shrinking */
+	width: 80px;
+	/* Width of the thumbnail */
+	height: 80px;
+	/* Height of the thumbnail */
+	background-size: cover;
+	background-position: center;
+	margin-right: 20px;
+	/* Space between thumbnail and details */
+	border-radius: 5px;
+	flex-shrink: 0;
+	/* Prevent thumbnail from shrinking */
 }
 
 .file-details {
-    flex-grow: 1; /* Allow details to take up remaining space */
+	flex-grow: 1;
+	/* Allow details to take up remaining space */
 }
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
-    .thumbnail {
-        width: 50px;
-        height: 50px;
-        margin-right: 10px;
-    }
+	.thumbnail {
+		width: 50px;
+		height: 50px;
+		margin-right: 10px;
+	}
 
-    .file-details p {
-        font-size: 14px;
-    }
+	.file-details p {
+		font-size: 14px;
+	}
 }
-</style>
+
+.delete-button {
+	background-color: #ff4b5a;
+	color: #fff;
+	border: none;
+	padding: 5px 10px;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	margin-left: 10px;
+	/* Space between the details and the button */
+}
+
+.delete-button:hover {
+	background-color: #e43f51;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+	.delete-button {
+		padding: 3px 7px;
+		font-size: 12px;
+	}
+}</style>
