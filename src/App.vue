@@ -112,17 +112,35 @@ export default {
 			try {
 				await fileClient.remove(this.normalizeItemPath(item.path));
 				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
+
 				// Remove the deleted item from the duplicates list in the UI
 				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
 				if (index !== -1) {
 					this.currentDuplicate.files.splice(index, 1);
 				}
+
+				// Check if only one file remains for the current hash
+				if (this.currentDuplicate.files.length === 1) {
+					const duplicateIndex = this.duplicates.findIndex(duplicate => duplicate.id === this.currentDuplicateId);
+
+					// Remove the hash from the navigation bar
+					this.duplicates.splice(duplicateIndex, 1);
+
+					// Switch to the next hash
+					if (this.duplicates[duplicateIndex]) {
+						this.openDuplicate(this.duplicates[duplicateIndex]);
+					} else if (this.duplicates[duplicateIndex - 1]) { // If current hash was the last, switch to the previous
+						this.openDuplicate(this.duplicates[duplicateIndex - 1]);
+					} else {
+						this.currentDuplicateId = null; // If no more hashes are left
+					}
+				}
+
 			} catch (e) {
 				console.error(e);
 				showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
 			}
 		}
-
 	},
 }
 
@@ -136,6 +154,8 @@ export default {
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
+    max-height: calc(100vh - 50px);
+    overflow-y: auto;
 }
 
 input[type='text'] {
@@ -150,7 +170,7 @@ textarea {
 .file-display {
 	display: flex;
 	align-items: center;
-	margin-bottom: 20px;
+	margin-bottom: 10px;
 	border: 1px solid #e0e0e0;
 	padding: 10px;
 	border-radius: 5px;
