@@ -1,7 +1,7 @@
 import { generateFilePath } from '@nextcloud/router'
 
 import Vue from 'vue'
-import App from './App'
+import Settings from './Settings.vue'
 
 // eslint-disable-next-line
 __webpack_public_path__ = generateFilePath(appName, '', 'js/')
@@ -10,5 +10,5 @@ Vue.mixin({ methods: { t, n } })
 
 export default new Vue({
 	el: '#settings-content',
-	render: h => h(App)
+	render: h => h(Settings)
 })
