@@ -107,9 +107,9 @@ export default {
 		openDuplicate(duplicate) {
 			this.currentDuplicateId = duplicate.id
 		},
-		async deleteDuplicate(item, e) {
+		async deleteDuplicate(duplicate) {
 			try {
-				await axios.delete(generateUrl(`/apps/duplicatefinder/api/v1/duplicates/${item.hash}/${item.type}`));
+				await axios.delete(generateUrl(`/apps/duplicatefinder/api/v1/duplicates/${duplicate.id}`));
 				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
 			} catch (e) {
 				console.error(e);

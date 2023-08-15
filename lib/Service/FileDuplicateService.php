@@ -36,7 +36,7 @@ class FileDuplicateService
     /**
      * @return FileDuplicate
      */
-    public function enrich(FileDuplicate $duplicate):FileDuplicate
+    public function enrich(FileDuplicate $duplicate): FileDuplicate
     {
         $files = $duplicate->getFiles();
         uasort($files, function (FileInfo $a, FileInfo $b) {
@@ -59,8 +59,8 @@ class FileDuplicateService
         ?int $limit = 20,
         ?int $offset = null,
         bool $enrich = false,
-        ?array $orderBy = [['hash'],['type']]
-    ):array {
+        ?array $orderBy = [['hash'], ['type']]
+    ): array {
         $result = array();
         $entities = null;
         do {
@@ -80,13 +80,13 @@ class FileDuplicateService
             }
             unset($entity);
         } while (count($result) < $limit && count($entities) === $limit);
-        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit );
+        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit);
     }
 
     private function stripFilesWithoutAccessRights(
         FileDuplicate $duplicate,
         ?string $user
-    ) : FileDuplicate {
+    ): FileDuplicate {
         $files = $this->fileInfoService->findByHash($duplicate->getHash(), $duplicate->getType());
         $duplicate->setFiles($files);
         if (is_null($user)) {
@@ -104,12 +104,12 @@ class FileDuplicateService
         return $duplicate;
     }
 
-    public function find(string $hash, string $type = 'file_hash'):FileDuplicate
+    public function find(string $hash, string $type = 'file_hash'): FileDuplicate
     {
         return $this->mapper->find($hash, $type);
     }
 
-    public function update(FileDuplicate $fileDuplicate):Entity
+    public function update(FileDuplicate $fileDuplicate): Entity
     {
         $fileDuplicate->setKeepAsPrimary(true);
         $fileDuplicate = $this->mapper->update($fileDuplicate);
@@ -117,7 +117,7 @@ class FileDuplicateService
         return $fileDuplicate;
     }
 
-    public function getOrCreate(string $hash, string $type = 'file_hash'):FileDuplicate
+    public function getOrCreate(string $hash, string $type = 'file_hash'): FileDuplicate
     {
         try {
             $fileDuplicate = $this->mapper->find($hash, $type);
@@ -133,7 +133,7 @@ class FileDuplicateService
         return $fileDuplicate;
     }
 
-    public function delete(string $hash, string $type = 'file_hash'):?FileDuplicate
+    public function delete(string $hash, string $type = 'file_hash'): ?FileDuplicate
     {
         try {
             $fileDuplicate = $this->mapper->find($hash, $type);
@@ -144,7 +144,22 @@ class FileDuplicateService
         }
     }
 
-    public function clear():void
+    public function deleteDuplicate(int $id): ?FileDuplicate
+    {
+        try {
+            $fileDuplicate = $this->mapper->find($id);
+            $fileInfo = $this->fileInfoService->find($fileDuplicate->getFileId());
+            $userFolder = \OC::$server->getUserFolder($fileInfo->getUserId());
+            $file = $userFolder->get($fileInfo->getPath());
+            $file->delete();
+            $this->mapper->delete($fileDuplicate);
+            return $fileDuplicate;
+        } catch (DoesNotExistException $e) {
+            return null;
+        }
+    }
+
+    public function clear(): void
     {
         $this->mapper->clear();
     }
