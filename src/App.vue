@@ -11,9 +11,11 @@
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
 					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
-					<p>File {{ index + 1 }}:</p>
-					<p>Hash: {{ file.fileHash }}</p>
-					<p>Path: {{ file.path }}</p>
+					<div class="file-details">
+						<p>File {{ index + 1 }}:</p>
+						<p>Hash: {{ file.fileHash }}</p>
+						<p>Path: {{ file.path }}</p>
+					</div>
 				</div>
 			</div>
 			<div v-else id="emptycontent">
@@ -133,9 +135,38 @@ textarea {
 }
 
 .file-display {
-	width: 50%;
-	float: left;
-	padding: 20px;
-	box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.thumbnail {
+    width: 80px;  /* Width of the thumbnail */
+    height: 80px; /* Height of the thumbnail */
+    background-size: cover;
+    background-position: center;
+    margin-right: 20px; /* Space between thumbnail and details */
+    border-radius: 5px;
+    flex-shrink: 0; /* Prevent thumbnail from shrinking */
+}
+
+.file-details {
+    flex-grow: 1; /* Allow details to take up remaining space */
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .thumbnail {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+    }
+
+    .file-details p {
+        font-size: 14px;
+    }
 }
 </style>
