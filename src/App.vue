@@ -107,9 +107,9 @@ export default {
 		openDuplicate(duplicate) {
 			this.currentDuplicateId = duplicate.id
 		},
-		async deleteItem(item, e) {
+		async deleteDuplicate(item, e) {
 			try {
-				function deleteItem(item, e) {
+				function deleteDuplicate(item, e) {
 					const fileClient = OC.Files.getClient();
 					let iconEl;
 					if (e.target.className === 'icon icon-delete') {
@@ -220,4 +220,5 @@ textarea {
 		padding: 3px 7px;
 		font-size: 12px;
 	}
-}</style>
+}
+</style>
