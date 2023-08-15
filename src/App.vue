@@ -148,6 +148,10 @@ export default {
 
 <style scoped>
 
+.app-content {
+	overflow-y: auto;
+}
+
 #app-content>div {
 	width: 100%;
 	height: 100%;

@@ -34,13 +34,6 @@
 </template>
   
 <script>
-import {
-    SettingsFrame,
-    SettingsPageTitle,
-    SettingsGrid,
-    FilterBuilder,
-} from 'nextcloud-vue';
-
 export default {
     name: 'Settings',
     data() {
