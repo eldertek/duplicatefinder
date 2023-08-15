@@ -147,6 +147,10 @@ export default {
 </script>
 
 <style scoped>
+#app-content {
+	overflow-y: auto;
+}
+
 #app-content>div {
 	width: 100%;
 	height: 100%;
@@ -154,10 +158,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
-}
-
-#content {
-	overflow-y: auto;
 }
 
 .file-display {

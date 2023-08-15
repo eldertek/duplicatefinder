@@ -1,3 +1,5 @@
 <?php
-script('duplicatefinder', 'duplicatefinder-main');
+script('duplicatefinder', 'duplicatefinder-settings');
 ?>
+
+<div id="settings-content"></div>
