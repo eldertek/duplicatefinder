@@ -27,18 +27,15 @@ import { NcCheckboxRadioSwitch, NcAppSettingsSection, NcInputField } from '@next
 
 export default {
     name: 'Settings',
-    data() {
-        return {
-            settings: {},
-            filter: {},
-        };
-    },
     created() {
-        const viewData = this.$store.state.SettingsView;
-        if (viewData && viewData.settings) {
-            this.settings = viewData.settings;
-            this.filter = viewData.filter;
-        }
+        axios.get('/apps/duplicatefinder/api/v1/settings')
+            .then(response => {
+                this.settings = response.data;
+                console.error(response.data)
+            })
+            .catch(error => {
+                console.error(error);
+            });
     },
     methods: {
         gettext(message) {

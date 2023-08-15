@@ -47,7 +47,7 @@ class Admin implements ISubAdminSettings
 
         $settings = $settingsApiController->list()->getData();
 
-        return new TemplateResponse(Application::ID, 'Settings', ['settings' => $settings], '');
+        return new TemplateResponse(Application::ID, 'Settings');
     }
 
     public function getSection(): string
