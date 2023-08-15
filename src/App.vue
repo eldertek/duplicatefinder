@@ -8,7 +8,7 @@
 			</ul>
 		</AppNavigation>
 		<AppContent>
-			<div class="file-list" v-if="currentDuplicate && currentDuplicate.files.length > 0">
+			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
 					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
 					<div class="file-details">
@@ -147,9 +147,6 @@ export default {
 </script>
 
 <style scoped>
-#app-content {
-	overflow-y: auto;
-}
 
 #app-content>div {
 	width: 100%;
