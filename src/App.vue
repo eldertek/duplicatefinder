@@ -1,29 +1,27 @@
 <template>
-    <div id="content" class="app-duplicatefinder">
-        <AppNavigation>
-            <ul>
-                <AppNavigationItem v-for="duplicate in duplicates"
-                    :key="duplicate.id"
-                    :title="duplicate.hash"
-                    :class="{active: currentDuplicateId === duplicate.id}"
-                    @click="openDuplicate(duplicate)">
-                </AppNavigationItem>
-            </ul>
-        </AppNavigation>
-        <AppContent>
-            <div v-if="currentDuplicate && currentDuplicate.files.length > 0">
-                <div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
-                    <p>File {{ index + 1 }}:</p>
-                    <p>Hash: {{ file.fileHash }}</p>
-                    <p>Path: {{ file.path }}</p>
-                </div>
-            </div>
-            <div v-else id="emptycontent">
-                <div class="icon-file" />
-                <h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
-            </div>
-        </AppContent>
-    </div>
+	<div id="content" class="app-duplicatefinder">
+		<AppNavigation>
+			<ul>
+				<AppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :title="duplicate.hash"
+					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+				</AppNavigationItem>
+			</ul>
+		</AppNavigation>
+		<AppContent>
+			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
+				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
+					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
+					<p>File {{ index + 1 }}:</p>
+					<p>Hash: {{ file.fileHash }}</p>
+					<p>Path: {{ file.path }}</p>
+				</div>
+			</div>
+			<div v-else id="emptycontent">
+				<div class="icon-file" />
+				<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+			</div>
+		</AppContent>
+	</div>
 </template>
 
 <script>
@@ -72,6 +70,29 @@ export default {
 		this.loading = false
 	},
 	methods: {
+		getPreviewImage(item) {
+			if (this.isImage(item) || this.isVideo(item)) {
+				const query = new URLSearchParams({
+					file: this.normalizeItemPath(item.path),
+					fileId: item.nodeId,
+					x: 500,
+					y: 500,
+					forceIcon: 0
+				});
+				return OC.generateUrl('/core/preview.png?') + query.toString();
+			}
+
+			return OC.MimeType.getIconUrl(item.mimetype);
+		},
+		isImage(item) {
+			return item.mimetype.substr(0, item.mimetype.indexOf('/')) === 'image';
+		},
+		isVideo(item) {
+			return item.mimetype.substr(0, item.mimetype.indexOf('/')) === 'video';
+		},
+		normalizeItemPath(path) {
+			return path.match(/\/([^/]*)\/files(\/.*)/)[2];
+		},
 		openDuplicate(duplicate) {
 			this.currentDuplicateId = duplicate.id
 		},
@@ -93,28 +114,28 @@ export default {
 </script>
 
 <style scoped>
-	#app-content > div {
-		width: 100%;
-		height: 100%;
-		padding: 20px;
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-	}
+#app-content>div {
+	width: 100%;
+	height: 100%;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+}
 
-	input[type='text'] {
-		width: 100%;
-	}
+input[type='text'] {
+	width: 100%;
+}
 
-	textarea {
-		flex-grow: 1;
-		width: 100%;
-	}
+textarea {
+	flex-grow: 1;
+	width: 100%;
+}
 
-    .file-display {
-        width: 50%;
-        float: left;
-        padding: 20px;
-        box-sizing: border-box;
-    }
+.file-display {
+	width: 50%;
+	float: left;
+	padding: 20px;
+	box-sizing: border-box;
+}
 </style>
