@@ -154,17 +154,10 @@ export default {
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
-    max-height: calc(100vh - 50px);
-    overflow-y: auto;
 }
 
-input[type='text'] {
-	width: 100%;
-}
-
-textarea {
-	flex-grow: 1;
-	width: 100%;
+.app-duplicatefinder {
+	overflow-y: auto;
 }
 
 .file-display {
