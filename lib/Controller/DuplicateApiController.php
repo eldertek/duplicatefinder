@@ -20,7 +20,7 @@ class DuplicateApiController extends AbstractAPIController
     /** @var FileInfoService */
     private $fileInfoService;
 
-    protected function success($responseData = null): JSONResponse
+    public function success($responseData = null): JSONResponse
     {
         return new JSONResponse([
             'status' => 'success',
