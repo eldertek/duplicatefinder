@@ -2,12 +2,11 @@
 	<div id="content" class="app-duplicatefinder">
 		<AppNavigation>
 			<ul>
-				<AppNavigationItem v-for="entity in duplicates.entities"
-					:key="entity.id"
-					:title="entity.hash"
-					:class="{active: currentDuplicateId === entity.id}"
-					@click="openDuplicate(entity)">
-					@mounted="logEntity(entity)">
+				<AppNavigationItem v-for="duplicate in duplicates"
+					:key="duplicate.id"
+					:title="duplicate.hash"
+					:class="{active: currentDuplicateId === duplicate.id}"
+					@click="openDuplicate(duplicate)">
 				</AppNavigationItem>
 			</ul>
 		</AppNavigation>
@@ -64,7 +63,7 @@ export default {
 	async mounted() {
 		try {
 			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/duplicates'))
-			this.duplicates = response.data
+			this.duplicates = response.data.entities
 		} catch (e) {
 			console.error(e)
 			showError(t('duplicatefinder', 'Could not fetch duplicates'))
@@ -72,9 +71,6 @@ export default {
 		this.loading = false
 	},
 	methods: {
-		logEntity(entity) {
-			console.log(entity)
-		},
 		openDuplicate(duplicate) {
 			this.currentDuplicateId = duplicate.id
 		},
