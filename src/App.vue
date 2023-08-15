@@ -1,6 +1,6 @@
 <template>
 	<div id="content" class="app-duplicatefinder">
-		<AppNavigation>
+		<AppNavigation v-if="duplicates.length > 0">
 			<ul>
 				<AppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :title="duplicate.hash"
 					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">

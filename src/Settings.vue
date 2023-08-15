@@ -1,39 +1,30 @@
 <template>
-    <SettingsFrame>
-        <SettingsPageTitle :help="'https://github.com/eldertek/duplicatefinder'"
-            :label="'(' + gettext('Version: ') + (settings.installed_version || 'n.a.') + ')'"
-            :description="gettext('Adjust these settings to make the process of finding duplicates your own.')">
-            {{ gettext('Duplicate Finder') }}
-        </SettingsPageTitle>
-        <SettingsGrid>
-            <Setting setting="ignore_mounted_files" type="checkbox"
-                :hint="gettext('When true, files mounted on external storage will be ignored...')"
-                :value="settings.ignore_mounted_files">
-                {{ gettext('Ignore Mounted Files') }}
-            </Setting>
+    <NcAppSettingsSection :title="gettext('Duplicate Finder')">
+        <NcCheckboxRadioSwitch :label="gettext('Ignore Mounted Files')" :value="settings.ignore_mounted_files"
+            @input="updateSetting('ignore_mounted_files', $event)">
+            <template #hint>{ gettext('When true, files mounted on external storage will be ignored...') }</template>
+        </NcCheckboxRadioSwitch>
 
-            <Setting setting="disable_filesystem_events" type="checkbox"
-                :hint="gettext('When true, the event-based detection will be disabled...')"
-                :value="settings.disable_filesystem_events">
-                {{ gettext('Disable event-based detection') }}
-            </Setting>
+        <NcCheckboxRadioSwitch :label="gettext('Disable event-based detection')" :value="settings.disable_filesystem_events"
+            @input="updateSetting('disable_filesystem_events', $event)">
+            <template #hint>{ gettext('When true, the event-based detection will be disabled...') }</template>
+        </NcCheckboxRadioSwitch>
 
-            <Setting setting="backgroundjob_interval_cleanup" type="text"
-                :hint="gettext('Interval in seconds in which the clean-up background job will be run')"
-                :value="settings.backgroundjob_interval_cleanup">
-                {{ gettext('Background Job Interval (Cleanup)') }}
-            </Setting>
+        <NcInputField :label="gettext('Background Job Interval (Cleanup)')"
+            :value="settings.backgroundjob_interval_cleanup" @input="updateSetting('backgroundjob_interval_cleanup', $event)">
+            <template #hint>{ gettext('Interval in seconds in which the clean-up background job will be run...') }</template>
+        </NcInputField>
 
-            <Setting setting="backgroundjob_interval_find" type="text"
-                :hint="gettext('Interval in seconds in which the background job, to find duplicates, will be run')"
-                :value="settings.backgroundjob_interval_find">
-                {{ gettext('Background Job Interval (Find Duplicates)') }}
-            </Setting>
-        </SettingsGrid>
-    </SettingsFrame>
+        <NcInputField :label="gettext('Background Job Interval (Find Duplicates)')"
+            :value="settings.backgroundjob_interval_find" @input="updateSetting('backgroundjob_interval_find', $event)">
+            <template #hint>{ gettext('Interval in seconds in which the background job, to find duplicates, will be run...') }</template>
+        </NcInputField>
+    </NcAppSettingsSection>
 </template>
   
 <script>
+import { NcCheckboxRadioSwitch, NcAppSettingsSection, NcInputField } from '@nextcloud/vue'
+
 export default {
     name: 'Settings',
     data() {
