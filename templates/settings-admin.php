@@ -1,23 +1,4 @@
 <?php
-// Create an instance of SettingsApiController
-$settingsApiController = new \OCA\DuplicateFinder\Controller\SettingsApiController(/* parameters */);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Gather form data
-    $config = [
-        'ignore_mounted_files' => isset($_POST['ignore_mounted_files']),
-        'disable_filesystem_events' => isset($_POST['disable_filesystem_events']),
-        'backgroundjob_interval_find' => $_POST['backgroundjob_interval_find'],
-        'backgroundjob_interval_cleanup' => $_POST['backgroundjob_interval_cleanup'],
-    ];
-
-    // Save new settings
-    $settingsApiController->save($config);
-}
-
-// Fetch the settings from the server
-$settings = $settingsApiController->list()->getData();
-
 // Extract the settings
 $ignoreMountedFiles = $settings['ignore_mounted_files'];
 $disableEventBasedDetection = $settings['disable_filesystem_events'];
