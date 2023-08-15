@@ -32,8 +32,8 @@ export default {
     created() {
         axios.get(generateUrl('/apps/duplicatefinder/api/v1/settings'))
             .then(response => {
-                this.settings = response.data;
-                console.error(response.data)
+                this.settings = response.data.data;
+                console.error(response.data.data)
             })
             .catch(error => {
                 console.error(error);
