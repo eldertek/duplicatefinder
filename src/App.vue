@@ -2,19 +2,11 @@
 	<div id="content" class="app-duplicatefinder">
 		<AppNavigation>
 			<ul>
-				<AppNavigationItem v-for="duplicate in duplicates"
-					:key="duplicate.id"
-					:title="duplicate.hash"
-					:class="{active: currentDuplicateId === duplicate.id}"
-					@click="openDuplicate(duplicate)">
-					<template slot="actions">
-						<ActionButton
-							icon="icon-delete"
-							@click="deleteDuplicate(duplicate)">
-							{{
-							 t('duplicatefinder', 'Delete duplicate') }}
-						</ActionButton>
-					</template>
+				<AppNavigationItem v-for="entity in duplicates.entities"
+					:key="entity.id"
+					:title="entity.hash"
+					:class="{active: currentDuplicateId === entity.id}"
+					@click="openDuplicate(entity)">
 				</AppNavigationItem>
 			</ul>
 		</AppNavigation>
