@@ -156,7 +156,7 @@ export default {
 	flex-grow: 1;
 }
 
-.file-list {
+#content {
 	overflow-y: auto;
 }
 
