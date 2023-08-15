@@ -33,15 +33,8 @@ $cleanupInterval = $settings['backgroundjob_interval_cleanup'];
                     <div class="css-1g7fhnh">Interval in seconds in which the clean-up background job will be run.</div>
                 </div>
                 <div class="css-1eyazhx">
-                    <input id="setting_6" type="number" variant="conversion" class="css-qjp5a6" value="<?php echo $detectionInterval; ?>">
-                    <select class="css-1ojds2j">
-                        <option value="second">second</option>
-                        <option value="minute">minute</option>
-                        <option value="hour">hour</option>
-                        <option value="day">day</option>
-                        <option value="week">week</option>
-                        <option value="month">month</option>
-                    </select><span class="css-1wr6z7j">172800 second</span>
+                    <input id="setting_6" type="number" variant="conversion" class="css-qjp5a6"
+                        value="<?php echo $detectionInterval; ?>">
                 </div>
             </div>
             <div class="css-rwkpl7">
@@ -50,15 +43,8 @@ $cleanupInterval = $settings['backgroundjob_interval_cleanup'];
                         be run.</div>
                 </div>
                 <div class="css-1eyazhx">
-                    <input id="setting_8" type="number" variant="conversion" class="css-qjp5a6" value="<?php echo $cleanupInterval; ?>">
-                    <select class="css-1ojds2j">
-                        <option value="second">second</option>
-                        <option value="minute">minute</option>
-                        <option value="hour">hour</option>
-                        <option value="day">day</option>
-                        <option value="week">week</option>
-                        <option value="month">month</option>
-                    </select><span class="css-1wr6z7j">86400 second</span>
+                    <input id="setting_8" type="number" variant="conversion" class="css-qjp5a6"
+                        value="<?php echo $cleanupInterval; ?>">
                 </div>
             </div>
         </div>
@@ -67,3 +53,37 @@ $cleanupInterval = $settings['backgroundjob_interval_cleanup'];
     </div>
     <div class="css-7jxi8x"></div>
 </div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".css-d5kv4l").click(function (e) {
+            e.preventDefault();
+
+            // Collect data from the form
+            var ignoreMountedFiles = $("#setting_2").is(":checked");
+            var disableEventBasedDetection = $("#setting_4").is(":checked");
+            var detectionInterval = $("#setting_6").val();
+            var cleanupInterval = $("#setting_8").val();
+
+            // Send the data
+            $.ajax({
+                url: '/apps/duplicatefinder/api/v1/Settings',
+                type: 'PATCH',
+                data: {
+                    ignore_mounted_files: ignoreMountedFiles,
+                    disable_filesystem_events: disableEventBasedDetection,
+                    backgroundjob_interval_find: detectionInterval,
+                    backgroundjob_interval_cleanup: cleanupInterval
+                },
+                success: function (data, status) {
+                    alert("Data: " + data + "\nStatus: " + status);
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                    alert(thrownError);
+                }
+            });
+        });
+    });
+</script>
