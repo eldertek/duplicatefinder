@@ -20,6 +20,14 @@ class DuplicateApiController extends AbstractAPIController
     /** @var FileInfoService */
     private $fileInfoService;
 
+    protected function success($responseData = null): JSONResponse
+    {
+        return new JSONResponse([
+            'status' => 'success',
+            'data' => $responseData
+        ]);
+    }
+
     public function __construct(
         $appName,
         IRequest $request,
@@ -44,6 +52,21 @@ class DuplicateApiController extends AbstractAPIController
             return $this->success($duplicates);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            return $this->handleException($e);
+        }
+    }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function delete(int $id): JSONResponse
+    {
+        try {
+            $this->fileDuplicateService->deleteDuplicate($id);
+            return $this->success();
+        } catch (\Exception $e) {
+            $this->logger->error('An unknown exception occurred', ['app' => Application::ID, 'exception' => $e]);
             return $this->handleException($e);
         }
     }

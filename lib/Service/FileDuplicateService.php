@@ -153,7 +153,7 @@ class FileDuplicateService
             $file = $userFolder->get($fileInfo->getPath());
             $file->delete();
             $this->mapper->delete($fileDuplicate);
-            return $fileDuplicate;
+            return null;
         } catch (DoesNotExistException $e) {
             return null;
         }
