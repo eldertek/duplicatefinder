@@ -16,7 +16,7 @@
 						<p><strong>Hash:</strong> {{ file.fileHash }}</p>
 						<p><strong>Path:</strong> {{ file.path }}</p>
 					</div>
-					<button @click="deleteDuplicate(duplicate)" class="delete-button">Delete</button>
+					<button @click="deleteDuplicate(file)" class="delete-button">Delete</button>
 				</div>
 			</div>
 			<div v-else id="emptycontent">
@@ -107,9 +107,9 @@ export default {
 		openDuplicate(duplicate) {
 			this.currentDuplicateId = duplicate.id
 		},
-		async deleteDuplicate(duplicate) {
+		async deleteDuplicate(item) {
 			try {
-				await axios.delete(generateUrl(`/apps/duplicatefinder/api/v1/duplicates/${duplicate.id}`));
+				await axios.delete(generateUrl(`/apps/duplicatefinder/api/v1/duplicates/${item.id}`));
 				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
 			} catch (e) {
 				console.error(e);
