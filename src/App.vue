@@ -63,7 +63,7 @@ export default {
 	async mounted() {
 		try {
 			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/duplicates'))
-			this.duplicates = response.data.entities
+			this.duplicates = response.data.data.entities
 		} catch (e) {
 			console.error(e)
 			showError(t('duplicatefinder', 'Could not fetch duplicates'))
