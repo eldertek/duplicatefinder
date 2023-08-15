@@ -24,11 +24,13 @@
   
 <script>
 import { NcCheckboxRadioSwitch, NcAppSettingsSection, NcInputField } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
+import axios from '@nextcloud/axios'
 
 export default {
     name: 'Settings',
     created() {
-        axios.get('/apps/duplicatefinder/api/v1/settings')
+        axios.get(generateUrl('/apps/duplicatefinder/api/v1/settings'))
             .then(response => {
                 this.settings = response.data;
                 console.error(response.data)
