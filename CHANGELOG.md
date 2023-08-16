@@ -1,6 +1,7 @@
 # 1.0.1
 - Added new preview in appstore
 - Added new user interface and administration section
+- Added translation support (english, french)
 - Updated dependencies
 - Removed support of ignored file configuration from web interface
 # 1.0.0

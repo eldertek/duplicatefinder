@@ -1,23 +1,24 @@
 <template>
   <div id="duplicatefinder_settings_form">
+    <h2>Duplicate Finder Settings</h2>
     <NcSettingsSection name="Ignore Mounted Files"
       description="When true, files mounted on external storage will be ignored..." :limit-width="true">
-      <NcCheckboxRadioSwitch :checked.sync="settings.ignore_mounted_files">Ignore mounted file</NcCheckboxRadioSwitch>
+      <NcCheckboxRadioSwitch :checked.sync="settings.ignore_mounted_files" @input="saveSettings">Ignore mounted file</NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
     <NcSettingsSection name="Disable Filesystem Events"
       description="When true, the event-based detection will be disabled..." :limit-width="true">
-      <NcCheckboxRadioSwitch :checked.sync="settings.disable_filesystem_events">Disable filesystem events</NcCheckboxRadioSwitch>
+      <NcCheckboxRadioSwitch :checked.sync="settings.disable_filesystem_events" @input="saveSettings">Disable filesystem events</NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
     <NcSettingsSection name="Background Job Cleanup Interval (seconds)"
       description="The interval in seconds for the cleanup background job..." :limit-width="true">
-      <NcTextField :value.sync="settings.backgroundjob_interval_cleanup"></NcTextField>
+      <NcTextField :value.sync="settings.backgroundjob_interval_cleanup" @input="saveSettings"></NcTextField>
     </NcSettingsSection>
 
     <NcSettingsSection name="Background Job Find Duplicates Interval (seconds)"
       description="The interval in seconds for the find duplicates background job..." :limit-width="true">
-      <NcTextField :value.sync="settings.backgroundjob_interval_find"></NcTextField>
+      <NcTextField :value.sync="settings.backgroundjob_interval_find" @input="saveSettings"></NcTextField>
     </NcSettingsSection>
   </div>
 </template>
@@ -26,6 +27,14 @@
 import { NcSettingsSection, NcCheckboxRadioSwitch, NcTextField } from '@nextcloud/vue'
 
 export default {
+  async mounted() {
+    try {
+      const response = await this.$axios.get('/apps/duplicatefinder/api/v1/settings');
+      this.settings = response.data.data;
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    }
+  },
   components: {
     NcSettingsSection,
     NcCheckboxRadioSwitch,
@@ -33,19 +42,17 @@ export default {
   },
   data() {
     return {
-      settings: {
-        ignore_mounted_files: false,
-        disable_filesystem_events: false,
-        backgroundjob_interval_cleanup: 432000,
-        backgroundjob_interval_find: 172800,
-        ignored_files: "[]"
-      }
+      settings: {}
     }
   },
   methods: {
     saveSettings() {
-      // Logic to save the settings data
-    }
+      this.$axios.post('/apps/duplicatefinder/api/v1/settings', this.settings).then(response => {
+        console.log("Settings saved successfully:", response.data);
+      }).catch(error => {
+        console.error("Error saving settings:", error);
+      });
+    },
   }
 }
 </script>
