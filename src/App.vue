@@ -9,8 +9,7 @@
 		</NcAppNavigation>
 		<NcAppContent>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0" class="summary-section">
-				<p>Welcome, you have {{ numberOfDuplicates }} duplicates, total size: {{ totalSizeOfDuplicates | formatSize
-				}}</p>
+				<p>Welcome, you have {{ numberOfDuplicates }} duplicates, total size: {{ formattedSizeOfDuplicates }}</p>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
@@ -71,6 +70,9 @@ export default {
 		},
 		totalSizeOfDuplicates() {
 			return this.duplicates.reduce((acc, duplicate) => acc + duplicate.files.reduce((a, file) => a + file.size, 0), 0);
+		},
+		formattedSizeOfDuplicates() {
+			return OC.Util.humanFileSize(this.totalSizeOfDuplicates);
 		},
 		numberOfDuplicates() {
 			return this.duplicates.length;
@@ -237,5 +239,6 @@ export default {
 	background-color: #f7f7f7;
 	border-radius: 5px;
 	font-weight: bold;
+	text-align: center;
 }
 </style>
