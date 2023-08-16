@@ -70,7 +70,7 @@ export default {
         ignore_mounted_files: this.settings.ignore_mounted_files
       };
 
-      axios.post(generateUrl('/apps/duplicatefinder/api/v1/settings'), config)
+      axios.post(generateUrl('/apps/duplicatefinder/api/v1/settings'), { config: this.settings })
         .then(response => {
           showSuccess(t('duplicatefinder', 'Settings saved'));
         })
