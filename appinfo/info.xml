@@ -9,7 +9,7 @@
     <name>Duplicate Finder</name>
     <summary>Save some space by finding your duplicate files</summary>
     <description>Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?</description>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <licence>agpl</licence>
     <author mail="andrelauret@eclipse-technology.eu" >André Théo LAURET</author>
     <namespace>DuplicateFinder</namespace>

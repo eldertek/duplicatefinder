@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Nextcloud 3.14159\n"
 "Report-Msgid-Bugs-To: translations\\@example.com\n"
-"POT-Creation-Date: 2021-11-05 05:13+0100\n"
+"POT-Creation-Date: 2023-08-16 18:25+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,78 +17,144 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:19
-msgid "Version: "
-msgstr ""
-
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:20
-msgid ""
-"Adjust these settings to make the process of finding duplicates your own."
-msgstr ""
-
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:22
-#: /home/chrros95/git/nextcloud/duplicatefinder/lib/Settings/Section.php:32
-#: /home/chrros95/git/nextcloud/duplicatefinder/specialAppInfoFakeDummyForL10nScript.php:2
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/lib/Settings/Section.php:34
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialAppInfoFakeDummyForL10nScript.php:2
 msgid "Duplicate Finder"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:28
-msgid ""
-"When true, files mounted on external storage will be ignored. Computing the "
-"hash for an external file may require transferring the whole file to the "
-"Nextcloud server. So, this setting can be useful when you need to reduce "
-"traffic e.g if you need to pay for the traffic."
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialAppInfoFakeDummyForL10nScript.php:3
+msgid "Save some space by finding your duplicate files"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:31
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialAppInfoFakeDummyForL10nScript.php:4
+msgid ""
+"Are you tired of sifting through piles of files and folders, only to "
+"discover multiple copies of the same content cluttering your storage space?"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:12
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:2
+msgid ""
+"Welcome, the current duplicate has {numberOfFiles} files, total size: "
+"{formattedSize}"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:20
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:4
+msgid "File"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:21
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:6
+msgid "Hash:"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:22
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:8
+msgid "Path:"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:24
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:10
+msgid "Delete"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:30
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:12
+msgid "No duplicates found or no duplicate selected."
+msgstr ""
+
+#. TRANSLATORS src/App.vue:96
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:14
+msgid "Could not fetch duplicates"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:131
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:16
+msgid "Duplicate deleted"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:158
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:18
+msgid "Could not delete the duplicate at path: ${item.path}"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:3
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:20
+msgid "Duplicate Finder Settings"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:4
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:22
+msgid "All general settings to modify Duplicate Finder behaviors."
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:8
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:24
 msgid "Ignore Mounted Files"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:36
-msgid ""
-"When true, the event-based detection will be disabled. This gives you more "
-"control when the hashes are generated."
+#. TRANSLATORS src/Settings.vue:9
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:26
+msgid "When true, files mounted on external storage will be ignored."
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:39
-msgid "Disable event-based detection"
+#. TRANSLATORS src/Settings.vue:11
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:28
+msgid "Ignore mounted file"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:48
-msgid "Interval in seconds in which the clean-up background job will be run."
+#. TRANSLATORS src/Settings.vue:15
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:30
+msgid "Disable Filesystem Events"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:51
-msgid "Detection Interval"
+#. TRANSLATORS src/Settings.vue:16
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:32
+msgid "When true, the event-based detection will be disabled."
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:60
-msgid ""
-"Interval in seconds in which the background job, to find duplicates, will be "
-"run."
+#. TRANSLATORS src/Settings.vue:18
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:34
+msgid "Disable filesystem events"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:63
-msgid "Cleanup Interval"
+#. TRANSLATORS src/Settings.vue:22
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:36
+msgid "Background Job Cleanup Interval (seconds)"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/App.js:66
-msgid "Ignored Files"
+#. TRANSLATORS src/Settings.vue:23
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:38
+msgid "The interval in seconds for the cleanup background job."
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/sagas/settingsSagas.js:92
-msgid "Loading Settings"
+#. TRANSLATORS src/Settings.vue:28
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:40
+msgid "Background Job Find Duplicates Interval (seconds)"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/sagas/settingsSagas.js:110
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/sagas/settingsSagas.js:111
-msgid "Failed to load settings"
+#. TRANSLATORS src/Settings.vue:29
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:42
+msgid "The interval in seconds for the find duplicates background job."
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/sagas/settingsSagas.js:120
-msgid "Saved setting "
+#. TRANSLATORS src/Settings.vue:34
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:44
+msgid "Save"
 msgstr ""
 
-#: /home/chrros95/git/nextcloud/duplicatefinder/js-src/settings/sagas/settingsSagas.js:122
-msgid "Failed to save setting "
+#. TRANSLATORS src/Settings.vue:51
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:46
+msgid "Could not fetch settings"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:68
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:48
+msgid "Settings saved"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:70
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:50
+msgid "Could not save settings"
 msgstr ""

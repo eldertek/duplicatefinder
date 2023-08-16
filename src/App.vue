@@ -1,69 +1,42 @@
 <template>
-    <!--
-    SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
-    SPDX-License-Identifier: AGPL-3.0-or-later
-    -->
 	<div id="content" class="app-duplicatefinder">
-		<AppNavigation>
-			<AppNavigationNew v-if="!loading"
-				:text="t('duplicatefinder', 'New note')"
-				:disabled="false"
-				button-id="new-duplicatefinder-button"
-				button-class="icon-add"
-				@click="newNote" />
+		<NcAppNavigation v-if="duplicates.length > 0">
 			<ul>
-				<AppNavigationItem v-for="note in notes"
-					:key="note.id"
-					:title="note.title ? note.title : t('duplicatefinder', 'New note')"
-					:class="{active: currentNoteId === note.id}"
-					@click="openNote(note)">
-					<template slot="actions">
-						<ActionButton v-if="note.id === -1"
-							icon="icon-close"
-							@click="cancelNewNote(note)">
-							{{
-							t('duplicatefinder', 'Cancel note creation') }}
-						</ActionButton>
-						<ActionButton v-else
-							icon="icon-delete"
-							@click="deleteNote(note)">
-							{{
-							 t('duplicatefinder', 'Delete note') }}
-						</ActionButton>
-					</template>
-				</AppNavigationItem>
+				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
+					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+				</NcAppNavigationItem>
 			</ul>
-		</AppNavigation>
-		<AppContent>
-			<div v-if="currentNote">
-				<input ref="title"
-					v-model="currentNote.title"
-					type="text"
-					:disabled="updating">
-				<textarea ref="content" v-model="currentNote.content" :disabled="updating" />
-				<input type="button"
-					class="primary"
-					:value="t('duplicatefinder', 'Save')"
-					:disabled="updating || !savePossible"
-					@click="saveNote">
+		</NcAppNavigation>
+		<NcAppContent>
+			<div v-if="currentDuplicate && currentDuplicate.files.length > 0" class="summary-section">
+				<p>{{ t('duplicatefinder',
+					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
+					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}</p>
+			</div>
+			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
+				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
+					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
+					<div class="file-details">
+						<p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}:</strong></p>
+						<p><strong>{{ t('duplicatefinder', 'Hash:') }}</strong> {{ file.fileHash }}</p>
+						<p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ file.path }}</p>
+					</div>
+					<button @click="deleteDuplicate(file)" class="delete-button">{{ t('duplicatefinder', 'Delete')
+					}}</button>
+				</div>
 			</div>
 			<div v-else id="emptycontent">
 				<div class="icon-file" />
-				<h2>{{
-				 t('duplicatefinder', 'Create a note to get started') }}</h2>
+				<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
 			</div>
-		</AppContent>
+		</NcAppContent>
 	</div>
 </template>
 
 <script>
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import AppContent from '@nextcloud/vue/dist/Components/AppContent'
-import AppNavigation from '@nextcloud/vue/dist/Components/AppNavigation'
-import AppNavigationItem from '@nextcloud/vue/dist/Components/AppNavigationItem'
-import AppNavigationNew from '@nextcloud/vue/dist/Components/AppNavigationNew'
 
-import '@nextcloud/dialogs/styles/toast.scss'
+import { NcAppContent, NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue'
+
 import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
@@ -71,171 +44,210 @@ import axios from '@nextcloud/axios'
 export default {
 	name: 'App',
 	components: {
-		ActionButton,
-		AppContent,
-		AppNavigation,
-		AppNavigationItem,
-		AppNavigationNew,
+		NcAppContent,
+		NcAppNavigation,
+		NcAppNavigationItem,
 	},
 	data() {
 		return {
-			notes: [],
-			currentNoteId: null,
+			duplicates: [],
+			currentDuplicateId: null,
 			updating: false,
 			loading: true,
+
+			groupedResult: {
+				groupedItems: [],
+				totalSize: 0,
+				itemCount: 0,
+				uniqueTotalSize: 0
+			},
+
 		}
 	},
 	computed: {
-		/**
-		 * Return the currently selected note object
-		 * @returns {Object|null}
-		 */
-		currentNote() {
-			if (this.currentNoteId === null) {
-				return null
+		currentDuplicate() {
+			if (this.currentDuplicateId === null) {
+				return null;
 			}
-			return this.notes.find((note) => note.id === this.currentNoteId)
+			return this.duplicates.find((duplicate) => duplicate.id === this.currentDuplicateId);
 		},
-
-		/**
-		 * Returns true if a note is selected and its title is not empty
-		 * @returns {Boolean}
-		 */
-		savePossible() {
-			return this.currentNote && this.currentNote.title !== ''
+		sizeOfCurrentDuplicate() {
+			if (!this.currentDuplicate) {
+				return 0;
+			}
+			return this.currentDuplicate.files.reduce((acc, file) => acc + file.size, 0);
 		},
+		numberOfFilesInCurrentDuplicate() {
+			if (!this.currentDuplicate) {
+				return 0;
+			}
+			return this.currentDuplicate.files.length;
+		},
+		formattedSizeOfCurrentDuplicate() {
+			return OC.Util.humanFileSize(this.sizeOfCurrentDuplicate);
+		}
 	},
-	/**
-	 * Fetch list of notes when the component is loaded
-	 */
 	async mounted() {
 		try {
-			const response = await axios.get(generateUrl('/apps/duplicatefinder/notes'))
-			this.notes = response.data
+			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/duplicates'))
+			this.duplicates = response.data.data.entities
 		} catch (e) {
 			console.error(e)
-			showError(t('notestutorial', 'Could not fetch notes'))
+			showError(t('duplicatefinder', 'Could not fetch duplicates'))
 		}
 		this.loading = false
 	},
-
 	methods: {
-		/**
-		 * Create a new note and focus the note content field automatically
-		 * @param {Object} note Note object
-		 */
-		openNote(note) {
-			if (this.updating) {
-				return
+		getPreviewImage(item) {
+			if (this.isImage(item) || this.isVideo(item)) {
+				const query = new URLSearchParams({
+					file: this.normalizeItemPath(item.path),
+					fileId: item.nodeId,
+					x: 500,
+					y: 500,
+					forceIcon: 0
+				});
+				return OC.generateUrl('/core/preview.png?') + query.toString();
 			}
-			this.currentNoteId = note.id
-			this.$nextTick(() => {
-				this.$refs.content.focus()
-			})
+
+			return OC.MimeType.getIconUrl(item.mimetype);
 		},
-		/**
-		 * Action tiggered when clicking the save button
-		 * create a new note or save
-		 */
-		saveNote() {
-			if (this.currentNoteId === -1) {
-				this.createNote(this.currentNote)
-			} else {
-				this.updateNote(this.currentNote)
-			}
+		isImage(item) {
+			return item.mimetype.substr(0, item.mimetype.indexOf('/')) === 'image';
 		},
-		/**
-		 * Create a new note and focus the note content field automatically
-		 * The note is not yet saved, therefore an id of -1 is used until it
-		 * has been persisted in the backend
-		 */
-		newNote() {
-			if (this.currentNoteId !== -1) {
-				this.currentNoteId = -1
-				this.notes.push({
-					id: -1,
-					title: '',
-					content: '',
-				})
-				this.$nextTick(() => {
-					this.$refs.title.focus()
-				})
-			}
+		isVideo(item) {
+			return item.mimetype.substr(0, item.mimetype.indexOf('/')) === 'video';
 		},
-		/**
-		 * Abort creating a new note
-		 */
-		cancelNewNote() {
-			this.notes.splice(this.notes.findIndex((note) => note.id === -1), 1)
-			this.currentNoteId = null
+		normalizeItemPath(path) {
+			return path.match(/\/([^/]*)\/files(\/.*)/)[2];
 		},
-		/**
-		 * Create a new note by sending the information to the server
-		 * @param {Object} note Note object
-		 */
-		async createNote(note) {
-			this.updating = true
+		openDuplicate(duplicate) {
+			this.currentDuplicateId = duplicate.id
+		},
+		async deleteDuplicate(item) {
+			const fileClient = OC.Files.getClient();
 			try {
-				const response = await axios.post(generateUrl('/apps/duplicatefinder/notes'), note)
-				const index = this.notes.findIndex((match) => match.id === this.currentNoteId)
-				this.$set(this.notes, index, response.data)
-				this.currentNoteId = response.data.id
-			} catch (e) {
-				console.error(e)
-				showError(t('notestutorial', 'Could not create the note'))
-			}
-			this.updating = false
-		},
-		/**
-		 * Update an existing note on the server
-		 * @param {Object} note Note object
-		 */
-		async updateNote(note) {
-			this.updating = true
-			try {
-				await axios.put(generateUrl(`/apps/duplicatefinder/notes/${note.id}`), note)
-			} catch (e) {
-				console.error(e)
-				showError(t('notestutorial', 'Could not update the note'))
-			}
-			this.updating = false
-		},
-		/**
-		 * Delete a note, remove it from the frontend and show a hint
-		 * @param {Object} note Note object
-		 */
-		async deleteNote(note) {
-			try {
-				await axios.delete(generateUrl(`/apps/duplicatefinder/notes/${note.id}`))
-				this.notes.splice(this.notes.indexOf(note), 1)
-				if (this.currentNoteId === note.id) {
-					this.currentNoteId = null
+				await fileClient.remove(this.normalizeItemPath(item.path));
+				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
+
+				// Remove the deleted item from the duplicates list in the UI
+				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
+				if (index !== -1) {
+					this.currentDuplicate.files.splice(index, 1);
 				}
-				showSuccess(t('duplicatefinder', 'Note deleted'))
+
+				// Check if only one file remains for the current hash
+				if (this.currentDuplicate.files.length === 1) {
+					const duplicateIndex = this.duplicates.findIndex(duplicate => duplicate.id === this.currentDuplicateId);
+
+					// Remove the hash from the navigation bar
+					this.duplicates.splice(duplicateIndex, 1);
+
+					// Switch to the next hash
+					if (this.duplicates[duplicateIndex]) {
+						this.openDuplicate(this.duplicates[duplicateIndex]);
+					} else if (this.duplicates[duplicateIndex - 1]) { // If current hash was the last, switch to the previous
+						this.openDuplicate(this.duplicates[duplicateIndex - 1]);
+					} else {
+						this.currentDuplicateId = null; // If no more hashes are left
+					}
+				}
+
 			} catch (e) {
-				console.error(e)
-				showError(t('duplicatefinder', 'Could not delete the note'))
+				console.error(e);
+				showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
 			}
-		},
+		}
 	},
 }
+
 </script>
+
 <style scoped>
-	#app-content > div {
-		width: 100%;
-		height: 100%;
-		padding: 20px;
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
+.app-content {
+	overflow-y: auto;
+}
+
+#app-content>div {
+	width: 100%;
+	height: 100%;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+}
+
+.file-display {
+	display: flex;
+	align-items: center;
+	margin-bottom: 10px;
+	border: 1px solid #e0e0e0;
+	padding: 10px;
+	border-radius: 5px;
+}
+
+.thumbnail {
+	width: 80px;
+	/* Width of the thumbnail */
+	height: 80px;
+	/* Height of the thumbnail */
+	background-size: cover;
+	background-position: center;
+	margin-right: 20px;
+	/* Space between thumbnail and details */
+	border-radius: 5px;
+	flex-shrink: 0;
+	/* Prevent thumbnail from shrinking */
+}
+
+.file-details {
+	flex-grow: 1;
+	/* Allow details to take up remaining space */
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+	.thumbnail {
+		width: 50px;
+		height: 50px;
+		margin-right: 10px;
 	}
 
-	input[type='text'] {
-		width: 100%;
+	.file-details p {
+		font-size: 14px;
 	}
+}
 
-	textarea {
-		flex-grow: 1;
-		width: 100%;
+.delete-button {
+	background-color: #ff4b5a;
+	color: #fff;
+	border: none;
+	padding: 5px 10px;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	margin-left: 10px;
+	/* Space between the details and the button */
+}
+
+.delete-button:hover {
+	background-color: #e43f51;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+	.delete-button {
+		padding: 3px 7px;
+		font-size: 12px;
 	}
+}
+
+.summary-section {
+	margin-bottom: 20px;
+	padding: 10px;
+	background-color: #f7f7f7;
+	border-radius: 5px;
+	font-weight: bold;
+	text-align: center;
+}
 </style>

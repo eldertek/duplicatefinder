@@ -37,7 +37,7 @@ class DuplicateApiController extends AbstractAPIController
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function list(int $offset = 0, int $limit = 20): JSONResponse
+    public function list(int $offset = 0, int $limit = 30): JSONResponse
     {
         try {
             $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);
