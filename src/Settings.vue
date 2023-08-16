@@ -62,19 +62,21 @@ export default {
   },
   methods: {
     saveSettings() {
-      axios.post(
-        generateUrl('/apps/duplicatefinder/api/v1/settings'),
-        { config: this.settings },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      ).then(response => {
-        showSuccess(t('duplicatefinder', 'Settings saved'));
-      }).catch(error => {
-        showError(t('duplicatefinder', 'Could not save settings'));
-      });
+      const config = {
+        ignored_files: "",
+        backgroundjob_interval_find: this.settings.backgroundjob_interval_find,
+        backgroundjob_interval_cleanup: this.settings.backgroundjob_interval_cleanup,
+        disable_filesystem_events: this.settings.disable_filesystem_events,
+        ignore_mounted_files: this.settings.ignore_mounted_files
+      };
+
+      axios.post(generateUrl('/apps/duplicatefinder/api/v1/settings'), config)
+        .then(response => {
+          showSuccess(t('duplicatefinder', 'Settings saved'));
+        })
+        .catch(error => {
+          showError(t('duplicatefinder', 'Could not save settings'));
+        });
     },
   }
 }
