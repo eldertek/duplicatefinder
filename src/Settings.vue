@@ -53,7 +53,7 @@ export default {
 </script>
 
 <style scoped>
-.app-content {
+#duplicatefinder_settings_form {
 	overflow-y: auto;
 }
 </style>
