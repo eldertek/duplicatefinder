@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Generic Makefile for building and packaging a Nextcloud app which uses npm and
-# Composer.
 #
 app_name=$(notdir $(CURDIR))
 project_dir=$(CURDIR)/../$(app_name)
@@ -15,7 +14,6 @@ source_package_name=$(source_build_directory)/$(app_name)
 appstore_build_directory=$(CURDIR)/build/artifacts/appstore
 appstore_package_name=$(appstore_build_directory)/$(app_name)
 npm=$(shell which npm 2> /dev/null)
-composer=$(shell which composer 2> /dev/null)
 
 all: build
 
@@ -25,42 +23,20 @@ npm:
 	npm install
 	npm run build
 
-# Installs and updates the composer dependencies. If composer is not installed
-# a copy is fetched from the web
-.PHONY: composer
-composer:
-ifeq (, $(composer))
-	@echo "No composer command available, downloading a copy from the web"
-	mkdir -p $(build_tools_directory)
-	curl -sS https://getcomposer.org/installer | php
-	mv composer.phar $(build_tools_directory)
-	php $(build_tools_directory)/composer.phar install --prefer-dist
-else
-	composer install --prefer-dist
-endif
-
-# Builds the depencies for the app. If a composer.json or package.json is present
+# Builds the depencies for the app
 .PHONY: build
 build:
-ifneq (,$(wildcard $(CURDIR)/composer.json))
-	make composer
-endif
-ifneq (,$(wildcard $(CURDIR)/package.json))
 	make npm
-endif
 
 # Removes the appstore build
 .PHONY: clean
 clean:
 	rm -rf ./build
 
-# Same as clean but also removes dependencies installed by composer, bower and
-# npm
+# Same as clean but also removes dependencies installed by npm
 .PHONY: distclean
 distclean: clean
-	rm -rf vendor
 	rm -rf node_modules
-	rm -rf js/vendor
 	rm -rf js/node_modules
 
 # Builds the source and appstore package
@@ -94,7 +70,6 @@ appstore:
 	--exclude="Makefile" \
 	--exclude="/*.log" \
 	--exclude="phpunit*xml" \
-	--exclude="/composer.*" \
 	--exclude="/js/node_modules" \
 	--exclude="/js/tests" \
 	--exclude="/js/test" \
@@ -123,8 +98,3 @@ appstore:
 		echo "Signing package…"; \
 		openssl dgst -sha512 -sign $(cert_dir)/$(app_name).key $(build_dir)/$(app_name).tar.gz | openssl base64; \
 	fi
-
-.PHONY: test
-test: composer
-	$(CURDIR)/vendor/phpunit/phpunit/phpunit -c phpunit.xml
-	$(CURDIR)/vendor/phpunit/phpunit/phpunit -c phpunit.integration.xml

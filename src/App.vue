@@ -9,7 +9,9 @@
 		</NcAppNavigation>
 		<NcAppContent>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0" class="summary-section">
-				<p>{{ t('duplicatefinder', 'Welcome, the current duplicate has ${numberOfFilesInCurrentDuplicate} files, total size: ${formattedSizeOfCurrentDuplicate}') }}</p>
+				<p>{{ t('duplicatefinder',
+					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
+					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}</p>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
@@ -19,7 +21,8 @@
 						<p><strong>{{ t('duplicatefinder', 'Hash:') }}</strong> {{ file.fileHash }}</p>
 						<p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ file.path }}</p>
 					</div>
-					<button @click="deleteDuplicate(file)" class="delete-button">{{ t('duplicatefinder', 'Delete') }}</button>
+					<button @click="deleteDuplicate(file)" class="delete-button">{{ t('duplicatefinder', 'Delete')
+					}}</button>
 				</div>
 			</div>
 			<div v-else id="emptycontent">
