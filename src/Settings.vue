@@ -39,7 +39,7 @@ import { NcSettingsSection, NcCheckboxRadioSwitch, NcTextField } from '@nextclou
 export default {
   async mounted() {
     try {
-      const response = await this.$axios.get('/apps/duplicatefinder/api/v1/settings');
+      const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/settings'))
       this.settings = response.data;
       console.error(response.data)
     } catch (error) {
