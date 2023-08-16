@@ -34,6 +34,7 @@
 </template>
       
 <script>
+import { generateUrl } from '@nextcloud/router'
 import { NcSettingsSection, NcCheckboxRadioSwitch, NcTextField } from '@nextcloud/vue'
 import axios from '@nextcloud/axios'
 
