@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Nextcloud 3.14159\n"
 "Report-Msgid-Bugs-To: translations\\@example.com\n"
-"POT-Creation-Date: 2023-08-16 16:52+0200\n"
+"POT-Creation-Date: 2023-08-16 17:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,22 +36,109 @@ msgid ""
 "discover multiple copies of the same content cluttering your storage space?"
 msgstr ""
 
-#. TRANSLATORS src/App.vue:27
+#. TRANSLATORS src/App.vue:12
 #: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:2
+msgid ""
+"Welcome, the current duplicate has ${numberOfFilesInCurrentDuplicate} files, "
+"total size: ${formattedSizeOfCurrentDuplicate}"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:18
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:4
+msgid "File"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:19
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:6
+msgid "Hash:"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:20
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:8
+msgid "Path:"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:22
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:10
+msgid "Delete"
+msgstr ""
+
+#. TRANSLATORS src/App.vue:27
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:12
 msgid "No duplicates found or no duplicate selected."
 msgstr ""
 
 #. TRANSLATORS src/App.vue:93
-#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:4
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:14
 msgid "Could not fetch duplicates"
 msgstr ""
 
 #. TRANSLATORS src/App.vue:128
-#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:6
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:16
 msgid "Duplicate deleted"
 msgstr ""
 
 #. TRANSLATORS src/App.vue:155
-#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:8
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:18
 msgid "Could not delete the duplicate at path: ${item.path}"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:3
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:20
+msgid "Duplicate Finder Settings"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:4
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:22
+msgid "All general settings to modify Duplicate Finder behaviors."
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:8
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:24
+msgid "Ignore Mounted Files"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:9
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:26
+msgid "When true, files mounted on external storage will be ignored..."
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:11
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:28
+msgid "Ignore mounted file"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:15
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:30
+msgid "Disable Filesystem Events"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:16
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:32
+msgid "When true, the event-based detection will be disabled..."
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:19
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:34
+msgid "Disable filesystem events"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:22
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:36
+msgid "Background Job Cleanup Interval (seconds)"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:23
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:38
+msgid "The interval in seconds for the cleanup background job..."
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:28
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:40
+msgid "Background Job Find Duplicates Interval (seconds)"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:29
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:42
+msgid "The interval in seconds for the find duplicates background job..."
 msgstr ""
