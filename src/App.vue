@@ -1,16 +1,16 @@
 <template>
-	<div id="content" class="app-duplicatefinder">
-		<NcAppNavigation v-if="duplicates.length > 0">
+	<div class="app-duplicatefinder" id="content">
+		<div class="navigation">
 			<ul>
-				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :title="duplicate.hash"
-					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
-				</NcAppNavigationItem>
+				<li :class="{ active: currentDuplicateId === duplicate.id }" :key="duplicate.id" :title="duplicate.hash"
+					@click="openDuplicate(duplicate)" v-for="duplicate in duplicates">
+				</li>
 			</ul>
-		</NcAppNavigation>
-		<NcAppContent>
-			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
-				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
-					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
+		</div>
+		<div class="content">
+			<div v-if="currentDuplicate &amp;&amp; currentDuplicate.files.length &gt; 0">
+				<div :key="file.id" class="file-display" v-for="(file, index) in currentDuplicate.files">
+					<div :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }" class="thumbnail"></div>
 					<div class="file-details">
 						<p><strong>File {{ index + 1 }}:</strong></p>
 						<p><strong>Hash:</strong> {{ file.fileHash }}</p>
@@ -19,29 +19,20 @@
 					<button @click="deleteDuplicate(file)" class="delete-button">Delete</button>
 				</div>
 			</div>
-			<div v-else id="emptycontent">
-				<div class="icon-file" />
+			<div id="emptycontent" v-else="">
+				<div class="icon-file"></div>
 				<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
 			</div>
-		</NcAppContent>
+		</div>
 	</div>
 </template>
-
 <script>
 
-import { NcAppContent, NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue'
-
 import { generateUrl } from '@nextcloud/router'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 
 export default {
 	name: 'App',
-	components: {
-		NcAppContent,
-		NcAppNavigation,
-		NcAppNavigationItem,
-	},
 	data() {
 		return {
 			duplicates: [],
@@ -72,7 +63,6 @@ export default {
 			this.duplicates = response.data.data.entities
 		} catch (e) {
 			console.error(e)
-			showError(t('duplicatefinder', 'Could not fetch duplicates'))
 		}
 		this.loading = false
 	},
@@ -107,21 +97,16 @@ export default {
 			const fileClient = OC.Files.getClient();
 			try {
 				await fileClient.remove(this.normalizeItemPath(item.path));
-				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
-
 				// Remove the deleted item from the duplicates list in the UI
 				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
 				if (index !== -1) {
 					this.currentDuplicate.files.splice(index, 1);
 				}
-
 				// Check if only one file remains for the current hash
 				if (this.currentDuplicate.files.length === 1) {
 					const duplicateIndex = this.duplicates.findIndex(duplicate => duplicate.id === this.currentDuplicateId);
-
 					// Remove the hash from the navigation bar
 					this.duplicates.splice(duplicateIndex, 1);
-
 					// Switch to the next hash
 					if (this.duplicates[duplicateIndex]) {
 						this.openDuplicate(this.duplicates[duplicateIndex]);
@@ -131,19 +116,15 @@ export default {
 						this.currentDuplicateId = null; // If no more hashes are left
 					}
 				}
-
 			} catch (e) {
 				console.error(e);
-				showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
 			}
 		}
 	},
 }
 
 </script>
-
-<style scoped>
-
+<style scoped="">
 .app-content {
 	overflow-y: auto;
 }
@@ -220,5 +201,31 @@ export default {
 		padding: 3px 7px;
 		font-size: 12px;
 	}
+}
+
+
+.navigation {
+	width: 20%;
+	overflow-y: auto;
+	border-right: 1px solid #e0e0e0;
+	padding: 10px;
+}
+
+.content {
+	width: 80%;
+	padding: 20px;
+}
+
+
+.navigation {
+	width: 20%;
+	overflow-y: auto;
+	border-right: 1px solid #e0e0e0;
+	padding: 10px;
+}
+
+.content {
+	width: 80%;
+	padding: 20px;
 }
 </style>
