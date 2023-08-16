@@ -37,13 +37,7 @@
     "@nextcloud/logger": "^2.5.0",
     "@nextcloud/router": "^2.1.2",
     "@nextcloud/vue": "^8.0.0-beta.2",
-    "@skjnldsv/sanitize-svg": "^1.0.2",
-    "babel-loader": "^9.1.3",
-    "css-loader": "^6.8.1",
-    "node-polyfill-webpack-plugin": "^2.0.1",
-    "style-loader": "^3.3.3",
-    "vue-loader": "^17.2.2",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
+    "@nextcloud/webpack-vue-config": "^5.5.1",
+    "@skjnldsv/sanitize-svg": "^1.0.2"
   }
 }
