@@ -2,36 +2,34 @@
   <div id="duplicatefinder_settings_form">
     <NcSettingsSection name="Ignore Mounted Files"
       description="When true, files mounted on external storage will be ignored..." :limit-width="true">
-      <p>Your settings here</p>
+      <NcCheckboxRadioSwitch :checked.sync="settings.ignore_mounted_files">Ignore mounted file</NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
     <NcSettingsSection name="Disable Filesystem Events"
       description="When true, the event-based detection will be disabled..." :limit-width="true">
-      <p>Your settings here</p>
+      <NcCheckboxRadioSwitch :checked.sync="settings.disable_filesystem_events">Disable filesystem events</NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
     <NcSettingsSection name="Background Job Cleanup Interval (seconds)"
       description="The interval in seconds for the cleanup background job..." :limit-width="true">
-      <p>Your settings here</p>
+      <NcTextField :value.sync="settings.backgroundjob_interval_cleanup"></NcTextField>
     </NcSettingsSection>
 
     <NcSettingsSection name="Background Job Find Duplicates Interval (seconds)"
       description="The interval in seconds for the find duplicates background job..." :limit-width="true">
-      <p>Your settings here</p>
-    </NcSettingsSection>
-
-    <NcSettingsSection name="Ignored Files (JSON Array)" description="Files to ignore..." :limit-width="true">
-      <p>Your settings here</p>
+      <NcTextField :value.sync="settings.backgroundjob_interval_find"></NcTextField>
     </NcSettingsSection>
   </div>
 </template>
   
 <script>
-import { NcSettingsSection } from '@nextcloud/vue'
+import { NcSettingsSection, NcCheckboxRadioSwitch, NcTextField } from '@nextcloud/vue'
 
 export default {
   components: {
-    NcSettingsSection
+    NcSettingsSection,
+    NcCheckboxRadioSwitch,
+    NcTextField
   },
   data() {
     return {
@@ -54,6 +52,8 @@ export default {
 
 <style scoped>
 #duplicatefinder_settings_form {
-	overflow-y: auto;
+  background-color: var(--color-main-background);
+  width: 100%;
+  overflow-y: auto;
 }
 </style>
