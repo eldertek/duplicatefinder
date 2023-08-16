@@ -13,6 +13,8 @@ permissions:
   contents: write
 
 env:
+  APP_NAME: duplicatefinder
+  APP_VERSION: ${{ github.ref }}
   PHP_VERSION: 8.1
 
 jobs:
@@ -24,13 +26,7 @@ jobs:
         uses: skjnldsv/check-actor-permission@e591dbfe838300c007028e1219ca82cc26e8d7c5 # v2.1
         with:
           require: write
-
-      - name: Set app env
-        run: |
-          # Split and keep last
-          echo "APP_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
-          echo "APP_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
-
+          
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
