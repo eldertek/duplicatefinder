@@ -51,3 +51,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.app-content {
+	overflow-y: auto;
+}
+</style>

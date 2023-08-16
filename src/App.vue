@@ -9,7 +9,7 @@
 		</NcAppNavigation>
 		<NcAppContent>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0" class="summary-section">
-				<p>Welcome, you have {{ numberOfDuplicates }} duplicates, total size: {{ formattedSizeOfDuplicates }}</p>
+				<p>Welcome, the current duplicate has {{ numberOfFilesInCurrentDuplicate }} files, total size: {{ formattedSizeOfCurrentDuplicate }}</p>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
@@ -64,18 +64,24 @@ export default {
 	computed: {
 		currentDuplicate() {
 			if (this.currentDuplicateId === null) {
-				return null
+				return null;
 			}
-			return this.duplicates.find((duplicate) => duplicate.id === this.currentDuplicateId)
+			return this.duplicates.find((duplicate) => duplicate.id === this.currentDuplicateId);
 		},
-		totalSizeOfDuplicates() {
-			return this.duplicates.reduce((acc, duplicate) => acc + duplicate.files.reduce((a, file) => a + file.size, 0), 0);
+		sizeOfCurrentDuplicate() {
+			if (!this.currentDuplicate) {
+				return 0;
+			}
+			return this.currentDuplicate.files.reduce((acc, file) => acc + file.size, 0);
 		},
-		formattedSizeOfDuplicates() {
-			return OC.Util.humanFileSize(this.totalSizeOfDuplicates);
+		numberOfFilesInCurrentDuplicate() {
+			if (!this.currentDuplicate) {
+				return 0;
+			}
+			return this.currentDuplicate.files.length;
 		},
-		numberOfDuplicates() {
-			return this.duplicates.length;
+		formattedSizeOfCurrentDuplicate() {
+			return OC.Util.humanFileSize(this.sizeOfCurrentDuplicate);
 		}
 	},
 	async mounted() {
