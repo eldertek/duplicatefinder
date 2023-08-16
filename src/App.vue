@@ -8,6 +8,10 @@
 			</ul>
 		</NcAppNavigation>
 		<NcAppContent>
+			<div v-if="currentDuplicate && currentDuplicate.files.length > 0" class="summary-section">
+				<p>Welcome, you have {{ numberOfDuplicates }} duplicates, total size: {{ totalSizeOfDuplicates | formatSize
+				}}</p>
+			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
 					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
@@ -65,6 +69,12 @@ export default {
 			}
 			return this.duplicates.find((duplicate) => duplicate.id === this.currentDuplicateId)
 		},
+		totalSizeOfDuplicates() {
+			return this.duplicates.reduce((acc, duplicate) => acc + duplicate.files.reduce((a, file) => a + file.size, 0), 0);
+		},
+		numberOfDuplicates() {
+			return this.duplicates.length;
+		}
 	},
 	async mounted() {
 		try {
@@ -143,7 +153,6 @@ export default {
 </script>
 
 <style scoped>
-
 .app-content {
 	overflow-y: auto;
 }
@@ -220,5 +229,13 @@ export default {
 		padding: 3px 7px;
 		font-size: 12px;
 	}
+}
+
+.summary-section {
+	margin-bottom: 20px;
+	padding: 10px;
+	background-color: #f7f7f7;
+	border-radius: 5px;
+	font-weight: bold;
 }
 </style>

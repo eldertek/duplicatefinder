@@ -1,27 +1,29 @@
 <template>
-  <NcSettingsSection name="Ignore Mounted Files"
-    description="When true, files mounted on external storage will be ignored..." :limit-width="true">
-    <p>Your settings here</p>
-  </NcSettingsSection>
+  <div id="duplicatefinder_settings_form">
+    <NcSettingsSection name="Ignore Mounted Files"
+      description="When true, files mounted on external storage will be ignored..." :limit-width="true">
+      <p>Your settings here</p>
+    </NcSettingsSection>
 
-  <NcSettingsSection name="Disable Filesystem Events"
-    description="When true, the event-based detection will be disabled..." :limit-width="true">
-    <p>Your settings here</p>
-  </NcSettingsSection>
+    <NcSettingsSection name="Disable Filesystem Events"
+      description="When true, the event-based detection will be disabled..." :limit-width="true">
+      <p>Your settings here</p>
+    </NcSettingsSection>
 
-  <NcSettingsSection name="Background Job Cleanup Interval (seconds)"
-    description="The interval in seconds for the cleanup background job..." :limit-width="true">
-    <p>Your settings here</p>
-  </NcSettingsSection>
+    <NcSettingsSection name="Background Job Cleanup Interval (seconds)"
+      description="The interval in seconds for the cleanup background job..." :limit-width="true">
+      <p>Your settings here</p>
+    </NcSettingsSection>
 
-  <NcSettingsSection name="Background Job Find Duplicates Interval (seconds)"
-    description="The interval in seconds for the find duplicates background job..." :limit-width="true">
-    <p>Your settings here</p>
-  </NcSettingsSection>
+    <NcSettingsSection name="Background Job Find Duplicates Interval (seconds)"
+      description="The interval in seconds for the find duplicates background job..." :limit-width="true">
+      <p>Your settings here</p>
+    </NcSettingsSection>
 
-  <NcSettingsSection name="Ignored Files (JSON Array)" description="Files to ignore..." :limit-width="true">
-    <p>Your settings here</p>
-  </NcSettingsSection>
+    <NcSettingsSection name="Ignored Files (JSON Array)" description="Files to ignore..." :limit-width="true">
+      <p>Your settings here</p>
+    </NcSettingsSection>
+  </div>
 </template>
   
 <script>
