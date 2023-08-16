@@ -42,8 +42,8 @@ export default {
   async mounted() {
     try {
       const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/settings'))
-      this.settings = response.data;
-      console.error(response.data)
+      this.settings = response.data.data;
+      console.error(response.data.data)
     } catch (error) {
       console.error("Error fetching settings:", error);
     }
