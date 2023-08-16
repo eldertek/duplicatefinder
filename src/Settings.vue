@@ -69,6 +69,8 @@ export default {
     saveSettings(key, value) {
       axios.post(generateUrl(`/apps/duplicatefinder/api/v1/settings/${key}/${value}`))
         .then(response => {
+          console.error(response)
+          console.error("key : " + key + ", value : " + value)
           showSuccess(t('duplicatefinder', 'Settings saved'));
         })
         .catch(error => {
