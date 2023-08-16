@@ -25,15 +25,6 @@ npm:
 	npm install
 	npm run build
 
-.PHONY: build
-build:
-ifneq (,$(wildcard $(CURDIR)/composer.json))
-	make composer
-endif
-ifneq (,$(wildcard $(CURDIR)/package.json))
-	make npm
-endif
-
 # Installs and updates the composer dependencies. If composer is not installed
 # a copy is fetched from the web
 .PHONY: composer
@@ -46,6 +37,16 @@ ifeq (, $(composer))
 	php $(build_tools_directory)/composer.phar install --prefer-dist
 else
 	composer install --prefer-dist
+endif
+
+# Builds the depencies for the app. If a composer.json or package.json is present
+.PHONY: build
+build:
+ifneq (,$(wildcard $(CURDIR)/composer.json))
+	make composer
+endif
+ifneq (,$(wildcard $(CURDIR)/package.json))
+	make npm
 endif
 
 # Removes the appstore build
