@@ -1,52 +1,35 @@
 <template>
-  <NcSettingsSection :title="t('duplicatefinder', 'Duplicate Finder')" class="duplicatefinder-settings">
-    <NcActions>
-      <NcActionCheckbox :checked="settings.ignore_mounted_files" @change="settings.ignore_mounted_files = $event"
-        id="ignore_mounted_files">
-        Ignore Mounted Files
-      </NcActionCheckbox>
-      <p>When true, files mounted on external storage will be ignored...</p>
+  <NcSettingsSection name="Ignore Mounted Files"
+    description="When true, files mounted on external storage will be ignored..." :limit-width="true">
+    <p>Your settings here</p>
+  </NcSettingsSection>
 
-      <NcActionCheckbox :checked="settings.disable_filesystem_events"
-        @change="settings.disable_filesystem_events = $event" id="disable_filesystem_events">
-        Disable Filesystem Events
-      </NcActionCheckbox>
-      <p>When true, the event-based detection will be disabled.</p>
+  <NcSettingsSection name="Disable Filesystem Events"
+    description="When true, the event-based detection will be disabled..." :limit-width="true">
+    <p>Your settings here</p>
+  </NcSettingsSection>
 
-      <NcActionInput type="number" v-model="settings.backgroundjob_interval_cleanup"
-        label="Background Job Cleanup Interval (seconds)" id="backgroundjob_interval_cleanup">
-      </NcActionInput>
+  <NcSettingsSection name="Background Job Cleanup Interval (seconds)"
+    description="The interval in seconds for the cleanup background job..." :limit-width="true">
+    <p>Your settings here</p>
+  </NcSettingsSection>
 
-      <NcActionInput type="number" v-model="settings.backgroundjob_interval_find"
-        label="Background Job Find Duplicates Interval (seconds)" id="backgroundjob_interval_find">
-      </NcActionInput>
+  <NcSettingsSection name="Background Job Find Duplicates Interval (seconds)"
+    description="The interval in seconds for the find duplicates background job..." :limit-width="true">
+    <p>Your settings here</p>
+  </NcSettingsSection>
 
-      <NcActionTextEditable v-model="settings.ignored_files" label="Ignored Files (JSON Array)" id="ignored_files"
-        placeholder='Example: [[{"attribute":"filename","operator":"=","value":"1_1.txt"}]]'>
-      </NcActionTextEditable>
-    </NcActions>
-
-    <NcActionButton @click="saveSettings" icon="icon-confirm">Save Settings</NcActionButton>
+  <NcSettingsSection name="Ignored Files (JSON Array)" description="Files to ignore..." :limit-width="true">
+    <p>Your settings here</p>
   </NcSettingsSection>
 </template>
   
 <script>
-import {
-  NcActions,
-  NcActionCheckbox,
-  NcActionInput,
-  NcActionTextEditable,
-  NcActionButton,
-  NcSettingsSection
-} from '@nextcloud/vue'
+import { NcSettingsSection } from '@nextcloud/vue'
 
 export default {
   components: {
-    NcActions,
-    NcActionCheckbox,
-    NcActionInput,
-    NcActionTextEditable,
-    NcActionButton
+    NcSettingsSection
   },
   data() {
     return {
