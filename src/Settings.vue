@@ -13,15 +13,13 @@
     </NcSettingsSection>
 
     <NcSettingsSection :name="t('duplicatefinder', 'Disable Filesystem Events')"
-      :description="t('duplicatefinder', 'When true, the event-based detection will be disabled.')"
-      :limit-width="true">
-      <NcCheckboxRadioSwitch :checked.sync="settings.disable_filesystem_events">{{ t('duplicatefinder', 
-      'Disable filesystem events') }}</NcCheckboxRadioSwitch>
+      :description="t('duplicatefinder', 'When true, the event-based detection will be disabled.')" :limit-width="true">
+      <NcCheckboxRadioSwitch :checked.sync="settings.disable_filesystem_events">{{ t('duplicatefinder',
+        'Disable filesystem events') }}</NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
     <NcSettingsSection :name="t('duplicatefinder', 'Background Job Cleanup Interval (seconds)')"
-      :description="t('duplicatefinder', 'The interval in seconds for the cleanup background job.')"
-      :limit-width="true">
+      :description="t('duplicatefinder', 'The interval in seconds for the cleanup background job.')" :limit-width="true">
       <NcTextField :value.sync="settings.backgroundjob_interval_cleanup"></NcTextField>
     </NcSettingsSection>
 
@@ -31,7 +29,7 @@
       <NcTextField :value.sync="settings.backgroundjob_interval_find"></NcTextField>
     </NcSettingsSection>
 
-		<NcButton @click="saveSettings" type="primary">{{ t('duplicatefinder', 'Save') }}</NcButton>
+    <NcButton @click="saveSettings" type="primary">{{ t('duplicatefinder', 'Save') }}</NcButton>
   </div>
 </template>
       
@@ -47,8 +45,8 @@ export default {
       const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/settings'))
       this.settings = response.data.data;
     } catch (e) {
-			console.error(e)
-			showError(t('duplicatefinder', 'Could not fetch settings'))
+      console.error(e)
+      showError(t('duplicatefinder', 'Could not fetch settings'))
     }
   },
   components: {
@@ -64,7 +62,15 @@ export default {
   },
   methods: {
     saveSettings() {
-      axios.post(generateUrl('/apps/duplicatefinder/api/v1/settings'), this.settings).then(response => {
+      axios.post(
+        generateUrl('/apps/duplicatefinder/api/v1/settings'),
+        { config: this.settings },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      ).then(response => {
         showSuccess(t('duplicatefinder', 'Settings saved'));
       }).catch(error => {
         showError(t('duplicatefinder', 'Could not save settings'));
