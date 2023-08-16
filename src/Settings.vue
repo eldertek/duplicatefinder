@@ -2,34 +2,34 @@
   <div id="duplicatefinder_settings_form">
     <NcSettingsSection :name="t('duplicatefinder', 'Duplicate Finder Settings')"
       :description="t('duplicatefinder', 'All general settings to modify Duplicate Finder behaviors.')"
-      :limit-width="true">
+      @change="saveSettings('settings', settings.settings)" :limit-width="true">
     </NcSettingsSection>
 
     <NcSettingsSection :name="t('duplicatefinder', 'Ignore Mounted Files')"
       :description="t('duplicatefinder', 'When true, files mounted on external storage will be ignored.')"
-      :limit-width="true">
+      @change="saveSettings('ignore_mounted_files', settings.ignore_mounted_files)" :limit-width="true">
       <NcCheckboxRadioSwitch :checked.sync="settings.ignore_mounted_files">{{ t('duplicatefinder',
         'Ignore mounted file') }}</NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
     <NcSettingsSection :name="t('duplicatefinder', 'Disable Filesystem Events')"
-      :description="t('duplicatefinder', 'When true, the event-based detection will be disabled.')" :limit-width="true">
+      :description="t('duplicatefinder', 'When true, the event-based detection will be disabled.')" 
+      @change="saveSettings('disable_filesystem_events', settings.disable_filesystem_events)" :limit-width="true">
       <NcCheckboxRadioSwitch :checked.sync="settings.disable_filesystem_events">{{ t('duplicatefinder',
         'Disable filesystem events') }}</NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
     <NcSettingsSection :name="t('duplicatefinder', 'Background Job Cleanup Interval (seconds)')"
-      :description="t('duplicatefinder', 'The interval in seconds for the cleanup background job.')" :limit-width="true">
+      :description="t('duplicatefinder', 'The interval in seconds for the cleanup background job.')" 
+      @change="saveSettings('backgroundjob_interval_cleanup', settings.backgroundjob_interval_cleanup)" :limit-width="true">
       <NcTextField :value.sync="settings.backgroundjob_interval_cleanup"></NcTextField>
     </NcSettingsSection>
 
     <NcSettingsSection :name="t('duplicatefinder', 'Background Job Find Duplicates Interval (seconds)')"
       :description="t('duplicatefinder', 'The interval in seconds for the find duplicates background job.')"
-      :limit-width="true">
+      @change="saveSettings('backgroundjob_interval_find', settings.backgroundjob_interval_find)" :limit-width="true">
       <NcTextField :value.sync="settings.backgroundjob_interval_find"></NcTextField>
     </NcSettingsSection>
-
-    <NcButton @click="saveSettings" type="primary">{{ t('duplicatefinder', 'Save') }}</NcButton>
   </div>
 </template>
       
@@ -61,16 +61,8 @@ export default {
     }
   },
   methods: {
-    saveSettings() {
-      const config = {
-        ignored_files: "",
-        backgroundjob_interval_find: this.settings.backgroundjob_interval_find,
-        backgroundjob_interval_cleanup: this.settings.backgroundjob_interval_cleanup,
-        disable_filesystem_events: this.settings.disable_filesystem_events,
-        ignore_mounted_files: this.settings.ignore_mounted_files
-      };
-
-      axios.post(generateUrl('/apps/duplicatefinder/api/v1/settings'), { config: this.settings })
+    saveSettings(key, value) {
+      axios.post(generateUrl(`/apps/duplicatefinder/api/v1/settings/${key}/${value}`))
         .then(response => {
           showSuccess(t('duplicatefinder', 'Settings saved'));
         })

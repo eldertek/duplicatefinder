@@ -27,7 +27,7 @@ class SettingsApiController extends AbstractAPIController
     /**
      * @return array<mixed>
      */
-    private function getConfigArray() : array
+    private function getConfigArray(): array
     {
         return [
             'ignored_files' => $this->configService->getIgnoreConditions(),
@@ -45,9 +45,10 @@ class SettingsApiController extends AbstractAPIController
     }
 
     /**
-     * @param array<mixed> $config
+     * @param string $key
+     * @param mixed $value
      */
-    public function save(array $config): JSONResponse
+    public function save(string $key, $value): JSONResponse
     {
         $configKeys = [
             'ignored_files' => 'setIgnoreConditions',
@@ -56,30 +57,27 @@ class SettingsApiController extends AbstractAPIController
             'disable_filesystem_events' => 'setFilesytemEventsDisabled',
             'ignore_mounted_files' => 'setMountedFilesIgnored'
         ];
-        foreach ($config as $key => $value) {
-            $found = false;
-            foreach (array_keys($configKeys) as $existingConfigKey) {
-                if ($key === $existingConfigKey) {
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found) {
-                return $this->error(new UnknownConfigKeyException($key), 400);
+
+        $found = false;
+        foreach (array_keys($configKeys) as $existingConfigKey) {
+            if ($key === $existingConfigKey) {
+                $found = true;
+                break;
             }
         }
-        unset($key);
-        unset($value);
+        if (!$found) {
+            return $this->error(new UnknownConfigKeyException($key), 400);
+        }
+
+        $method = $configKeys[$key];
+        $this->configService->$method($value);
+
         try {
-            foreach ($config as $key => $value) {
-                $method = $configKeys[$key];
-                $this->configService->$method($config[$key]);
-            }
-            unset($key);
-            unset($value);
+            $this->configService->$method($value);
         } catch (\Exception $e) {
             return $this->error($e, 400);
         }
+
         return $this->success($this->getConfigArray());
     }
 }
