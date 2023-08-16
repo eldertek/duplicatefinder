@@ -58,19 +58,15 @@ class SettingsApiController extends AbstractAPIController
             'ignore_mounted_files' => 'setMountedFilesIgnored'
         ];
 
-        $found = false;
-        foreach (array_keys($configKeys) as $existingConfigKey) {
-            if ($key === $existingConfigKey) {
-                $found = true;
-                break;
-            }
-        }
-        if (!$found) {
+        if (!array_key_exists($key, $configKeys)) {
             return $this->error(new UnknownConfigKeyException($key), 400);
         }
 
         $method = $configKeys[$key];
-        $this->configService->$method($value);
+
+        if ($method === 'setMountedFilesIgnored' || $method === 'setFilesytemEventsDisabled') {
+            $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
 
         try {
             $this->configService->$method($value);
