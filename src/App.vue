@@ -2,7 +2,7 @@
 	<div id="content" class="app-duplicatefinder">
 		<NcAppNavigation v-if="duplicates.length > 0">
 			<ul>
-				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :title="duplicate.hash"
+				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
 					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
 				</NcAppNavigationItem>
 			</ul>
