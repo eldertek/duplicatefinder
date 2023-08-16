@@ -1,3 +1,5 @@
+# 1.0.2
+- Removed source from appstore package
 # 1.0.1
 - Added new preview in appstore
 - Added new user interface and administration section
