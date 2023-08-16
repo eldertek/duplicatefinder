@@ -9,7 +9,7 @@
       :description="t('duplicatefinder', 'When true, files mounted on external storage will be ignored.')"
       :limit-width="true">
       <NcCheckboxRadioSwitch :checked.sync="settings.ignore_mounted_files"
-        @update:checked="saveSettings('ignore_mounted_files', settings.ignore_mounted_files)">
+        @update:checked="saveSettings('ignore_mounted_files', $event.toString())">
         {{ t('duplicatefinder', 'Ignore mounted file') }}
       </NcCheckboxRadioSwitch>
     </NcSettingsSection>
@@ -17,7 +17,7 @@
     <NcSettingsSection :name="t('duplicatefinder', 'Disable Filesystem Events')"
       :description="t('duplicatefinder', 'When true, the event-based detection will be disabled.')" :limit-width="true">
       <NcCheckboxRadioSwitch :checked.sync="settings.disable_filesystem_events"
-        @update:checked="saveSettings('disable_filesystem_events', settings.disable_filesystem_events)">
+        @update:checked="saveSettings('disable_filesystem_events', $event.toString())">
         {{ t('duplicatefinder', 'Disable filesystem events') }}
       </NcCheckboxRadioSwitch>
     </NcSettingsSection>
@@ -67,12 +67,10 @@ export default {
   },
   methods: {
     saveSettings(key, value) {
-      const stringValue = value.toString();
-
-      axios.post(generateUrl(`/apps/duplicatefinder/api/v1/settings/${key}/${stringValue}`))
+      axios.post(generateUrl(`/apps/duplicatefinder/api/v1/settings/${key}/${value}`))
         .then(response => {
-          console.error(response);
-          console.error("key : " + key + ", value : " + stringValue);
+          console.error(response)
+          console.error("key : " + key + ", value : " + value)
           showSuccess(t('duplicatefinder', 'Settings saved'));
         })
         .catch(error => {
@@ -80,7 +78,6 @@ export default {
         });
     },
   }
-
 }
 </script>
 
