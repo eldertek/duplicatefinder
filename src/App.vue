@@ -1,13 +1,13 @@
 <template>
 	<div id="content" class="app-duplicatefinder">
-		<AppNavigation v-if="duplicates.length > 0">
+		<NcAppNavigation v-if="duplicates.length > 0">
 			<ul>
-				<AppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :title="duplicate.hash"
+				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :title="duplicate.hash"
 					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
-				</AppNavigationItem>
+				</NcAppNavigationItem>
 			</ul>
-		</AppNavigation>
-		<AppContent>
+		</NcAppNavigation>
+		<NcAppContent>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
 					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
@@ -23,17 +23,14 @@
 				<div class="icon-file" />
 				<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
 			</div>
-		</AppContent>
+		</NcAppContent>
 	</div>
 </template>
 
 <script>
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import AppContent from '@nextcloud/vue/dist/Components/AppContent'
-import AppNavigation from '@nextcloud/vue/dist/Components/AppNavigation'
-import AppNavigationItem from '@nextcloud/vue/dist/Components/AppNavigationItem'
 
-import '@nextcloud/dialogs/styles/toast.scss'
+import { NcAppContent, NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue'
+
 import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
@@ -41,10 +38,9 @@ import axios from '@nextcloud/axios'
 export default {
 	name: 'App',
 	components: {
-		ActionButton,
-		AppContent,
-		AppNavigation,
-		AppNavigationItem,
+		NcAppContent,
+		NcAppNavigation,
+		NcAppNavigationItem,
 	},
 	data() {
 		return {
