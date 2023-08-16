@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Nextcloud 3.14159\n"
 "Report-Msgid-Bugs-To: translations\\@example.com\n"
-"POT-Creation-Date: 2023-08-16 17:41+0200\n"
+"POT-Creation-Date: 2023-08-16 18:25+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,7 +96,7 @@ msgstr ""
 
 #. TRANSLATORS src/Settings.vue:9
 #: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:26
-msgid "When true, files mounted on external storage will be ignored..."
+msgid "When true, files mounted on external storage will be ignored."
 msgstr ""
 
 #. TRANSLATORS src/Settings.vue:11
@@ -111,7 +111,7 @@ msgstr ""
 
 #. TRANSLATORS src/Settings.vue:16
 #: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:32
-msgid "When true, the event-based detection will be disabled..."
+msgid "When true, the event-based detection will be disabled."
 msgstr ""
 
 #. TRANSLATORS src/Settings.vue:18
@@ -126,7 +126,7 @@ msgstr ""
 
 #. TRANSLATORS src/Settings.vue:23
 #: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:38
-msgid "The interval in seconds for the cleanup background job..."
+msgid "The interval in seconds for the cleanup background job."
 msgstr ""
 
 #. TRANSLATORS src/Settings.vue:28
@@ -136,5 +136,25 @@ msgstr ""
 
 #. TRANSLATORS src/Settings.vue:29
 #: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:42
-msgid "The interval in seconds for the find duplicates background job..."
+msgid "The interval in seconds for the find duplicates background job."
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:34
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:44
+msgid "Save"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:51
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:46
+msgid "Could not fetch settings"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:68
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:48
+msgid "Settings saved"
+msgstr ""
+
+#. TRANSLATORS src/Settings.vue:70
+#: /mnt/c/Users/andre/Workspace/duplicatefinder/specialVueFakeDummyForL10nScript.js:50
+msgid "Could not save settings"
 msgstr ""
