@@ -64,7 +64,7 @@ export default {
   },
   methods: {
     saveSettings() {
-      axios.post('/apps/duplicatefinder/api/v1/settings', this.settings).then(response => {
+      axios.post(generateUrl('/apps/duplicatefinder/api/v1/settings'), this.settings).then(response => {
         showSuccess(t('duplicatefinder', 'Settings saved'));
       }).catch(error => {
         showError(t('duplicatefinder', 'Could not save settings'));
