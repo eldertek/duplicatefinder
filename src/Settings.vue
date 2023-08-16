@@ -67,10 +67,12 @@ export default {
   },
   methods: {
     saveSettings(key, value) {
-      axios.post(generateUrl(`/apps/duplicatefinder/api/v1/settings/${key}/${value}`))
+      const stringValue = value.toString();
+
+      axios.post(generateUrl(`/apps/duplicatefinder/api/v1/settings/${key}/${stringValue}`))
         .then(response => {
-          console.error(response)
-          console.error("key : " + key + ", value : " + value)
+          console.error(response);
+          console.error("key : " + key + ", value : " + stringValue);
           showSuccess(t('duplicatefinder', 'Settings saved'));
         })
         .catch(error => {
@@ -78,6 +80,7 @@ export default {
         });
     },
   }
+
 }
 </script>
 
