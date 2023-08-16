@@ -12,7 +12,7 @@ return [
         ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'duplicate_api#list', 'url' => '/api/{apiVersion}/duplicates', 'verb' => 'GET', 'requirements' => ['apiVersion' => 'v1']],
         ['name' => 'settings_api#list', 'url' => '/api/{apiVersion}/settings', 'verb' => 'GET', 'requirements' => ['apiVersion' => 'v1']],
-        ['name' => 'settings_api#save', 'url' => '/api/{apiVersion}/settings', 'verb' => 'PATCH', 'requirements' => ['apiVersion' => 'v1']],
+        ['name' => 'settings_api#save', 'url' => '/api/{apiVersion}/settings', 'verb' => 'POST', 'requirements' => ['apiVersion' => 'v1']],
         ['name' => 'filter_api#list', 'url' => '/api/{apiVersion}/filters', 'verb' => 'GET', 'requirements' => ['apiVersion' => 'v1']],
         ['name' => 'filter_api#save', 'url' => '/api/{apiVersion}/filters', 'verb' => 'PUT', 'requirements' => ['apiVersion' => 'v1']],
     ]
