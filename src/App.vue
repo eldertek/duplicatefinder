@@ -1,5 +1,5 @@
 <template>
-	<div id="content" class="app-duplicatefinder">
+	<NcContent app-name="duplicatefinder">
 		<NcAppNavigation v-if="duplicates.length > 0">
 			<ul>
 				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
@@ -30,12 +30,12 @@
 				<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
 			</div>
 		</NcAppContent>
-	</div>
+	</NcContent>
 </template>
 
 <script>
 
-import { NcAppContent, NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue'
+import { NcAppContent, NcAppNavigation, NcAppNavigationItem, NcContent } from '@nextcloud/vue'
 
 import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -47,6 +47,7 @@ export default {
 		NcAppContent,
 		NcAppNavigation,
 		NcAppNavigationItem,
+		NcContent
 	},
 	data() {
 		return {
