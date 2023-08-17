@@ -1,4 +1,6 @@
 ## 1.0.2 - 2023-08-18
+### Changed
+- Updated screenshot
 ### Fixed
 - Wrong container for App.vue
 ### Removed
