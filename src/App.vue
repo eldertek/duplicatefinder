@@ -1,17 +1,18 @@
 <template>
 	<NcContent app-name="duplicatefinder">
 		<NcAppNavigation v-if="duplicates.length > 0">
-			<ul>
+			<template #list>
 				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
 					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
 				</NcAppNavigationItem>
-			</ul>
+			</template>
 		</NcAppNavigation>
 		<NcAppContent>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0" class="summary-section">
 				<p>{{ t('duplicatefinder',
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
-					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}</p>
+					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
+				</p>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
