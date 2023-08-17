@@ -1,15 +1,11 @@
 <?xml version="1.0"?>
 <info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-    <!--
-    SPDX-FileCopyrightText: André Théo LAURET <andrelauret@eclipse-technology.eu>
-    SPDX-License-Identifier: CC0-1.0
-    -->
     <id>duplicatefinder</id>
     <name>Duplicate Finder</name>
     <summary>Save some space by finding your duplicate files</summary>
     <description>Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?</description>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <licence>agpl</licence>
     <author mail="andrelauret@eclipse-technology.eu" >André Théo LAURET</author>
     <namespace>DuplicateFinder</namespace>

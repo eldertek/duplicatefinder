@@ -1,25 +1,32 @@
 <template>
-	<div id="content" class="app-duplicatefinder">
+	<NcContent app-name="duplicatefinder">
 		<NcAppNavigation v-if="duplicates.length > 0">
-			<ul>
+			<template #list>
 				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
 					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+					<template #icon>
+						<div class="nav-thumbnail"
+							:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+					</template>
 				</NcAppNavigationItem>
-			</ul>
+			</template>
 		</NcAppNavigation>
 		<NcAppContent>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0" class="summary-section">
 				<p>{{ t('duplicatefinder',
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
-					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}</p>
+					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
+				</p>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
-					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
-					<div class="file-details">
-						<p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}:</strong></p>
-						<p><strong>{{ t('duplicatefinder', 'Hash:') }}</strong> {{ file.fileHash }}</p>
-						<p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ file.path }}</p>
+					<div class="file-info-container">
+						<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
+						<div class="file-details">
+							<p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong></p>
+							<p><strong>{{ t('duplicatefinder', 'Hash:') }}</strong> {{ file.fileHash }}</p>
+							<p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizeItemPath(file.path) }}</p>
+						</div>
 					</div>
 					<button @click="deleteDuplicate(file)" class="delete-button">{{ t('duplicatefinder', 'Delete')
 					}}</button>
@@ -30,12 +37,12 @@
 				<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
 			</div>
 		</NcAppContent>
-	</div>
+	</NcContent>
 </template>
 
 <script>
 
-import { NcAppContent, NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue'
+import { NcAppContent, NcAppNavigation, NcAppNavigationItem, NcContent } from '@nextcloud/vue'
 
 import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -47,6 +54,7 @@ export default {
 		NcAppContent,
 		NcAppNavigation,
 		NcAppNavigationItem,
+		NcContent
 	},
 	data() {
 		return {
@@ -91,6 +99,12 @@ export default {
 		try {
 			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/duplicates'))
 			this.duplicates = response.data.data.entities
+
+			// Automatically set the currentDuplicateId to the ID of the first duplicate
+			if (this.duplicates.length > 0) {
+				this.currentDuplicateId = this.duplicates[0].id
+			}
+
 		} catch (e) {
 			console.error(e)
 			showError(t('duplicatefinder', 'Could not fetch duplicates'))
@@ -177,45 +191,51 @@ export default {
 	flex-grow: 1;
 }
 
+.file-info-container {
+	display: flex;
+	align-items: center;
+}
+
 .file-display {
+	width: calc(100% - 20px);
 	display: flex;
 	align-items: center;
 	margin-bottom: 10px;
+	margin-left: 10px;
+	margin-right: 10px;
 	border: 1px solid #e0e0e0;
 	padding: 10px;
 	border-radius: 5px;
+	position: relative; 
 }
 
-.thumbnail {
-	width: 80px;
-	/* Width of the thumbnail */
-	height: 80px;
-	/* Height of the thumbnail */
-	background-size: cover;
-	background-position: center;
-	margin-right: 20px;
-	/* Space between thumbnail and details */
-	border-radius: 5px;
-	flex-shrink: 0;
-	/* Prevent thumbnail from shrinking */
+.file-display p {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .file-details {
 	flex-grow: 1;
-	/* Allow details to take up remaining space */
+	overflow: hidden;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-	.thumbnail {
-		width: 50px;
-		height: 50px;
-		margin-right: 10px;
-	}
+.thumbnail {
+	width: 80px;
+	height: 80px;
+	background-size: cover;
+	background-position: center;
+	margin-right: 20px;
+	border-radius: 5px;
+	flex-shrink: 0;
+}
 
-	.file-details p {
-		font-size: 14px;
-	}
+.nav-thumbnail {
+	width: 20px;
+	height: 20px;
+	background-size: cover;
+	background-position: center;
+	border-radius: 4px;
 }
 
 .delete-button {
@@ -227,27 +247,72 @@ export default {
 	cursor: pointer;
 	transition: background-color 0.3s;
 	margin-left: 10px;
-	/* Space between the details and the button */
 }
 
 .delete-button:hover {
 	background-color: #e43f51;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-	.delete-button {
-		padding: 3px 7px;
-		font-size: 12px;
-	}
-}
-
 .summary-section {
+	margin-top: 50px;
 	margin-bottom: 20px;
 	padding: 10px;
-	background-color: #f7f7f7;
 	border-radius: 5px;
 	font-weight: bold;
 	text-align: center;
+}
+
+/* Desktop styles */
+@media (min-width: 801px) {
+	.delete-button {
+		position: absolute;
+		right: 10px;
+		top: 50%;
+		transform: translateY(-50%);
+		margin-left: 0; /* <-- reset margin for desktop */
+	}
+}
+
+/* Mobile stles */
+@media (max-width: 800px) {
+	.file-display {
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.file-info-container {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		margin-bottom: 10px;
+		justify-content: space-between;
+	}
+
+	.thumbnail {
+		margin-right: 20px;
+		margin-bottom: 0;
+		flex-shrink: 0;
+	}
+
+	.file-details {
+		flex-grow: 1;
+		width: calc(100% - 100px);
+	}
+
+	.file-details p {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 90%;
+	}
+
+	.delete-button {
+		width: 100%;
+		margin-left: 0;
+		margin-right: 0;
+		padding: 3px 7px;
+		font-size: 12px;
+		margin-top: 10px;
+	}
 }
 </style>

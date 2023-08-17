@@ -13,6 +13,8 @@ permissions:
   contents: write
 
 env:
+  APP_NAME: duplicatefinder
+  APP_VERSION: ${{ github.ref }}
   PHP_VERSION: 8.1
 
 jobs:
@@ -24,13 +26,7 @@ jobs:
         uses: skjnldsv/check-actor-permission@e591dbfe838300c007028e1219ca82cc26e8d7c5 # v2.1
         with:
           require: write
-
-      - name: Set app env
-        run: |
-          # Split and keep last
-          echo "APP_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
-          echo "APP_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
-
+          
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
@@ -73,18 +69,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check composer.json
-        id: check_composer
-        uses: andstor/file-existence-action@20b4d2e596410855db8f9ca21e96fbe18e12930b # v2
-        with:
-          files: "${{ env.APP_NAME }}/composer.json"
-
-      - name: Install composer dependencies
-        if: steps.check_composer.outputs.files_exists == 'true'
-        run: |
-          cd ${{ env.APP_NAME }}
-          composer install --no-dev
-
       - name: Build ${{ env.APP_NAME }}
         # Skip if no package.json
         if: ${{ steps.versions.outputs.nodeVersion }}
@@ -104,14 +88,6 @@ jobs:
           NCVERSION=${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
           wget --quiet https://download.nextcloud.com/server/releases/latest-$NCVERSION.zip
           unzip latest-$NCVERSION.zip
-
-      - name: Checkout server master fallback
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-        if: ${{ steps.server-checkout.outcome != 'success' }}
-        with:
-          submodules: true
-          repository: nextcloud/server
-          path: nextcloud
 
       - name: Sign app
         run: |
