@@ -1,8 +1,12 @@
 ## 1.0.2 - 2023-08-18
+### Added
+- Mobile responsive design
+- Duplicate thumbnail in navigation
 ### Changed
 - Updated screenshot
 ### Fixed
 - Wrong container for App.vue
+- Navigation button not working (issue with @nextcloud/vue 8)
 ### Removed
 - Source from appstore package
 

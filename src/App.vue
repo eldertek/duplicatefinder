@@ -4,6 +4,10 @@
 			<template #list>
 				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
 					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+					<template #icon>
+						<div class="nav-thumbnail"
+							:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+					</template>
 				</NcAppNavigationItem>
 			</template>
 		</NcAppNavigation>
@@ -93,6 +97,12 @@ export default {
 		try {
 			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/duplicates'))
 			this.duplicates = response.data.data.entities
+
+			// Automatically set the currentDuplicateId to the ID of the first duplicate
+			if (this.duplicates.length > 0) {
+				this.currentDuplicateId = this.duplicates[0].id
+			}
+
 		} catch (e) {
 			console.error(e)
 			showError(t('duplicatefinder', 'Could not fetch duplicates'))
@@ -180,44 +190,45 @@ export default {
 }
 
 .file-display {
+	width: calc(100% - 20px);
+	;
 	display: flex;
 	align-items: center;
 	margin-bottom: 10px;
+	margin-left: 10px;
+	margin-right: 10px;
 	border: 1px solid #e0e0e0;
 	padding: 10px;
 	border-radius: 5px;
 }
 
-.thumbnail {
-	width: 80px;
-	/* Width of the thumbnail */
-	height: 80px;
-	/* Height of the thumbnail */
-	background-size: cover;
-	background-position: center;
-	margin-right: 20px;
-	/* Space between thumbnail and details */
-	border-radius: 5px;
-	flex-shrink: 0;
-	/* Prevent thumbnail from shrinking */
+.file-display p {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .file-details {
 	flex-grow: 1;
-	/* Allow details to take up remaining space */
+	overflow: hidden;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-	.thumbnail {
-		width: 50px;
-		height: 50px;
-		margin-right: 10px;
-	}
+.thumbnail {
+	width: 80px;
+	height: 80px;
+	background-size: cover;
+	background-position: center;
+	margin-right: 20px;
+	border-radius: 5px;
+	flex-shrink: 0;
+}
 
-	.file-details p {
-		font-size: 14px;
-	}
+.nav-thumbnail {
+	width: 20px;
+	height: 20px;
+	background-size: cover;
+	background-position: center;
+	border-radius: 4px;
 }
 
 .delete-button {
@@ -229,11 +240,19 @@ export default {
 	cursor: pointer;
 	transition: background-color 0.3s;
 	margin-left: 10px;
-	/* Space between the details and the button */
 }
 
 .delete-button:hover {
 	background-color: #e43f51;
+}
+
+.summary-section {
+	margin-top: 50px;
+	margin-bottom: 20px;
+	padding: 10px;
+	border-radius: 5px;
+	font-weight: bold;
+	text-align: center;
 }
 
 /* Responsive adjustments */
@@ -244,12 +263,15 @@ export default {
 	}
 }
 
-.summary-section {
-	margin-bottom: 20px;
-	padding: 10px;
-	background-color: #f7f7f7;
-	border-radius: 5px;
-	font-weight: bold;
-	text-align: center;
+@media (max-width: 600px) {
+	.thumbnail {
+		width: 50px;
+		height: 50px;
+		margin-right: 10px;
+	}
+
+	.file-details p {
+		font-size: 14px;
+	}
 }
 </style>

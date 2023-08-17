@@ -36,7 +36,7 @@
     "@nextcloud/event-bus": "^3.1.0",
     "@nextcloud/logger": "^2.5.0",
     "@nextcloud/router": "^2.1.2",
-    "@nextcloud/vue": "^8.0.0-beta.2",
+    "@nextcloud/vue": "^7.12.2",
     "@nextcloud/webpack-vue-config": "^6.0.0",
     "@skjnldsv/sanitize-svg": "^1.0.2"
   }
