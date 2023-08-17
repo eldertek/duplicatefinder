@@ -1,4 +1,4 @@
-## 1.0.2 - 2023-08-18
+## 1.0.2 - 2023-08-17
 ### Added
 - Mobile responsive design
 - Duplicate thumbnail in navigation
@@ -11,7 +11,7 @@
 ### Removed
 - Source from appstore package
 
-## 1.0.1 - 2023-08-17
+## 1.0.1 - 2023-08-16
 ### Added
 - New preview in appstore
 - New user interface and administration section
