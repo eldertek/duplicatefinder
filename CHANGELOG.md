@@ -6,6 +6,7 @@
 - Updated screenshot
 ### Fixed
 - Wrong container for App.vue
+- No navigation button in administration section
 - Navigation button not working (issue with @nextcloud/vue 8)
 ### Removed
 - Source from appstore package
