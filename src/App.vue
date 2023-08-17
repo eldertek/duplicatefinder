@@ -20,11 +20,13 @@
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
-					<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
-					<div class="file-details">
-						<p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}:</strong></p>
-						<p><strong>{{ t('duplicatefinder', 'Hash:') }}</strong> {{ file.fileHash }}</p>
-						<p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ file.path }}</p>
+					<div class="file-info-container">
+						<div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
+						<div class="file-details">
+							<p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong></p>
+							<p><strong>{{ t('duplicatefinder', 'Hash:') }}</strong> {{ file.fileHash }}</p>
+							<p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizeItemPath(file.path) }}</p>
+						</div>
 					</div>
 					<button @click="deleteDuplicate(file)" class="delete-button">{{ t('duplicatefinder', 'Delete')
 					}}</button>
@@ -189,9 +191,13 @@ export default {
 	flex-grow: 1;
 }
 
+.file-info-container {
+	display: flex;
+	align-items: center;
+}
+
 .file-display {
 	width: calc(100% - 20px);
-	;
 	display: flex;
 	align-items: center;
 	margin-bottom: 10px;
@@ -200,6 +206,7 @@ export default {
 	border: 1px solid #e0e0e0;
 	padding: 10px;
 	border-radius: 5px;
+	position: relative; 
 }
 
 .file-display p {
@@ -255,23 +262,57 @@ export default {
 	text-align: center;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
+/* Desktop styles */
+@media (min-width: 801px) {
 	.delete-button {
-		padding: 3px 7px;
-		font-size: 12px;
+		position: absolute;
+		right: 10px;
+		top: 50%;
+		transform: translateY(-50%);
+		margin-left: 0; /* <-- reset margin for desktop */
 	}
 }
 
-@media (max-width: 600px) {
+/* Mobile stles */
+@media (max-width: 800px) {
+	.file-display {
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.file-info-container {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		margin-bottom: 10px;
+		justify-content: space-between;
+	}
+
 	.thumbnail {
-		width: 50px;
-		height: 50px;
-		margin-right: 10px;
+		margin-right: 20px;
+		margin-bottom: 0;
+		flex-shrink: 0;
+	}
+
+	.file-details {
+		flex-grow: 1;
+		width: calc(100% - 100px);
 	}
 
 	.file-details p {
-		font-size: 14px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 90%;
+	}
+
+	.delete-button {
+		width: 100%;
+		margin-left: 0;
+		margin-right: 0;
+		padding: 3px 7px;
+		font-size: 12px;
+		margin-top: 10px;
 	}
 }
 </style>
