@@ -14,7 +14,7 @@ permissions:
 
 env:
   APP_NAME: duplicatefinder
-  APP_VERSION: ${{ github.ref }}
+  APP_VERSION: ${{ github.ref_name }}
   PHP_VERSION: 8.1
 
 jobs:
