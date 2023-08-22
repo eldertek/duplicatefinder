@@ -1,6 +1,30 @@
 { "translations": {
+    "Duplicate Finder" : "Откривач дупликата",
+    "Save some space by finding your duplicate files" : "Уштедите мало простора проналажњем дуплираних фајлова",
+    "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?" : "Да ли вам је доста копања кроз гомиле фајлова и фолдера и проналажења више копија једног те истог саджаја које загушују простор за складиштење? ",
+    "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Добродошли, тренутни дупликати се састоје од {numberOfFiles} фајлова, укупне величине: {formattedSize}",
     "File" : "Фајл",
+    "Hash:" : "Хеш:",
+    "Path:" : "Путања:",
     "Delete" : "Избриши",
-    "Settings saved" : "Поставке сачуване"
+    "No duplicates found or no duplicate selected." : "Није пронађен ниједан дупликат, или није изабран ниједан.",
+    "Could not fetch duplicates" : "Дупликати нису могли да се добаве",
+    "Duplicate deleted" : "Дупликат је обрисан",
+    "Could not delete the duplicate at path: ${item.path}" : "Није могао да се обрише дупликат на путањи: ${item.path}",
+    "Duplicate Finder Settings" : "Поставке Откривача дупликата",
+    "All general settings to modify Duplicate Finder behaviors." : "Сва општа подешаваа која мењају понашање Откривача дупликата.",
+    "Ignore Mounted Files" : "Игнорисање монтираних фајлова",
+    "When true, files mounted on external storage will be ignored." : "Када је истинито, игнорисаће се фајлови који се налазе на монтираном спољном складишту.",
+    "Ignore mounted file" : "Игнориши монтиране фајлове",
+    "Disable Filesystem Events" : "Искључивање догађаја фајл система",
+    "When true, the event-based detection will be disabled." : "Када је истинито, искључиће се откривање базирано на догађајима.",
+    "Disable filesystem events" : "Искључи догађаје фајл система",
+    "Background Job Cleanup Interval (seconds)" : "Интервал позадинског посла чишћења (у секундама)",
+    "The interval in seconds for the cleanup background job." : "Интервал у секундама након којег се покреће позадински посао чишћења.",
+    "Background Job Find Duplicates Interval (seconds)" : "Интервал позадинског посла откривања дупликата (у секундама)",
+    "The interval in seconds for the find duplicates background job." : "Интервал у секундама након којег се покреће позадински посао откривања дупликата.",
+    "Could not fetch settings" : "Не могу да се добаве подешавања",
+    "Settings saved" : "Поставке сачуване",
+    "Could not save settings" : "Не могу да се сачувају подешавања"
 },"pluralForm" :"nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);"
 }

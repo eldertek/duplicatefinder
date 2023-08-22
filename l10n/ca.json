@@ -1,0 +1,6 @@
+{ "translations": {
+    "File" : "Fitxer",
+    "Delete" : "Suprimir",
+    "Settings saved" : "S'han desat els paràmetres"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}
