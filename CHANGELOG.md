@@ -1,3 +1,7 @@
+# 1.0.3 - 2023-08-22
+### Changed
+- Updated translations
+
 ## 1.0.2 - 2023-08-17
 ### Added
 - Mobile responsive design
