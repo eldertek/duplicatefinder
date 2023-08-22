@@ -1,3 +1,7 @@
+# 1.0.4 - xxxx-xx-xx
+### Added
+- Added french description to appinfo/info.xml
+
 # 1.0.3 - 2023-08-22
 ### Changed
 - Updated translations
