@@ -60,15 +60,6 @@ class ConfigService
         $this->config->setUserValue($userId, Application::ID, $key, $value);
     }
 
-    /**
-     * @return array<array>
-     */
-    public function getIgnoreConditions() : array
-    {
-        $unparsedConditions = $this->config->getAppValue(Application::ID, 'ignored_files', '[]');
-        return json_decode($unparsedConditions, true);
-    }
-
     public function getFindJobInterval() : int
     {
         return $this->getIntVal('backgroundjob_interval_find', 60*60*24*5);
@@ -92,20 +83,6 @@ class ConfigService
     public function getInstalledVersion() : string
     {
         return $this->config->getAppValue(Application::ID, 'installed_version', '0.0.0');
-    }
-
-    /**
-     * @param array<array> $value
-     * @throws UnableToParseException
-     */
-    public function setIgnoreConditions(array $value) : void
-    {
-        $deocedArray = json_encode($value);
-        if (is_string($deocedArray)) {
-            $this->config->setAppValue(Application::ID, 'ignored_files', $deocedArray);
-        } else {
-            throw new UnableToParseException('ignore conditions');
-        }
     }
 
     public function setFindJobInterval(int $value) : void

@@ -30,7 +30,6 @@ class SettingsApiController extends AbstractAPIController
     private function getConfigArray(): array
     {
         return [
-            'ignored_files' => $this->configService->getIgnoreConditions(),
             'backgroundjob_interval_find' => $this->configService->getFindJobInterval(),
             'backgroundjob_interval_cleanup' => $this->configService->getCleanupJobInterval(),
             'disable_filesystem_events' => $this->configService->areFilesytemEventsDisabled(),
@@ -51,7 +50,6 @@ class SettingsApiController extends AbstractAPIController
     public function save(string $key, $value): JSONResponse
     {
         $configKeys = [
-            'ignored_files' => 'setIgnoreConditions',
             'backgroundjob_interval_find' => 'setFindJobInterval',
             'backgroundjob_interval_cleanup' => 'setCleanupJobInterval',
             'disable_filesystem_events' => 'setFilesytemEventsDisabled',

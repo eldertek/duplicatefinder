@@ -22,6 +22,9 @@ There are three possible ways duplicates can be detected.
 
 Normally the detection methods should be used in the order as listed, but if you are installing the app on an existing installation it can be quite useful to start with a full scan by using command-based detection.
 
+## Ignoring Duplicates
+To prevent a folder from being scanned for duplicates, place a `.nodupefinder` file inside it. Any files in this folder will be excluded from the duplicate detection process.
+
 ## Command usage
 
   `occ [-v] duplicates:ACTION [options]`
@@ -53,7 +56,6 @@ All settings should be modified only through UI. If this doesn't work for you, y
 | disable_filesystem_events | boolean | false | When true, the event-based detection will be disabled.<br>This gives you more control when the hashes are generated. |
 | backgroundjob_interval_cleanup | integer | 432000 | Interval in seconds in which the clean-up background job will be run |
 | backgroundjob_interval_find | integer | 172800 | Interval in seconds in which the background job, to find duplicates, will be run |
-| ignored_files | string | [] | JSON-decoded array that contains the conditions to ignore files<br>Example: `[[{"attribute":"filename","operator":"=","value":"1_1.txt"}]]` |
 
 ## Preview
 
