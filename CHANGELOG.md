@@ -1,9 +1,9 @@
-# 1.0.4 - 2023-08-23
+## 1.0.4 - 2023-08-23
 ### Added
 - French description now available in appinfo/info.xml.
 - Easily ignore all duplicates inside a specific folder. Simply add a .nodupefinder file inside the relevant folder.
 
-# 1.0.3 - 2023-08-22
+## 1.0.3 - 2023-08-22
 ### Changed
 - Updated translations
 
