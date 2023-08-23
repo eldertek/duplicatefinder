@@ -44,7 +44,7 @@ class FileInfoListener implements IEventListener
                 }
             }
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to handle NewFileInfoEvent.', ['exception'=> $e]);
+            $this->logger->error('Failed to handle NewFileInfoEvent.', ['exception' => $e]);
         }
     }
 }

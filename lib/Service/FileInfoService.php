@@ -15,7 +15,6 @@ use OCA\DuplicateFinder\Db\FileInfoMapper;
 use OCA\DuplicateFinder\Event\CalculatedHashEvent;
 use OCA\DuplicateFinder\Event\UpdatedFileInfoEvent;
 use OCA\DuplicateFinder\Event\NewFileInfoEvent;
-use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
 use OCA\DuplicateFinder\Exception\UnableToCalculateHash;
 use OCA\DuplicateFinder\Utils\CMDUtils;
 use OCA\DuplicateFinder\Utils\ScannerUtil;

@@ -119,12 +119,12 @@ class FindDuplicates extends Base
     /**
      * @param array<string> $users
      */
-    private function findDuplicatesForUsers(array $users) : int
+    private function findDuplicatesForUsers(array $users): int
     {
         $result = 0;
         foreach ($users as $user) {
             if (!$this->userManager->userExists($user)) {
-                $this->output->writeln('User '.$user.' is unkown.');
+                $this->output->writeln('User ' . $user . ' is unkown.');
                 $result = 1;
                 break;
             }
@@ -133,14 +133,14 @@ class FindDuplicates extends Base
                 $this->findDuplicates($user);
             } catch (NotFoundException $e) {
                 $this->logger->error('A given path doesn\'t exists', ['app' => Application::ID, 'exception' => $e]);
-                $this->output->writeln('<error>The given path doesn\'t exists ('.$e->getMessage().').<error>');
+                $this->output->writeln('<error>The given path doesn\'t exists (' . $e->getMessage() . ').<error>');
             }
         }
         unset($user);
         return $result;
     }
 
-    private function findDuplicates(string $user):void
+    private function findDuplicates(string $user): void
     {
         if (is_null($this->inputPath)) {
             $this->fileInfoService->scanFiles(
@@ -168,4 +168,5 @@ class FindDuplicates extends Base
             $this->abortIfInterrupted();
         }, $user);
     }
+
 }
