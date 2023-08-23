@@ -1,7 +1,6 @@
 OC.L10N.register(
     "duplicatefinder",
     {
-    "Save some space by finding your duplicate files" : "Spara utrymme genom att hitta dina dubbletter av filer",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Välkommen, den aktuella dubbletten har {numberOfFiles} filer, total storlek: {formattedSize}",
     "File" : "Fil",
     "Hash:" : "Hash:",

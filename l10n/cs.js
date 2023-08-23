@@ -2,8 +2,6 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Duplicate Finder" : "Hledání duplicit",
-    "Save some space by finding your duplicate files" : "Ušetřete nějaké místo nalezením duplicitních souborů",
-    "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?" : "Už vás nebaví probírat se hromadami souborů a složek jen proto, aby jste zjistili, že prostor na úložišti zabírají vícenásobné kopie toho stejného obsahu?",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Vítejte, stávající duplicita má {numberOfFiles} souborů, celková velikost: {formattedSize}",
     "File" : "Soubor",
     "Hash:" : "Otisk:",

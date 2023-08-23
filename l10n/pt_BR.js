@@ -2,8 +2,6 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Duplicate Finder" : "Localizador de Duplicatas",
-    "Save some space by finding your duplicate files" : "Economize espaço encontrando seus arquivos duplicados",
-    "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?" : "Você está cansado de vasculhar pilhas de arquivos e pastas, apenas para descobrir várias cópias do mesmo conteúdo bagunçando seu espaço de armazenamento?",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Bem-vindo, a duplicata atual tem {numberOfFiles} arquivos, tamanho total: {formattedSize}",
     "File" : "Arquivo",
     "Hash:" : "Hash:",

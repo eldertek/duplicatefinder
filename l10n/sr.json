@@ -1,7 +1,5 @@
 { "translations": {
     "Duplicate Finder" : "Откривач дупликата",
-    "Save some space by finding your duplicate files" : "Уштедите мало простора проналажњем дуплираних фајлова",
-    "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?" : "Да ли вам је доста копања кроз гомиле фајлова и фолдера и проналажења више копија једног те истог саджаја које загушују простор за складиштење? ",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Добродошли, тренутни дупликати се састоје од {numberOfFiles} фајлова, укупне величине: {formattedSize}",
     "File" : "Фајл",
     "Hash:" : "Хеш:",

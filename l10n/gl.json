@@ -1,7 +1,5 @@
 { "translations": {
     "Duplicate Finder" : "Buscador de duplicados",
-    "Save some space by finding your duplicate files" : "Aforra espazo atopando os seus ficheiros duplicados",
-    "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?" : "Está canso de buscar entre moreas de ficheiros e cartafoles, só para descubrir varias copias do mesmo contido que ateigan o seu espazo de almacenamento?",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Dámoslle a benvida, neste momento ten {numberOfFiles} ficheiros duplicados, cun tamaño total de: {formattedSize}",
     "File" : "Ficheiro",
     "Hash:" : "Resumo (criptográfico):",
