@@ -1,5 +1,6 @@
 { "translations": {
     "File" : "Fail",
+    "Delete" : "Kustuta",
     "Settings saved" : "Seaded salvestatud"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

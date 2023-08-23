@@ -2,8 +2,6 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Duplicate Finder" : "مكتشف التكرارات Duplicate Finder",
-    "Save some space by finding your duplicate files" : "توفير بعض المساحة باكتشاف الملفات المتكررة عندك",
-    "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?" : "هل سئمت من غربلة أكوام من الملفات و المجلدات لأجل أن تكتشف النسخ المتكررة من نفس المحتوى و التي تُزجِم مساحة التخزين عندك؟",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "مرحباً. التكرارات الحالية تشتمل على {numberOfFiles} ملف؛ إجمالي حجمها: {formattedSize}",
     "File" : "ملف",
     "Hash:" : "المُستَصْفَى Hashـ :",

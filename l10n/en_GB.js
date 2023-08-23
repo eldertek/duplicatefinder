@@ -2,8 +2,6 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Duplicate Finder" : "Duplicate Finder",
-    "Save some space by finding your duplicate files" : "Save some space by finding your duplicate files",
-    "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?" : "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}",
     "File" : "File",
     "Hash:" : "Hash:",

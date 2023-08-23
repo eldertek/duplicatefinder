@@ -2,8 +2,6 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Duplicate Finder" : "重複尋找器",
-    "Save some space by finding your duplicate files" : "通過尋找重複檔案來節省一些空間",
-    "Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?" : "您是否厭倦了在成堆的檔案和資料夾中進行篩選，卻發現同一內容的多個副本擠滿了您的存儲空間？",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "歡迎，當前副本有 {numberOfFiles} 個檔案，總大小：{formattedSize}",
     "File" : "檔案",
     "Hash:" : "散列：",
