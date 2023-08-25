@@ -1,6 +1,28 @@
 { "translations": {
+    "Duplicate Finder" : "Çift bulucu",
+    "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Hoş geldiniz. Bu kopyada {numberOfFiles} çift dosya var. Toplam boyut: {formattedSize}",
     "File" : "Dosya",
+    "Hash:" : "Karma:",
+    "Path:" : "Yol:",
     "Delete" : "Sil",
-    "Settings saved" : "Ayarlar kaydedildi"
+    "No duplicates found or no duplicate selected." : "Herhangi bir çift dosya bulunamadı ya da bir çift seçilmemiş.",
+    "Could not fetch duplicates" : "Çiftler alınamadı",
+    "Duplicate deleted" : "Çift silindi",
+    "Could not delete the duplicate at path: ${item.path}" : "Şu yoldaki çift silinemedi: ${item.path}",
+    "Duplicate Finder Settings" : "Çift bulucu ayarları",
+    "All general settings to modify Duplicate Finder behaviors." : "Çift bulucu davranışlarını belirleyen tüm genel ayarlar.",
+    "Ignore Mounted Files" : "Takılı dosyalar yok sayılsın",
+    "When true, files mounted on external storage will be ignored." : "Bu seçenek etkinleştirildiğinde, dış depolama birimine takılı dosyalar yok sayılır.",
+    "Ignore mounted file" : "Takılı dosyayı yok say",
+    "Disable Filesystem Events" : "Dosya sistemi etkinliklerine bakılmasın",
+    "When true, the event-based detection will be disabled." : "Bu seçenek etkinleştirildiğinde, etkinlik temelli algılama yapılmayacak.",
+    "Disable filesystem events" : "Dosya sistemi etkinliklerine bakılmasın",
+    "Background Job Cleanup Interval (seconds)" : "Temizleme arka plan görevi sıklığı (saniye)",
+    "The interval in seconds for the cleanup background job." : "Temizleme arka plan görevinin saniye cinsinden çalışma sıklığı.",
+    "Background Job Find Duplicates Interval (seconds)" : "Çiftleri bulma arka plan görevi sıklığı (saniye)",
+    "The interval in seconds for the find duplicates background job." : "Çiftleri bulma arka plan görevinin saniye cinsinden çalışma sıklığı.",
+    "Could not fetch settings" : "Ayarlar alınamadı",
+    "Settings saved" : "Ayarlar kaydedildi",
+    "Could not save settings" : "Ayarlar kaydedilemedi"
 },"pluralForm" :"nplurals=2; plural=(n > 1);"
 }
