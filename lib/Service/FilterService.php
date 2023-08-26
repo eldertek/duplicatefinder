@@ -32,7 +32,7 @@ class FilterService
         }
 
         // Ignore files when any ancestor folder contains a .nodupefinder file
-        while ($node->getId() !== $node->getRoot()->getId()) { // loop until root
+        while ($node->getParent() !== null) { // loop until root
             $parent = $node->getParent();
             if ($parent->nodeExists('.nodupefinder')) {
                 return true;
