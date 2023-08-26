@@ -1,34 +1,42 @@
 <?php
+
 namespace OCA\DuplicateFinder\BackgroundJob;
 
-use OC\Files\Utils\Scanner;
-use OCP\EventDispatcher\IEventDispatcher;
-use Psr\Log\LoggerInterface;
-use OCP\IUserManager;
-use OCP\IUser;
-use OCP\IDBConnection;
-use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\ConfigService;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCP\EventDispatcher\IEventDispatcher;
+use OCP\IDBConnection;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\BackgroundJob\TimedJob;
+use Psr\Log\LoggerInterface;
 
-class FindDuplicates extends \OCP\BackgroundJob\TimedJob
+class FindDuplicates extends TimedJob
 {
     /** @var IUserManager */
     private $userManager;
+
     /** @var IEventDispatcher */
     private $dispatcher;
+
     /** @var LoggerInterface */
     private $logger;
-    /** @var FileInfoService*/
-    private $fileInfoService;
+
     /** @var IDBConnection */
     protected $connection;
 
+    /** @var FileInfoService */
+    private $fileInfoService;
 
     /**
+     * FindDuplicates constructor.
+     *
      * @param IUserManager $userManager
      * @param IEventDispatcher $dispatcher
      * @param LoggerInterface $logger
+     * @param IDBConnection $connection
      * @param FileInfoService $fileInfoService
+     * @param ConfigService $config
      */
     public function __construct(
         IUserManager $userManager,
@@ -47,6 +55,8 @@ class FindDuplicates extends \OCP\BackgroundJob\TimedJob
     }
 
     /**
+     * Execute the job to find duplicates.
+     *
      * @param mixed $argument
      * @return void
      * @throws \Exception
