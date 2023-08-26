@@ -4,6 +4,7 @@ namespace OCA\DuplicateFinder\Service;
 
 use Psr\Log\LoggerInterface;
 use OCP\Files\Node;
+use OCP\Files\NotFoundException;
 
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
@@ -30,26 +31,22 @@ class FilterService
         if ($node->isMounted() && $this->config->areMountedFilesIgnored()) {
             throw new ForcedToIgnoreFileException($fileInfo, 'app:ignore_mounted_files');
         }
-
+    
         // Ignore files when any ancestor folder contains a .nodupefinder file
-        try {
-            while ($node !== null && $node->getParent() !== null) { // loop until root or null node
+        while ($node !== null) {
+            try {
                 $parent = $node->getParent();
                 if ($parent !== null && $parent->nodeExists('.nodupefinder')) {
                     return true;
                 }
                 $node = $parent; // move up to the parent and check again
+            } catch (NotFoundException $e) {
+                // No parent found (probably root), break the loop
+                break;
             }
-        } catch (\Exception $e) {
-                $this->logger->error(sprintf(
-                    "Error while checking for .nodupefinder in node '%s'. Exception: %s (%s). Trace: %s",
-                    $node->getPath(),
-                    get_class($e),
-                    $e->getMessage(),
-                    $e->getTraceAsString()
-                ));
-            }            
-
+        }
+    
         return false;
     }
+    
 }
