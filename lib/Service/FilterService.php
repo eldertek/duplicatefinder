@@ -41,8 +41,14 @@ class FilterService
                 $node = $parent; // move up to the parent and check again
             }
         } catch (\Exception $e) {
-            $this->logger->error("Error while checking for .nodupefinder: " . $e->getMessage());
-        }
+                $this->logger->error(sprintf(
+                    "Error while checking for .nodupefinder in node '%s'. Exception: %s (%s). Trace: %s",
+                    $node->getPath(),
+                    get_class($e),
+                    $e->getMessage(),
+                    $e->getTraceAsString()
+                ));
+            }            
 
         return false;
     }
