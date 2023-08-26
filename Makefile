@@ -30,6 +30,9 @@ appstore:
 	--exclude="/build" \
 	--exclude="Makefile" \
 	--exclude="/*.log" \
+	--exclude="composer.json" \
+	--exclude="composer.lock" \
+	--exclude="/vendor" \
 	--exclude="/node_modules" \
 	--exclude="/package-lock.json" \
 	--exclude="/package.json" \
