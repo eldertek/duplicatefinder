@@ -1,4 +1,5 @@
 <?php
+
 namespace OCA\DuplicateFinder\Service;
 
 use Psr\Log\LoggerInterface;
@@ -30,10 +31,13 @@ class FilterService
             throw new ForcedToIgnoreFileException($fileInfo, 'app:ignore_mounted_files');
         }
 
-        // Ignore files when folder contains a .nodupefinder file
-        $parent = $node->getParent();
-        if ($parent->nodeExists('.nodupefinder')) {
-            return true;
+        // Ignore files when any ancestor folder contains a .nodupefinder file
+        while ($node->getId() !== $node->getRoot()->getId()) { // loop until root
+            $parent = $node->getParent();
+            if ($parent->nodeExists('.nodupefinder')) {
+                return true;
+            }
+            $node = $parent; // move up to the parent and check again
         }
 
         return false;
