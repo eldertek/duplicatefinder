@@ -20,6 +20,7 @@
 		}
 	},
 	"require": {
-		"nextcloud/ocp": "^27.0"
+		"nextcloud/ocp": "^27.0",
+		"symfony/console": "^6.3"
 	}
 }
