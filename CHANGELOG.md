@@ -1,3 +1,11 @@
+## 1.0.5 - 2023-08-26
+### Added
+- Composer support
+### Changed
+- Clean up somes code
+### Fixed
+- Fix [#7](https://github.com/eldertek/duplicatefinder/issues/7)
+
 ## 1.0.4 - 2023-08-23
 ### Added
 - French description now available in appinfo/info.xml.
