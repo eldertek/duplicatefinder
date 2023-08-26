@@ -10,7 +10,7 @@ use OCP\IDBConnection;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\ConfigService;
 
-class FindDuplicates extends \OC\BackgroundJob\TimedJob
+class FindDuplicates extends \OCP\BackgroundJob\TimedJob
 {
     /** @var IUserManager */
     private $userManager;
