@@ -3,12 +3,14 @@ source_build_directory=$(CURDIR)/build/artifacts/source
 build_dir=$(CURDIR)/build/artifacts
 sign_dir=$(source_build_directory)/sign
 npm=$(shell which npm 2> /dev/null)
+composer=$(shell which composer 2> /dev/null)
 
 all: build
 
 # Installs npm dependencies and builds the app
 .PHONY: build
 build:
+	composer install
 	npm install
 	npm run build
 
@@ -16,6 +18,7 @@ build:
 .PHONY: clean
 clean:
 	rm -rf ./build
+	rm -rf ./vendor
 
 # Builds the source package for the app store
 .PHONY: appstore
@@ -24,9 +27,7 @@ appstore:
 	mkdir -p $(sign_dir)
 	rsync -a \
 	--exclude="/.git" \
-	--exclude="/.devcontainer" \
 	--exclude="/build" \
-	--exclude="/tests" \
 	--exclude="Makefile" \
 	--exclude="/*.log" \
 	--exclude="/node_modules" \

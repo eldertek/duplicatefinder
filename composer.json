@@ -1,0 +1,25 @@
+{
+	"name": "nextcloud/duplicatefinder",
+	"description": "Save some space by finding your duplicate files",
+	"type": "project",
+	"license": "AGPL-3.0-or-later",
+	"authors": [
+		{
+			"name": "André Théo LAURET"
+		}
+	],
+	"scripts": {
+		"lint": "find . -name \\*.php -not -path './vendor/*' -print0 | xargs -0 -n1 php -l"
+	},
+	"config": {
+		"allow-plugins": {
+			"composer/package-versions-deprecated": true
+		},
+		"platform": {
+			"php": "8.2"
+		}
+	},
+	"require": {
+		"nextcloud/ocp": "^27.0"
+	}
+}
