@@ -1,5 +1,4 @@
 ## 1.0.6 - 2023-10-24
-- Clean up somes code
 ### Fixed
 - Fix [#10](https://github.com/eldertek/duplicatefinder/issues/10)
 
