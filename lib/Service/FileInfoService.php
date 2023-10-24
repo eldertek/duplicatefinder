@@ -1,4 +1,5 @@
 <?php
+
 namespace OCA\DuplicateFinder\Service;
 
 use Psr\Log\LoggerInterface;
@@ -58,7 +59,7 @@ class FileInfoService
     /**
      * @return FileInfo
      */
-    public function enrich(FileInfo $fileInfo):FileInfo
+    public function enrich(FileInfo $fileInfo): FileInfo
     {
         $node = $this->folderService->getNodeByFileInfo($fileInfo);
         $fileInfo->setNodeId($node->getId());
@@ -70,7 +71,7 @@ class FileInfoService
     /**
      * @return array<FileInfo>
      */
-    public function findAll(bool $enrich = false):array
+    public function findAll(bool $enrich = false): array
     {
         $entities = $this->mapper->findAll();
         if ($enrich) {
@@ -82,7 +83,7 @@ class FileInfoService
         return $entities;
     }
 
-    public function find(string $path, ?string $fallbackUID = null, bool $enrich = false):FileInfo
+    public function find(string $path, ?string $fallbackUID = null, bool $enrich = false): FileInfo
     {
         $entity = $this->mapper->find($path, $fallbackUID);
         if ($enrich) {
@@ -91,7 +92,7 @@ class FileInfoService
         return $entity;
     }
 
-    public function findById(int $id, bool $enrich = false):FileInfo
+    public function findById(int $id, bool $enrich = false): FileInfo
     {
         $entity = $this->mapper->findById($id);
         if ($enrich) {
@@ -103,7 +104,7 @@ class FileInfoService
     /**
      * @return array<FileInfo>
      */
-    public function findByHash(string $hash, string $type = 'file_hash'):array
+    public function findByHash(string $hash, string $type = 'file_hash'): array
     {
         return $this->mapper->findByHash($hash, $type);
     }
@@ -111,22 +112,22 @@ class FileInfoService
     /**
      * @return array<FileInfo>
      */
-    public function findBySize(int $size, bool $onlyEmptyHash = true):array
+    public function findBySize(int $size, bool $onlyEmptyHash = true): array
     {
         return $this->mapper->findBySize($size, $onlyEmptyHash);
     }
 
-    public function countByHash(string $hash, string $type = 'file_hash'):int
+    public function countByHash(string $hash, string $type = 'file_hash'): int
     {
         return $this->mapper->countByHash($hash, $type);
     }
 
-    public function countBySize(int $size):int
+    public function countBySize(int $size): int
     {
         return $this->mapper->countBySize($size);
     }
 
-    public function update(FileInfo $fileInfo, ?string $fallbackUID = null):FileInfo
+    public function update(FileInfo $fileInfo, ?string $fallbackUID = null): FileInfo
     {
         $fileInfo = $this->updateFileMeta($fileInfo, $fallbackUID);
         $fileInfo->setKeepAsPrimary(true);
@@ -135,7 +136,7 @@ class FileInfoService
         return $fileInfo;
     }
 
-    public function save(string $path, ?string $fallbackUID = null):FileInfo
+    public function save(string $path, ?string $fallbackUID = null): FileInfo
     {
         try {
             $fileInfo = $this->mapper->find($path, $fallbackUID);
@@ -152,18 +153,18 @@ class FileInfoService
         return $fileInfo;
     }
 
-    public function delete(FileInfo $fileInfo):FileInfo
+    public function delete(FileInfo $fileInfo): FileInfo
     {
         $this->mapper->delete($fileInfo);
         return $fileInfo;
     }
 
-    public function clear():void
+    public function clear(): void
     {
         $this->mapper->clear();
     }
 
-    public function updateFileMeta(FileInfo $fileInfo, ?string $fallbackUID = null) : FileInfo
+    public function updateFileMeta(FileInfo $fileInfo, ?string $fallbackUID = null): FileInfo
     {
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
         $fileInfo->setSize($file->getSize());
@@ -192,29 +193,35 @@ class FileInfoService
         if (is_null($file)) {
             $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
         }
-        if ($file->getType() === \OCP\Files\FileInfo::TYPE_FILE
-          && ( empty($fileInfo->getFileHash())
-               || $file->getMtime() > $fileInfo->getUpdatedAt()->getTimestamp()
-               || $file->getUploadTime() > $fileInfo->getUpdatedAt()->getTimestamp())
-          || $file->isMounted()) {
+        if (
+            $file->getType() === \OCP\Files\FileInfo::TYPE_FILE
+            && (empty($fileInfo->getFileHash())
+                || $file->getMtime() > $fileInfo->getUpdatedAt()->getTimestamp()
+                || $file->getUploadTime() > $fileInfo->getUpdatedAt()->getTimestamp())
+            || $file->isMounted()
+        ) {
             return $file->getInternalPath();
         }
         return false;
     }
 
-    public function calculateHashes(FileInfo $fileInfo, ?string $fallbackUID = null, bool $requiresHash = true):FileInfo
+    public function calculateHashes(FileInfo $fileInfo, ?string $fallbackUID = null, bool $requiresHash = true): FileInfo
     {
         $oldHash = $fileInfo->getFileHash();
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
         $path = $this->isRecalculationRequired($fileInfo, $fallbackUID, $file);
         if ($path !== false) {
             if ($requiresHash) {
-                $hash = $file->getStorage()->hash('sha256', $path);
-                if (!is_bool($hash)) {
-                    $fileInfo->setFileHash($hash);
-                    $fileInfo->setUpdatedAt(new \DateTime());
+                if ($file instanceof \OCP\Files\File) {
+                    $hash = $file->getStorage()->hash('sha256', $path);
+                    if (!is_bool($hash)) {
+                        $fileInfo->setFileHash($hash);
+                        $fileInfo->setUpdatedAt(new \DateTime());
+                    } else {
+                        throw new UnableToCalculateHash($file->getInternalPath());
+                    }
                 } else {
-                    throw new UnableToCalculateHash($file->getInternalPath());
+                    $fileInfo->setFileHash(null);
                 }
             } else {
                 $fileInfo->setFileHash(null);
@@ -235,10 +242,10 @@ class FileInfoService
         $userFolder = $this->folderService->getUserFolder($user);
         $scanPath = $userFolder->getPath();
         if (!is_null($path) && !$isShared) {
-            $scanPath .= DIRECTORY_SEPARATOR.ltrim($path, DIRECTORY_SEPARATOR);
+            $scanPath .= DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
             if (!$userFolder->nodeExists(ltrim($path, DIRECTORY_SEPARATOR))) {
                 CMDUtils::showIfOutputIsPresent(
-                    'Skipped '.$scanPath.' because it doesn\'t exists.',
+                    'Skipped ' . $scanPath . ' because it doesn\'t exists.',
                     $output,
                     OutputInterface::VERBOSITY_VERBOSE
                 );
@@ -263,7 +270,7 @@ class FileInfoService
         }
     }
 
-    public function hasAccessRight(FileInfo $fileInfo, string $user) : ?FileInfo
+    public function hasAccessRight(FileInfo $fileInfo, string $user): ?FileInfo
     {
         $result = null;
         if ($fileInfo->getOwner() === $user) {
@@ -282,7 +289,7 @@ class FileInfoService
                 $result = null;
             }
         }
-        
+
         return $result;
     }
 }

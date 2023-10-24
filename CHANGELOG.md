@@ -1,3 +1,9 @@
+## 1.0.6 - 2023-10-24
+- Clean up somes code
+### Fixed
+- Fix [#10](https://github.com/eldertek/duplicatefinder/issues/10)
+
+
 ## 1.0.5 - 2023-08-26
 ### Added
 - Composer support
