@@ -7,6 +7,7 @@
 					<template #icon>
 						<div class="nav-thumbnail"
 							:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+        				{{ console.log('Problematic duplicate:', duplicate) }}
 					</template>
 				</NcAppNavigationItem>
 			</template>
@@ -127,7 +128,6 @@ export default {
 			}
 		},
 		getPreviewImage(item) {
-    		console.log('Item in getPreviewImage:', item);
 			if (this.isImage(item) || this.isVideo(item)) {
 				const query = new URLSearchParams({
 					file: this.normalizeItemPath(item.path),
@@ -142,7 +142,6 @@ export default {
 			return OC.MimeType.getIconUrl(item.mimetype);
 		},
 		isImage(item) {
-    	console.log('Item in isImage:', item);
 			return item.mimetype.substr(0, item.mimetype.indexOf('/')) === 'image';
 		},
 		isVideo(item) {
