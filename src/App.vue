@@ -1,12 +1,35 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<NcAppNavigation v-if="duplicates.length > 0">
+		<NcAppNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
 			<template #list>
-				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
-					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
 					<template #icon>
-						<div class="nav-thumbnail"
-							:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+						<CloseCircle :size="20" />
+					</template>
+					<template>
+						<NcAppNavigationItem v-for="duplicate in unacknowledgedDuplicates" :key="duplicate.id"
+							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
+							@click="openDuplicate(duplicate)">
+							<template #icon>
+								<div class="nav-thumbnail"
+									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+							</template>
+						</NcAppNavigationItem>
+					</template>
+				</NcAppNavigationItem>
+				<NcAppNavigationItem name="Acknowledged" :allowCollapse="true" :open="false">
+					<template #icon>
+						<CheckCircle :size="20" />
+					</template>
+					<template>
+						<NcAppNavigationItem v-for="duplicate in acknowledgedDuplicates" :key="duplicate.id"
+							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
+							@click="openDuplicate(duplicate)">
+							<template #icon>
+								<div class="nav-thumbnail"
+									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+							</template>
+						</NcAppNavigationItem>
 					</template>
 				</NcAppNavigationItem>
 			</template>
@@ -17,6 +40,13 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
+				<a v-if="isAcknowledged(currentDuplicate)" class="acknowledge-link" @click="unacknowledgeDuplicate"
+					href="#">
+					{{ t('duplicatefinder', 'Unacknowledge it') }}
+				</a>
+				<a v-else class="acknowledge-link" @click="acknowledgeDuplicate" href="#">
+					{{ t('duplicatefinder', 'Acknowledge it') }}
+				</a>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
@@ -48,17 +78,24 @@ import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 
+import CheckCircle from 'vue-material-design-icons/CheckCircle'
+import CloseCircle from 'vue-material-design-icons/CloseCircle'
+
 export default {
 	name: 'App',
 	components: {
 		NcAppContent,
 		NcAppNavigation,
 		NcAppNavigationItem,
-		NcContent
+		NcContent,
+		CheckCircle,
+		CloseCircle
 	},
 	data() {
 		return {
-			duplicates: [],
+			acknowledgedDuplicates: [],
+			unacknowledgedDuplicates: [],
+
 			currentDuplicateId: null,
 			updating: false,
 			loading: true,
@@ -77,7 +114,12 @@ export default {
 			if (this.currentDuplicateId === null) {
 				return null;
 			}
-			return this.duplicates.find((duplicate) => duplicate.id === this.currentDuplicateId);
+			// Check in acknowledgedDuplicates
+			const duplicate = this.acknowledgedDuplicates.find(dup => dup.id === this.currentDuplicateId);
+			if (duplicate) return duplicate;
+
+			// Check in unacknowledgedDuplicates
+			return this.unacknowledgedDuplicates.find(dup => dup.id === this.currentDuplicateId);
 		},
 		sizeOfCurrentDuplicate() {
 			if (!this.currentDuplicate) {
@@ -97,21 +139,59 @@ export default {
 	},
 	async mounted() {
 		try {
-			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/duplicates'))
-			this.duplicates = response.data.data.entities
+			const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
+			this.acknowledgedDuplicates = responseAcknowledged.data.data.entities;
 
-			// Automatically set the currentDuplicateId to the ID of the first duplicate
-			if (this.duplicates.length > 0) {
-				this.currentDuplicateId = this.duplicates[0].id
+			const responseUnacknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'));
+			this.unacknowledgedDuplicates = responseUnacknowledged.data.data.entities;
+
+			// Set the current duplicate to the first item in unacknowledged duplicates by default
+			if (this.unacknowledgedDuplicates.length > 0) {
+				this.currentDuplicateId = this.unacknowledgedDuplicates[0].id;
 			}
-
 		} catch (e) {
-			console.error(e)
-			showError(t('duplicatefinder', 'Could not fetch duplicates'))
+			console.error(e);
+			showError(t('duplicatefinder', 'Could not fetch duplicates'));
 		}
-		this.loading = false
+		this.loading = false;
 	},
 	methods: {
+		async acknowledgeDuplicate() {
+			try {
+				const hash = this.currentDuplicate.hash;
+				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledge/${hash}`));
+
+				showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
+
+				// Move the duplicate from the  unacknowledgedlist to the acknowledged list
+				const index = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
+				const [removedItem] = this.unacknowledgedDuplicates.splice(index, 1);
+				this.acknowledgedDuplicates.push(removedItem);
+			} catch (e) {
+				console.error(e);
+				showError(t('duplicatefinder', 'Could not acknowledge the duplicate'));
+			}
+		},
+		async unacknowledgeDuplicate() {
+			try {
+				const hash = this.currentDuplicate.hash;
+				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledge/${hash}`));
+
+				showSuccess(t('duplicatefinder', 'Duplicate unacknowledged successfully'));
+
+				// Move the duplicate from the acknowledged list to the unacknowledged list
+				const index = this.acknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
+				const [removedItem] = this.acknowledgedDuplicates.splice(index, 1);
+				this.unacknowledgedDuplicates.push(removedItem);
+
+			} catch (e) {
+				console.error(e);
+				showError(t('duplicatefinder', 'Could not unacknowledge the duplicate'));
+			}
+		},
+		isAcknowledged(duplicate) {
+			return this.acknowledgedDuplicates.some(dup => dup.id === duplicate.id);
+		},
 		getPreviewImage(item) {
 			if (this.isImage(item) || this.isVideo(item)) {
 				const query = new URLSearchParams({
@@ -150,20 +230,28 @@ export default {
 					this.currentDuplicate.files.splice(index, 1);
 				}
 
-				// Check if only one file remains for the current hash
-				if (this.currentDuplicate.files.length === 1) {
-					const duplicateIndex = this.duplicates.findIndex(duplicate => duplicate.id === this.currentDuplicateId);
+				// Determine which list the current duplicate belongs to
+				let currentList = null;
+				if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
+					currentList = this.unacknowledgedDuplicates;
+				} else if (this.acknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
+					currentList = this.acknowledgedDuplicates;
+				}
+
+				// If only one file remains for the current hash, remove the hash
+				if (this.currentDuplicate.files.length === 1 && currentList) {
+					const duplicateIndex = currentList.findIndex(dup => dup.id === this.currentDuplicateId);
 
 					// Remove the hash from the navigation bar
-					this.duplicates.splice(duplicateIndex, 1);
+					currentList.splice(duplicateIndex, 1);
 
-					// Switch to the next hash
-					if (this.duplicates[duplicateIndex]) {
-						this.openDuplicate(this.duplicates[duplicateIndex]);
-					} else if (this.duplicates[duplicateIndex - 1]) { // If current hash was the last, switch to the previous
-						this.openDuplicate(this.duplicates[duplicateIndex - 1]);
+					// Switch to the next hash in the same list
+					if (currentList[duplicateIndex]) {
+						this.openDuplicate(currentList[duplicateIndex]);
+					} else if (currentList[duplicateIndex - 1]) { // If current hash was the last, switch to the previous
+						this.openDuplicate(currentList[duplicateIndex - 1]);
 					} else {
-						this.currentDuplicateId = null; // If no more hashes are left
+						this.currentDuplicateId = null; // If no more hashes are left in the current list
 					}
 				}
 
@@ -206,7 +294,7 @@ export default {
 	border: 1px solid #e0e0e0;
 	padding: 10px;
 	border-radius: 5px;
-	position: relative; 
+	position: relative;
 }
 
 .file-display p {
@@ -269,7 +357,8 @@ export default {
 		right: 10px;
 		top: 50%;
 		transform: translateY(-50%);
-		margin-left: 0; /* <-- reset margin for desktop */
+		margin-left: 0;
+		/* <-- reset margin for desktop */
 	}
 }
 
@@ -314,5 +403,15 @@ export default {
 		font-size: 12px;
 		margin-top: 10px;
 	}
+}
+
+.acknowledge-link {
+	color: #007BFF;
+	text-decoration: none;
+	transition: color 0.3s ease;
+}
+
+.acknowledge-link:hover {
+	color: #0056b3;
 }
 </style>

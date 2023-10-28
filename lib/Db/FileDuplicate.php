@@ -18,6 +18,9 @@ class FileDuplicate extends EEntity
     protected $hash;
     /** @var array<string|FileInfo> */
     protected $files = [];
+    /** @var bool */
+    protected $acknowledged = false;
+
 
     public function __construct(?string $hash = null, string $type = 'file_hash')
     {
@@ -48,7 +51,7 @@ class FileDuplicate extends EEntity
         $this->files = [];
     }
 
-  /**
+    /**
      * @return array<string|FileInfo>
      */
     public function getFiles():array
@@ -72,4 +75,25 @@ class FileDuplicate extends EEntity
         unset($u);
         return $result;
     }
+
+    /**
+     * Get the value of the acknowledged property.
+     * 
+     * @return bool
+     */
+    public function isAcknowledged(): bool
+    {
+        return $this->acknowledged;
+    }
+
+    /**
+     * Set the value of the acknowledged property.
+     * 
+     * @param bool $acknowledged
+     */
+    public function setAcknowledged(bool $acknowledged): void
+    {
+        $this->acknowledged = $acknowledged;
+    }
+    
 }

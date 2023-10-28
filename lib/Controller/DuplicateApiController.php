@@ -1,22 +1,22 @@
 <?php
 namespace OCA\DuplicateFinder\Controller;
 
+use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use OCP\AppFramework\ApiController;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCA\DuplicateFinder\AppInfo\Application;
-use OCA\DuplicateFinder\Exception\NotAuthenticatedException;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
-use OCA\DuplicateFinder\Utils\JSONResponseTrait;
+use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 
 class DuplicateApiController extends AbstractAPIController
 {
     /** @var FileDuplicateService */
     private $fileDuplicateService;
+    /** @var FileDuplicateMapper */
+    private $fileDuplicateMapper;
     /** @var FileInfoService */
     private $fileInfoService;
 
@@ -26,25 +26,61 @@ class DuplicateApiController extends AbstractAPIController
         ?IUserSession $userSession,
         FileDuplicateService $fileDuplicateService,
         FileInfoService $fileInfoService,
+        FileDuplicateMapper $fileDuplidateMapper,
         LoggerInterface $logger
     ) {
         parent::__construct($appName, $request, $userSession, $logger);
         $this->fileInfoService = $fileInfoService;
         $this->fileDuplicateService = $fileDuplicateService;
+        $this->fileDuplicateMapper = $fileDuplidateMapper;
     }
 
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function list(int $offset = 0, int $limit = 30): JSONResponse
+    
+    public function list(int $offset = 0, int $limit = 30, string $type = 'unacknowledged'): JSONResponse
     {
         try {
-            $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);
+            $duplicates = [];
+            switch($type) {
+                case 'all':
+                    $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);
+                    break;
+                case 'acknowledged':
+                    $duplicates = $this->fileDuplicateService->findAcknowledged($this->getUserId(), $limit, $offset, true);
+                    break;
+                case 'unacknowledged':
+                default:
+                    $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset, true);
+                    break;
+            }
             return $this->success($duplicates);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
             return $this->handleException($e);
         }
     }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function acknowledge(string $hash): DataResponse 
+    {
+        $this->fileDuplicateMapper->markAsAcknowledged($hash);
+        return new DataResponse(['status' => 'success']);
+    }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function unacknowledge(string $hash): DataResponse 
+    {
+        $this->fileDuplicateMapper->unmarkAcknowledged($hash);
+        return new DataResponse(['status' => 'success']);
+    }
+
 }
