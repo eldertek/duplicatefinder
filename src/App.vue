@@ -215,29 +215,26 @@ export default {
 
 				if (this.currentDuplicate.files.length === 1) {
 					let currentList = null;
-					if (this.allDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
-						currentList = this.allDuplicates;
+					if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
+						currentList = this.unacknowledgedDuplicates;
 					} else if (this.acknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
 						currentList = this.acknowledgedDuplicates;
-					} else if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
-						currentList = this.unacknowledgedDuplicates;
 					}
-
-					// Remove the duplicate from all lists to ensure consistency
-					[this.allDuplicates, this.acknowledgedDuplicates, this.unacknowledgedDuplicates].forEach(list => {
-						const indexInList = list.findIndex(dup => dup.id === this.currentDuplicateId);
-						if (indexInList !== -1) {
-							list.splice(indexInList, 1);
-						}
-					});
 
 					const currentIndex = currentList.findIndex(dup => dup.id === this.currentDuplicateId);
 					const nextDuplicate = currentList[currentIndex + 1] || currentList[currentIndex - 1];
 
-					if (nextDuplicate) {
-						this.openDuplicate(nextDuplicate);
+					// If there's no next duplicate in the current list
+					if (!nextDuplicate) {
+						if (currentList === this.unacknowledgedDuplicates && this.acknowledgedDuplicates.length) {
+							this.openDuplicate(this.acknowledgedDuplicates[0]);
+						} else if (currentList === this.acknowledgedDuplicates && this.unacknowledgedDuplicates.length) {
+							this.openDuplicate(this.unacknowledgedDuplicates[0]);
+						} else {
+							this.currentDuplicateId = null;  // No more duplicates in acknowledged or unacknowledged lists
+						}
 					} else {
-						this.currentDuplicateId = null;  // No more duplicates in the current list
+						this.openDuplicate(nextDuplicate);
 					}
 				}
 			} catch (e) {
