@@ -1,10 +1,11 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<NcAppNavigation v-if="duplicates.length > 0">
+		<NcAppNavigation
+			v-if="allDuplicates.length > 0 || acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
 			<template #list>
-				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
-					<template >
-						<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
+				<NcAppNavigationItem name="All" :allowCollapse="true" :open="false">
+					<template>
+						<NcAppNavigationItem v-for="duplicate in allDuplicates" :key="duplicate.id" :name="duplicate.hash"
 							:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
 							<template #icon>
 								<div class="nav-thumbnail"
@@ -14,9 +15,10 @@
 					</template>
 				</NcAppNavigationItem>
 				<NcAppNavigationItem name="Acknowledged" :allowCollapse="true" :open="false">
-					<template >
-						<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
-							:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+					<template>
+						<NcAppNavigationItem v-for="duplicate in acknowledgedDuplicates" :key="duplicate.id"
+							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
+							@click="openDuplicate(duplicate)">
 							<template #icon>
 								<div class="nav-thumbnail"
 									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
@@ -24,10 +26,11 @@
 						</NcAppNavigationItem>
 					</template>
 				</NcAppNavigationItem>
-				<NcAppNavigationItem name="All" :allowCollapse="true" :open="false">
-					<template >
-						<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
-							:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
+					<template>
+						<NcAppNavigationItem v-for="duplicate in unacknowledgedDuplicates" :key="duplicate.id"
+							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
+							@click="openDuplicate(duplicate)">
 							<template #icon>
 								<div class="nav-thumbnail"
 									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
@@ -88,6 +91,11 @@ export default {
 	data() {
 		return {
 			duplicates: [],
+
+			allDuplicates: [],
+			acknowledgedDuplicates: [],
+			unacknowledgedDuplicates: [],
+
 			currentDuplicateId: null,
 			updating: false,
 			loading: true,
@@ -126,19 +134,24 @@ export default {
 	},
 	async mounted() {
 		try {
-			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'))
-			this.duplicates = response.data.data.entities;
+			const responseAll = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/all'));
+			this.allDuplicates = responseAll.data.data.entities;
 
-			// Automatically set the currentDuplicateId to the ID of the first duplicate
-			if (this.duplicates.length > 0) {
-				this.currentDuplicateId = this.duplicates[0].id
+			const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
+			this.acknowledgedDuplicates = responseAcknowledged.data.data.entities;
+
+			const responseUnacknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'));
+			this.unacknowledgedDuplicates = responseUnacknowledged.data.data.entities;
+
+			// Set the current duplicate to the first item in unacknowledged duplicates by default
+			if (this.unacknowledgedDuplicates.length > 0) {
+				this.currentDuplicateId = this.unacknowledgedDuplicates[0].id;
 			}
-
 		} catch (e) {
-			console.error(e)
-			showError(t('duplicatefinder', 'Could not fetch duplicates'))
+			console.error(e);
+			showError(t('duplicatefinder', 'Could not fetch duplicates'));
 		}
-		this.loading = false
+		this.loading = false;
 	},
 	methods: {
 		async acknowledgeDuplicate() {
