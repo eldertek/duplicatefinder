@@ -76,8 +76,6 @@ class FileDuplicateMapper extends EQBMapper
      */
     public function markAsAcknowledged(string $hash): bool
     {
-        // Debug : notice
-        $this->logger->notice('markAsAcknowledged() called with hash = ' . $hash);
         $qb = $this->db->getQueryBuilder();
 
         try {
