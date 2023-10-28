@@ -214,18 +214,25 @@ export default {
 				}
 
 				if (this.currentDuplicate.files.length === 1) {
-					const removeDuplicateFromList = (list) => {
+					const removeDuplicateFromListAndFindNext = (list) => {
 						const index = list.findIndex(dup => dup.id === this.currentDuplicateId);
+						let nextDuplicate = null;
 						if (index !== -1) {
 							list.splice(index, 1);
+							nextDuplicate = list[index] || list[index - 1];
 						}
+						return nextDuplicate;
 					};
 
-					removeDuplicateFromList(this.allDuplicates);
-					removeDuplicateFromList(this.acknowledgedDuplicates);
-					removeDuplicateFromList(this.unacknowledgedDuplicates);
+					let nextDuplicate;
+					if (this.allDuplicates.includes(this.currentDuplicate)) {
+						nextDuplicate = removeDuplicateFromListAndFindNext(this.allDuplicates);
+					} else if (this.acknowledgedDuplicates.includes(this.currentDuplicate)) {
+						nextDuplicate = removeDuplicateFromListAndFindNext(this.acknowledgedDuplicates);
+					} else if (this.unacknowledgedDuplicates.includes(this.currentDuplicate)) {
+						nextDuplicate = removeDuplicateFromListAndFindNext(this.unacknowledgedDuplicates);
+					}
 
-					const nextDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || this.allDuplicates[0];
 					if (nextDuplicate) {
 						this.openDuplicate(nextDuplicate);
 					} else {
