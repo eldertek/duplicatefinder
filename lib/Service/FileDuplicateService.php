@@ -177,7 +177,7 @@ class FileDuplicateService
                 $result[] = $entity;
             }
         }
-        return $result;
+        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit);
     }
 
 
@@ -209,7 +209,7 @@ class FileDuplicateService
                 $result[] = $entity;
             }
         }
-        return $result;
+        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit);
     }
 
 

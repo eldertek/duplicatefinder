@@ -99,7 +99,7 @@ export default {
 	async mounted() {
 		try {
 			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'))
-			this.duplicates = response.data.data
+			this.duplicates = response.data.data.entities;
 
 			// Automatically set the currentDuplicateId to the ID of the first duplicate
 			if (this.duplicates.length > 0) {
