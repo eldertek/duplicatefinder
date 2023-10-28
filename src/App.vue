@@ -101,8 +101,8 @@ export default {
 			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'))
 			this.duplicates = response.data.data.entities;
 
-			console.error("duplicates : " + this.duplicates)
-			console.error("duplicate 0 : " + this.duplicates[0])
+			console.error("duplicates : ", this.duplicates)
+			console.error("duplicate 0 : ", this.duplicates[0])
 
 			// Automatically set the currentDuplicateId to the ID of the first duplicate
 			if (this.duplicates.length > 0) {
