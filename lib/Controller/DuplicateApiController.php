@@ -1,6 +1,7 @@
 <?php
 namespace OCA\DuplicateFinder\Controller;
 
+use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
