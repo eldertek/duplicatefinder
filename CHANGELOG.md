@@ -1,3 +1,7 @@
+## 1.0.7 - 2023-10-28
+### Added 
+- Add a new acknowledge feature to avoid to display the same duplicate again and again.
+
 ## 1.0.6 - 2023-10-24
 ### Fixed
 - Fix [#10](https://github.com/eldertek/duplicatefinder/issues/10)
