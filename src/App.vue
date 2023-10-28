@@ -1,7 +1,6 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<NcAppNavigation
-			v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
+		<NcAppNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
 			<template #list>
 				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
 					<template>
@@ -101,7 +100,7 @@ export default {
 				return null;
 			}
 			// Check in acknowledgedDuplicates
-			duplicate = this.acknowledgedDuplicates.find(dup => dup.id === this.currentDuplicateId);
+			const duplicate = this.acknowledgedDuplicates.find(dup => dup.id === this.currentDuplicateId);
 			if (duplicate) return duplicate;
 
 			// Check in unacknowledgedDuplicates
