@@ -7,6 +7,7 @@ import App from './App.vue'
 __webpack_public_path__ = generateFilePath(appName, '', 'js/')
 
 Vue.mixin({ methods: { t, n } })
+Vue.config.devtools = true;
 
 export default new Vue({
 	el: '#content',
