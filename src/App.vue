@@ -17,7 +17,7 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
-				<a @click="acknowledgeDuplicate" href="#">{{ t('duplicatefinder', 'I acknowledge it') }}</a>
+				<a class="acknowledge-link" @click="acknowledgeDuplicate" href="#">{{ t('duplicatefinder', 'I acknowledge it') }}</a>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
@@ -329,5 +329,14 @@ export default {
 		font-size: 12px;
 		margin-top: 10px;
 	}
+}
+
+.acknowledge-link {
+    color: #007BFF;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+.acknowledge-link:hover {
+    color: #0056b3;
 }
 </style>
