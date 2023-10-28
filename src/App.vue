@@ -208,12 +208,21 @@ export default {
 				await fileClient.remove(this.normalizeItemPath(item.path));
 				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
 
+				// Remove the file from the current duplicate
 				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
 				if (index !== -1) {
 					this.currentDuplicate.files.splice(index, 1);
 				}
 
 				if (this.currentDuplicate.files.length === 1) {
+					// Remove the duplicate from all lists to ensure consistency
+					[this.allDuplicates, this.acknowledgedDuplicates, this.unacknowledgedDuplicates].forEach(list => {
+						const indexInList = list.findIndex(dup => dup.id === this.currentDuplicateId);
+						if (indexInList !== -1) {
+							list.splice(indexInList, 1);
+						}
+					});
+
 					let currentList = null;
 					if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
 						currentList = this.unacknowledgedDuplicates;
