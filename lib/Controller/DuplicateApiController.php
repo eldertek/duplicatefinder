@@ -49,11 +49,11 @@ class DuplicateApiController extends AbstractAPIController
                     $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);
                     break;
                 case 'acknowledged':
-                    $duplicates = $this->fileDuplicateService->findAcknowledged($this->getUserId(), $limit, $offset);
+                    $duplicates = $this->fileDuplicateService->findAcknowledged($this->getUserId(), $limit, $offset, true);
                     break;
                 case 'unacknowledged':
                 default:
-                    $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset);
+                    $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset, true);
                     break;
             }
             return $this->success($duplicates);

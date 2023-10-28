@@ -97,7 +97,8 @@ class FileDuplicateMapper extends EQBMapper
      * 
      * @param string $hash The hash of the duplicate to unacknowledge.
      * @return bool True if successful, false otherwise.
-     */public function unmarkAcknowledged(string $hash): bool
+     */
+    public function unmarkAcknowledged(string $hash): bool
     {
         $qb = $this->db->getQueryBuilder();
 
