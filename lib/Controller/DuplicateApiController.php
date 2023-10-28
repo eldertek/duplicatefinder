@@ -8,11 +8,14 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 
 class DuplicateApiController extends AbstractAPIController
 {
     /** @var FileDuplicateService */
     private $fileDuplicateService;
+    /** @var FileDuplicateMapper */
+    private $fileDuplicateMapper;
     /** @var FileInfoService */
     private $fileInfoService;
 
@@ -48,13 +51,10 @@ class DuplicateApiController extends AbstractAPIController
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function acknowledge(string $hash)
+    public function acknowledge(string $hash): DataResponse 
     {
-        // Logic to mark the duplicate with the specified hash as acknowledged.
-        // This will involve calling the appropriate method from FileDuplicateMapper or a related service.
-        
-        // Placeholder response. In a real implementation, this would return a success or error message.
-        return new JSONResponse(['status' => 'success', 'message' => 'Duplicate acknowledged.']);
+        $this->fileDuplicateMapper->markAsAcknowledged($hash);
+        return new DataResponse(['status' => 'success']);
     }
 
 
@@ -62,26 +62,19 @@ class DuplicateApiController extends AbstractAPIController
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function getAcknowledged(int $offset = 0, int $limit = 30): JSONResponse
-    {
-        // Logic to retrieve the list of acknowledged duplicates.
-        // This will involve calling the appropriate method from FileDuplicateMapper or a related service.
-        
-        // Placeholder response. In a real implementation, this would return a list of acknowledged duplicates.
-        return new JSONResponse(['status' => 'success', 'duplicates' => []]);
+    public function listAcknowledged(): DataResponse {
+        $acknowledgedDuplicates = $this->fileDuplicateMapper->getAcknowledgedDuplicates();
+        return new DataResponse($acknowledgedDuplicates);
     }
 
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function unacknowledge(string $hash)
+    public function unacknowledge(string $hash): DataResponse 
     {
-        // Logic to unmark the duplicate with the specified hash as acknowledged.
-        // This will involve calling the appropriate method from FileDuplicateMapper or a related service.
-        
-        // Placeholder response. In a real implementation, this would return a success or error message.
-        return new JSONResponse(['status' => 'success', 'message' => 'Acknowledgement removed.']);
+        $this->fileDuplicateMapper->unmarkAcknowledged($hash);
+        return new DataResponse(['status' => 'success']);
     }
 
 }

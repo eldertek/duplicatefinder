@@ -1,5 +1,0 @@
-{
-    "intelephense.environment.includePaths": ["./vendor"],
-    "intelephense.files.exclude": ["**/vendor/**"]
-}
-  

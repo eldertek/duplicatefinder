@@ -3,46 +3,50 @@ namespace OCA\DuplicateFinder\Db;
 
 use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\ILogger;
 
 /**
  * @extends EQBMapper<FileDuplicate>
  */
 class FileDuplicateMapper extends EQBMapper
 {
+    /** @var ILogger */
+    private $logger;
 
-    public function __construct(IDBConnection $db)
+    public function __construct(IDBConnection $db, ILogger $logger)
     {
         parent::__construct($db, 'duplicatefinder_dups', FileDuplicate::class);
+        $this->logger = $logger;
     }
 
     public function find(string $hash, string $type = 'file_hash'): FileDuplicate
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
-        ->from($this->getTableName())
-        ->where(
-            $qb->expr()->eq('hash', $qb->createNamedParameter($hash)),
-            $qb->expr()->eq('type', $qb->createNamedParameter($type))
-        );
+            ->from($this->getTableName())
+            ->where(
+                $qb->expr()->eq('hash', $qb->createNamedParameter($hash)),
+                $qb->expr()->eq('type', $qb->createNamedParameter($type))
+            );
         return $this->findEntity($qb);
     }
 
-  /**
-   * @param string|null $user
-   * @param int|null $limit
-   * @param int|null $offset
-   * @param array<array<string>> $orderBy
-   * @return array<FileDuplicate>
-   */
+    /**
+     * @param string|null $user
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param array<array<string>> $orderBy
+     * @return array<FileDuplicate>
+     */
     public function findAll(
         ?string $user = null,
         ?int $limit = null,
         ?int $offset = null,
-        ?array $orderBy = [['hash'],['type']]
-    ):array {
+        ?array $orderBy = [['hash'], ['type']]
+    ): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('d.id as id', 'type', 'hash')
-        ->from($this->getTableName(), 'd');
+            ->from($this->getTableName(), 'd');
         if ($limit !== null) {
             $qb->setMaxResults($limit);
         }
@@ -59,9 +63,9 @@ class FileDuplicateMapper extends EQBMapper
         return $this->findEntities($qb);
     }
 
-    public function clear(?string $table = null):void
+    public function clear(?string $table = null): void
     {
-        parent::clear($this->getTableName().'_f');
+        parent::clear($this->getTableName() . '_f');
         parent::clear();
     }
     /**
@@ -74,32 +78,40 @@ class FileDuplicateMapper extends EQBMapper
     {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->update($this->getTableName())
-           ->set('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
-           ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
-           ->execute();
+        try {
+            $qb->update($this->getTableName())
+                ->set('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
+                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+                ->execute();
 
-        // Note: Add error handling and return true if successful, false otherwise.
-        return true;
+            return true;
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            return false;
+        }
     }
+
 
     /**
      * Removes the acknowledged status from the specified duplicate.
      * 
      * @param string $hash The hash of the duplicate to unacknowledge.
      * @return bool True if successful, false otherwise.
-     */
-    public function unmarkAcknowledged(string $hash): bool
+     */public function unmarkAcknowledged(string $hash): bool
     {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->update($this->getTableName())
-           ->set('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
-           ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
-           ->execute();
+        try {
+            $qb->update($this->getTableName())
+                ->set('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
+                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+                ->execute();
 
-        // Note: Add error handling and return true if successful, false otherwise.
-        return true;
+            return true;
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -112,8 +124,8 @@ class FileDuplicateMapper extends EQBMapper
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('*')
-           ->from($this->getTableName())
-           ->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
+            ->from($this->getTableName())
+            ->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
 
         $result = $qb->execute()->fetchAll();
 
