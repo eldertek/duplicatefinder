@@ -26,11 +26,13 @@ class DuplicateApiController extends AbstractAPIController
         ?IUserSession $userSession,
         FileDuplicateService $fileDuplicateService,
         FileInfoService $fileInfoService,
+        FileDuplicateMapper $fileDuplidateMapper,
         LoggerInterface $logger
     ) {
         parent::__construct($appName, $request, $userSession, $logger);
         $this->fileInfoService = $fileInfoService;
         $this->fileDuplicateService = $fileDuplicateService;
+        $this->fileDuplicateMapper = $fileDuplidateMapper;
     }
 
     /**
