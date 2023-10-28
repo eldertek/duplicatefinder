@@ -45,7 +45,7 @@
 					{{ t('duplicatefinder', 'Unacknowledge it') }}
 				</a>
 				<a v-else class="acknowledge-link" @click="acknowledgeDuplicate" href="#">
-					{{ t('duplicatefinder', 'I acknowledge it') }}
+					{{ t('duplicatefinder', 'Acknowledge it') }}
 				</a>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
