@@ -232,7 +232,7 @@ export default {
 					});
 
 					const currentIndex = currentList.findIndex(dup => dup.id === this.currentDuplicateId);
-					const nextDuplicate = currentList[currentIndex] || currentList[currentIndex - 1];
+					const nextDuplicate = currentList[currentIndex + 1] || currentList[currentIndex - 1];
 
 					if (nextDuplicate) {
 						this.openDuplicate(nextDuplicate);
