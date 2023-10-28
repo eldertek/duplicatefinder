@@ -1,12 +1,13 @@
 <template>
 	<NcContent app-name="duplicatefinder">
 		<NcAppNavigation
-			v-if="allDuplicates.length > 0 || acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
+			v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
 			<template #list>
-				<NcAppNavigationItem name="All" :allowCollapse="true" :open="false">
+				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
 					<template>
-						<NcAppNavigationItem v-for="duplicate in allDuplicates" :key="duplicate.id" :name="duplicate.hash"
-							:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+						<NcAppNavigationItem v-for="duplicate in unacknowledgedDuplicates" :key="duplicate.id"
+							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
+							@click="openDuplicate(duplicate)">
 							<template #icon>
 								<div class="nav-thumbnail"
 									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
@@ -17,18 +18,6 @@
 				<NcAppNavigationItem name="Acknowledged" :allowCollapse="true" :open="false">
 					<template>
 						<NcAppNavigationItem v-for="duplicate in acknowledgedDuplicates" :key="duplicate.id"
-							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
-							@click="openDuplicate(duplicate)">
-							<template #icon>
-								<div class="nav-thumbnail"
-									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
-							</template>
-						</NcAppNavigationItem>
-					</template>
-				</NcAppNavigationItem>
-				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
-					<template>
-						<NcAppNavigationItem v-for="duplicate in unacknowledgedDuplicates" :key="duplicate.id"
 							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
 							@click="openDuplicate(duplicate)">
 							<template #icon>
@@ -90,9 +79,6 @@ export default {
 	},
 	data() {
 		return {
-			duplicates: [],
-
-			allDuplicates: [],
 			acknowledgedDuplicates: [],
 			unacknowledgedDuplicates: [],
 
@@ -114,10 +100,6 @@ export default {
 			if (this.currentDuplicateId === null) {
 				return null;
 			}
-			// Check in allDuplicates
-			let duplicate = this.allDuplicates.find(dup => dup.id === this.currentDuplicateId);
-			if (duplicate) return duplicate;
-
 			// Check in acknowledgedDuplicates
 			duplicate = this.acknowledgedDuplicates.find(dup => dup.id === this.currentDuplicateId);
 			if (duplicate) return duplicate;
@@ -143,9 +125,6 @@ export default {
 	},
 	async mounted() {
 		try {
-			const responseAll = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/all'));
-			this.allDuplicates = responseAll.data.data.entities;
-
 			const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
 			this.acknowledgedDuplicates = responseAcknowledged.data.data.entities;
 
