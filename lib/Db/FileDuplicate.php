@@ -19,7 +19,7 @@ class FileDuplicate extends EEntity
     /** @var array<string|FileInfo> */
     protected $files = [];
     /** @var bool */
-    protected $acknowledged = false;
+    protected $acknowledged;
 
 
     public function __construct(?string $hash = null, string $type = 'file_hash')
