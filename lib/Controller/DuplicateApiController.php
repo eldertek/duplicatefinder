@@ -63,16 +63,6 @@ class DuplicateApiController extends AbstractAPIController
         }
     }
 
-    {
-        try {
-            $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);
-            return $this->success($duplicates);
-        } catch (\Exception $e) {
-            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
-            return $this->handleException($e);
-        }
-    }
-
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -81,16 +71,6 @@ class DuplicateApiController extends AbstractAPIController
     {
         $this->fileDuplicateMapper->markAsAcknowledged($hash);
         return new DataResponse(['status' => 'success']);
-    }
-
-
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function listAcknowledged(): DataResponse {
-        $acknowledgedDuplicates = $this->fileDuplicateMapper->getAcknowledgedDuplicates();
-        return new DataResponse($acknowledgedDuplicates);
     }
 
     /**
