@@ -9,7 +9,7 @@ use OCP\Migration\SimpleMigrationStep;
 /**
  * Migration step for adding "acknowledged" column.
  */
-class Version1000Date20231028094720 extends SimpleMigrationStep {
+class Version0007Date20231028094720 extends SimpleMigrationStep {
 
     /**
      * @param IOutput $output
