@@ -2,7 +2,6 @@
 namespace OCA\DuplicateFinder\Db;
 
 use OCP\IDBConnection;
-use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 
 /**
@@ -64,5 +63,66 @@ class FileDuplicateMapper extends EQBMapper
     {
         parent::clear($this->getTableName().'_f');
         parent::clear();
+    }
+    /**
+     * Marks the specified duplicate as acknowledged.
+     * 
+     * @param string $hash The hash of the duplicate to acknowledge.
+     * @return bool True if successful, false otherwise.
+     */
+    public function markAsAcknowledged(string $hash): bool
+    {
+        $qb = $this->db->getQueryBuilder();
+
+        $qb->update($this->getTableName())
+           ->set('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
+           ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+           ->execute();
+
+        // Note: Add error handling and return true if successful, false otherwise.
+        return true;
+    }
+
+    /**
+     * Removes the acknowledged status from the specified duplicate.
+     * 
+     * @param string $hash The hash of the duplicate to unacknowledge.
+     * @return bool True if successful, false otherwise.
+     */
+    public function unmarkAcknowledged(string $hash): bool
+    {
+        $qb = $this->db->getQueryBuilder();
+
+        $qb->update($this->getTableName())
+           ->set('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
+           ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+           ->execute();
+
+        // Note: Add error handling and return true if successful, false otherwise.
+        return true;
+    }
+
+    /**
+     * Retrieves all acknowledged duplicates.
+     * 
+     * @return array An array of FileDuplicate entities that have been acknowledged.
+     */
+    public function getAcknowledgedDuplicates(): array
+    {
+        $qb = $this->db->getQueryBuilder();
+
+        $qb->select('*')
+           ->from($this->getTableName())
+           ->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
+
+        $result = $qb->execute()->fetchAll();
+
+        // Convert the result into an array of FileDuplicate entities
+        $duplicates = [];
+        foreach ($result as $row) {
+            $duplicates[] = FileDuplicate::fromRow($row);
+        }
+
+        return $duplicates;
     }
 }

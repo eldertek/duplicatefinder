@@ -4,14 +4,10 @@ namespace OCA\DuplicateFinder\Controller;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use OCP\AppFramework\ApiController;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCA\DuplicateFinder\AppInfo\Application;
-use OCA\DuplicateFinder\Exception\NotAuthenticatedException;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
-use OCA\DuplicateFinder\Utils\JSONResponseTrait;
 
 class DuplicateApiController extends AbstractAPIController
 {
@@ -47,4 +43,45 @@ class DuplicateApiController extends AbstractAPIController
             return $this->handleException($e);
         }
     }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function acknowledge(string $hash)
+    {
+        // Logic to mark the duplicate with the specified hash as acknowledged.
+        // This will involve calling the appropriate method from FileDuplicateMapper or a related service.
+        
+        // Placeholder response. In a real implementation, this would return a success or error message.
+        return new JSONResponse(['status' => 'success', 'message' => 'Duplicate acknowledged.']);
+    }
+
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getAcknowledged(int $offset = 0, int $limit = 30): JSONResponse
+    {
+        // Logic to retrieve the list of acknowledged duplicates.
+        // This will involve calling the appropriate method from FileDuplicateMapper or a related service.
+        
+        // Placeholder response. In a real implementation, this would return a list of acknowledged duplicates.
+        return new JSONResponse(['status' => 'success', 'duplicates' => []]);
+    }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function unacknowledge(string $hash)
+    {
+        // Logic to unmark the duplicate with the specified hash as acknowledged.
+        // This will involve calling the appropriate method from FileDuplicateMapper or a related service.
+        
+        // Placeholder response. In a real implementation, this would return a success or error message.
+        return new JSONResponse(['status' => 'success', 'message' => 'Acknowledgement removed.']);
+    }
+
 }
