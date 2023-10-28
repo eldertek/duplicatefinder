@@ -2,11 +2,15 @@
 	<NcContent app-name="duplicatefinder">
 		<NcAppNavigation v-if="duplicates.length > 0">
 			<template #list>
-				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
-					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
-					<template #icon>
-						<div class="nav-thumbnail"
-							:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+				<NcAppNavigationItem name="Uncknowledged duplicates" :allowCollapse="true" :open="true">
+					<template>
+						<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
+							:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+							<template #icon>
+								<div class="nav-thumbnail"
+									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+							</template>
+						</NcAppNavigationItem>
 					</template>
 				</NcAppNavigationItem>
 			</template>
@@ -17,7 +21,9 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
-				<a class="acknowledge-link" @click="acknowledgeDuplicate" href="#">{{ t('duplicatefinder', 'I acknowledge it') }}</a>
+				<a class="acknowledge-link" @click="acknowledgeDuplicate" href="#">
+					{{ t('duplicatefinder', 'I acknowledge it') }}
+				</a>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
@@ -115,7 +121,7 @@ export default {
 	methods: {
 		async acknowledgeDuplicate() {
 			try {
-				const hash = this.currentDuplicate.hash; 
+				const hash = this.currentDuplicate.hash;
 				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledge/${hash}`));
 
 				showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
@@ -332,11 +338,12 @@ export default {
 }
 
 .acknowledge-link {
-    color: #007BFF;
-    text-decoration: none;
-    transition: color 0.3s ease;
+	color: #007BFF;
+	text-decoration: none;
+	transition: color 0.3s ease;
 }
+
 .acknowledge-link:hover {
-    color: #0056b3;
+	color: #0056b3;
 }
 </style>
