@@ -166,8 +166,20 @@ class FileDuplicateService
         bool $enrich = false,
         ?array $orderBy = [['hash'], ['type']]
     ): array {
-        return $this->mapper->findAcknowledged($user, $limit, $offset, $orderBy);
+        $result = array();
+        $entities = $this->mapper->findAll($user, $limit, $offset, $orderBy);
+        foreach ($entities as $entity) {
+            $entity = $this->stripFilesWithoutAccessRights($entity, $user);
+            if ($enrich) {
+                $entity = $this->enrich($entity);
+            }
+            if ($entity->acknowledged) {
+                $result[] = $entity;
+            }
+        }
+        return $result;
     }
+
 
     /**
      * Fetches unacknowledged duplicates
@@ -186,7 +198,19 @@ class FileDuplicateService
         bool $enrich = false,
         ?array $orderBy = [['hash'], ['type']]
     ): array {
-        return $this->mapper->findUnacknowledged($user, $limit, $offset, $orderBy);
+        $result = array();
+        $entities = $this->mapper->findAll($user, $limit, $offset, $orderBy);
+        foreach ($entities as $entity) {
+            $entity = $this->stripFilesWithoutAccessRights($entity, $user);
+            if ($enrich) {
+                $entity = $this->enrich($entity);
+            }
+            if (!$entity->acknowledged) {
+                $result[] = $entity;
+            }
+        }
+        return $result;
     }
+
 
 }
