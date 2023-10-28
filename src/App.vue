@@ -186,29 +186,37 @@ export default {
 				await fileClient.remove(this.normalizeItemPath(item.path));
 				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
 
+				// Remove the file from the currentDuplicate's files list
 				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
 				if (index !== -1) {
 					this.currentDuplicate.files.splice(index, 1);
 				}
 
-				// If there's only one file left, this isn't a duplicate group anymore
-				if (this.currentDuplicate.files.length === 0) {
-					if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
-						const dupIndex = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
-						this.unacknowledgedDuplicates.splice(dupIndex, 1);
-					} else if (this.acknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
-						const dupIndex = this.acknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
-						this.acknowledgedDuplicates.splice(dupIndex, 1);
-					}
+				// Determine which list the current duplicate belongs to
+				let currentList = null;
+				if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
+					currentList = this.unacknowledgedDuplicates;
+				} else if (this.acknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
+					currentList = this.acknowledgedDuplicates;
+				}
 
-					// Now, navigate to the next available duplicate or reset the currentDuplicateId
-					if (this.unacknowledgedDuplicates.length > 0) {
-						this.currentDuplicateId = this.unacknowledgedDuplicates[0].id;
-					} else if (this.acknowledgedDuplicates.length > 0) {
-						this.currentDuplicateId = this.acknowledgedDuplicates[0].id;
-					} else {
-						this.currentDuplicateId = null;
+				if (currentList) {
+					// If there's no file left in the currentDuplicate, remove this duplicate entry from the list
+					if (this.currentDuplicate.files.length === 0) {
+						const dupIndex = currentList.findIndex(dup => dup.id === this.currentDuplicateId);
+						if (dupIndex !== -1) {
+							currentList.splice(dupIndex, 1);
+						}
+
+						// Navigate to the next available duplicate or reset the currentDuplicateId
+						if (currentList.length > 0) {
+							this.currentDuplicateId = currentList[0].id;
+						} else {
+							this.currentDuplicateId = null; // No more duplicates in the current list
+						}
 					}
+				} else {
+					console.error('Could not determine the current list for the duplicate');
 				}
 			} catch (e) {
 				console.error(e);
