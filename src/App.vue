@@ -208,29 +208,30 @@ export default {
 				await fileClient.remove(this.normalizeItemPath(item.path));
 				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
 
-				// Remove the deleted item from the duplicates list in the UI
 				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
 				if (index !== -1) {
 					this.currentDuplicate.files.splice(index, 1);
 				}
 
-				// Check if only one file remains for the current hash
 				if (this.currentDuplicate.files.length === 1) {
-					const duplicateIndex = this.duplicates.findIndex(duplicate => duplicate.id === this.currentDuplicateId);
+					const removeDuplicateFromList = (list) => {
+						const index = list.findIndex(dup => dup.id === this.currentDuplicateId);
+						if (index !== -1) {
+							list.splice(index, 1);
+						}
+					};
 
-					// Remove the hash from the navigation bar
-					this.duplicates.splice(duplicateIndex, 1);
+					removeDuplicateFromList(this.allDuplicates);
+					removeDuplicateFromList(this.acknowledgedDuplicates);
+					removeDuplicateFromList(this.unacknowledgedDuplicates);
 
-					// Switch to the next hash
-					if (this.duplicates[duplicateIndex]) {
-						this.openDuplicate(this.duplicates[duplicateIndex]);
-					} else if (this.duplicates[duplicateIndex - 1]) { // If current hash was the last, switch to the previous
-						this.openDuplicate(this.duplicates[duplicateIndex - 1]);
+					const nextDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || this.allDuplicates[0];
+					if (nextDuplicate) {
+						this.openDuplicate(nextDuplicate);
 					} else {
-						this.currentDuplicateId = null; // If no more hashes are left
+						this.currentDuplicateId = null;
 					}
 				}
-
 			} catch (e) {
 				console.error(e);
 				showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
