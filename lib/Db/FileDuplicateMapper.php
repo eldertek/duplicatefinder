@@ -45,7 +45,7 @@ class FileDuplicateMapper extends EQBMapper
         ?array $orderBy = [['hash'], ['type']]
     ): array {
         $qb = $this->db->getQueryBuilder();
-        $qb->select('d.id as id', 'type', 'hash')
+        $qb->select('d.id as id', 'type', 'hash', 'acknowledged')
             ->from($this->getTableName(), 'd');
         if ($limit !== null) {
             $qb->setMaxResults($limit);
