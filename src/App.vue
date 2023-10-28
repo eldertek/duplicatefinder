@@ -191,32 +191,23 @@ export default {
 					this.currentDuplicate.files.splice(index, 1);
 				}
 
-				if (this.currentDuplicate.files.length === 1) {
-					let currentList = null;
+				// If there's only one file left, this isn't a duplicate group anymore
+				if (this.currentDuplicate.files.length === 0) {
 					if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
-						currentList = this.unacknowledgedDuplicates;
+						const dupIndex = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
+						this.unacknowledgedDuplicates.splice(dupIndex, 1);
 					} else if (this.acknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
-						currentList = this.acknowledgedDuplicates;
+						const dupIndex = this.acknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
+						this.acknowledgedDuplicates.splice(dupIndex, 1);
 					}
 
-					if (currentList) {
-						const currentIndex = currentList.findIndex(dup => dup.id === this.currentDuplicateId);
-						const nextDuplicate = currentList[currentIndex + 1] || currentList[currentIndex - 1];
-
-						// If there's no next duplicate in the current list
-						if (!nextDuplicate) {
-							if (currentList === this.unacknowledgedDuplicates && this.acknowledgedDuplicates.length) {
-								this.openDuplicate(this.acknowledgedDuplicates[0]);
-							} else if (currentList === this.acknowledgedDuplicates && this.unacknowledgedDuplicates.length) {
-								this.openDuplicate(this.unacknowledgedDuplicates[0]);
-							} else {
-								this.currentDuplicateId = null;  // No more duplicates in acknowledged or unacknowledged lists
-							}
-						} else {
-							this.openDuplicate(nextDuplicate);
-						}
+					// Now, navigate to the next available duplicate or reset the currentDuplicateId
+					if (this.unacknowledgedDuplicates.length > 0) {
+						this.currentDuplicateId = this.unacknowledgedDuplicates[0].id;
+					} else if (this.acknowledgedDuplicates.length > 0) {
+						this.currentDuplicateId = this.acknowledgedDuplicates[0].id;
 					} else {
-						this.currentDuplicateId = null; // If we couldn't determine the current list, reset the currentDuplicateId
+						this.currentDuplicateId = null;
 					}
 				}
 			} catch (e) {
