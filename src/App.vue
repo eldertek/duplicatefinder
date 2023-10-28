@@ -114,7 +114,16 @@ export default {
 			if (this.currentDuplicateId === null) {
 				return null;
 			}
-			return this.duplicates.find((duplicate) => duplicate.id === this.currentDuplicateId);
+			// Check in allDuplicates
+			let duplicate = this.allDuplicates.find(dup => dup.id === this.currentDuplicateId);
+			if (duplicate) return duplicate;
+
+			// Check in acknowledgedDuplicates
+			duplicate = this.acknowledgedDuplicates.find(dup => dup.id === this.currentDuplicateId);
+			if (duplicate) return duplicate;
+
+			// Check in unacknowledgedDuplicates
+			return this.unacknowledgedDuplicates.find(dup => dup.id === this.currentDuplicateId);
 		},
 		sizeOfCurrentDuplicate() {
 			if (!this.currentDuplicate) {
