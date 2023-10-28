@@ -3,6 +3,9 @@
 		<NcAppNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
 			<template #list>
 				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
+					<template #icon>
+						<CloseCircle :size="20" />
+					</template>
 					<template>
 						<NcAppNavigationItem v-for="duplicate in unacknowledgedDuplicates" :key="duplicate.id"
 							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
@@ -15,6 +18,9 @@
 					</template>
 				</NcAppNavigationItem>
 				<NcAppNavigationItem name="Acknowledged" :allowCollapse="true" :open="false">
+					<template #icon>
+						<CheckCircle :size="20" />
+					</template>
 					<template>
 						<NcAppNavigationItem v-for="duplicate in acknowledgedDuplicates" :key="duplicate.id"
 							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
@@ -72,13 +78,18 @@ import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 
+import CheckCircle from 'vue-material-design-icons/CheckCircle'
+import CloseCircle from 'vue-material-design-icons/CloseCircle'
+
 export default {
 	name: 'App',
 	components: {
 		NcAppContent,
 		NcAppNavigation,
 		NcAppNavigationItem,
-		NcContent
+		NcContent,
+		CheckCircle,
+		CloseCircle
 	},
 	data() {
 		return {
