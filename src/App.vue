@@ -97,7 +97,7 @@ export default {
 	},
 	async mounted() {
 		try {
-			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/duplicates'))
+			const response = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates'))
 			this.duplicates = response.data.data.entities
 
 			// Automatically set the currentDuplicateId to the ID of the first duplicate

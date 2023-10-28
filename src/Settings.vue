@@ -47,7 +47,7 @@ import axios from '@nextcloud/axios'
 export default {
   async mounted() {
     try {
-      const response = await axios.get(generateUrl('/apps/duplicatefinder/api/v1/settings'))
+      const response = await axios.get(generateUrl('/apps/duplicatefinder/api/settings'))
       this.settings = response.data.data;
     } catch (e) {
       console.error(e)
@@ -67,7 +67,7 @@ export default {
   },
   methods: {
     saveSettings(key, value) {
-      axios.post(generateUrl(`/apps/duplicatefinder/api/v1/settings/${key}/${value}`))
+      axios.post(generateUrl(`/apps/duplicatefinder/api/settings/${key}/${value}`))
         .then(response => {
           console.error(response)
           console.error("key : " + key + ", value : " + value)
