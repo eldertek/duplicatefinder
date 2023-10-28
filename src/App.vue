@@ -1,12 +1,16 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<NcAppNavigation v-if="duplicates.length > 0" name="Uncknowledged duplicates" :allowCollapse="true" :open="true">
+		<NcAppNavigation v-if="duplicates.length > 0">
 			<template #list>
-				<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
-					:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
-					<template #icon>
-						<div class="nav-thumbnail"
-							:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+				<NcAppNavigationItem name="Uncknowledged duplicates" :allowCollapse="true" :open="true">
+					<template >
+						<NcAppNavigationItem v-for="duplicate in duplicates" :key="duplicate.id" :name="duplicate.hash"
+							:class="{ active: currentDuplicateId === duplicate.id }" @click="openDuplicate(duplicate)">
+							<template #icon>
+								<div class="nav-thumbnail"
+									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
+							</template>
+						</NcAppNavigationItem>
 					</template>
 				</NcAppNavigationItem>
 			</template>
