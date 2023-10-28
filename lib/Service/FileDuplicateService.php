@@ -173,7 +173,7 @@ class FileDuplicateService
             if ($enrich) {
                 $entity = $this->enrich($entity);
             }
-            if ($entity->acknowledged) {
+            if ($entity->isAcknowledged()) {
                 $result[] = $entity;
             }
         }
@@ -205,7 +205,7 @@ class FileDuplicateService
             if ($enrich) {
                 $entity = $this->enrich($entity);
             }
-            if (!$entity->acknowledged) {
+            if (!$entity->isAcknowledged()) {
                 $result[] = $entity;
             }
         }
