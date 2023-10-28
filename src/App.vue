@@ -223,11 +223,6 @@ export default {
 						currentList = this.unacknowledgedDuplicates;
 					}
 
-					const currentIndex = currentList.findIndex(dup => dup.id === this.currentDuplicateId);
-					if (currentIndex !== -1) {
-						currentList.splice(currentIndex, 1);
-					}
-
 					// Remove the duplicate from all lists to ensure consistency
 					[this.allDuplicates, this.acknowledgedDuplicates, this.unacknowledgedDuplicates].forEach(list => {
 						const indexInList = list.findIndex(dup => dup.id === this.currentDuplicateId);
@@ -236,6 +231,7 @@ export default {
 						}
 					});
 
+					const currentIndex = currentList.findIndex(dup => dup.id === this.currentDuplicateId);
 					const nextDuplicate = currentList[currentIndex] || currentList[currentIndex - 1];
 
 					if (nextDuplicate) {
