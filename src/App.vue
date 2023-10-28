@@ -17,6 +17,7 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
+				<a @click="acknowledgeDuplicate" href="#">{{ t('duplicatefinder', 'I acknowledge it') }}</a>
 			</div>
 			<div v-if="currentDuplicate && currentDuplicate.files.length > 0">
 				<div class="file-display" v-for="(file, index) in currentDuplicate.files" :key="file.id">
@@ -112,6 +113,19 @@ export default {
 		this.loading = false
 	},
 	methods: {
+		async acknowledgeDuplicate() {
+			try {
+				const hash = this.currentDuplicate.hash; 
+				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledge/${hash}`));
+
+				showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
+
+				// TODO: Remove the duplicate from the list and switch to the next one
+			} catch (e) {
+				console.error(e);
+				showError(t('duplicatefinder', 'Could not acknowledge the duplicate'));
+			}
+		},
 		getPreviewImage(item) {
 			if (this.isImage(item) || this.isVideo(item)) {
 				const query = new URLSearchParams({
@@ -206,7 +220,7 @@ export default {
 	border: 1px solid #e0e0e0;
 	padding: 10px;
 	border-radius: 5px;
-	position: relative; 
+	position: relative;
 }
 
 .file-display p {
@@ -269,7 +283,8 @@ export default {
 		right: 10px;
 		top: 50%;
 		transform: translateY(-50%);
-		margin-left: 0; /* <-- reset margin for desktop */
+		margin-left: 0;
+		/* <-- reset margin for desktop */
 	}
 }
 
