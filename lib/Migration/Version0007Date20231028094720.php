@@ -26,7 +26,7 @@ class Version0007Date20231028094720 extends SimpleMigrationStep {
             
             if (!$table->hasColumn('acknowledged')) {
                 $table->addColumn('acknowledged', 'boolean', [
-                    'notnull' => true,
+                    'notnull' => false,
                     'default' => false
                 ]);
             }
