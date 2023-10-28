@@ -39,7 +39,30 @@ class DuplicateApiController extends AbstractAPIController
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function list(int $offset = 0, int $limit = 30): JSONResponse
+    
+    public function list(int $offset = 0, int $limit = 30, string $type = 'unacknowledged'): JSONResponse
+    {
+        try {
+            $duplicates = [];
+            switch($type) {
+                case 'all':
+                    $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);
+                    break;
+                case 'acknowledged':
+                    $duplicates = $this->fileDuplicateService->findAcknowledged($this->getUserId(), $limit, $offset);
+                    break;
+                case 'unacknowledged':
+                default:
+                    $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset);
+                    break;
+            }
+            return $this->success($duplicates);
+        } catch (\Exception $e) {
+            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            return $this->handleException($e);
+        }
+    }
+
     {
         try {
             $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);

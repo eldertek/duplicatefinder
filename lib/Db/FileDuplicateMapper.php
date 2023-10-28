@@ -113,28 +113,77 @@ class FileDuplicateMapper extends EQBMapper
             return false;
         }
     }
-
+    
     /**
-     * Retrieves all acknowledged duplicates.
-     * 
-     * @return array An array of FileDuplicate entities that have been acknowledged.
+     * Fetches acknowledged duplicates
+     *
+     * @param string|null $user
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param array<array<string>> $orderBy
+     * @return array<FileDuplicate>
      */
-    public function getAcknowledgedDuplicates(): array
-    {
+    public function findAcknowledged(
+        ?string $user = null,
+        ?int $limit = null,
+        ?int $offset = null,
+        ?array $orderBy = [['hash'], ['type']]
+    ): array {
         $qb = $this->db->getQueryBuilder();
-
         $qb->select('*')
             ->from($this->getTableName())
-            ->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
-
-        $result = $qb->execute()->fetchAll();
-
-        // Convert the result into an array of FileDuplicate entities
-        $duplicates = [];
-        foreach ($result as $row) {
-            $duplicates[] = FileDuplicate::fromRow($row);
+            ->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(1)));
+        if ($user !== null) {
+            $qb->andWhere($qb->expr()->eq('user', $qb->createNamedParameter($user)));
         }
-
-        return $duplicates;
+        if ($limit !== null) {
+            $qb->setMaxResults($limit);
+        }
+        if ($offset !== null) {
+            $qb->where($qb->expr()->gt('id', $qb->createNamedParameter($offset, IQueryBuilder::PARAM_INT)));
+        }
+        if ($orderBy !== null) {
+            foreach ($orderBy as $order) {
+                $qb->addOrderBy($order[0], isset($order[1]) ? $order[1] : null);
+            }
+        }
+        return $this->findEntities($qb);
     }
+
+    /**
+     * Fetches unacknowledged duplicates
+     *
+     * @param string|null $user
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param array<array<string>> $orderBy
+     * @return array<FileDuplicate>
+     */
+    public function findUnacknowledged(
+        ?string $user = null,
+        ?int $limit = null,
+        ?int $offset = null,
+        ?array $orderBy = [['hash'], ['type']]
+    ): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')
+            ->from($this->getTableName())
+            ->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(0)));
+        if ($user !== null) {
+            $qb->andWhere($qb->expr()->eq('user', $qb->createNamedParameter($user)));
+        }
+        if ($limit !== null) {
+            $qb->setMaxResults($limit);
+        }
+        if ($offset !== null) {
+            $qb->where($qb->expr()->gt('id', $qb->createNamedParameter($offset, IQueryBuilder::PARAM_INT)));
+        }
+        if ($orderBy !== null) {
+            foreach ($orderBy as $order) {
+                $qb->addOrderBy($order[0], isset($order[1]) ? $order[1] : null);
+            }
+        }
+        return $this->findEntities($qb);
+    }
+
 }

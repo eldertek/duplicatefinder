@@ -148,4 +148,45 @@ class FileDuplicateService
     {
         $this->mapper->clear();
     }
+
+    /**
+     * Fetches acknowledged duplicates
+     *
+     * @param string|null $user
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param bool $enrich
+     * @param array<array<string>> $orderBy
+     * @return array<string, FileDuplicate|int|mixed>
+     */
+    public function findAcknowledged(
+        ?string $user = null,
+        ?int $limit = 20,
+        ?int $offset = null,
+        bool $enrich = false,
+        ?array $orderBy = [['hash'], ['type']]
+    ): array {
+        return $this->mapper->findAcknowledged($user, $limit, $offset, $orderBy);
+    }
+
+    /**
+     * Fetches unacknowledged duplicates
+     *
+     * @param string|null $user
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param bool $enrich
+     * @param array<array<string>> $orderBy
+     * @return array<string, FileDuplicate|int|mixed>
+     */
+    public function findUnacknowledged(
+        ?string $user = null,
+        ?int $limit = 20,
+        ?int $offset = null,
+        bool $enrich = false,
+        ?array $orderBy = [['hash'], ['type']]
+    ): array {
+        return $this->mapper->findUnacknowledged($user, $limit, $offset, $orderBy);
+    }
+
 }

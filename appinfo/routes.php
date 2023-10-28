@@ -10,8 +10,7 @@
 return [
     'routes' => [
         ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
-        ['name' => 'duplicate_api#list', 'url' => '/api/duplicates', 'verb' => 'GET'],
-        ['name' => 'duplicate_api#listAcknowledged', 'url' => '/api/duplicates/acknowledged', 'verb' => 'GET'],
+        ['name' => 'duplicate_api#list', 'url' => '/api/duplicates/{type}', 'verb' => 'GET'],
         ['name' => 'duplicate_api#acknowledge', 'url' => '/api/duplicates/acknowledge/{hash}', 'verb' => 'POST'],
         ['name' => 'duplicate_api#unacknowledge', 'url' => '/api/duplicates/unacknowledge/{hash}', 'verb' => 'POST'],
         ['name' => 'settings_api#list', 'url' => '/api/settings', 'verb' => 'GET'],
