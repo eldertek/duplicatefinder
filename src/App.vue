@@ -34,7 +34,11 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
-				<a class="acknowledge-link" @click="acknowledgeDuplicate" href="#">
+				<a v-if="isAcknowledged(currentDuplicate)" class="acknowledge-link" @click="unacknowledgeDuplicate"
+					href="#">
+					{{ t('duplicatefinder', 'Unacknowledge it') }}
+				</a>
+				<a v-else class="acknowledge-link" @click="acknowledgeDuplicate" href="#">
 					{{ t('duplicatefinder', 'I acknowledge it') }}
 				</a>
 			</div>
@@ -148,11 +152,34 @@ export default {
 
 				showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
 
-				// TODO: Remove the duplicate from the list and switch to the next one
+				// Move the duplicate from the  unacknowledgedlist to the acknowledged list
+				const index = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
+				const [removedItem] = this.unacknowledgedDuplicates.splice(index, 1);
+				this.acknowledgedDuplicates.push(removedItem);
 			} catch (e) {
 				console.error(e);
 				showError(t('duplicatefinder', 'Could not acknowledge the duplicate'));
 			}
+		},
+		async unacknowledgeDuplicate() {
+			try {
+				const hash = this.currentDuplicate.hash;
+				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledge/${hash}`));
+
+				showSuccess(t('duplicatefinder', 'Duplicate unacknowledged successfully'));
+
+				// Move the duplicate from the acknowledged list to the unacknowledged list
+				const index = this.acknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
+				const [removedItem] = this.acknowledgedDuplicates.splice(index, 1);
+				this.unacknowledgedDuplicates.push(removedItem);
+
+			} catch (e) {
+				console.error(e);
+				showError(t('duplicatefinder', 'Could not unacknowledge the duplicate'));
+			}
+		},
+		isAcknowledged(duplicate) {
+			return this.acknowledgedDuplicates.some(dup => dup.id === duplicate.id);
 		},
 		getPreviewImage(item) {
 			if (this.isImage(item) || this.isVideo(item)) {
