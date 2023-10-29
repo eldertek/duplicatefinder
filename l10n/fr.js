@@ -24,7 +24,7 @@ OC.L10N.register(
     "Background Job Find Duplicates Interval (seconds)" : "Intervalle de détection automatique des doublons (secondes)",
     "The interval in seconds for the find duplicates background job." : "Intervalle en secondes pour la détection automatique des doublons.",
     "Could not fetch settings" : "Impossible de récupérer les paramètres",
-    "Settings saved" : "Paramètres sauvegardés",
+    "Settings saved" : "Paramètres enregistrés",
     "Could not save settings" : "Impossible d'enregistrer les paramètres"
 },
 "nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");
