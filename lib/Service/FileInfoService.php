@@ -33,8 +33,6 @@ class FileInfoService
     private $shareService;
     /** @var FolderService */
     private $folderService;
-    /** @var FilterService */
-    private $filterService;
     /** @var ScannerUtil */
     private $scannerUtil;
 
@@ -44,7 +42,6 @@ class FileInfoService
         LoggerInterface $logger,
         ShareService $shareService,
         FolderService $folderService,
-        FilterService $filterService,
         ScannerUtil $scannerUtil
     ) {
         $this->mapper = $mapper;
@@ -52,7 +49,6 @@ class FileInfoService
         $this->logger = $logger;
         $this->shareService = $shareService;
         $this->folderService = $folderService;
-        $this->filterService = $filterService;
         $this->scannerUtil = $scannerUtil;
     }
 
@@ -178,7 +174,6 @@ class FileInfoService
                 throw $e;
             }
         }
-        $fileInfo->setIgnored($this->filterService->isIgnored($fileInfo, $file));
         return $fileInfo;
     }
 

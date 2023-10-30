@@ -19,14 +19,51 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class FindDuplicates extends Command
 {
+    /**
+     * @var IUserManager The user manager instance.
+     */
     private $userManager;
+
+    /**
+     * @var IManager The encryption manager instance.
+     */
     private $encryptionManager;
+
+    /**
+     * @var IDBConnection The database connection instance.
+     */
     private $connection;
+
+    /**
+     * @var FileInfoService The file info service instance.
+     */
     private $fileInfoService;
+
+    /**
+     * @var FileDuplicateService The file duplicate service instance.
+     */
     private $fileDuplicateService;
+
+    /**
+     * @var LoggerInterface The logger instance.
+     */
     private $logger;
+
+    /**
+     * @var OutputInterface The output interface.
+     */
     private $output;
 
+    /**
+     * FindDuplicates constructor.
+     *
+     * @param IUserManager $userManager The user manager instance.
+     * @param IManager $encryptionManager The encryption manager instance.
+     * @param IDBConnection $connection The database connection instance.
+     * @param FileInfoService $fileInfoService The file info service instance.
+     * @param FileDuplicateService $fileDuplicateService The file duplicate service instance.
+     * @param LoggerInterface $logger The logger instance.
+     */
     public function __construct(
         IUserManager $userManager,
         IManager $encryptionManager,
@@ -44,14 +81,24 @@ class FindDuplicates extends Command
         $this->logger = $logger;
     }
 
+    /**
+     * Configure the command.
+     */
     protected function configure(): void
     {
         $this
-            ->setDescription('Find all duplicates files')
+            ->setDescription('Find all duplicate files')
             ->addOption('user', 'u', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Scan files of the specified user')
             ->addOption('path', 'p', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Limit scan to this path, e.g., --path="./Photos"');
     }
 
+    /**
+     * Execute the command.
+     *
+     * @param InputInterface $input The input interface.
+     * @param OutputInterface $output The output interface.
+     * @return int The command exit code.
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->output = $output;
@@ -67,6 +114,13 @@ class FindDuplicates extends Command
         return (!empty($users)) ? $this->findDuplicatesForUsers($users, $paths) : $this->findAllDuplicates($paths);
     }
 
+    /**
+     * Find duplicates for the specified users.
+     *
+     * @param array $users The array of user names.
+     * @param array $paths The array of paths to limit the scan.
+     * @return int The command exit code.
+     */
     private function findDuplicatesForUsers(array $users, array $paths): int
     {
         foreach ($users as $user) {
@@ -86,6 +140,12 @@ class FindDuplicates extends Command
         return 0;
     }
 
+    /**
+     * Find all duplicates for all users.
+     *
+     * @param array $paths The array of paths to limit the scan.
+     * @return int The command exit code.
+     */
     private function findAllDuplicates(array $paths): int
     {
         $this->userManager->callForAllUsers(function (IUser $user) use ($paths): void {
@@ -95,6 +155,12 @@ class FindDuplicates extends Command
         return 0;
     }
 
+    /**
+     * Find duplicates for the specified user and paths.
+     *
+     * @param string $user The user name.
+     * @param array $paths The array of paths to limit the scan.
+     */
     private function findDuplicates(string $user, array $paths): void
     {
         $callback = function () {
