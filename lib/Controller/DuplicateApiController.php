@@ -24,7 +24,7 @@ class DuplicateApiController extends AbstractAPIController
     /** @var IUserManager */
     private $userManager;
     /** @var LoggerInterface */
-    private $logger;
+    protected $logger;
 
     public function __construct(
         $appName,
