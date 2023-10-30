@@ -38,8 +38,10 @@
 
     <NcSettingsSection :title="t('duplicatefinder', 'Advanced settings')"
       :description="t('duplicatefinder', 'Advanced settings for Duplicate Finder. Be cautious !')" :limit-width="true">
-      <NcButton @click="clearAllDuplicates">{{ t('duplicatefinder', 'Clear all duplicates') }}</NcButton>
-      <NcButton @click="findAllDuplicates">{{ t('duplicatefinder', 'Find all duplicates') }}</NcButton>
+      <div class="buttons-container">
+        <NcButton @click="clearAllDuplicates">{{ t('duplicatefinder', 'Clear all duplicates') }}</NcButton>
+        <NcButton @click="findAllDuplicates">{{ t('duplicatefinder', 'Find all duplicates') }}</NcButton>
+      </div>
     </NcSettingsSection>
   </div>
 </template>
@@ -91,7 +93,7 @@ export default {
         });
     },
     findAllDuplicates() {
-      showSuccess(t('duplicatefinder', 'Duplicates search initiated'));
+      showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while))'));
       axios.post(generateUrl('/apps/duplicatefinder/api/duplicates/find'))
         .then(response => {
           showSuccess(t('duplicatefinder', 'All duplicates found'));
@@ -110,5 +112,10 @@ export default {
   width: 100%;
   overflow-y: auto;
 }
+.buttons-container {
+  display: flex;
+  gap: 10px;
+}
+
 </style>
 
