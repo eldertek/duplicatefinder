@@ -36,7 +36,9 @@
         @update:value="saveSettings('backgroundjob_interval_find', settings.backgroundjob_interval_find)"></NcTextField>
     </NcSettingsSection>
 
-    <NcSettingsSection :title="t('duplicatefinder', 'Advanced settings (be cautious)')" :limit-width="true">
+    <NcSettingsSection :title="t('duplicatefinder', 'Advanced settings (be cautious)')" 
+      :description="t('duplicatefinder', 'These settings are for advanced users only. If you are not sure what you are doing, please do not change them.')"
+      :limit-width="true">
       <div class="buttons-container">
         <NcButton @click="clearAllDuplicates">{{ t('duplicatefinder', 'Clear all duplicates') }}</NcButton>
         <NcButton @click="findAllDuplicates">{{ t('duplicatefinder', 'Find all duplicates') }}</NcButton>
