@@ -7,7 +7,6 @@ use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use OCP\AppFramework\Http\JSONResponse;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
@@ -49,7 +48,7 @@ class DuplicateApiController extends AbstractAPIController
      * @NoCSRFRequired
      */
     
-    public function list(int $offset = 0, int $limit = 30, string $type = 'unacknowledged'): JSONResponse
+    public function list(int $offset = 0, int $limit = 30, string $type = 'unacknowledged'): DataResponse
     {
         try {
             $duplicates = [];
@@ -65,10 +64,10 @@ class DuplicateApiController extends AbstractAPIController
                     $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset, true);
                     break;
             }
-            return $this->logger->success($duplicates);
+            return new DataResponse(['status' => 'success', 'data' => $duplicates]);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
-            return $this->handleException($e);
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
