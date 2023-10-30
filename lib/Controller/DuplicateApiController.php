@@ -3,6 +3,8 @@ namespace OCA\DuplicateFinder\Controller;
 
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use OCP\AppFramework\Http\JSONResponse;
@@ -19,6 +21,10 @@ class DuplicateApiController extends AbstractAPIController
     private $fileDuplicateMapper;
     /** @var FileInfoService */
     private $fileInfoService;
+    /** @var IUserManager */
+    private $userManager;
+    /** @var LoggerInterface */
+    private $logger;
 
     public function __construct(
         $appName,
@@ -27,11 +33,14 @@ class DuplicateApiController extends AbstractAPIController
         FileDuplicateService $fileDuplicateService,
         FileInfoService $fileInfoService,
         FileDuplicateMapper $fileDuplidateMapper,
+        IUserManager $userManager,
         LoggerInterface $logger
     ) {
         parent::__construct($appName, $request, $userSession, $logger);
         $this->fileInfoService = $fileInfoService;
+        $this->userManager = $userManager;
         $this->fileDuplicateService = $fileDuplicateService;
+        $this->logger = $logger;
         $this->fileDuplicateMapper = $fileDuplidateMapper;
     }
 
@@ -56,7 +65,7 @@ class DuplicateApiController extends AbstractAPIController
                     $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset, true);
                     break;
             }
-            return $this->success($duplicates);
+            return $this->logger->success($duplicates);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
             return $this->handleException($e);
@@ -81,6 +90,27 @@ class DuplicateApiController extends AbstractAPIController
     {
         $this->fileDuplicateMapper->unmarkAcknowledged($hash);
         return new DataResponse(['status' => 'success']);
+    }
+
+    /**
+     * @NoCSRFRequired
+     */
+    public function clear(): DataResponse
+    {
+        $this->fileDuplicateService->clear();
+        $this->fileInfoService->clear();
+        return new DataResponse(['status'=> 'success']);
+    }
+
+    /**
+     * @NoCSRFRequired
+     */
+    public function find(): DataResponse
+    {
+        $this->userManager->callForAllUsers(function (IUser $user): void {
+            $this->fileInfoService->scanFiles($user->getUID());
+        });
+        return new DataResponse(['status'=> 'success']);
     }
 
 }
