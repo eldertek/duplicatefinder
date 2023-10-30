@@ -9,7 +9,7 @@
  use OCP\BackgroundJob\TimedJob;
  use Psr\Log\LoggerInterface;
  
- class FindDuplicates extends TimedJob
+ class SearchDuplicates extends TimedJob
  {
     /** @var IUserManager */
     private $userManager;
