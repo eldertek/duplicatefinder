@@ -62,9 +62,8 @@ class DuplicateApiController extends AbstractAPIController
                 case 'unacknowledged':
                     $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset, true);
                     break;
-                default:
-                    return new DataResponse(['status' => 'error', 'message' => 'Invalid type']);
             }
+            return new DataResponse(['status' => 'error', 'message' => 'Invalid type']);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
             return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
