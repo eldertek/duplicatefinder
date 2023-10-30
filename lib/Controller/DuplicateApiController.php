@@ -97,9 +97,14 @@ class DuplicateApiController extends AbstractAPIController
      */
     public function clear(): DataResponse
     {
-        $this->fileDuplicateService->clear();
-        $this->fileInfoService->clear();
-        return new DataResponse(['status'=> 'success']);
+        try {
+            $this->fileDuplicateService->clear();
+            $this->fileInfoService->clear();
+            return new DataResponse(['status'=> 'success']);
+        } catch (\Exception $e) {
+            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -107,10 +112,15 @@ class DuplicateApiController extends AbstractAPIController
      */
     public function find(): DataResponse
     {
-        $this->userManager->callForAllUsers(function (IUser $user): void {
-            $this->fileInfoService->scanFiles($user->getUID());
-        });
-        return new DataResponse(['status'=> 'success']);
+        try {
+            $this->userManager->callForAllUsers(function (IUser $user): void {
+                $this->fileInfoService->scanFiles($user->getUID());
+            });
+            return new DataResponse(['status'=> 'success']);
+        } catch (\Exception $e) {
+            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
 }
