@@ -13,24 +13,23 @@ class CMDUtils
         \Closure $abortIfInterrupted,
         ?string $user = null
     ): void {
-        if ($user === null) {
-            $output->writeln('Duplicates are: ');
-        } else {
-            $output->writeln('Duplicates for user "'.$user.'" are: ');
-        }
+        $output->writeln($user === null ? 'Duplicates are: ' : 'Duplicates for user "'.$user.'" are: ');
         $duplicates = array("pageKey" => 0, "isLastFetched" => true);
         do {
             $duplicates = $fileDuplicateService->findAll($user, 20, $duplicates["pageKey"], true);
-            foreach ($duplicates["entities"] as $duplicate) {
-                if (!$duplicate->getFiles()) {
-                    continue;
-                }
-                $output->writeln($duplicate->getHash().'('.$duplicate->getType().')');
-                self::showFiles($output, $duplicate->getFiles());
-            }
-            unset($duplicate);
+            self::processDuplicates($output, $duplicates);
             $abortIfInterrupted();
         } while (!$duplicates["isLastFetched"]);
+    }
+
+    private static function processDuplicates(OutputInterface $output, array $duplicates): void {
+        foreach ($duplicates["entities"] as $duplicate) {
+            if (!$duplicate->getFiles()) {
+                continue;
+            }
+            $output->writeln($duplicate->getHash().'('.$duplicate->getType().')');
+            self::showFiles($output, $duplicate->getFiles());
+        }
     }
 
     /**
@@ -51,18 +50,11 @@ class CMDUtils
                 }
             }
         }
-        unset($file);
-        $message = '';
-        if ($hiddenPaths == 1) {
-            $message = $hiddenPaths.' path is hidden because it references';
-        } elseif ($hiddenPaths > 1) {
-            $message = $hiddenPaths.' paths are hidden because they reference';
-        }
         if ($hiddenPaths > 0) {
-            $output->writeln($indent.'<info>'.$message.' to a similiar file.</info>');
+            $message = $hiddenPaths.' path'.($hiddenPaths > 1 ? 's are' : ' is').' hidden because '.($hiddenPaths > 1 ? 'they reference' : 'it references').' to a similiar file.';
+            $output->writeln($indent.'<info>'.$message.'</info>');
         }
     }
-
 
     public static function showIfOutputIsPresent(
         string $message,

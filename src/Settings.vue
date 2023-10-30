@@ -35,6 +35,15 @@
       <NcTextField :value.sync="settings.backgroundjob_interval_find"
         @update:value="saveSettings('backgroundjob_interval_find', settings.backgroundjob_interval_find)"></NcTextField>
     </NcSettingsSection>
+
+    <NcSettingsSection :title="t('duplicatefinder', 'Advanced settings (be cautious)')" 
+      :description="t('duplicatefinder', 'These settings are for advanced users only. If you are not sure what you are doing, please do not change them.')"
+      :limit-width="true">
+      <div class="buttons-container">
+        <NcButton @click="clearAllDuplicates">{{ t('duplicatefinder', 'Clear all duplicates') }}</NcButton>
+        <NcButton @click="findAllDuplicates">{{ t('duplicatefinder', 'Find all duplicates') }}</NcButton>
+      </div>
+    </NcSettingsSection>
   </div>
 </template>
       
@@ -69,14 +78,31 @@ export default {
     saveSettings(key, value) {
       axios.post(generateUrl(`/apps/duplicatefinder/api/settings/${key}/${value}`))
         .then(response => {
-          console.error(response)
-          console.error("key : " + key + ", value : " + value)
           showSuccess(t('duplicatefinder', 'Settings saved'));
         })
         .catch(error => {
           showError(t('duplicatefinder', 'Could not save settings'));
         });
     },
+    clearAllDuplicates() {
+      axios.post(generateUrl('/apps/duplicatefinder/api/duplicates/clear'))
+        .then(response => {
+          showSuccess(t('duplicatefinder', 'All duplicates cleared'));
+        })
+        .catch(error => {
+          showError(t('duplicatefinder', 'Could not clear duplicates'));
+        });
+    },
+    findAllDuplicates() {
+      showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while))'));
+      axios.post(generateUrl('/apps/duplicatefinder/api/duplicates/find'))
+        .then(response => {
+          showSuccess(t('duplicatefinder', 'All duplicates found'));
+        })
+        .catch(error => {
+          showError(t('duplicatefinder', 'Could not initiate duplicate search'));
+        });
+    }
   }
 }
 </script>
@@ -87,5 +113,10 @@ export default {
   width: 100%;
   overflow-y: auto;
 }
+.buttons-container {
+  display: flex;
+  gap: 10px;
+}
+
 </style>
 

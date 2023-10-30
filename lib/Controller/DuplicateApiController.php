@@ -3,9 +3,10 @@ namespace OCA\DuplicateFinder\Controller;
 
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use OCP\AppFramework\Http\JSONResponse;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
@@ -19,6 +20,10 @@ class DuplicateApiController extends AbstractAPIController
     private $fileDuplicateMapper;
     /** @var FileInfoService */
     private $fileInfoService;
+    /** @var IUserManager */
+    private $userManager;
+    /** @var LoggerInterface */
+    protected $logger;
 
     public function __construct(
         $appName,
@@ -27,11 +32,14 @@ class DuplicateApiController extends AbstractAPIController
         FileDuplicateService $fileDuplicateService,
         FileInfoService $fileInfoService,
         FileDuplicateMapper $fileDuplidateMapper,
+        IUserManager $userManager,
         LoggerInterface $logger
     ) {
         parent::__construct($appName, $request, $userSession, $logger);
         $this->fileInfoService = $fileInfoService;
+        $this->userManager = $userManager;
         $this->fileDuplicateService = $fileDuplicateService;
+        $this->logger = $logger;
         $this->fileDuplicateMapper = $fileDuplidateMapper;
     }
 
@@ -40,7 +48,7 @@ class DuplicateApiController extends AbstractAPIController
      * @NoCSRFRequired
      */
     
-    public function list(int $offset = 0, int $limit = 30, string $type = 'unacknowledged'): JSONResponse
+    public function list(int $offset = 0, int $limit = 30, string $type = 'unacknowledged'): DataResponse
     {
         try {
             $duplicates = [];
@@ -52,14 +60,15 @@ class DuplicateApiController extends AbstractAPIController
                     $duplicates = $this->fileDuplicateService->findAcknowledged($this->getUserId(), $limit, $offset, true);
                     break;
                 case 'unacknowledged':
-                default:
                     $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset, true);
                     break;
+                default:
+                    return new DataResponse(['status' => 'error', 'message' => 'Invalid type']);
             }
-            return $this->success($duplicates);
+            return new DataResponse(['status' => 'success', 'data' => $duplicates]);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
-            return $this->handleException($e);
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
@@ -81,6 +90,37 @@ class DuplicateApiController extends AbstractAPIController
     {
         $this->fileDuplicateMapper->unmarkAcknowledged($hash);
         return new DataResponse(['status' => 'success']);
+    }
+
+    /**
+     * @NoCSRFRequired
+     */
+    public function clear(): DataResponse
+    {
+        try {
+            $this->fileDuplicateService->clear();
+            $this->fileInfoService->clear();
+            return new DataResponse(['status'=> 'success']);
+        } catch (\Exception $e) {
+            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * @NoCSRFRequired
+     */
+    public function find(): DataResponse
+    {
+        try {
+            $this->userManager->callForAllUsers(function (IUser $user): void {
+                $this->fileInfoService->scanFiles($user->getUID());
+            });
+            return new DataResponse(['status'=> 'success']);
+        } catch (\Exception $e) {
+            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
 }

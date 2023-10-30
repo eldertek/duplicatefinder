@@ -1,11 +1,10 @@
 <?php
 namespace OCA\DuplicateFinder\Controller;
 
+use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use OCP\AppFramework\Http\JSONResponse;
-use OCA\DuplicateFinder\Exception\UnknownConfigKeyException;
 use OCA\DuplicateFinder\Service\ConfigService;
 
 class SettingsApiController extends AbstractAPIController
@@ -38,16 +37,16 @@ class SettingsApiController extends AbstractAPIController
         ];
     }
 
-    public function list(): JSONResponse
+    public function list(): DataResponse
     {
-        return $this->success($this->getConfigArray());
+        return new DataResponse(['status' => 'success', 'data' => $this->getConfigArray()]);
     }
 
     /**
      * @param string $key
      * @param mixed $value
      */
-    public function save(string $key, $value): JSONResponse
+    public function save(string $key, $value): DataResponse
     {
         $configKeys = [
             'backgroundjob_interval_find' => 'setFindJobInterval',
@@ -57,7 +56,7 @@ class SettingsApiController extends AbstractAPIController
         ];
 
         if (!array_key_exists($key, $configKeys)) {
-            return $this->error(new UnknownConfigKeyException($key), 400);
+            return new DataResponse(['status' => 'error', 'message' => 'Unknown config key']);
         }
 
         $method = $configKeys[$key];
@@ -69,9 +68,9 @@ class SettingsApiController extends AbstractAPIController
         try {
             $this->configService->$method($value);
         } catch (\Exception $e) {
-            return $this->error($e, 400);
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
         }
 
-        return $this->success($this->getConfigArray());
+        return new DataResponse(['status' => 'success', 'data' => $this->getConfigArray()]);
     }
 }
