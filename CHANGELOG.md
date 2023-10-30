@@ -1,3 +1,10 @@
+## 1.0.8 - 2023-10-30
+### Added 
+- In settings, you can now directly clear all and find all duplicates.
+### Changed
+- Updated translations
+- Make the code more readable
+
 ## 1.0.7 - 2023-10-28
 ### Added 
 - Add a new acknowledge feature to avoid to display the same duplicate again and again.
