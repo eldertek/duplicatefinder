@@ -18,7 +18,7 @@
         <nextcloud min-version="26" max-version="28"/>
     </dependencies>
     <background-jobs>
-        <job>OCA\DuplicateFinder\BackgroundJob\SearchDuplicates</job>
+        <job>OCA\DuplicateFinder\BackgroundJob\ClearDuplicates</job>
         <job>OCA\DuplicateFinder\BackgroundJob\CleanUpDB</job>
     </background-jobs>
     <repair-steps>

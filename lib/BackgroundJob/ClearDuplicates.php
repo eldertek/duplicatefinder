@@ -1,5 +1,7 @@
 <?php
 
+namespace OCA\DuplicateFinder\BackgroundJob;
+
  use OCA\DuplicateFinder\Service\ConfigService;
  use OCA\DuplicateFinder\Service\FileInfoService;
  use OCP\EventDispatcher\IEventDispatcher;
@@ -9,7 +11,7 @@
  use OCP\BackgroundJob\TimedJob;
  use Psr\Log\LoggerInterface;
  
- class SearchDuplicates extends TimedJob
+ class ClearDuplicates extends TimedJob
  {
     /** @var IUserManager */
     private $userManager;
