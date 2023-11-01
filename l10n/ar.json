@@ -1,12 +1,18 @@
 { "translations": {
     "Duplicate Finder" : "مكتشف التكرارات Duplicate Finder",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "مرحباً. التكرارات الحالية تشتمل على {numberOfFiles} ملف؛ إجمالي حجمها: {formattedSize}",
+    "Unacknowledge it" : "إنكاره",
+    "Acknowledge it" : "الاعتراف به",
     "File" : "ملف",
     "Hash:" : "المُستَصْفَى Hashـ :",
     "Path:" : "المسار Pathـ :",
     "Delete" : "حذف",
     "No duplicates found or no duplicate selected." : "لم يتم اكتشاف أي تكررات و لم يتم تحديد أي تكرار.",
     "Could not fetch duplicates" : "تعذّر جلب التكرارات",
+    "Duplicate acknowledged successfully" : "تمّ الاعتراف بالتكرار بنجاح",
+    "Could not acknowledge the duplicate" : "تعذّر الاعتراف بالتكرار",
+    "Duplicate unacknowledged successfully" : "تمّ إنكار التكرار بنجاح",
+    "Could not unacknowledge the duplicate" : "تعذّر إنكار التكرار",
     "Duplicate deleted" : "تمّ حذف التكرارات",
     "Could not delete the duplicate at path: ${item.path}" : "تعذّر حذف التكرار في المسار: ${item.path}",
     "Duplicate Finder Settings" : "إعدادات مكتشف التكرارات",
@@ -21,8 +27,16 @@
     "The interval in seconds for the cleanup background job." : "الفاصل الزمني بالثواني لتنظيف المهام في الخلفية.",
     "Background Job Find Duplicates Interval (seconds)" : "الفاصل الزمني لمهمة اكتشاف التكرارات في الخلفية (بالثواني)",
     "The interval in seconds for the find duplicates background job." : "الفاصل الزمني بالثواني لمهمة اكتشاف التكرارات في الخلفية. ",
+    "Advanced settings (be cautious)" : "الإعدادات المتقدمة (تعامل معها بحرصٍ)",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "هذه الإعدادات لاستعمال المستخدِمين المتمكنين فقط. إذا لم تكون متأكداً مما تفعل، لا تقم بالتغيير رجاءً.",
+    "Clear all duplicates" : "تنظيف كل التكرارات",
+    "Find all duplicates" : "أوجِد جميع التكرارات",
     "Could not fetch settings" : "تعذّر جلب الإعدادات",
     "Settings saved" : "تمّ حفظ الإعدادات",
-    "Could not save settings" : "تعذّر حفظ الإعدادات"
+    "Could not save settings" : "تعذّر حفظ الإعدادات",
+    "All duplicates cleared" : "تمّ تنظيف جميع التكرارات",
+    "Could not clear duplicates" : "تعذّر تنظيف التكرارات",
+    "All duplicates found" : "تمّ إيجاد كل التكرارات",
+    "Could not initiate duplicate search" : "تعذّر البدء في البحث عن التكرارات"
 },"pluralForm" :"nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;"
 }

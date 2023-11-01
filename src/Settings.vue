@@ -94,7 +94,7 @@ export default {
         });
     },
     findAllDuplicates() {
-      showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while))'));
+      showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while)'));
       axios.post(generateUrl('/apps/duplicatefinder/api/duplicates/find'))
         .then(response => {
           showSuccess(t('duplicatefinder', 'All duplicates found'));

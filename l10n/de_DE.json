@@ -1,12 +1,18 @@
 { "translations": {
     "Duplicate Finder" : "Duplikatfinder",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Hallo, das aktuelle Duplikat enthält {numberOfFiles} Dateien, Gesamtgröße: {formattedSize}",
+    "Unacknowledge it" : "Nicht bestätigen",
+    "Acknowledge it" : "Bestätigen",
     "File" : "Datei",
     "Hash:" : "Prüfsumme:",
     "Path:" : "Pfad:",
     "Delete" : "Löschen",
     "No duplicates found or no duplicate selected." : "Keine Duplikate gefunden oder keine Duplikate ausgewählt.",
     "Could not fetch duplicates" : "Duplikate konnten nicht abgerufen werden",
+    "Duplicate acknowledged successfully" : "Duplikat erfolgreich bestätigt",
+    "Could not acknowledge the duplicate" : "Das Duplikat konnte nicht bestätigt werden",
+    "Duplicate unacknowledged successfully" : "Bestätigung des Duplikats erfolgreich aufgehoben",
+    "Could not unacknowledge the duplicate" : "Die Bestätigung des Duplikats konnte nicht aufgehoben werden",
     "Duplicate deleted" : "Duplikat gelöscht",
     "Could not delete the duplicate at path: ${item.path}" : "Konnte das Duplikat nicht löschen. Pfad: ${item.path}",
     "Duplicate Finder Settings" : "Duplikatfinder Einstellungen",
@@ -21,8 +27,16 @@
     "The interval in seconds for the cleanup background job." : "Das Intervall in Sekunden für die Bereinigungs-Hintergrundaufgabe.",
     "Background Job Find Duplicates Interval (seconds)" : "Intervall für die Suche nach Duplikaten mittels Hintergrundaufgabe (Sekunden)",
     "The interval in seconds for the find duplicates background job." : "Das Intervall in Sekunden für die Hintergrundaufgabe zum Suchen von Duplikaten.",
+    "Advanced settings (be cautious)" : "Erweiterte Einstellungen (Vorsicht)",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Diese Einstellungen sind nur für fortgeschrittene Benutzer. Wenn Sie nicht sicher sind, was Sie tun, ändern Sie sie bitte nicht.",
+    "Clear all duplicates" : "Alle Duplikate löschen",
+    "Find all duplicates" : "Alle Duplikaten finden",
     "Could not fetch settings" : "Die Einstellungen konnten nicht abgerufen werden",
     "Settings saved" : "Einstellungen gespeichert",
-    "Could not save settings" : "Die Einstellungen konnten nicht gespeichert werden"
+    "Could not save settings" : "Die Einstellungen konnten nicht gespeichert werden",
+    "All duplicates cleared" : "Alle Duplikate gelöscht",
+    "Could not clear duplicates" : "Duplikate konnten nicht gelöscht werden",
+    "All duplicates found" : "Alle Duplikate gefunden",
+    "Could not initiate duplicate search" : "Die Duplikatsuche konnte nicht gestartet werden"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }
