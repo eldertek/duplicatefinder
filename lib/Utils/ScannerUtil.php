@@ -131,4 +131,5 @@ class ScannerUtil
             $isVerbose ? OutputInterface::VERBOSITY_VERBOSE : OutputInterface::VERBOSITY_NORMAL
         );
     }
+    
 }
