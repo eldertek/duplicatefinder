@@ -29,8 +29,16 @@ OC.L10N.register(
     "The interval in seconds for the cleanup background job." : "Das Intervall in Sekunden für die Bereinigungs-Hintergrundaufgabe.",
     "Background Job Find Duplicates Interval (seconds)" : "Intervall für die Suche nach Duplikaten mittels Hintergrundaufgabe (Sekunden)",
     "The interval in seconds for the find duplicates background job." : "Das Intervall in Sekunden für die Hintergrundaufgabe zum Suchen von Duplikaten.",
+    "Advanced settings (be cautious)" : "Erweiterte Einstellungen (Vorsicht)",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Diese Einstellungen sind nur für fortgeschrittene Benutzer. Wenn Sie nicht sicher sind, was Sie tun, ändern Sie sie bitte nicht.",
+    "Clear all duplicates" : "Alle Duplikate löschen",
+    "Find all duplicates" : "Alle Duplikaten finden",
     "Could not fetch settings" : "Die Einstellungen konnten nicht abgerufen werden",
     "Settings saved" : "Einstellungen gespeichert",
-    "Could not save settings" : "Die Einstellungen konnten nicht gespeichert werden"
+    "Could not save settings" : "Die Einstellungen konnten nicht gespeichert werden",
+    "All duplicates cleared" : "Alle Duplikate gelöscht",
+    "Could not clear duplicates" : "Duplikate konnten nicht gelöscht werden",
+    "All duplicates found" : "Alle Duplikate gefunden",
+    "Could not initiate duplicate search" : "Die Duplikatsuche konnte nicht gestartet werden"
 },
 "nplurals=2; plural=(n != 1);");

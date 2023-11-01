@@ -29,8 +29,16 @@ OC.L10N.register(
     "The interval in seconds for the cleanup background job." : "清理背景作業的時間間隔（以秒為單位）。",
     "Background Job Find Duplicates Interval (seconds)" : "背景作業尋找重複項目間隔（秒）",
     "The interval in seconds for the find duplicates background job." : "尋找重複項目背景作業的時間間隔（以秒為單位）。",
+    "Advanced settings (be cautious)" : "進階設定（請謹慎）",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "這些設定僅適用於進階使用者。若您不確定自己在做什麼，請不要變更這些設定。",
+    "Clear all duplicates" : "清除所有重複項目",
+    "Find all duplicates" : "尋找所有重複項目",
     "Could not fetch settings" : "無法擷取設定",
     "Settings saved" : "設定已儲存",
-    "Could not save settings" : "無法儲存設定"
+    "Could not save settings" : "無法儲存設定",
+    "All duplicates cleared" : "已清除所有重複項目",
+    "Could not clear duplicates" : "無法清除重複項目",
+    "All duplicates found" : "找到所有重複項目",
+    "Could not initiate duplicate search" : "無法啟動重複項目搜尋"
 },
 "nplurals=1; plural=0;");

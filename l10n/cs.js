@@ -29,8 +29,16 @@ OC.L10N.register(
     "The interval in seconds for the cleanup background job." : "Interval (v sekundách) ve kterém čistit úlohy na pozadí.",
     "Background Job Find Duplicates Interval (seconds)" : "Interval úlohy na pozadí pro hledání duplicit (sekundy)",
     "The interval in seconds for the find duplicates background job." : "Interval (v sekundách) ve kterém na pozadí hledat duplicity.",
+    "Advanced settings (be cautious)" : "Pokročilá nastavení (buďte opatrní)",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Tato nastavení jsou pouze pro pokročilé uživatele. Pokud přesně nevíte, co děláte, neměňte je.",
+    "Clear all duplicates" : "Vymazat veškeré duplicity",
+    "Find all duplicates" : "Najít všechny duplicity",
     "Could not fetch settings" : "Nastavení se nepodařilo získat",
     "Settings saved" : "Nastavení uložena",
-    "Could not save settings" : "Nastavení se nepodařilo uložit"
+    "Could not save settings" : "Nastavení se nepodařilo uložit",
+    "All duplicates cleared" : "Všechny duplicity vymazány",
+    "Could not clear duplicates" : "Některé duplicity se nepodařilo vymazat",
+    "All duplicates found" : "Nalezeny všechny duplicity",
+    "Could not initiate duplicate search" : "Nepodařilo se inicializovat hledání duplicit"
 },
 "nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;");

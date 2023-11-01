@@ -29,8 +29,16 @@ OC.L10N.register(
     "The interval in seconds for the cleanup background job." : "الفاصل الزمني بالثواني لتنظيف المهام في الخلفية.",
     "Background Job Find Duplicates Interval (seconds)" : "الفاصل الزمني لمهمة اكتشاف التكرارات في الخلفية (بالثواني)",
     "The interval in seconds for the find duplicates background job." : "الفاصل الزمني بالثواني لمهمة اكتشاف التكرارات في الخلفية. ",
+    "Advanced settings (be cautious)" : "الإعدادات المتقدمة (تعامل معها بحرصٍ)",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "هذه الإعدادات لاستعمال المستخدِمين المتمكنين فقط. إذا لم تكون متأكداً مما تفعل، لا تقم بالتغيير رجاءً.",
+    "Clear all duplicates" : "تنظيف كل التكرارات",
+    "Find all duplicates" : "أوجِد جميع التكرارات",
     "Could not fetch settings" : "تعذّر جلب الإعدادات",
     "Settings saved" : "تمّ حفظ الإعدادات",
-    "Could not save settings" : "تعذّر حفظ الإعدادات"
+    "Could not save settings" : "تعذّر حفظ الإعدادات",
+    "All duplicates cleared" : "تمّ تنظيف جميع التكرارات",
+    "Could not clear duplicates" : "تعذّر تنظيف التكرارات",
+    "All duplicates found" : "تمّ إيجاد كل التكرارات",
+    "Could not initiate duplicate search" : "تعذّر البدء في البحث عن التكرارات"
 },
 "nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;");

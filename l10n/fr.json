@@ -27,8 +27,16 @@
     "The interval in seconds for the cleanup background job." : "Intervalle en secondes pour le nettoyage automatique des doublons.",
     "Background Job Find Duplicates Interval (seconds)" : "Intervalle de détection automatique des doublons (secondes)",
     "The interval in seconds for the find duplicates background job." : "Intervalle en secondes pour la détection automatique des doublons.",
+    "Advanced settings (be cautious)" : "Paramètres avancés (prudence)",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Ces paramètres sont uniquement destinés aux utilisateurs avancés. Si vous n'êtes pas sûr de ce que vous faites, veuillez ne pas les modifier.",
+    "Clear all duplicates" : "Effacer tous les doublons",
+    "Find all duplicates" : "Trouver tous les doublons",
     "Could not fetch settings" : "Impossible de récupérer les paramètres",
     "Settings saved" : "Paramètres enregistrés",
-    "Could not save settings" : "Impossible d'enregistrer les paramètres"
+    "Could not save settings" : "Impossible d'enregistrer les paramètres",
+    "All duplicates cleared" : "Tous les doublons ont été effacés",
+    "Could not clear duplicates" : "Impossible d'effacer les doublons",
+    "All duplicates found" : "Tous les doublons trouvés",
+    "Could not initiate duplicate search" : "Impossible de lancer la recherche des doublons"
 },"pluralForm" :"nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
 }

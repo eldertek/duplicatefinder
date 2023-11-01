@@ -1,12 +1,18 @@
 { "translations": {
     "Duplicate Finder" : "Çift bulucu",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Hoş geldiniz. Bu kopyada {numberOfFiles} çift dosya var. Toplam boyut: {formattedSize}",
+    "Unacknowledge it" : "Çift olmadığını onayla",
+    "Acknowledge it" : "Çift olduğunu onayla",
     "File" : "Dosya",
     "Hash:" : "Karma:",
     "Path:" : "Yol:",
     "Delete" : "Sil",
     "No duplicates found or no duplicate selected." : "Herhangi bir çift dosya bulunamadı ya da bir çift seçilmemiş.",
     "Could not fetch duplicates" : "Çiftler alınamadı",
+    "Duplicate acknowledged successfully" : "Çift olduğu onaylandı",
+    "Could not acknowledge the duplicate" : "Çift olduğu onaylanamadı",
+    "Duplicate unacknowledged successfully" : "Çift olmadığı onaylandı",
+    "Could not unacknowledge the duplicate" : "Çift olmadığı onaylanamadı",
     "Duplicate deleted" : "Çift silindi",
     "Could not delete the duplicate at path: ${item.path}" : "Şu yoldaki çift silinemedi: ${item.path}",
     "Duplicate Finder Settings" : "Çift bulucu ayarları",
@@ -21,8 +27,16 @@
     "The interval in seconds for the cleanup background job." : "Temizleme arka plan görevinin saniye cinsinden çalışma sıklığı.",
     "Background Job Find Duplicates Interval (seconds)" : "Çiftleri bulma arka plan görevi sıklığı (saniye)",
     "The interval in seconds for the find duplicates background job." : "Çiftleri bulma arka plan görevinin saniye cinsinden çalışma sıklığı.",
+    "Advanced settings (be cautious)" : "Gelişmiş ayarlar (dikkatli olun)",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Bu ayarlar yalnızca uzman kullanıcılar içindir. Ne yaptığınızdan emin değilseniz lütfen bunları değiştirmeyin.",
+    "Clear all duplicates" : "Tüm çiftleri temizle",
+    "Find all duplicates" : "Tüm çiftleri bul",
     "Could not fetch settings" : "Ayarlar alınamadı",
     "Settings saved" : "Ayarlar kaydedildi",
-    "Could not save settings" : "Ayarlar kaydedilemedi"
+    "Could not save settings" : "Ayarlar kaydedilemedi",
+    "All duplicates cleared" : "Tüm çiftler temizlendi",
+    "Could not clear duplicates" : "Çiftler temizlenemedi",
+    "All duplicates found" : "Tüm çiftler bulundu",
+    "Could not initiate duplicate search" : "Çift araması başlatılamadı"
 },"pluralForm" :"nplurals=2; plural=(n > 1);"
 }
