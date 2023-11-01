@@ -35,12 +35,15 @@ class FileInfoService
     private $folderService;
     /** @var ScannerUtil */
     private $scannerUtil;
+    /** @var FilterService */
+    private $filterService;
 
     public function __construct(
         FileInfoMapper $mapper,
         IEventDispatcher $eventDispatcher,
         LoggerInterface $logger,
         ShareService $shareService,
+        FilterService $filterService,
         FolderService $folderService,
         ScannerUtil $scannerUtil
     ) {
@@ -48,6 +51,7 @@ class FileInfoService
         $this->eventDispatcher = $eventDispatcher;
         $this->logger = $logger;
         $this->shareService = $shareService;
+        $this->filterService = $filterService;
         $this->folderService = $folderService;
         $this->scannerUtil = $scannerUtil;
     }
@@ -174,6 +178,7 @@ class FileInfoService
                 throw $e;
             }
         }
+        $fileInfo->setIgnored($this->filterService->isIgnored($fileInfo, $file));
         return $fileInfo;
     }
 
