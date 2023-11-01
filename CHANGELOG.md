@@ -1,3 +1,7 @@
+## 1.0.9 - 2023-11-01
+### Fixed
+- Fix [#18](https://github.com/eldertek/duplicatefinder/issues/18)
+
 ## 1.0.8 - 2023-10-30
 ### Added 
 - In settings, you can now directly clear all and find all duplicates.
