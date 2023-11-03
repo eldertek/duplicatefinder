@@ -115,7 +115,7 @@ namespace OCA\DuplicateFinder\Command;
                  return 1;
              }
  
-             CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function() {});
+             CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function() {}, $user);
          }
  
          return 0;
