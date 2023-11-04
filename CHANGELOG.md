@@ -1,3 +1,9 @@
+## 1.1.0 - 2023-11-04
+### Fixed
+- Fix [#19](https://github.com/eldertek/duplicatefinder/issues/19)
+- Fix [#22](https://github.com/eldertek/duplicatefinder/issues/22)
+- FindDuplicates background job is now correctly executed
+
 ## 1.0.9 - 2023-11-01
 ### Fixed
 - Fix [#18](https://github.com/eldertek/duplicatefinder/issues/18)
