@@ -19,6 +19,7 @@
     </dependencies>
     <background-jobs>
         <job>OCA\DuplicateFinder\BackgroundJob\ClearDuplicates</job>
+        <job>OCA\DuplicateFinder\BackgroundJob\FindDuplicates</job>
         <job>OCA\DuplicateFinder\BackgroundJob\CleanUpDB</job>
     </background-jobs>
     <repair-steps>
