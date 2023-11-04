@@ -38,6 +38,7 @@ OC.L10N.register(
     "Could not save settings" : "Impossible d'enregistrer les paramètres",
     "All duplicates cleared" : "Tous les doublons ont été effacés",
     "Could not clear duplicates" : "Impossible d'effacer les doublons",
+    "Duplicates search initiated (this may take a while)" : "Recherche des doublons lancée (ceci peut prendre un moment)",
     "All duplicates found" : "Tous les doublons trouvés",
     "Could not initiate duplicate search" : "Impossible de lancer la recherche des doublons"
 },
