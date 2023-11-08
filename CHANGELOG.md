@@ -1,3 +1,7 @@
+## 1.1.1 - 2023-11-08
+### Fixed
+- Fix [#24](https://github.com/eldertek/duplicatefinder/issues/24)
+
 ## 1.1.0 - 2023-11-04
 ### Fixed
 - Fix [#19](https://github.com/eldertek/duplicatefinder/issues/19)

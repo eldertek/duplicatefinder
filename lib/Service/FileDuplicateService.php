@@ -55,6 +55,7 @@ class FileDuplicateService
      * @return array<string, FileDuplicate|int|mixed>
      */
     public function findAll(
+        ?string $type = null,
         ?string $user = null,
         ?int $limit = 20,
         ?int $offset = null,
@@ -72,7 +73,15 @@ class FileDuplicateService
                 }
                 $offset = $entity->id;
                 if (count($entity->getFiles()) > 1) {
-                    $result[] = $entity;
+                    if (!is_null($type)) {
+                        if ($type === 'acknowledged' && $entity->isAcknowledged()) {
+                            $result[] = $entity;
+                        } else  if ($type === 'unacknowledged' && !$entity->isAcknowledged()){
+                            $result[] = $entity;
+                        }
+                    } else {
+                        $result[] = $entity;
+                    }
                     if (count($result) === $limit) {
                         break;
                     }
