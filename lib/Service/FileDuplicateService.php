@@ -71,17 +71,18 @@ class FileDuplicateService
                     $entity = $this->enrich($entity);
                 }
                 $offset = $entity->id;
+                // Add the entity to the result only if there's more than one file remaining
                 if (count($entity->getFiles()) > 1) {
                     $result[] = $entity;
-                    if (count($result) === $limit) {
-                        break;
-                    }
                 }
             }
-            unset($entity);
+            // The loop continues until the number of results is less than the limit or there are no more entities
         } while (count($result) < $limit && count($entities) === $limit);
-        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit);
+        // Determine if this is the last page fetched
+        $isLastFetched = count($entities) < $limit;
+        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => $isLastFetched);
     }
+
 
     private function stripFilesWithoutAccessRights(
         FileDuplicate $duplicate,
@@ -173,7 +174,8 @@ class FileDuplicateService
             if ($enrich) {
                 $entity = $this->enrich($entity);
             }
-            if ($entity->isAcknowledged()) {
+            // Add the entity to the result only if it's acknowledged and has more than one file remaining
+            if ($entity->isAcknowledged() && count($entity->getFiles()) > 1) {
                 $result[] = $entity;
             }
         }
@@ -205,7 +207,7 @@ class FileDuplicateService
             if ($enrich) {
                 $entity = $this->enrich($entity);
             }
-            if (!$entity->isAcknowledged()) {
+            if (!$entity->isAcknowledged() && count($entity->getFiles()) > 1) {
                 $result[] = $entity;
             }
         }
