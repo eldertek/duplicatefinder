@@ -71,6 +71,7 @@ class FileDuplicateService
                     $entity = $this->enrich($entity);
                 }
                 $offset = $entity->id;
+                // Only add the entity to the result if there's more than one file remaining after access rights checks
                 if (count($entity->getFiles()) > 1) {
                     $result[] = $entity;
                     if (count($result) === $limit) {
@@ -78,9 +79,12 @@ class FileDuplicateService
                     }
                 }
             }
-            unset($entity);
+            // Continue fetching until we fill up the limit or there are no more entities
         } while (count($result) < $limit && count($entities) === $limit);
-        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit);
+
+        // Determine if this is the last page
+        $isLastFetched = count($entities) < $limit;
+        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => $isLastFetched);
     }
 
     private function stripFilesWithoutAccessRights(
