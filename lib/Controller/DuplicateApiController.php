@@ -57,10 +57,10 @@ class DuplicateApiController extends AbstractAPIController
                     $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);
                     break;
                 case 'acknowledged':
-                    $duplicates = $this->fileDuplicateService->findAcknowledged($this->getUserId(), $limit, $offset, true);
+                    $duplicates = $this->fileDuplicateService->findAll("acknowledged", $this->getUserId(), $limit, $offset, true);
                     break;
                 case 'unacknowledged':
-                    $duplicates = $this->fileDuplicateService->findUnacknowledged($this->getUserId(), $limit, $offset, true);
+                    $duplicates = $this->fileDuplicateService->findAll("unacknowledged", $this->getUserId(), $limit, $offset, true);
                     break;
                 default:
                     return new DataResponse(['status' => 'error', 'message' => 'Invalid type']);
