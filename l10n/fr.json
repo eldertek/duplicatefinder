@@ -1,8 +1,8 @@
 { "translations": {
     "Duplicate Finder" : "Duplicate Finder",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Bienvenue, le doublon actuel contient {numberOfFiles} fichiers, taille totale : {formattedSize}",
-    "Unacknowledge it" : "Marquer comme validé",
-    "Acknowledge it" : "Marquer comme non validé",
+    "Unacknowledge it" : "Marquer comme non validé",
+    "Acknowledge it" : "Marquer comme validé",
     "File" : "Fichier",
     "Hash:" : "Hachage :",
     "Path:" : "Chemin :",
