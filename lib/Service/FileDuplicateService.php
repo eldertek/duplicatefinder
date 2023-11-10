@@ -55,6 +55,7 @@ class FileDuplicateService
      * @return array<string, FileDuplicate|int|mixed>
      */
     public function findAll(
+        ?string $type = null,
         ?string $user = null,
         ?int $limit = 20,
         ?int $offset = null,
@@ -72,7 +73,13 @@ class FileDuplicateService
                 }
                 $offset = $entity->id;
                 if (count($entity->getFiles()) > 1) {
-                    $result[] = $entity;
+                    if ($type === 'acknowledged' && $entity->isAcknowledged()) {
+                        $result[] = $entity;
+                    } else if ($type === 'unacknowledged' && !$entity->isAcknowledged()) {
+                        $result[] = $entity;
+                    } else if ($type === 'all') {
+                        $result[] = $entity;
+                    }
                     if (count($result) === $limit) {
                         break;
                     }
@@ -148,69 +155,4 @@ class FileDuplicateService
     {
         $this->mapper->clear();
     }
-
-    /**
-     * Fetches acknowledged duplicates
-     *
-     * @param string|null $user
-     * @param int|null $limit
-     * @param int|null $offset
-     * @param bool $enrich
-     * @param array<array<string>> $orderBy
-     * @return array<string, FileDuplicate|int|mixed>
-     */
-    public function findAcknowledged(
-        ?string $user = null,
-        ?int $limit = 20,
-        ?int $offset = null,
-        bool $enrich = false,
-        ?array $orderBy = [['hash'], ['type']]
-    ): array {
-        $result = array();
-        $entities = $this->mapper->findAll($user, $limit, $offset, $orderBy);
-        foreach ($entities as $entity) {
-            $entity = $this->stripFilesWithoutAccessRights($entity, $user);
-            if ($enrich) {
-                $entity = $this->enrich($entity);
-            }
-            if ($entity->isAcknowledged()) {
-                $result[] = $entity;
-            }
-        }
-        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit);
-    }
-
-
-    /**
-     * Fetches unacknowledged duplicates
-     *
-     * @param string|null $user
-     * @param int|null $limit
-     * @param int|null $offset
-     * @param bool $enrich
-     * @param array<array<string>> $orderBy
-     * @return array<string, FileDuplicate|int|mixed>
-     */
-    public function findUnacknowledged(
-        ?string $user = null,
-        ?int $limit = 20,
-        ?int $offset = null,
-        bool $enrich = false,
-        ?array $orderBy = [['hash'], ['type']]
-    ): array {
-        $result = array();
-        $entities = $this->mapper->findAll($user, $limit, $offset, $orderBy);
-        foreach ($entities as $entity) {
-            $entity = $this->stripFilesWithoutAccessRights($entity, $user);
-            if ($enrich) {
-                $entity = $this->enrich($entity);
-            }
-            if (!$entity->isAcknowledged()) {
-                $result[] = $entity;
-            }
-        }
-        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit);
-    }
-
-
 }
