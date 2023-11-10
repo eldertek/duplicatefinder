@@ -1,3 +1,7 @@
+## 1.1.2 - xxxxx-xx-xx
+### Removed
+- Nextcloud 26 is no longer supported (DuplicateFinder will always be updated for the 2 last versions)
+
 ## 1.1.1 - 2023-11-10
 ### Fixed
 - Fix [#24](https://github.com/eldertek/duplicatefinder/issues/24)
