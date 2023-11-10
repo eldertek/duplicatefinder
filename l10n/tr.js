@@ -38,6 +38,7 @@ OC.L10N.register(
     "Could not save settings" : "Ayarlar kaydedilemedi",
     "All duplicates cleared" : "Tüm çiftler temizlendi",
     "Could not clear duplicates" : "Çiftler temizlenemedi",
+    "Duplicates search initiated (this may take a while)" : "Çift araması başlatıldı (bu işlem uzun sürebilir)",
     "All duplicates found" : "Tüm çiftler bulundu",
     "Could not initiate duplicate search" : "Çift araması başlatılamadı"
 },

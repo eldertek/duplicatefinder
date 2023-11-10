@@ -38,6 +38,7 @@ OC.L10N.register(
     "Could not save settings" : "تعذّر حفظ الإعدادات",
     "All duplicates cleared" : "تمّ تنظيف جميع التكرارات",
     "Could not clear duplicates" : "تعذّر تنظيف التكرارات",
+    "Duplicates search initiated (this may take a while)" : "بدء البحث عن المتكررات ( هذا سيستغرق بعض الوقت)",
     "All duplicates found" : "تمّ إيجاد كل التكرارات",
     "Could not initiate duplicate search" : "تعذّر البدء في البحث عن التكرارات"
 },

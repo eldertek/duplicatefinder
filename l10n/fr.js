@@ -3,8 +3,8 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Duplicate Finder",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Bienvenue, le doublon actuel contient {numberOfFiles} fichiers, taille totale : {formattedSize}",
-    "Unacknowledge it" : "Marquer comme validé",
-    "Acknowledge it" : "Marquer comme non validé",
+    "Unacknowledge it" : "Marquer comme non validé",
+    "Acknowledge it" : "Marquer comme validé",
     "File" : "Fichier",
     "Hash:" : "Hachage :",
     "Path:" : "Chemin :",
@@ -38,6 +38,7 @@ OC.L10N.register(
     "Could not save settings" : "Impossible d'enregistrer les paramètres",
     "All duplicates cleared" : "Tous les doublons ont été effacés",
     "Could not clear duplicates" : "Impossible d'effacer les doublons",
+    "Duplicates search initiated (this may take a while)" : "Recherche des doublons lancée (ceci peut prendre un moment)",
     "All duplicates found" : "Tous les doublons trouvés",
     "Could not initiate duplicate search" : "Impossible de lancer la recherche des doublons"
 },

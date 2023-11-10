@@ -38,6 +38,7 @@ OC.L10N.register(
     "Could not save settings" : "無法儲存設定",
     "All duplicates cleared" : "已清除所有重複項目",
     "Could not clear duplicates" : "無法清除重複項目",
+    "Duplicates search initiated (this may take a while)" : "已啟動重複項目搜尋（這可能需要一段時間）",
     "All duplicates found" : "找到所有重複項目",
     "Could not initiate duplicate search" : "無法啟動重複項目搜尋"
 },

@@ -38,6 +38,7 @@ OC.L10N.register(
     "Could not save settings" : "Die Einstellungen konnten nicht gespeichert werden",
     "All duplicates cleared" : "Alle Duplikate gelöscht",
     "Could not clear duplicates" : "Duplikate konnten nicht gelöscht werden",
+    "Duplicates search initiated (this may take a while)" : "Suche nach Duplikaten gestartet (dies kann eine Weile dauern)",
     "All duplicates found" : "Alle Duplikate gefunden",
     "Could not initiate duplicate search" : "Die Duplikatsuche konnte nicht gestartet werden"
 },

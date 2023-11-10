@@ -38,6 +38,7 @@ OC.L10N.register(
     "Could not save settings" : "Не могу да се сачувају подешавања",
     "All duplicates cleared" : "Обрисани су сви дупликати",
     "Could not clear duplicates" : "Дупликати нису успели да се обришу",
+    "Duplicates search initiated (this may take a while)" : "Покренута је претрага дупликата (ово може да потраје)",
     "All duplicates found" : "Пронађени су сви дупликати",
     "Could not initiate duplicate search" : "Није успело покретање претраге дупликата"
 },

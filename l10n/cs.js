@@ -38,6 +38,7 @@ OC.L10N.register(
     "Could not save settings" : "Nastavení se nepodařilo uložit",
     "All duplicates cleared" : "Všechny duplicity vymazány",
     "Could not clear duplicates" : "Některé duplicity se nepodařilo vymazat",
+    "Duplicates search initiated (this may take a while)" : "Spuštěno hledání duplicit (toto může chvíli trvat)",
     "All duplicates found" : "Nalezeny všechny duplicity",
     "Could not initiate duplicate search" : "Nepodařilo se inicializovat hledání duplicit"
 },
