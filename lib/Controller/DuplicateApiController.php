@@ -54,7 +54,7 @@ class DuplicateApiController extends AbstractAPIController
             $duplicates = [];
             switch($type) {
                 case 'all':
-                    $duplicates = $this->fileDuplicateService->findAll($this->getUserId(), $limit, $offset, true);
+                    $duplicates = $this->fileDuplicateService->findAll("all", $this->getUserId(), $limit, $offset, true);
                     break;
                 case 'acknowledged':
                     $duplicates = $this->fileDuplicateService->findAll("acknowledged", $this->getUserId(), $limit, $offset, true);

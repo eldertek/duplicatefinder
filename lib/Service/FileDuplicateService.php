@@ -55,7 +55,7 @@ class FileDuplicateService
      * @return array<string, FileDuplicate|int|mixed>
      */
     public function findAll(
-        ?string $type = null,
+        ?string $type = "all",
         ?string $user = null,
         ?int $limit = 20,
         ?int $offset = null,
