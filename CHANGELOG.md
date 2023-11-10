@@ -1,4 +1,4 @@
-## 1.1.1 - 2023-11-08
+## 1.1.1 - 2023-11-10
 ### Fixed
 - Fix [#24](https://github.com/eldertek/duplicatefinder/issues/24)
 
