@@ -137,6 +137,16 @@ export default {
 			return OC.Util.humanFileSize(this.sizeOfCurrentDuplicate);
 		}
 	},
+	watch: {
+		'currentDuplicate.files.length': {
+			immediate: false,
+			handler(newLength) {
+				if (newLength <= 3) {
+					this.fetchDuplicates();
+				}
+			}
+		}
+	},
 	async mounted() {
 		try {
 			const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
@@ -156,6 +166,18 @@ export default {
 		this.loading = false;
 	},
 	methods: {
+		async fetchDuplicates() {
+			try {
+				const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
+				this.acknowledgedDuplicates = responseAcknowledged.data.data.entities;
+
+				const responseUnacknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'));
+				this.unacknowledgedDuplicates = responseUnacknowledged.data.data.entities;
+			} catch (e) {
+				console.error(e);
+				showError(t('duplicatefinder', 'Could not fetch duplicates'));
+			}
+		},
 		async acknowledgeDuplicate() {
 			try {
 				const hash = this.currentDuplicate.hash;

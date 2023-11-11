@@ -15,7 +15,7 @@
     <bugs>https://github.com/eldertek/duplicatefinder/issues</bugs>
     <screenshot>https://raw.githubusercontent.com/eldertek/duplicatefinder/master/img/preview.png</screenshot>
     <dependencies>
-        <nextcloud min-version="26" max-version="28"/>
+        <nextcloud min-version="27" max-version="28"/>
     </dependencies>
     <background-jobs>
         <job>OCA\DuplicateFinder\BackgroundJob\CleanUpDB</job>
