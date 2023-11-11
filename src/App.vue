@@ -1,39 +1,33 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<NcAppNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
+		<NcAppNavigation v-if="(acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0) && !loading">
 			<template #list>
-				<NcAppNavigationItem name="Duplicates">
+				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
+					<template #icon>
+						<CloseCircle :size="20" />
+					</template>
 					<template>
-						<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="false">
+						<NcAppNavigationItem v-for="duplicate in unacknowledgedDuplicates" :key="duplicate.id"
+							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
+							@click="openDuplicate(duplicate)">
 							<template #icon>
-								<CloseCircle :size="20" />
-							</template>
-							<template>
-								<NcAppNavigationItem v-for="duplicate in unacknowledgedDuplicates" :key="duplicate.id"
-									:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
-									@click="openDuplicate(duplicate)">
-									<template #icon>
-										<div class="nav-thumbnail"
-											:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }">
-										</div>
-									</template>
-								</NcAppNavigationItem>
+								<div class="nav-thumbnail"
+									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
 							</template>
 						</NcAppNavigationItem>
-						<NcAppNavigationItem name="Acknowledged" :allowCollapse="true" :open="false">
+					</template>
+				</NcAppNavigationItem>
+				<NcAppNavigationItem name="Acknowledged" :allowCollapse="true" :open="false">
+					<template #icon>
+						<CheckCircle :size="20" />
+					</template>
+					<template>
+						<NcAppNavigationItem v-for="duplicate in acknowledgedDuplicates" :key="duplicate.id"
+							:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
+							@click="openDuplicate(duplicate)">
 							<template #icon>
-								<CheckCircle :size="20" />
-							</template>
-							<template>
-								<NcAppNavigationItem v-for="duplicate in acknowledgedDuplicates" :key="duplicate.id"
-									:name="duplicate.hash" :class="{ active: currentDuplicateId === duplicate.id }"
-									@click="openDuplicate(duplicate)">
-									<template #icon>
-										<div class="nav-thumbnail"
-											:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }">
-										</div>
-									</template>
-								</NcAppNavigationItem>
+								<div class="nav-thumbnail"
+									:style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }"></div>
 							</template>
 						</NcAppNavigationItem>
 					</template>
