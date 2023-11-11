@@ -2,7 +2,7 @@
 	<NcContent app-name="duplicatefinder">
 		<NcAppNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
 			<template #list>
-				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
+				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="false">
 					<template #icon>
 						<CloseCircle :size="20" />
 					</template>
