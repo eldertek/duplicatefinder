@@ -138,14 +138,16 @@ export default {
 		}
 	},
 	watch: {
-		'currentDuplicate.files.length': {
-			immediate: false,
-			handler(newLength) {
-				if (newLength <= 3) {
-					this.fetchDuplicates();
-				}
+		'acknowledgedDuplicates.length'(newLength) {
+			if (newLength <= 3) {
+				this.fetchDuplicates('acknowledged');
 			}
-		}
+		},
+		'unacknowledgedDuplicates.length'(newLength) {
+			if (newLength <= 3) {
+				this.fetchDuplicates('unacknowledged');
+			}
+		},
 	},
 	async mounted() {
 		try {
@@ -166,16 +168,39 @@ export default {
 		this.loading = false;
 	},
 	methods: {
-		async fetchDuplicates() {
-			try {
-				const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
-				this.acknowledgedDuplicates = responseAcknowledged.data.data.entities;
+		async fetchDuplicates(type) {
+			let url;
+			if (type === 'acknowledged') {
+				url = generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged');
+			} else if (type === 'unacknowledged') {
+				url = generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged');
+			} else {
+				console.error('Invalid fetch type');
+				return;
+			}
 
-				const responseUnacknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'));
-				this.unacknowledgedDuplicates = responseUnacknowledged.data.data.entities;
+			try {
+				const response = await axios.get(url);
+				const newDuplicates = response.data.data.entities;
+
+				if (type === 'acknowledged') {
+					// Keep track of the last three items' IDs
+					const lastThreeIds = this.acknowledgedDuplicates.slice(-3).map(dup => dup.id);
+					// Filter out any new items that are already in the last three
+					const filteredNewDuplicates = newDuplicates.filter(dup => !lastThreeIds.includes(dup.id));
+					// Combine the last three with the filtered new items
+					this.acknowledgedDuplicates = [...this.acknowledgedDuplicates.slice(-3), ...filteredNewDuplicates];
+				} else {
+					// Keep track of the last three items' IDs
+					const lastThreeIds = this.unacknowledgedDuplicates.slice(-3).map(dup => dup.id);
+					// Filter out any new items that are already in the last three
+					const filteredNewDuplicates = newDuplicates.filter(dup => !lastThreeIds.includes(dup.id));
+					// Combine the last three with the filtered new items
+					this.unacknowledgedDuplicates = [...this.unacknowledgedDuplicates.slice(-3), ...filteredNewDuplicates];
+				}
 			} catch (e) {
 				console.error(e);
-				showError(t('duplicatefinder', 'Could not fetch duplicates'));
+				showError(t('duplicatefinder', `Could not fetch ${type} duplicates`));
 			}
 		},
 		async acknowledgeDuplicate() {
