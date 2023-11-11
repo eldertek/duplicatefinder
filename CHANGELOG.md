@@ -1,4 +1,6 @@
 ## 1.1.2 - xxxxx-xx-xx
+### Added
+- Auto-fetch duplicates again when reaching the end of the list
 ### Removed
 - Nextcloud 26 is no longer supported (DuplicateFinder will always be updated for the 2 last versions)
 
