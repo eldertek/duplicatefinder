@@ -64,7 +64,13 @@
 			</div>
 			<div v-else id="emptycontent">
 				<div class="icon-file" />
-				<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+				<div v-if="loading">
+					<h2>{{ t('duplicatefinder', 'Fetching duplicates') }} {{ loadingDots }}</h2>
+				</div>
+				<div v-else>
+					<div class="icon-file" />
+					<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+				</div>
 			</div>
 		</NcAppContent>
 	</NcContent>
@@ -99,6 +105,8 @@ export default {
 			currentDuplicateId: null,
 			updating: false,
 			loading: true,
+			loadingDots: '',
+			loadingInterval: null,
 
 			groupedResult: {
 				groupedItems: [],
@@ -150,6 +158,7 @@ export default {
 		},
 	},
 	async mounted() {
+		this.startLoadingAnimation();
 		try {
 			const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
 			this.acknowledgedDuplicates = responseAcknowledged.data.data.entities;
@@ -166,8 +175,22 @@ export default {
 			showError(t('duplicatefinder', 'Could not fetch duplicates'));
 		}
 		this.loading = false;
+		this.stopLoadingAnimation();
 	},
 	methods: {
+		startLoadingAnimation() {
+			this.loadingDots = '';
+			this.loadingInterval = setInterval(() => {
+				this.loadingDots += '.';
+				if (this.loadingDots.length > 3) {
+					this.loadingDots = '';
+				}
+			}, 500); // Change dot every 500ms
+		},
+		stopLoadingAnimation() {
+			clearInterval(this.loadingInterval);
+			this.loadingDots = ''; // Reset loading dots
+		},
 		async fetchDuplicates(type) {
 			let url;
 			if (type === 'acknowledged') {
@@ -175,7 +198,8 @@ export default {
 			} else if (type === 'unacknowledged') {
 				url = generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged');
 			} else {
-				console.error('Invalid fetch type');
+				console.error('Invalid type');
+				showError(t('duplicatefinder', 'Could not fetch duplicates'));
 				return;
 			}
 
