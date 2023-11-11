@@ -68,7 +68,6 @@
 					<h2>{{ t('duplicatefinder', 'Fetching duplicates') }} {{ loadingDots }}</h2>
 				</div>
 				<div v-else>
-					<div class="icon-file" />
 					<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
 				</div>
 			</div>
