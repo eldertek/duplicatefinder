@@ -1,6 +1,6 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<NcAppNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0">
+		<NcAppNavigation v-if="(acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0) && !loading">
 			<template #list>
 				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
 					<template #icon>
@@ -64,7 +64,13 @@
 			</div>
 			<div v-else id="emptycontent">
 				<div class="icon-file" />
-				<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+				<div v-if="loading">
+					<h2>{{ t('duplicatefinder', 'Fetching duplicates') }} {{ loadingDots }}</h2>
+				</div>
+				<div v-else>
+					<div class="icon-file" />
+					<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+				</div>
 			</div>
 		</NcAppContent>
 	</NcContent>
@@ -99,6 +105,8 @@ export default {
 			currentDuplicateId: null,
 			updating: false,
 			loading: true,
+			loadingDots: '',
+			loadingInterval: null,
 
 			groupedResult: {
 				groupedItems: [],
@@ -137,7 +145,20 @@ export default {
 			return OC.Util.humanFileSize(this.sizeOfCurrentDuplicate);
 		}
 	},
+	watch: {
+		'acknowledgedDuplicates.length'(newLength) {
+			if (newLength <= 3) {
+				this.fetchDuplicates('acknowledged');
+			}
+		},
+		'unacknowledgedDuplicates.length'(newLength) {
+			if (newLength <= 3) {
+				this.fetchDuplicates('unacknowledged');
+			}
+		},
+	},
 	async mounted() {
+		this.startLoadingAnimation();
 		try {
 			const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
 			this.acknowledgedDuplicates = responseAcknowledged.data.data.entities;
@@ -154,8 +175,58 @@ export default {
 			showError(t('duplicatefinder', 'Could not fetch duplicates'));
 		}
 		this.loading = false;
+		this.stopLoadingAnimation();
 	},
 	methods: {
+		startLoadingAnimation() {
+			this.loadingDots = '';
+			this.loadingInterval = setInterval(() => {
+				this.loadingDots += '.';
+				if (this.loadingDots.length > 3) {
+					this.loadingDots = '';
+				}
+			}, 500); // Change dot every 500ms
+		},
+		stopLoadingAnimation() {
+			clearInterval(this.loadingInterval);
+			this.loadingDots = ''; // Reset loading dots
+		},
+		async fetchDuplicates(type) {
+			let url;
+			if (type === 'acknowledged') {
+				url = generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged');
+			} else if (type === 'unacknowledged') {
+				url = generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged');
+			} else {
+				console.error('Invalid type');
+				showError(t('duplicatefinder', 'Could not fetch duplicates'));
+				return;
+			}
+
+			try {
+				const response = await axios.get(url);
+				const newDuplicates = response.data.data.entities;
+
+				if (type === 'acknowledged') {
+					// Keep track of the last three items' IDs
+					const lastThreeIds = this.acknowledgedDuplicates.slice(-3).map(dup => dup.id);
+					// Filter out any new items that are already in the last three
+					const filteredNewDuplicates = newDuplicates.filter(dup => !lastThreeIds.includes(dup.id));
+					// Combine the last three with the filtered new items
+					this.acknowledgedDuplicates = [...this.acknowledgedDuplicates.slice(-3), ...filteredNewDuplicates];
+				} else {
+					// Keep track of the last three items' IDs
+					const lastThreeIds = this.unacknowledgedDuplicates.slice(-3).map(dup => dup.id);
+					// Filter out any new items that are already in the last three
+					const filteredNewDuplicates = newDuplicates.filter(dup => !lastThreeIds.includes(dup.id));
+					// Combine the last three with the filtered new items
+					this.unacknowledgedDuplicates = [...this.unacknowledgedDuplicates.slice(-3), ...filteredNewDuplicates];
+				}
+			} catch (e) {
+				console.error(e);
+				showError(t('duplicatefinder', `Could not fetch ${type} duplicates`));
+			}
+		},
 		async acknowledgeDuplicate() {
 			try {
 				const hash = this.currentDuplicate.hash;
