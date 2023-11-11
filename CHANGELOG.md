@@ -1,4 +1,4 @@
-## 1.1.2 - xxxxx-xx-xx
+## 1.1.2 - 2023-11-11
 ### Added
 - Auto-fetch duplicates again when reaching the end of the list
 ### Removed
