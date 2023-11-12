@@ -68,7 +68,6 @@
 					<h2>{{ t('duplicatefinder', 'Fetching duplicates') }} {{ loadingDots }}</h2>
 				</div>
 				<div v-else>
-					<div class="icon-file" />
 					<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
 				</div>
 			</div>
@@ -78,7 +77,7 @@
 
 <script>
 
-import { NcAppContent, NcAppNavigation, NcAppNavigationItem, NcContent } from '@nextcloud/vue'
+import { NcAppContent, NcContent } from '@nextcloud/vue'
 
 import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -91,11 +90,11 @@ export default {
 	name: 'App',
 	components: {
 		NcAppContent,
-		NcAppNavigation,
-		NcAppNavigationItem,
 		NcContent,
 		CheckCircle,
-		CloseCircle
+		CloseCircle,
+		NcAppNavigation: () => import('@nextcloud/vue').then(m => m.NcAppNavigation),
+		NcAppNavigationItem: () => import('@nextcloud/vue').then(m => m.NcAppNavigationItem),
 	},
 	data() {
 		return {

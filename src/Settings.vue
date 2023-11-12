@@ -1,11 +1,11 @@
 <template>
   <div id="app-content">
-    <NcSettingsSection :title="t('duplicatefinder', 'Duplicate Finder Settings')"
+    <NcSettingsSection :name="t('duplicatefinder', 'Duplicate Finder Settings')"
       :description="t('duplicatefinder', 'All general settings to modify Duplicate Finder behaviors.')"
       :limit-width="true">
     </NcSettingsSection>
 
-    <NcSettingsSection :title="t('duplicatefinder', 'Ignore Mounted Files')"
+    <NcSettingsSection :name="t('duplicatefinder', 'Ignore Mounted Files')"
       :description="t('duplicatefinder', 'When true, files mounted on external storage will be ignored.')"
       :limit-width="true">
       <NcCheckboxRadioSwitch :checked.sync="settings.ignore_mounted_files"
@@ -14,7 +14,7 @@
       </NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
-    <NcSettingsSection :title="t('duplicatefinder', 'Disable Filesystem Events')"
+    <NcSettingsSection :name="t('duplicatefinder', 'Disable Filesystem Events')"
       :description="t('duplicatefinder', 'When true, the event-based detection will be disabled.')" :limit-width="true">
       <NcCheckboxRadioSwitch :checked.sync="settings.disable_filesystem_events"
         @update:checked="saveSettings('disable_filesystem_events', settings.disable_filesystem_events)">
@@ -22,21 +22,21 @@
       </NcCheckboxRadioSwitch>
     </NcSettingsSection>
 
-    <NcSettingsSection :title="t('duplicatefinder', 'Background Job Cleanup Interval (seconds)')"
+    <NcSettingsSection :name="t('duplicatefinder', 'Background Job Cleanup Interval (seconds)')"
       :description="t('duplicatefinder', 'The interval in seconds for the cleanup background job.')" :limit-width="true">
       <NcTextField :value.sync="settings.backgroundjob_interval_cleanup"
         @update:value="saveSettings('backgroundjob_interval_cleanup', settings.backgroundjob_interval_cleanup)">
       </NcTextField>
     </NcSettingsSection>
 
-    <NcSettingsSection :title="t('duplicatefinder', 'Background Job Find Duplicates Interval (seconds)')"
+    <NcSettingsSection :name="t('duplicatefinder', 'Background Job Find Duplicates Interval (seconds)')"
       :description="t('duplicatefinder', 'The interval in seconds for the find duplicates background job.')"
       :limit-width="true">
       <NcTextField :value.sync="settings.backgroundjob_interval_find"
         @update:value="saveSettings('backgroundjob_interval_find', settings.backgroundjob_interval_find)"></NcTextField>
     </NcSettingsSection>
 
-    <NcSettingsSection :title="t('duplicatefinder', 'Advanced settings (be cautious)')" 
+    <NcSettingsSection :name="t('duplicatefinder', 'Advanced settings (be cautious)')" 
       :description="t('duplicatefinder', 'These settings are for advanced users only. If you are not sure what you are doing, please do not change them.')"
       :limit-width="true">
       <div class="buttons-container">

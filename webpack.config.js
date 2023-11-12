@@ -5,4 +5,6 @@ webpackConfig.entry = {
     'settings': './src/settings.js'
 };
 
+webpackConfig.devtool = false;
+
 module.exports = webpackConfig;
