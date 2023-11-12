@@ -160,10 +160,10 @@ export default {
 		this.startLoadingAnimation();
 		try {
 			const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
-			this.acknowledgedDuplicates = responseAcknowledged.data.data.entities;
+			this.acknowledgedDuplicates = responseAcknowledged.data.entities;
 
 			const responseUnacknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'));
-			this.unacknowledgedDuplicates = responseUnacknowledged.data.data.entities;
+			this.unacknowledgedDuplicates = responseUnacknowledged.data.entities;
 
 			// Set the current duplicate to the first item in unacknowledged duplicates by default
 			if (this.unacknowledgedDuplicates.length > 0) {
@@ -204,7 +204,7 @@ export default {
 
 			try {
 				const response = await axios.get(url);
-				const newDuplicates = response.data.data.entities;
+				const newDuplicates = response.data.entities;
 
 				if (type === 'acknowledged') {
 					// Keep track of the last three items' IDs
