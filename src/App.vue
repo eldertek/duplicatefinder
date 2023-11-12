@@ -100,6 +100,8 @@ export default {
 		return {
 			acknowledgedDuplicates: [],
 			unacknowledgedDuplicates: [],
+			currentPageAcknowledged: 1,
+			currentPageUnacknowledged: 1,
 
 			currentDuplicateId: null,
 			updating: false,
@@ -144,36 +146,10 @@ export default {
 			return OC.Util.humanFileSize(this.sizeOfCurrentDuplicate);
 		}
 	},
-	watch: {
-		'acknowledgedDuplicates.length'(newLength) {
-			if (newLength <= 3) {
-				this.fetchDuplicates('acknowledged');
-			}
-		},
-		'unacknowledgedDuplicates.length'(newLength) {
-			if (newLength <= 3) {
-				this.fetchDuplicates('unacknowledged');
-			}
-		},
-	},
 	async mounted() {
 		this.startLoadingAnimation();
-		try {
-			const responseAcknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged'));
-			this.acknowledgedDuplicates = responseAcknowledged.data.entities;
-
-			const responseUnacknowledged = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged'));
-			this.unacknowledgedDuplicates = responseUnacknowledged.data.entities;
-
-			// Set the current duplicate to the first item in unacknowledged duplicates by default
-			if (this.unacknowledgedDuplicates.length > 0) {
-				this.currentDuplicateId = this.unacknowledgedDuplicates[0].id;
-			}
-		} catch (e) {
-			console.error(e);
-			showError(t('duplicatefinder', 'Could not fetch duplicates'));
-		}
-		this.loading = false;
+		this.fetchAllPages('acknowledged');
+		this.fetchAllPages('unacknowledged');
 		this.stopLoadingAnimation();
 	},
 	methods: {
@@ -190,42 +166,49 @@ export default {
 			clearInterval(this.loadingInterval);
 			this.loadingDots = ''; // Reset loading dots
 		},
-		async fetchDuplicates(type) {
+
+
+		async fetchAllPages(type) {
+			let currentPage = 1;
 			let url;
-			if (type === 'acknowledged') {
-				url = generateUrl('/apps/duplicatefinder/api/duplicates/acknowledged');
-			} else if (type === 'unacknowledged') {
-				url = generateUrl('/apps/duplicatefinder/api/duplicates/unacknowledged');
-			} else {
-				console.error('Invalid type');
-				showError(t('duplicatefinder', 'Could not fetch duplicates'));
-				return;
-			}
+			this.loading = true;
 
-			try {
-				const response = await axios.get(url);
-				const newDuplicates = response.data.entities;
-
+			do {
 				if (type === 'acknowledged') {
-					// Keep track of the last three items' IDs
-					const lastThreeIds = this.acknowledgedDuplicates.slice(-3).map(dup => dup.id);
-					// Filter out any new items that are already in the last three
-					const filteredNewDuplicates = newDuplicates.filter(dup => !lastThreeIds.includes(dup.id));
-					// Combine the last three with the filtered new items
-					this.acknowledgedDuplicates = [...this.acknowledgedDuplicates.slice(-3), ...filteredNewDuplicates];
+					url = generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledged?page=${currentPage}`);
+				} else if (type === 'unacknowledged') {
+					url = generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledged?page=${currentPage}`);
 				} else {
-					// Keep track of the last three items' IDs
-					const lastThreeIds = this.unacknowledgedDuplicates.slice(-3).map(dup => dup.id);
-					// Filter out any new items that are already in the last three
-					const filteredNewDuplicates = newDuplicates.filter(dup => !lastThreeIds.includes(dup.id));
-					// Combine the last three with the filtered new items
-					this.unacknowledgedDuplicates = [...this.unacknowledgedDuplicates.slice(-3), ...filteredNewDuplicates];
+					console.error('Invalid type');
+					showError(t('duplicatefinder', 'Could not fetch duplicates'));
+					return;
 				}
-			} catch (e) {
-				console.error(e);
-				showError(t('duplicatefinder', `Could not fetch ${type} duplicates`));
-			}
+
+				try {
+					const response = await axios.get(url);
+					const newDuplicates = response.data.entities;
+					const pagination = response.data.pagination;
+
+					if (type === 'acknowledged') {
+						this.acknowledgedDuplicates = [...this.acknowledgedDuplicates, ...newDuplicates];
+						this.totalPagesAcknowledged = pagination.totalPages;
+					} else {
+						this.unacknowledgedDuplicates = [...this.unacknowledgedDuplicates, ...newDuplicates];
+						this.totalPagesUnacknowledged = pagination.totalPages;
+					}
+
+					currentPage++;
+				} catch (e) {
+					console.error(e);
+					showError(t('duplicatefinder', `Could not fetch ${type} duplicates`));
+					this.loading = false;
+					return;
+				}
+			} while (currentPage <= this[`totalPages${type.charAt(0).toUpperCase() + type.slice(1)}`]);
+
+			this.loading = false;
 		},
+
 		async acknowledgeDuplicate() {
 			try {
 				const hash = this.currentDuplicate.hash;
