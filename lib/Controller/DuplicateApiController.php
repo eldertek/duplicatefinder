@@ -47,36 +47,37 @@ class DuplicateApiController extends AbstractAPIController
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    
-    public function list(int $offset = 0, int $limit = 30, string $type = 'unacknowledged'): DataResponse
+    public function list(int $page = 1, int $limit = 30, string $type = 'unacknowledged'): DataResponse
     {
         try {
-            $duplicates = [];
-            switch($type) {
-                case 'all':
-                    $duplicates = $this->fileDuplicateService->findAll("all", $this->getUserId(), $limit, $offset, true);
-                    break;
-                case 'acknowledged':
-                    $duplicates = $this->fileDuplicateService->findAll("acknowledged", $this->getUserId(), $limit, $offset, true);
-                    break;
-                case 'unacknowledged':
-                    $duplicates = $this->fileDuplicateService->findAll("unacknowledged", $this->getUserId(), $limit, $offset, true);
-                    break;
-                default:
-                    return new DataResponse(['status' => 'error', 'message' => 'Invalid type']);
-            }
-            return new DataResponse(['status' => 'success', 'data' => $duplicates]);
+            $offset = ($page - 1) * $limit; // Calculate the offset based on the current page and limit
+            $duplicates = $this->fileDuplicateService->findAll($type, $this->getUserId(), $page, $limit, true);
+            $totalItems = $this->fileDuplicateService->getTotalCount($type); 
+            $totalPages = ceil($totalItems / $limit);
+
+            $data = [
+                'status' => 'success',
+                'entities' => $duplicates['entities'],
+                'pagination' => [
+                    'currentPage' => $page,
+                    'totalPages' => $totalPages,
+                    'totalItems' => $totalItems,
+                    'limit' => $limit
+                ]
+            ];
+            return new DataResponse($data);
         } catch (\Exception $e) {
-            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            $this->logger->error('A unknown exception occurred', ['app' => Application::ID, 'exception' => $e]);
             return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
+
 
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function acknowledge(string $hash): DataResponse 
+    public function acknowledge(string $hash): DataResponse
     {
         $this->fileDuplicateMapper->markAsAcknowledged($hash);
         return new DataResponse(['status' => 'success']);
@@ -86,7 +87,7 @@ class DuplicateApiController extends AbstractAPIController
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function unacknowledge(string $hash): DataResponse 
+    public function unacknowledge(string $hash): DataResponse
     {
         $this->fileDuplicateMapper->unmarkAcknowledged($hash);
         return new DataResponse(['status' => 'success']);
@@ -100,7 +101,7 @@ class DuplicateApiController extends AbstractAPIController
         try {
             $this->fileDuplicateService->clear();
             $this->fileInfoService->clear();
-            return new DataResponse(['status'=> 'success']);
+            return new DataResponse(['status' => 'success']);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
             return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
@@ -116,7 +117,7 @@ class DuplicateApiController extends AbstractAPIController
             $this->userManager->callForAllUsers(function (IUser $user): void {
                 $this->fileInfoService->scanFiles($user->getUID());
             });
-            return new DataResponse(['status'=> 'success']);
+            return new DataResponse(['status' => 'success']);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
             return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);

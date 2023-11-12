@@ -47,13 +47,16 @@ class FileDuplicateMapper extends EQBMapper
         $qb = $this->db->getQueryBuilder();
         $qb->select('d.id as id', 'type', 'hash', 'acknowledged')
             ->from($this->getTableName(), 'd');
+
         if ($limit !== null) {
-            $qb->setMaxResults($limit);
+            $qb->setMaxResults($limit); // Set the limit of rows to fetch
         }
         if ($offset !== null) {
-            $qb->where($qb->expr()->gt('id', $qb->createNamedParameter($offset, IQueryBuilder::PARAM_INT)));
+            $qb->setFirstResult($offset); // Set the offset to start fetching rows
         }
+
         $qb->addOrderBy('id');
+
         if ($orderBy !== null) {
             foreach ($orderBy as $order) {
                 $qb->addOrderBy($order[0], isset($order[1]) ? $order[1] : null);
@@ -114,5 +117,34 @@ class FileDuplicateMapper extends EQBMapper
             return false;
         }
     }
-    
+
+    /**
+     * Gets the total count of duplicates based on the type.
+     *
+     * @param string $type The type of duplicates to count.
+     * @return int The total count of duplicates.
+     */
+    public function getTotalCount(string $type = 'unacknowledged'): int
+    {
+        $qb = $this->db->getQueryBuilder();
+
+        // Start with a basic SELECT COUNT query
+        $qb->select($qb->func()->count('*', 'total_count'))
+            ->from($this->getTableName());
+
+        // Add conditions based on the type
+        if ($type === 'acknowledged') {
+            $qb->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
+        } elseif ($type === 'unacknowledged') {
+            $qb->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)));
+        } // No condition needed for 'all', as we want to count all rows
+
+        // Execute the query and fetch the result
+        $result = $qb->execute();
+        $row = $result->fetch();
+        $result->closeCursor();
+
+        // Return the count result as an integer
+        return (int) ($row ? $row['total_count'] : 0);
+    }
 }

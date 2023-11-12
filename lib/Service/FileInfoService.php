@@ -3,7 +3,6 @@
 namespace OCA\DuplicateFinder\Service;
 
 use Psr\Log\LoggerInterface;
-use OCP\IDBConnection;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
@@ -285,7 +284,7 @@ class FileInfoService
                     $fileInfo->setPath($path);
                     $result = $fileInfo;
                 }
-            } catch (NoUserException | NotFoundException $e) {
+            } catch (NotFoundException $e) {
                 $result = null;
             }
         }

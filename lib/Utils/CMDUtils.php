@@ -11,23 +11,34 @@ class CMDUtils
         FileDuplicateService $fileDuplicateService,
         OutputInterface $output,
         \Closure $abortIfInterrupted,
-        ?string $user = null
+        ?string $user = null,
+        int $pageSize = 20 // Add a page size parameter
     ): void {
-        $output->writeln($user === null ? 'Duplicates are: ' : 'Duplicates for user "'.$user.'" are: ');
-        $duplicates = array("pageKey" => 0, "isLastFetched" => true);
+        $output->writeln($user === null ? 'Duplicates are: ' : 'Duplicates for user "' . $user . '" are: ');
+
+        $currentPage = 1; // Start from the first page
+        $isLastFetched = false;
+
         do {
-            $duplicates = $fileDuplicateService->findAll('all', $user, 20, $duplicates["pageKey"], true);
+            // Pass the current page and page size to the findAll method
+            $duplicates = $fileDuplicateService->findAll('all', $user, $currentPage, $pageSize, true);
+
             self::processDuplicates($output, $duplicates);
             $abortIfInterrupted();
-        } while (!$duplicates["isLastFetched"]);
+
+            $isLastFetched = $duplicates["isLastFetched"];
+            $currentPage++; // Increment to fetch the next page in the next iteration
+        } while (!$isLastFetched); // Continue until the last page is fetched
     }
 
-    private static function processDuplicates(OutputInterface $output, array $duplicates): void {
+
+    private static function processDuplicates(OutputInterface $output, array $duplicates): void
+    {
         foreach ($duplicates["entities"] as $duplicate) {
             if (!$duplicate->getFiles()) {
                 continue;
             }
-            $output->writeln($duplicate->getHash().'('.$duplicate->getType().')');
+            $output->writeln($duplicate->getHash() . '(' . $duplicate->getType() . ')');
             self::showFiles($output, $duplicate->getFiles());
         }
     }
@@ -35,7 +46,7 @@ class CMDUtils
     /**
      * @param array<\OCA\DuplicateFinder\Db\FileInfo> $files
      */
-    private static function showFiles(OutputInterface $output, array $files) : void
+    private static function showFiles(OutputInterface $output, array $files): void
     {
         $shownPaths = [];
         $hiddenPaths = 0;
@@ -43,7 +54,7 @@ class CMDUtils
         foreach ($files as $file) {
             if ($file instanceof \OCA\DuplicateFinder\Db\FileInfo) {
                 if (!isset($shownPaths[$file->getPath()])) {
-                    $output->writeln($indent.$file->getPath());
+                    $output->writeln($indent . $file->getPath());
                     $shownPaths[$file->getPath()] = 1;
                 } else {
                     $hiddenPaths += 1;
@@ -51,8 +62,8 @@ class CMDUtils
             }
         }
         if ($hiddenPaths > 0) {
-            $message = $hiddenPaths.' path'.($hiddenPaths > 1 ? 's are' : ' is').' hidden because '.($hiddenPaths > 1 ? 'they reference' : 'it references').' to a similiar file.';
-            $output->writeln($indent.'<info>'.$message.'</info>');
+            $message = $hiddenPaths . ' path' . ($hiddenPaths > 1 ? 's are' : ' is') . ' hidden because ' . ($hiddenPaths > 1 ? 'they reference' : 'it references') . ' to a similiar file.';
+            $output->writeln($indent . '<info>' . $message . '</info>');
         }
     }
 
@@ -60,7 +71,7 @@ class CMDUtils
         string $message,
         ?OutputInterface $output = null,
         int $verbosity = OutputInterface::VERBOSITY_NORMAL
-    ) : void {
+    ): void {
         if (!is_null($output)) {
             $output->writeln($message, $verbosity);
         }

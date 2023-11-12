@@ -57,11 +57,14 @@ class FileDuplicateService
     public function findAll(
         ?string $type = null,
         ?string $user = null,
-        ?int $limit = 20,
-        ?int $offset = null,
+        int $page = 1,
+        int $pageSize = 20,
         bool $enrich = false,
         ?array $orderBy = [['hash'], ['type']]
     ): array {
+        $limit = $pageSize; // Set the number of records per page
+        $offset = ($page - 1) * $pageSize; // Calculate the offset
+
         $result = array();
         $entities = null;
         do {
@@ -154,5 +157,10 @@ class FileDuplicateService
     public function clear(): void
     {
         $this->mapper->clear();
+    }
+
+    public function getTotalCount(string $type = 'unacknowledged'): int
+    {
+        return $this->mapper->getTotalCount($type);
     }
 }

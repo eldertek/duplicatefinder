@@ -1,3 +1,8 @@
+## 1.1.3 - 2023-11-12
+### Added
+- Paging of duplicates to avoid to load all duplicates at once
+- Infinite-scrolling to load all duplicates in background
+
 ## 1.1.2 - 2023-11-11
 ### Added
 - Auto-fetch duplicates again when reaching the end of the list
