@@ -57,7 +57,7 @@ class DuplicateApiController extends AbstractAPIController
 
             $data = [
                 'status' => 'success',
-                'data' => $duplicates['entities'],
+                'entities' => $duplicates['entities'],
                 'pagination' => [
                     'currentPage' => $page,
                     'totalPages' => $totalPages,
