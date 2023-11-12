@@ -51,7 +51,7 @@ class DuplicateApiController extends AbstractAPIController
     {
         try {
             $offset = ($page - 1) * $limit; // Calculate the offset based on the current page and limit
-            $duplicates = $this->fileDuplicateService->findAll($type, $this->getUserId(), $limit, $offset, true);
+            $duplicates = $this->fileDuplicateService->findAll($type, $this->getUserId(), $page, $limit, true);
             $totalItems = $this->fileDuplicateService->getTotalCount($type); 
             $totalPages = ceil($totalItems / $limit);
 
