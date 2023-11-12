@@ -16,7 +16,7 @@ class CMDUtils
         $output->writeln($user === null ? 'Duplicates are: ' : 'Duplicates for user "'.$user.'" are: ');
         $duplicates = array("pageKey" => 0, "isLastFetched" => true);
         do {
-            $duplicates = $fileDuplicateService->findAll($user, 20, $duplicates["pageKey"], true);
+            $duplicates = $fileDuplicateService->findAll('all', $user, 20, $duplicates["pageKey"], true);
             self::processDuplicates($output, $duplicates);
             $abortIfInterrupted();
         } while (!$duplicates["isLastFetched"]);
