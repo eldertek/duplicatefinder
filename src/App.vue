@@ -222,8 +222,8 @@ export default {
 				this.acknowledgedDuplicates.push(removedItem);
 
 				// Switch to the next unacknowledged duplicate in the list
-				if (this.unacknowledgedDuplicates[index + 1]) {
-					this.openDuplicate(this.unacknowledgedDuplicates[index + 1]);
+				if (this.unacknowledgedDuplicates[index]) {
+					this.openDuplicate(this.unacknowledgedDuplicates[index]);
 				} else {
 					// If no more duplicates are left in the unacknowledged list
 					this.currentDuplicateId = null;
