@@ -40,6 +40,10 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
+				<a v-if="currentDuplicate.files.length > 0" class="preview-link" :href="getPreviewUrl(currentDuplicate.files[0])"
+					target="_blank">
+					{{ t('duplicatefinder', 'Show Preview') }}
+				</a>
 				<a v-if="isAcknowledged(currentDuplicate)" class="acknowledge-link" @click="unacknowledgeDuplicate"
 					href="#">
 					{{ t('duplicatefinder', 'Unacknowledge it') }}
@@ -220,6 +224,14 @@ export default {
 				const index = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
 				const [removedItem] = this.unacknowledgedDuplicates.splice(index, 1);
 				this.acknowledgedDuplicates.push(removedItem);
+
+				// Switch to the next unacknowledged duplicate in the list
+				if (this.unacknowledgedDuplicates[index]) {
+					this.openDuplicate(this.unacknowledgedDuplicates[index]);
+				} else {
+					// If no more duplicates are left in the unacknowledged list
+					this.currentDuplicateId = null;
+				}
 			} catch (e) {
 				console.error(e);
 				showError(t('duplicatefinder', 'Could not acknowledge the duplicate'));
@@ -244,6 +256,11 @@ export default {
 		},
 		isAcknowledged(duplicate) {
 			return this.acknowledgedDuplicates.some(dup => dup.id === duplicate.id);
+		},
+		getPreviewUrl(item) {
+			const itemPath = this.normalizeItemPath(item.path);
+			// Use the Nextcloud OC object to generate a webDAV URL
+			return OC.generateUrl('/remote.php/webdav/') + encodeURIComponent(itemPath);
 		},
 		getPreviewImage(item) {
 			if (this.isImage(item) || this.isVideo(item)) {
@@ -459,12 +476,23 @@ export default {
 }
 
 .acknowledge-link {
-	color: #007BFF;
+	color: #007BFF; /* Blue color */
 	text-decoration: none;
 	transition: color 0.3s ease;
 }
 
 .acknowledge-link:hover {
-	color: #0056b3;
+	color: #0056b3; /* Darker blue on hover */
 }
+
+.preview-link {
+    color: #28a745; /* Green color */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.preview-link:hover {
+    color: #1e7e34; /* Darker green on hover */
+}
+
 </style>

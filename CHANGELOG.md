@@ -1,3 +1,11 @@
+## 1.1.4 - 2023-11-19
+### Added
+- When clicking 'Acknowledge it', select the next unacknowledged entry automatically.
+- Add a preview link to open the file in a new tab.
+### Fixed
+- Fix [#32](https://github.com/eldertek/duplicatefinder/issues/32)
+- Fix [#33](https://github.com/eldertek/duplicatefinder/issues/33)
+
 ## 1.1.3 - 2023-11-12
 ### Added
 - Paging of duplicates to avoid to load all duplicates at once
