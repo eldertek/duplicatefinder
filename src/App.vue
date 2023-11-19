@@ -220,6 +220,14 @@ export default {
 				const index = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
 				const [removedItem] = this.unacknowledgedDuplicates.splice(index, 1);
 				this.acknowledgedDuplicates.push(removedItem);
+
+				// Switch to the next unacknowledged duplicate in the list
+				if (this.unacknowledgedDuplicates[index + 1]) {
+					this.openDuplicate(this.unacknowledgedDuplicates[index + 1]);
+				} else {
+					// If no more duplicates are left in the unacknowledged list
+					this.currentDuplicateId = null;
+				}
 			} catch (e) {
 				console.error(e);
 				showError(t('duplicatefinder', 'Could not acknowledge the duplicate'));

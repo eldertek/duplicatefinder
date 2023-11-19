@@ -1,3 +1,9 @@
+## 1.1.4 - 2023-11-19
+### Added
+- When clicking 'Acknowledge it', select the next unacknowledged entry automatically.
+### Fixed
+- Fix [#32](https://github.com/eldertek/duplicatefinder/issues/32)
+
 ## 1.1.3 - 2023-11-12
 ### Added
 - Paging of duplicates to avoid to load all duplicates at once
