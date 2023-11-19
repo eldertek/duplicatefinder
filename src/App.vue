@@ -40,6 +40,10 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
+				<a v-if="currentDuplicate.files.length > 0" :href="getPreviewUrl(currentDuplicate.files[0])"
+					target="_blank">
+					{{ t('duplicatefinder', 'Show Preview') }}
+				</a>
 				<a v-if="isAcknowledged(currentDuplicate)" class="acknowledge-link" @click="unacknowledgeDuplicate"
 					href="#">
 					{{ t('duplicatefinder', 'Unacknowledge it') }}
@@ -252,6 +256,11 @@ export default {
 		},
 		isAcknowledged(duplicate) {
 			return this.acknowledgedDuplicates.some(dup => dup.id === duplicate.id);
+		},
+		getPreviewUrl(item) {
+			const itemPath = this.normalizeItemPath(item.path);
+			// Use the Nextcloud OC object to generate a webDAV URL
+			return OC.generateUrl('/remote.php/webdav/') + encodeURIComponent(itemPath);
 		},
 		getPreviewImage(item) {
 			if (this.isImage(item) || this.isVideo(item)) {
