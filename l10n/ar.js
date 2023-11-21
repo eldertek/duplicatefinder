@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "مكتشف التكرارات Duplicate Finder",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "مرحباً. التكرارات الحالية تشتمل على {numberOfFiles} ملف؛ إجمالي حجمها: {formattedSize}",
+    "Show Preview" : "عرض المعاينة",
     "Unacknowledge it" : "إنكاره",
     "Acknowledge it" : "الاعتراف به",
     "File" : "ملف",

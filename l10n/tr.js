@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Çift bulucu",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Hoş geldiniz. Bu kopyada {numberOfFiles} çift dosya var. Toplam boyut: {formattedSize}",
+    "Show Preview" : "Ön izlemeyi görüntüle",
     "Unacknowledge it" : "Çift olmadığını onayla",
     "Acknowledge it" : "Çift olduğunu onayla",
     "File" : "Dosya",

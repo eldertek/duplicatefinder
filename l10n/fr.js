@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Duplicate Finder",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Bienvenue, le doublon actuel contient {numberOfFiles} fichiers, taille totale : {formattedSize}",
+    "Show Preview" : "Afficher l'aperçu",
     "Unacknowledge it" : "Marquer comme non validé",
     "Acknowledge it" : "Marquer comme validé",
     "File" : "Fichier",
@@ -17,6 +18,7 @@ OC.L10N.register(
     "Duplicate unacknowledged successfully" : "Doublon invalidé",
     "Could not unacknowledge the duplicate" : "Impossible d'invalider le doublon",
     "Duplicate deleted" : "Doublon supprimé",
+    "Could not fetch ${type} duplicates" : "Impossible de récupérer les dupliqués ${type}",
     "Could not delete the duplicate at path: ${item.path}" : "Impossible de supprimer le doublon au chemin : ${item.path}",
     "Duplicate Finder Settings" : "Paramètres de Duplicate Finder",
     "All general settings to modify Duplicate Finder behaviors." : "Paramètres généraux permettant de modifier les comportements de Duplicate Finder.",

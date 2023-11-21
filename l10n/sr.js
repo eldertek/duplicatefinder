@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Откривач дупликата",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Добродошли, тренутни дупликати се састоје од {numberOfFiles} фајлова, укупне величине: {formattedSize}",
+    "Show Preview" : "Прикажи преглед",
     "Unacknowledge it" : "Уклони потврду",
     "Acknowledge it" : "Потврди",
     "File" : "Фајл",

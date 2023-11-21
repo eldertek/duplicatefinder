@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Hledání duplicit",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Vítejte, stávající duplicita má {numberOfFiles} souborů, celková velikost: {formattedSize}",
+    "Show Preview" : "Zobrazit náhled",
     "Unacknowledge it" : "Zrušit potvrzení toho",
     "Acknowledge it" : "Potvrdit to",
     "File" : "Soubor",

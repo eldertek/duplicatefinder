@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Duplikatfinder",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Hallo, das aktuelle Duplikat enthält {numberOfFiles} Dateien, Gesamtgröße: {formattedSize}",
+    "Show Preview" : "Vorschau anzeigen",
     "Unacknowledge it" : "Nicht bestätigen",
     "Acknowledge it" : "Bestätigen",
     "File" : "Datei",
