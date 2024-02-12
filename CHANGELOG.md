@@ -1,3 +1,13 @@
+## 1.1.5 - 2024-02-12
+### Added
+- Limit number of errors/success messages to 2
+### Fixed
+- Fix [#37](https://github.com/eldertek/duplicatefinder/issues/37)
+### Changed
+- Updated dependencies
+### Removed
+- Remove support for Nextcloud 27
+
 ## 1.1.4 - 2023-11-19
 ### Added
 - When clicking 'Acknowledge it', select the next unacknowledged entry automatically.
