@@ -60,10 +60,20 @@ class FileInfoService
      */
     public function enrich(FileInfo $fileInfo): FileInfo
     {
-        $node = $this->folderService->getNodeByFileInfo($fileInfo);
-        $fileInfo->setNodeId($node->getId());
-        $fileInfo->setMimetype($node->getMimetype());
-        $fileInfo->setSize($node->getSize());
+        try {
+            $node = $this->folderService->getNodeByFileInfo($fileInfo);
+            if ($node) {
+                $fileInfo->setNodeId($node->getId());
+                $fileInfo->setMimetype($node->getMimetype());
+                $fileInfo->setSize($node->getSize());
+            } else {
+                // Handle the case where no node is found
+                $this->logger->error("No node found for file info ID: " . $fileInfo->getId());
+            }
+        } catch (\Exception $e) {
+            // Log exception details
+            $this->logger->error("Error enriching FileInfo: " . $e->getMessage());
+        }
         return $fileInfo;
     }
 

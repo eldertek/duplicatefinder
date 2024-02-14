@@ -1,4 +1,5 @@
 <?php
+
 namespace OCA\DuplicateFinder\Service;
 
 use OCP\IUser;
@@ -39,10 +40,20 @@ class FileDuplicateService
     public function enrich(FileDuplicate $duplicate): FileDuplicate
     {
         $files = $duplicate->getFiles();
+        // Iterate through each FileInfo object to enrich it
+        foreach ($files as $key => $fileInfo) {
+            // Enrich the FileInfo object
+            $files[$key] = $this->fileInfoService->enrich($fileInfo);
+        }
+
+        // Sort the enriched FileInfo objects
         uasort($files, function (FileInfo $a, FileInfo $b) {
             return strnatcmp($a->getPath(), $b->getPath());
         });
+
+        // Set the sorted and enriched FileInfo objects back to the duplicate
         $duplicate->setFiles(array_values($files));
+
         return $duplicate;
     }
 

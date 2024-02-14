@@ -2,8 +2,12 @@
 ### Added
 - Limit number of errors/success messages to 2
 ### Fixed
+- Fix an issue where nodeid was not corectly returned by the api
+- Fix [#38](https://github.com/eldertek/duplicatefinder/issues/38)
 - Fix [#37](https://github.com/eldertek/duplicatefinder/issues/37)
 ### Changed
+- Show preview now relies on the file preview app
+- Updated translations
 - Updated dependencies
 ### Removed
 - Remove support for Nextcloud 27

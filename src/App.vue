@@ -31,7 +31,7 @@
 							</template>
 						</NcAppNavigationItem>
 					</template>
-				</NcAppNavigationItem> 
+				</NcAppNavigationItem>
 			</template>
 		</NcAppNavigation>
 		<NcAppContent>
@@ -40,8 +40,8 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
-				<a v-if="currentDuplicate.files.length > 0" class="preview-link"
-					:href="getPreviewUrl(currentDuplicate.files[0])" target="_blank">
+				<a v-if="currentDuplicate.files.length > 0" @click.prevent="openFileInViewer(currentDuplicate.files[0])"
+					href="#" class="preview-link">
 					{{ t('duplicatefinder', 'Show Preview') }}
 				</a>
 				<a v-if="isAcknowledged(currentDuplicate)" class="acknowledge-link" @click="unacknowledgeDuplicate"
@@ -160,6 +160,18 @@ export default {
 		this.stopLoadingAnimation();
 	},
 	methods: {
+		openFileInViewer(file) {
+			// Ensure the viewer script is loaded and OCA.Viewer is available
+			if (OCA && OCA.Viewer) {
+				const filePath = this.normalizeItemPath(file.path);
+				// Open the viewer with the fileinfo
+				OCA.Viewer.open({
+					path: filePath,
+				});
+			} else {
+				console.error('Viewer is not available');
+			}
+		},
 		// Modified showError and showSuccess to use queue system
 		showError(message) {
 			this.addNotificationToQueue(() => {
@@ -299,9 +311,23 @@ export default {
 			return this.acknowledgedDuplicates.some(dup => dup.id === duplicate.id);
 		},
 		getPreviewUrl(item) {
-			const itemPath = this.normalizeItemPath(item.path);
-			// Use the Nextcloud OC object to generate a webDAV URL
-			return OC.generateUrl('/remote.php/webdav/') + encodeURIComponent(itemPath);
+			const normalizedPath = this.normalizeItemPath(item.path);
+			if (!normalizedPath) {
+				console.error('Unable to normalize path for item:', item);
+				return '#'; // Fallback or error handling
+			}
+
+			// Split the normalized path to separate directory and file name
+			const lastSlashIndex = normalizedPath.lastIndexOf('/');
+			const dir = normalizedPath.substring(0, lastSlashIndex);
+			const fileName = normalizedPath.substring(lastSlashIndex + 1);
+
+			// Encode components to ensure valid URL construction
+			const encodedDir = encodeURIComponent(dir);
+			const encodedFileName = encodeURIComponent(fileName);
+
+			// Construct URL for Nextcloud Files app, focusing on dir and scrolling to the file
+			return OC.generateUrl(`/apps/files/?dir=${encodedDir}&scrollto=${encodedFileName}`);
 		},
 		getPreviewImage(item) {
 			if (this.isImage(item) || this.isVideo(item)) {
@@ -366,7 +392,7 @@ export default {
 					}
 				}
 
-			} catch (e) {	
+			} catch (e) {
 				console.error(e);
 				this.showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
 			}
@@ -538,4 +564,5 @@ export default {
 .preview-link:hover {
 	color: #1e7e34;
 	/* Darker green on hover */
-}</style>
+}
+</style>
