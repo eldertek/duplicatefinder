@@ -31,7 +31,7 @@
 							</template>
 						</NcAppNavigationItem>
 					</template>
-				</NcAppNavigationItem>
+				</NcAppNavigationItem> 
 			</template>
 		</NcAppNavigation>
 		<NcAppContent>
@@ -40,8 +40,8 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
-				<a v-if="currentDuplicate.files.length > 0" class="preview-link" :href="getPreviewUrl(currentDuplicate.files[0])"
-					target="_blank">
+				<a v-if="currentDuplicate.files.length > 0" class="preview-link"
+					:href="getPreviewUrl(currentDuplicate.files[0])" target="_blank">
 					{{ t('duplicatefinder', 'Show Preview') }}
 				</a>
 				<a v-if="isAcknowledged(currentDuplicate)" class="acknowledge-link" @click="unacknowledgeDuplicate"
@@ -84,7 +84,7 @@
 import { NcAppContent, NcContent } from '@nextcloud/vue'
 
 import { generateUrl } from '@nextcloud/router'
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError as showErrorToast, showSuccess as showSuccessToast } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 
 import CheckCircle from 'vue-material-design-icons/CheckCircle'
@@ -119,6 +119,9 @@ export default {
 				itemCount: 0,
 				uniqueTotalSize: 0
 			},
+
+			notificationQueue: [],
+			activeNotifications: 0,
 
 		}
 	},
@@ -157,6 +160,44 @@ export default {
 		this.stopLoadingAnimation();
 	},
 	methods: {
+		// Modified showError and showSuccess to use queue system
+		showError(message) {
+			this.addNotificationToQueue(() => {
+				return showErrorToast(message, {
+					onRemove: this.onNotificationRemove
+				});
+			});
+		},
+
+		showSuccess(message) {
+			this.addNotificationToQueue(() => {
+				return showSuccessToast(message, {
+					onRemove: this.onNotificationRemove
+				});
+			});
+		},
+
+		// Add notification to the queue
+		addNotificationToQueue(notificationFunction) {
+			this.notificationQueue.push(notificationFunction);
+			this.displayNextNotification();
+		},
+
+		// Display the next notification if less than two are active
+		displayNextNotification() {
+			if (this.activeNotifications < 2 && this.notificationQueue.length > 0) {
+				const notificationToShow = this.notificationQueue.shift();
+				notificationToShow(); // This will show the notification
+				this.activeNotifications++;
+			}
+		},
+
+		// Callback for when a notification is removed
+		onNotificationRemove() {
+			this.activeNotifications--;
+			this.displayNextNotification();
+		},
+
 		startLoadingAnimation() {
 			this.loadingDots = '';
 			this.loadingInterval = setInterval(() => {
@@ -218,7 +259,7 @@ export default {
 				const hash = this.currentDuplicate.hash;
 				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledge/${hash}`));
 
-				showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
+				this.showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
 
 				// Move the duplicate from the  unacknowledgedlist to the acknowledged list
 				const index = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
@@ -242,7 +283,7 @@ export default {
 				const hash = this.currentDuplicate.hash;
 				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledge/${hash}`));
 
-				showSuccess(t('duplicatefinder', 'Duplicate unacknowledged successfully'));
+				this.showSuccess(t('duplicatefinder', 'Duplicate unacknowledged successfully'));
 
 				// Move the duplicate from the acknowledged list to the unacknowledged list
 				const index = this.acknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
@@ -292,7 +333,7 @@ export default {
 			const fileClient = OC.Files.getClient();
 			try {
 				await fileClient.remove(this.normalizeItemPath(item.path));
-				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
+				this.showSuccess(t('duplicatefinder', 'Duplicate deleted'));
 
 				// Remove the deleted item from the duplicates list in the UI
 				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
@@ -325,9 +366,9 @@ export default {
 					}
 				}
 
-			} catch (e) {
+			} catch (e) {	
 				console.error(e);
-				showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
+				this.showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
 			}
 		}
 	},
@@ -476,23 +517,25 @@ export default {
 }
 
 .acknowledge-link {
-	color: #007BFF; /* Blue color */
+	color: #007BFF;
+	/* Blue color */
 	text-decoration: none;
 	transition: color 0.3s ease;
 }
 
 .acknowledge-link:hover {
-	color: #0056b3; /* Darker blue on hover */
+	color: #0056b3;
+	/* Darker blue on hover */
 }
 
 .preview-link {
-    color: #28a745; /* Green color */
-    text-decoration: none;
-    transition: color 0.3s ease;
+	color: #28a745;
+	/* Green color */
+	text-decoration: none;
+	transition: color 0.3s ease;
 }
 
 .preview-link:hover {
-    color: #1e7e34; /* Darker green on hover */
-}
-
-</style>
+	color: #1e7e34;
+	/* Darker green on hover */
+}</style>
