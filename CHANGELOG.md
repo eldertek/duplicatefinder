@@ -1,8 +1,12 @@
 ## 1.1.5 - 2024-02-12
 ### Added
 - Limit number of errors/success messages to 2
+- Limit number of fetched duplicates to 20
 ### Fixed
 - Fix an issue where nodeid was not corectly returned by the api
+- Fix an issue where duplicates returned was not the user's one
+- Fix [#41](https://github.com/eldertek/duplicatefinder/issues/41)
+- Fix [#40](https://github.com/eldertek/duplicatefinder/issues/40)
 - Fix [#38](https://github.com/eldertek/duplicatefinder/issues/38)
 - Fix [#37](https://github.com/eldertek/duplicatefinder/issues/37)
 ### Changed

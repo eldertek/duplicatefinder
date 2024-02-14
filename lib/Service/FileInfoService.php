@@ -6,7 +6,6 @@ use Psr\Log\LoggerInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
-use OC\User\NoUserException;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use OCA\DuplicateFinder\AppInfo\Application;

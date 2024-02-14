@@ -2,7 +2,7 @@
 	<NcContent app-name="duplicatefinder">
 		<NcAppNavigation v-if="(acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0) && !loading">
 			<template #list>
-				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
+				<NcAppNavigationItem name="Unacknowledged" :allowCollapse="true" :open="true">
 					<template #icon>
 						<CloseCircle :size="20" />
 					</template>
@@ -109,6 +109,7 @@ export default {
 
 			currentDuplicateId: null,
 			updating: false,
+			fetchingLimit: 1,
 			loading: true,
 			loadingDots: '',
 			loadingInterval: null,
@@ -155,9 +156,25 @@ export default {
 	},
 	async mounted() {
 		this.startLoadingAnimation();
-		this.fetchAllPages('acknowledged');
-		this.fetchAllPages('unacknowledged');
+		this.fetchAllPages('acknowledged', this.fetchingLimit, true);
+		this.fetchAllPages('unacknowledged', this.fetchingLimit, true);
 		this.stopLoadingAnimation();
+	},
+	watch: {
+		// Watcher for acknowledgedDuplicates list
+		acknowledgedDuplicates(newVal) {
+			if (newVal.length <= 2) {
+				// Trigger re-fetch for acknowledged list with the existing limit, not initial fetch
+				this.fetchAllPages('acknowledged', this.fetchingLimit, false);
+			}
+		},
+		// Watcher for unacknowledgedDuplicates list
+		unacknowledgedDuplicates(newVal) {
+			if (newVal.length <= 2) {
+				// Trigger re-fetch for unacknowledged list with the existing limit, not initial fetch
+				this.fetchAllPages('unacknowledged', this.fetchingLimit, false);
+			}
+		}
 	},
 	methods: {
 		openFileInViewer(file) {
@@ -224,20 +241,21 @@ export default {
 			this.loadingDots = ''; // Reset loading dots
 		},
 
-
-		async fetchAllPages(type) {
+		async fetchAllPages(type, limit, initial) {
 			let currentPage = 1;
 			let url;
 			this.loading = true;
 
 			do {
+				// Determine URL based on the type
 				if (type === 'acknowledged') {
-					url = generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledged?page=${currentPage}`);
+					url = generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledged?page=${currentPage}&limit=${limit}`);
 				} else if (type === 'unacknowledged') {
-					url = generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledged?page=${currentPage}`);
+					url = generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledged?page=${currentPage}&limit=${limit}`);
 				} else {
 					console.error('Invalid type');
-					showError(t('duplicatefinder', 'Could not fetch duplicates'));
+					this.showError(t('duplicatefinder', 'Could not fetch duplicates'));
+					this.loading = false;
 					return;
 				}
 
@@ -246,18 +264,27 @@ export default {
 					const newDuplicates = response.data.entities;
 					const pagination = response.data.pagination;
 
-					if (type === 'acknowledged') {
-						this.acknowledgedDuplicates = [...this.acknowledgedDuplicates, ...newDuplicates];
-						this.totalPagesAcknowledged = pagination.totalPages;
+					// Decide to append new duplicates or replace based on `initial` flag
+					if (initial) {
+						// Replace or set the list if it's the initial fetch
+						this[type + 'Duplicates'] = newDuplicates.slice(0, limit);
 					} else {
-						this.unacknowledgedDuplicates = [...this.unacknowledgedDuplicates, ...newDuplicates];
-						this.totalPagesUnacknowledged = pagination.totalPages;
+						// Append new duplicates and ensure unique entries, if needed
+						this[type + 'Duplicates'] = [...this[type + 'Duplicates'], ...newDuplicates].slice(0, limit);
 					}
 
+					// Update pagination details
+					this[`totalPages${type.charAt(0).toUpperCase() + type.slice(1)}`] = pagination.totalPages;
 					currentPage++;
+
+					// Break out if the limit is reached
+					if (this[type + 'Duplicates'].length >= limit) {
+						console.log(`Limit of ${limit} reached for ${type} duplicates, stopping fetch.`);
+						break;
+					}
 				} catch (e) {
 					console.error(e);
-					showError(t('duplicatefinder', `Could not fetch ${type} duplicates`));
+					this.showError(t('duplicatefinder', `Could not fetch ${type} duplicates`));
 					this.loading = false;
 					return;
 				}
@@ -265,7 +292,6 @@ export default {
 
 			this.loading = false;
 		},
-
 		async acknowledgeDuplicate() {
 			try {
 				const hash = this.currentDuplicate.hash;
@@ -391,7 +417,6 @@ export default {
 						this.currentDuplicateId = null; // If no more hashes are left in the current list
 					}
 				}
-
 			} catch (e) {
 				console.error(e);
 				this.showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
