@@ -24,7 +24,13 @@ all: build
 # Installs npm dependencies and builds the app
 .PHONY: build
 build:
+ifeq ($(composer),)
+	$(error "composer is not installed. Please install composer to proceed.")
+endif
 	composer install
+ifeq ($(npm),)
+	$(error "npm is not installed. Please install npm to proceed.")
+endif
 	npm install
 	npm run build
 
