@@ -1,4 +1,5 @@
 <?php
+
 namespace OCA\DuplicateFinder\Service;
 
 use OCP\IUser;
@@ -39,10 +40,20 @@ class FileDuplicateService
     public function enrich(FileDuplicate $duplicate): FileDuplicate
     {
         $files = $duplicate->getFiles();
+        // Iterate through each FileInfo object to enrich it
+        foreach ($files as $key => $fileInfo) {
+            // Enrich the FileInfo object
+            $files[$key] = $this->fileInfoService->enrich($fileInfo);
+        }
+
+        // Sort the enriched FileInfo objects
         uasort($files, function (FileInfo $a, FileInfo $b) {
             return strnatcmp($a->getPath(), $b->getPath());
         });
+
+        // Set the sorted and enriched FileInfo objects back to the duplicate
         $duplicate->setFiles(array_values($files));
+
         return $duplicate;
     }
 
@@ -62,19 +73,19 @@ class FileDuplicateService
         bool $enrich = false,
         ?array $orderBy = [['hash'], ['type']]
     ): array {
-        $limit = $pageSize; // Set the number of records per page
-        $offset = ($page - 1) * $pageSize; // Calculate the offset
+        $result = [];
+        $isLastFetched = false;
+        $entities = [];
 
-        $result = array();
-        $entities = null;
-        do {
-            $entities = $this->mapper->findAll($user, $limit, $offset, $orderBy);
+        while (empty($entities) && !$isLastFetched) {
+            $offset = ($page - 1) * $pageSize; // Calculate the offset based on the current page
+            $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy);
+
             foreach ($entities as $entity) {
                 $entity = $this->stripFilesWithoutAccessRights($entity, $user);
                 if ($enrich) {
                     $entity = $this->enrich($entity);
                 }
-                $offset = $entity->id;
                 if (count($entity->getFiles()) > 1) {
                     if ($type === 'acknowledged' && $entity->isAcknowledged()) {
                         $result[] = $entity;
@@ -83,14 +94,20 @@ class FileDuplicateService
                     } else if ($type === 'all') {
                         $result[] = $entity;
                     }
-                    if (count($result) === $limit) {
-                        break;
-                    }
                 }
             }
-            unset($entity);
-        } while (count($result) < $limit && count($entities) === $limit);
-        return array("entities" => $result, "pageKey" => $offset, "isLastFetched" => count($entities) !== $limit);
+
+            $isLastFetched = count($entities) < $pageSize; // Determine if this is the last page
+            if (empty($entities) && !$isLastFetched) {
+                $page++; // Move to the next page if no entities found and not the last page
+            }
+        }
+
+        return [
+            "entities" => $result,
+            "pageKey" => $offset,
+            "isLastFetched" => $isLastFetched
+        ];
     }
 
     private function stripFilesWithoutAccessRights(

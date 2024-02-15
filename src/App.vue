@@ -2,7 +2,7 @@
 	<NcContent app-name="duplicatefinder">
 		<NcAppNavigation v-if="(acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0) && !loading">
 			<template #list>
-				<NcAppNavigationItem name="Uncknowledged" :allowCollapse="true" :open="true">
+				<NcAppNavigationItem name="Unacknowledged" :allowCollapse="true" :open="true">
 					<template #icon>
 						<CloseCircle :size="20" />
 					</template>
@@ -40,8 +40,8 @@
 					'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
 					{ numberOfFiles: numberOfFilesInCurrentDuplicate, formattedSize: formattedSizeOfCurrentDuplicate }) }}
 				</p>
-				<a v-if="currentDuplicate.files.length > 0" class="preview-link" :href="getPreviewUrl(currentDuplicate.files[0])"
-					target="_blank">
+				<a v-if="currentDuplicate.files.length > 0" @click.prevent="openFileInViewer(currentDuplicate.files[0])"
+					href="#" class="preview-link">
 					{{ t('duplicatefinder', 'Show Preview') }}
 				</a>
 				<a v-if="isAcknowledged(currentDuplicate)" class="acknowledge-link" @click="unacknowledgeDuplicate"
@@ -84,7 +84,7 @@
 import { NcAppContent, NcContent } from '@nextcloud/vue'
 
 import { generateUrl } from '@nextcloud/router'
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError as showErrorToast, showSuccess as showSuccessToast } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 
 import CheckCircle from 'vue-material-design-icons/CheckCircle'
@@ -109,6 +109,7 @@ export default {
 
 			currentDuplicateId: null,
 			updating: false,
+			fetchingLimit: 50,
 			loading: true,
 			loadingDots: '',
 			loadingInterval: null,
@@ -119,6 +120,9 @@ export default {
 				itemCount: 0,
 				uniqueTotalSize: 0
 			},
+
+			notificationQueue: [],
+			activeNotifications: 0,
 
 		}
 	},
@@ -152,11 +156,61 @@ export default {
 	},
 	async mounted() {
 		this.startLoadingAnimation();
-		this.fetchAllPages('acknowledged');
-		this.fetchAllPages('unacknowledged');
+		this.fetchAllPages('acknowledged', this.fetchingLimit);
+		this.fetchAllPages('unacknowledged', this.fetchingLimit);
 		this.stopLoadingAnimation();
 	},
 	methods: {
+		openFileInViewer(file) {
+			// Ensure the viewer script is loaded and OCA.Viewer is available
+			if (OCA && OCA.Viewer) {
+				const filePath = this.normalizeItemPath(file.path);
+				// Open the viewer with the fileinfo
+				OCA.Viewer.open({
+					path: filePath,
+				});
+			} else {
+				console.error('Viewer is not available');
+			}
+		},
+		// Modified showError and showSuccess to use queue system
+		showError(message) {
+			this.addNotificationToQueue(() => {
+				return showErrorToast(message, {
+					onRemove: this.onNotificationRemove
+				});
+			});
+		},
+
+		showSuccess(message) {
+			this.addNotificationToQueue(() => {
+				return showSuccessToast(message, {
+					onRemove: this.onNotificationRemove
+				});
+			});
+		},
+
+		// Add notification to the queue
+		addNotificationToQueue(notificationFunction) {
+			this.notificationQueue.push(notificationFunction);
+			this.displayNextNotification();
+		},
+
+		// Display the next notification if less than two are active
+		displayNextNotification() {
+			if (this.activeNotifications < 2 && this.notificationQueue.length > 0) {
+				const notificationToShow = this.notificationQueue.shift();
+				notificationToShow(); // This will show the notification
+				this.activeNotifications++;
+			}
+		},
+
+		// Callback for when a notification is removed
+		onNotificationRemove() {
+			this.activeNotifications--;
+			this.displayNextNotification();
+		},
+
 		startLoadingAnimation() {
 			this.loadingDots = '';
 			this.loadingInterval = setInterval(() => {
@@ -170,21 +224,21 @@ export default {
 			clearInterval(this.loadingInterval);
 			this.loadingDots = ''; // Reset loading dots
 		},
-
-
-		async fetchAllPages(type) {
+		async fetchAllPages(type, limit) {
 			let currentPage = 1;
 			let url;
 			this.loading = true;
+			let totalFetched = 0; // Initialize total fetched entities counter
 
 			do {
 				if (type === 'acknowledged') {
-					url = generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledged?page=${currentPage}`);
+					url = generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledged?page=${currentPage}&limit=${limit}`);
 				} else if (type === 'unacknowledged') {
-					url = generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledged?page=${currentPage}`);
+					url = generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledged?page=${currentPage}&limit=${limit}`);
 				} else {
 					console.error('Invalid type');
-					showError(t('duplicatefinder', 'Could not fetch duplicates'));
+					this.showError(t('duplicatefinder', 'Could not fetch duplicates'));
+					this.loading = false;
 					return;
 				}
 
@@ -193,18 +247,24 @@ export default {
 					const newDuplicates = response.data.entities;
 					const pagination = response.data.pagination;
 
-					if (type === 'acknowledged') {
-						this.acknowledgedDuplicates = [...this.acknowledgedDuplicates, ...newDuplicates];
-						this.totalPagesAcknowledged = pagination.totalPages;
-					} else {
-						this.unacknowledgedDuplicates = [...this.unacknowledgedDuplicates, ...newDuplicates];
-						this.totalPagesUnacknowledged = pagination.totalPages;
-					}
+					// Filter out duplicates that already exist in the current list
+					const filteredNewDuplicates = newDuplicates.filter(newDup =>
+						!this[type + 'Duplicates'].some(existingDup => existingDup.id === newDup.id)
+					);
 
+					this[type + 'Duplicates'] = [...this[type + 'Duplicates'], ...filteredNewDuplicates.slice(0, limit - totalFetched)];
+					totalFetched += filteredNewDuplicates.length; // Update total fetched entities based on filtered list
+
+					this[`totalPages${type.charAt(0).toUpperCase() + type.slice(1)}`] = pagination.totalPages;
 					currentPage++;
+
+					// Stop fetching if we have reached the limit
+					if (totalFetched >= limit) {
+						break;
+					}
 				} catch (e) {
 					console.error(e);
-					showError(t('duplicatefinder', `Could not fetch ${type} duplicates`));
+					this.showError(t('duplicatefinder', `Could not fetch ${type} duplicates`));
 					this.loading = false;
 					return;
 				}
@@ -212,18 +272,20 @@ export default {
 
 			this.loading = false;
 		},
-
 		async acknowledgeDuplicate() {
 			try {
 				const hash = this.currentDuplicate.hash;
 				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledge/${hash}`));
 
-				showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
+				this.showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
+				// Fetch all pages again to get the latest data
 
 				// Move the duplicate from the  unacknowledgedlist to the acknowledged list
 				const index = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
 				const [removedItem] = this.unacknowledgedDuplicates.splice(index, 1);
 				this.acknowledgedDuplicates.push(removedItem);
+
+				this.fetchAllPages('unacknowledged', 5);
 
 				// Switch to the next unacknowledged duplicate in the list
 				if (this.unacknowledgedDuplicates[index]) {
@@ -242,7 +304,8 @@ export default {
 				const hash = this.currentDuplicate.hash;
 				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledge/${hash}`));
 
-				showSuccess(t('duplicatefinder', 'Duplicate unacknowledged successfully'));
+				this.showSuccess(t('duplicatefinder', 'Duplicate unacknowledged successfully'));
+				this.fetchAllPages('acknowledged', 5);
 
 				// Move the duplicate from the acknowledged list to the unacknowledged list
 				const index = this.acknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
@@ -258,9 +321,23 @@ export default {
 			return this.acknowledgedDuplicates.some(dup => dup.id === duplicate.id);
 		},
 		getPreviewUrl(item) {
-			const itemPath = this.normalizeItemPath(item.path);
-			// Use the Nextcloud OC object to generate a webDAV URL
-			return OC.generateUrl('/remote.php/webdav/') + encodeURIComponent(itemPath);
+			const normalizedPath = this.normalizeItemPath(item.path);
+			if (!normalizedPath) {
+				console.error('Unable to normalize path for item:', item);
+				return '#'; // Fallback or error handling
+			}
+
+			// Split the normalized path to separate directory and file name
+			const lastSlashIndex = normalizedPath.lastIndexOf('/');
+			const dir = normalizedPath.substring(0, lastSlashIndex);
+			const fileName = normalizedPath.substring(lastSlashIndex + 1);
+
+			// Encode components to ensure valid URL construction
+			const encodedDir = encodeURIComponent(dir);
+			const encodedFileName = encodeURIComponent(fileName);
+
+			// Construct URL for Nextcloud Files app, focusing on dir and scrolling to the file
+			return OC.generateUrl(`/apps/files/?dir=${encodedDir}&scrollto=${encodedFileName}`);
 		},
 		getPreviewImage(item) {
 			if (this.isImage(item) || this.isVideo(item)) {
@@ -292,7 +369,7 @@ export default {
 			const fileClient = OC.Files.getClient();
 			try {
 				await fileClient.remove(this.normalizeItemPath(item.path));
-				showSuccess(t('duplicatefinder', 'Duplicate deleted'));
+				this.showSuccess(t('duplicatefinder', 'Duplicate deleted'));
 
 				// Remove the deleted item from the duplicates list in the UI
 				const index = this.currentDuplicate.files.findIndex(file => file.id === item.id);
@@ -304,8 +381,10 @@ export default {
 				let currentList = null;
 				if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
 					currentList = this.unacknowledgedDuplicates;
+					this.fetchAllPages('unacknowledged', 5);
 				} else if (this.acknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
 					currentList = this.acknowledgedDuplicates;
+					this.fetchAllPages('acknowledged', 5);
 				}
 
 				// If only one file remains for the current hash, remove the hash
@@ -324,10 +403,9 @@ export default {
 						this.currentDuplicateId = null; // If no more hashes are left in the current list
 					}
 				}
-
 			} catch (e) {
 				console.error(e);
-				showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
+				this.showError(t('duplicatefinder', `Could not delete the duplicate at path: ${item.path}`));
 			}
 		}
 	},
@@ -476,23 +554,26 @@ export default {
 }
 
 .acknowledge-link {
-	color: #007BFF; /* Blue color */
+	color: #007BFF;
+	/* Blue color */
 	text-decoration: none;
 	transition: color 0.3s ease;
 }
 
 .acknowledge-link:hover {
-	color: #0056b3; /* Darker blue on hover */
+	color: #0056b3;
+	/* Darker blue on hover */
 }
 
 .preview-link {
-    color: #28a745; /* Green color */
-    text-decoration: none;
-    transition: color 0.3s ease;
+	color: #28a745;
+	/* Green color */
+	text-decoration: none;
+	transition: color 0.3s ease;
 }
 
 .preview-link:hover {
-    color: #1e7e34; /* Darker green on hover */
+	color: #1e7e34;
+	/* Darker green on hover */
 }
-
 </style>
