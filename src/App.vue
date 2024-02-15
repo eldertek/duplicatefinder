@@ -109,7 +109,7 @@ export default {
 
 			currentDuplicateId: null,
 			updating: false,
-			fetchingLimit: 1,
+			fetchingLimit: 50,
 			loading: true,
 			loadingDots: '',
 			loadingInterval: null,
@@ -156,25 +156,9 @@ export default {
 	},
 	async mounted() {
 		this.startLoadingAnimation();
-		this.fetchAllPages('acknowledged', this.fetchingLimit, true);
-		this.fetchAllPages('unacknowledged', this.fetchingLimit, true);
+		this.fetchAllPages('acknowledged', this.fetchingLimit);
+		this.fetchAllPages('unacknowledged', this.fetchingLimit);
 		this.stopLoadingAnimation();
-	},
-	watch: {
-		// Watcher for acknowledgedDuplicates list
-		acknowledgedDuplicates(newVal) {
-			if (newVal.length <= 2) {
-				// Trigger re-fetch for acknowledged list with the existing limit, not initial fetch
-				this.fetchAllPages('acknowledged', this.fetchingLimit, false);
-			}
-		},
-		// Watcher for unacknowledgedDuplicates list
-		unacknowledgedDuplicates(newVal) {
-			if (newVal.length <= 2) {
-				// Trigger re-fetch for unacknowledged list with the existing limit, not initial fetch
-				this.fetchAllPages('unacknowledged', this.fetchingLimit, false);
-			}
-		}
 	},
 	methods: {
 		openFileInViewer(file) {
@@ -240,14 +224,13 @@ export default {
 			clearInterval(this.loadingInterval);
 			this.loadingDots = ''; // Reset loading dots
 		},
-
-		async fetchAllPages(type, limit, initial) {
+		async fetchAllPages(type, limit) {
 			let currentPage = 1;
 			let url;
 			this.loading = true;
+			let totalFetched = 0; // Initialize total fetched entities counter
 
 			do {
-				// Determine URL based on the type
 				if (type === 'acknowledged') {
 					url = generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledged?page=${currentPage}&limit=${limit}`);
 				} else if (type === 'unacknowledged') {
@@ -264,22 +247,19 @@ export default {
 					const newDuplicates = response.data.entities;
 					const pagination = response.data.pagination;
 
-					// Decide to append new duplicates or replace based on `initial` flag
-					if (initial) {
-						// Replace or set the list if it's the initial fetch
-						this[type + 'Duplicates'] = newDuplicates.slice(0, limit);
-					} else {
-						// Append new duplicates and ensure unique entries, if needed
-						this[type + 'Duplicates'] = [...this[type + 'Duplicates'], ...newDuplicates].slice(0, limit);
-					}
+					// Filter out duplicates that already exist in the current list
+					const filteredNewDuplicates = newDuplicates.filter(newDup =>
+						!this[type + 'Duplicates'].some(existingDup => existingDup.id === newDup.id)
+					);
 
-					// Update pagination details
+					this[type + 'Duplicates'] = [...this[type + 'Duplicates'], ...filteredNewDuplicates.slice(0, limit - totalFetched)];
+					totalFetched += filteredNewDuplicates.length; // Update total fetched entities based on filtered list
+
 					this[`totalPages${type.charAt(0).toUpperCase() + type.slice(1)}`] = pagination.totalPages;
 					currentPage++;
 
-					// Break out if the limit is reached
-					if (this[type + 'Duplicates'].length >= limit) {
-						console.log(`Limit of ${limit} reached for ${type} duplicates, stopping fetch.`);
+					// Stop fetching if we have reached the limit
+					if (totalFetched >= limit) {
 						break;
 					}
 				} catch (e) {
@@ -298,11 +278,14 @@ export default {
 				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/acknowledge/${hash}`));
 
 				this.showSuccess(t('duplicatefinder', 'Duplicate acknowledged successfully'));
+				// Fetch all pages again to get the latest data
 
 				// Move the duplicate from the  unacknowledgedlist to the acknowledged list
 				const index = this.unacknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
 				const [removedItem] = this.unacknowledgedDuplicates.splice(index, 1);
 				this.acknowledgedDuplicates.push(removedItem);
+
+				this.fetchAllPages('unacknowledged', 5);
 
 				// Switch to the next unacknowledged duplicate in the list
 				if (this.unacknowledgedDuplicates[index]) {
@@ -322,6 +305,7 @@ export default {
 				await axios.post(generateUrl(`/apps/duplicatefinder/api/duplicates/unacknowledge/${hash}`));
 
 				this.showSuccess(t('duplicatefinder', 'Duplicate unacknowledged successfully'));
+				this.fetchAllPages('acknowledged', 5);
 
 				// Move the duplicate from the acknowledged list to the unacknowledged list
 				const index = this.acknowledgedDuplicates.findIndex(dup => dup.id === this.currentDuplicateId);
@@ -397,8 +381,10 @@ export default {
 				let currentList = null;
 				if (this.unacknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
 					currentList = this.unacknowledgedDuplicates;
+					this.fetchAllPages('unacknowledged', 5);
 				} else if (this.acknowledgedDuplicates.some(dup => dup.id === this.currentDuplicateId)) {
 					currentList = this.acknowledgedDuplicates;
+					this.fetchAllPages('acknowledged', 5);
 				}
 
 				// If only one file remains for the current hash, remove the hash

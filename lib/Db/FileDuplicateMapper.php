@@ -45,24 +45,25 @@ class FileDuplicateMapper extends EQBMapper
         ?array $orderBy = [['hash'], ['type']]
     ): array {
         $qb = $this->db->getQueryBuilder();
-        $qb->select('d.id as id', 'type', 'hash', 'acknowledged')
-            ->from($this->getTableName(), 'd');
-
+        $qb->select('d.*')
+            ->from($this->getTableName(), 'd')
+            ->leftJoin('d', 'duplicatefinder_finfo', 'f', 'd.hash = f.file_hash');
+    
+        if (!is_null($user)) {
+            $qb->andWhere($qb->expr()->eq('f.owner', $qb->createNamedParameter($user)));
+        }
+    
         if ($limit !== null) {
-            $qb->setMaxResults($limit); // Set the limit of rows to fetch
+            $qb->setMaxResults($limit);
         }
         if ($offset !== null) {
-            $qb->setFirstResult($offset); // Set the offset to start fetching rows
+            $qb->setFirstResult($offset);
         }
-
-        $qb->addOrderBy('id');
-
-        if ($orderBy !== null) {
-            foreach ($orderBy as $order) {
-                $qb->addOrderBy($order[0], isset($order[1]) ? $order[1] : null);
-            }
-            unset($order);
+    
+        foreach ($orderBy as $order) {
+            $qb->addOrderBy($order[0], $order[1] ?? 'ASC');
         }
+    
         return $this->findEntities($qb);
     }
 
