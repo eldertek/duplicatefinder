@@ -1,3 +1,7 @@
+## 1.1.6 - 2024-02-17
+### Fixed
+- Fix an issue where the same duplicate was displayed multiple times
+
 ## 1.1.5 - 2024-02-12
 ### Added
 - Limit number of errors/success messages to 2
