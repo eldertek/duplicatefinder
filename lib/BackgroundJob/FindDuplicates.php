@@ -8,7 +8,7 @@ namespace OCA\DuplicateFinder\BackgroundJob;
  use OCP\IDBConnection;
  use OCP\IUser;
  use OCP\IUserManager;
- use OC\BackgroundJob\TimedJob;
+ use OCP\BackgroundJob\TimedJob;
  use Psr\Log\LoggerInterface;
  
  class FindDuplicates extends TimedJob

@@ -1,3 +1,7 @@
+## 1.1.7 - 2024-02-20
+### Fixed
+- Refactor the code to use components
+
 ## 1.1.6 - 2024-02-17
 ### Fixed
 - Fix an issue where the same duplicate was displayed multiple times
