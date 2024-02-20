@@ -115,28 +115,4 @@ export default {
   }
 }
 
-.acknowledge-link {
-  color: #007BFF;
-  /* Blue color */
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.acknowledge-link:hover {
-  color: #0056b3;
-  /* Darker blue on hover */
-}
-
-.preview-link {
-  color: #28a745;
-  /* Green color */
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.preview-link:hover {
-  color: #1e7e34;
-  /* Darker green on hover */
-}
-
 </style>

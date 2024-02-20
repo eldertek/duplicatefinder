@@ -1,3 +1,5 @@
+import { showErrorNotification } from "./notifications";
+
 /**
  * Normalize the item path to extract the relative path within the user's files.
  * 
@@ -82,4 +84,23 @@ export function getFormattedSizeOfCurrentDuplicate(currentDuplicate) {
     }
     const totalSize = currentDuplicate.files.reduce((acc, file) => acc + file.size, 0);
     return OC.Util.humanFileSize(totalSize);
+}
+
+/**
+ * Open a file in the viewer.
+ * 
+ * @param {Object} file - The file to open in the viewer.
+ */
+export function openFileInViewer(file) {
+    // Ensure the viewer script is loaded and OCA.Viewer is available
+    if (OCA && OCA.Viewer) {
+        const filePath = normalizeItemPath(file.path);
+        // Open the viewer with the fileinfo
+        OCA.Viewer.open({
+            path: filePath,
+        });
+    } else {
+        showErrorNotification(t('duplicatefinder', 'The viewer is not available'));
+        console.error('Viewer is not available');
+    }
 }

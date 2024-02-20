@@ -15,7 +15,7 @@ function generateApiBaseUrl(path) {
  * @param {number} page The page number for pagination.
  * @returns {Promise<Object>} An object containing arrays of duplicates.
  */
-export const fetchDuplicates = async (type = 'unacknowledged', limit = 5, page = 1) => {
+export const fetchDuplicates = async (type = 'all', limit = 5, page = 1) => {
     try {
         const url = generateApiBaseUrl(`/duplicates/${type}?limit=${limit}&page=${page}`);
         const response = await axios.get(url);
@@ -33,8 +33,8 @@ export const fetchDuplicates = async (type = 'unacknowledged', limit = 5, page =
  */
 export const acknowledgeDuplicate = async (hash) => {
     try {
-        const url = generateApiBaseUrl('/duplicates/acknowledge');
-        await axios.post(url, { hash });
+        const url = generateApiBaseUrl(`/duplicates/acknowledge/${hash}`);
+        await axios.post(url);
         showSuccessNotification(t('duplicatefinder', 'Duplicate acknowledged successfully'));
     } catch (error) {
         console.error(`Error acknowledging duplicate with hash ${hash}:`, error);
@@ -50,8 +50,8 @@ export const acknowledgeDuplicate = async (hash) => {
  */
 export const unacknowledgeDuplicate = async (hash) => {
     try {
-        const url = generateApiBaseUrl('/duplicates/unacknowledge');
-        await axios.post(url, { hash });
+        const url = generateApiBaseUrl(`/duplicates/unacknowledge/${hash}`);
+        await axios.post(url);
         showSuccessNotification(t('duplicatefinder', 'Duplicate unacknowledged successfully.'));
     } catch (error) {
         console.error(`Error unacknowledging duplicate with hash ${hash}:`, error);
