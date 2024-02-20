@@ -2,11 +2,10 @@
   <div class="file-info-container">
     <div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
     <div class="file-details">
-      <p><strong>File:</strong> {{ file.name }}</p>
-      <p><strong>Size:</strong> {{ file.size }} bytes</p>
-      <p><strong>Path:</strong> {{ normalizeItemPath(file.path) }}</p>
+      <p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong></p>
+      <p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizeItemPath(file.path) }}</p>
     </div>
-    <button @click="deleteFile" class="delete-button">Delete</button>
+    <button @click="deleteFile" class="delete-button">{{ t('duplicatefinder', 'Delete') }}</button>
   </div>
 </template>
 <script>
@@ -15,7 +14,8 @@ import { getPreviewImage, normalizeItemPath } from '@/tools/utils';
 
 export default {
   props: {
-    file: Object
+    file: Object,
+    index: Number
   },
   methods: {
     getPreviewImage,
@@ -35,46 +35,19 @@ export default {
   align-items: center;
 }
 
-.file-display {
-  width: calc(100% - 20px);
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-  margin-left: 10px;
-  margin-right: 10px;
-  border: 1px solid #e0e0e0;
-  padding: 10px;
-  border-radius: 5px;
-  position: relative;
-}
-
-.file-display p {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
 .file-details {
   flex-grow: 1;
   overflow: hidden;
 }
 
 .thumbnail {
-  width: 80px;
-  height: 80px;
-  background-size: cover;
-  background-position: center;
-  margin-right: 20px;
-  border-radius: 5px;
-  flex-shrink: 0;
-}
-
-.nav-thumbnail {
-  width: 20px;
-  height: 20px;
-  background-size: cover;
-  background-position: center;
-  border-radius: 4px;
+	width: 80px;
+	height: 80px;
+	background-size: cover;
+	background-position: center;
+	margin-right: 20px;
+	border-radius: 5px;
+	flex-shrink: 0;
 }
 
 .delete-button {
@@ -92,15 +65,6 @@ export default {
   background-color: #e43f51;
 }
 
-.summary-section {
-  margin-top: 50px;
-  margin-bottom: 20px;
-  padding: 10px;
-  border-radius: 5px;
-  font-weight: bold;
-  text-align: center;
-}
-
 /* Desktop styles */
 @media (min-width: 801px) {
   .delete-button {
@@ -115,11 +79,6 @@ export default {
 
 /* Mobile stles */
 @media (max-width: 800px) {
-  .file-display {
-    flex-direction: column;
-    align-items: center;
-  }
-
   .file-info-container {
     display: flex;
     width: 100%;
@@ -128,11 +87,11 @@ export default {
     justify-content: space-between;
   }
 
-  .thumbnail {
-    margin-right: 20px;
-    margin-bottom: 0;
-    flex-shrink: 0;
-  }
+	.thumbnail {
+		margin-right: 20px;
+		margin-bottom: 0;
+		flex-shrink: 0;
+	} 
 
   .file-details {
     flex-grow: 1;
@@ -179,4 +138,5 @@ export default {
   color: #1e7e34;
   /* Darker green on hover */
 }
+
 </style>

@@ -1,15 +1,20 @@
 <template>
-  <div class="duplicate-details">
-    <div v-if="duplicate && duplicate.files.length > 0" class="summary-section">
-      <p>Welcome, the current duplicate has {{ duplicate.files.length }} files, total size: {{ getDuplicateSize(duplicate) }}</p>
-      <div v-for="(file) in duplicate.files" :key="file.id" class="file-display">
-        <DuplicateFileDisplay :file="file" @fileDeleted="removeFileFromListAndUpdate(file)"></DuplicateFileDisplay>
-      </div>
+  <div v-if="duplicate && duplicate.files.length > 0">
+    <div class="summary-section">
+      <p>{{ t('duplicatefinder',
+        'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
+        { numberOfFiles: duplicate.files.length, formattedSize: getDuplicateSize(duplicate) }) }}</p>
     </div>
-    <div v-else class="emptycontent">
-      <div class="icon-file"></div>
-      <h2>No files found for this duplicate.</h2>
+    <div v-for="(file, index) in duplicate.files" :key="file.id" class="file-display">
+      <DuplicateFileDisplay :file="file" :index="index" @fileDeleted="removeFileFromListAndUpdate(file)">
+      </DuplicateFileDisplay>
     </div>
+  </div>
+  <div v-else class="emptycontent">
+				<div class="icon-file" />
+				<div>
+					<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+				</div>
   </div>
 </template>
 
@@ -40,17 +45,13 @@ export default {
 </script>
 
 <style scoped>
-.duplicate-details {
-  overflow-y: auto;
-}
-
-.duplicate-details > div {
-  width: 100%;
-  height: 100%;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+.summary-section {
+  margin-top: 50px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  text-align: center;
 }
 
 .file-display {
@@ -72,11 +73,11 @@ export default {
   overflow: hidden;
 }
 
-.summary-section {
-  margin-top: 50px;
-  margin-bottom: 20px;
-  padding: 10px;
-  border-radius: 5px;
-  font-weight: bold;
-  text-align: center;
+@media (max-width: 800px) {
+  .file-display {
+    flex-direction: column;
+    align-items: center;
+  }
+
 }
+</style>

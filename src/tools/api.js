@@ -15,7 +15,7 @@ function generateApiBaseUrl(path) {
  * @param {number} page The page number for pagination.
  * @returns {Promise<Object>} An object containing arrays of duplicates.
  */
-export const fetchDuplicates = async (type = 'unacknowledged', limit = 20, page = 1) => {
+export const fetchDuplicates = async (type = 'unacknowledged', limit = 5, page = 1) => {
     try {
         const url = generateApiBaseUrl(`/duplicates/${type}?limit=${limit}&page=${page}`);
         const response = await axios.get(url);
@@ -35,10 +35,10 @@ export const acknowledgeDuplicate = async (hash) => {
     try {
         const url = generateApiBaseUrl('/duplicates/acknowledge');
         await axios.post(url, { hash });
-        showSuccessNotification('Duplicate acknowledged successfully.');
+        showSuccessNotification(t('duplicatefinder', 'Duplicate acknowledged successfully'));
     } catch (error) {
         console.error(`Error acknowledging duplicate with hash ${hash}:`, error);
-        showErrorNotification('Error acknowledging duplicate.');
+        showErrorNotification(t('duplicatefinder', 'Error acknowledging duplicate.'));
         throw error;
     }
 };
@@ -52,10 +52,10 @@ export const unacknowledgeDuplicate = async (hash) => {
     try {
         const url = generateApiBaseUrl('/duplicates/unacknowledge');
         await axios.post(url, { hash });
-        showSuccessNotification('Duplicate unacknowledged successfully.');
+        showSuccessNotification(t('duplicatefinder', 'Duplicate unacknowledged successfully.'));
     } catch (error) {
         console.error(`Error unacknowledging duplicate with hash ${hash}:`, error);
-        showErrorNotification('Error unacknowledging duplicate.');
+        showErrorNotification(t('duplicatefinder', 'Error unacknowledging duplicate.'));
         throw error;
     }
 };
@@ -70,9 +70,9 @@ export const deleteFile = async (file) => {
     const filePath = normalizeItemPath(file.path);
     try {
         await fileClient.remove(filePath);
-        showSuccessNotification('File deleted successfully.');
+        showSuccessNotification(t('duplicatefinder', 'File deleted successfully.'));
     } catch (error) {
         console.error(`Error deleting file with path ${filePath}`, error);
-        showErrorNotification('Error deleting file.');
+        showErrorNotification(t('duplicatefinder', 'Error deleting file.'));
     }
 };

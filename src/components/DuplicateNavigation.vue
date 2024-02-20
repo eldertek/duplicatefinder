@@ -2,7 +2,7 @@
     <NcAppNavigation>
         <template #list>
             <!-- Navigation for Unacknowledged Duplicates -->
-            <NcAppNavigationItem name="Unacknowledged" :allowCollapse="true" :open="true">
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Unacknowledged')" :allowCollapse="true" :open="true">
                 <template #icon>
                     <CloseCircle :size="20" />
                 </template>
@@ -13,7 +13,7 @@
                 </template>
             </NcAppNavigationItem>
             <!-- Navigation for Acknowledged Duplicates -->
-            <NcAppNavigationItem name="Acknowledged" :allowCollapse="true" :open="true">
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Acknowledged')" :allowCollapse="true" :open="true">
                 <template #icon>
                     <CheckCircle :size="20" />
                 </template>

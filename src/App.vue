@@ -1,9 +1,9 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<DuplicateNavigation :acknowledged-duplicates="acknowledgedDuplicates"
+		<DuplicateNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0" :acknowledged-duplicates="acknowledgedDuplicates"
 			:unacknowledged-duplicates="unacknowledgedDuplicates" @open-duplicate="openDuplicate" />
 		<NcAppContent>
-			<DuplicateDetails v-if="currentDuplicate" :duplicate="currentDuplicate"
+			<DuplicateDetails :duplicate="currentDuplicate"
 			@lastFileDeleted="removeDuplicate(currentDuplicate)"/>
 		</NcAppContent>
 	</NcContent>
@@ -35,6 +35,14 @@ export default {
 	methods: {
 		async removeDuplicate(duplicate) {
 			await removeDuplicateFromList(duplicate, this.acknowledgedDuplicates, this.unacknowledgedDuplicates);
+			// Go to next duplicate
+			if (this.acknowledgedDuplicates.length > 0 && duplicate.acknowledged) {
+				this.currentDuplicate = this.acknowledgedDuplicates[0];
+			} else if (this.unacknowledgedDuplicates.length > 0) {
+				this.currentDuplicate = this.unacknowledgedDuplicates[0];
+			} else {
+				this.currentDuplicate = null;
+			}
 		},
 		async openDuplicate(duplicate) {
 			this.currentDuplicate = duplicate;
@@ -42,11 +50,11 @@ export default {
 		async refreshDuplicates() {
 			try {
 				// Fetch unacknowledged duplicates
-				const unacknowledgedData = await fetchDuplicates('unacknowledged', 20);
+				const unacknowledgedData = await fetchDuplicates('unacknowledged', 5);
 				this.unacknowledgedDuplicates = unacknowledgedData.entities;
 
 				// Fetch acknowledged duplicates
-				const acknowledgedData = await fetchDuplicates('acknowledged', 20);
+				const acknowledgedData = await fetchDuplicates('acknowledged', 5);
 				this.acknowledgedDuplicates = acknowledgedData.entities;
 			} catch (error) {
 				console.error('Failed to refresh duplicates:', error);
@@ -61,14 +69,8 @@ export default {
 </script>
   
 <style>
-#app {
-	max-width: 1200px;
-	margin: 0 auto;
-}
-
-.empty-state {
-	text-align: center;
-	padding: 20px;
+.app-content {
+	overflow-y: auto;
 }
 </style>
   
