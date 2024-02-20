@@ -6,7 +6,7 @@
  use OCA\DuplicateFinder\Service\FileInfoService;
  use OCA\DuplicateFinder\Service\FolderService;
  use OCP\Files\NotFoundException;
- use OC\BackgroundJob\TimedJob;
+ use OCP\BackgroundJob\TimedJob;
  use Psr\Log\LoggerInterface;
  class CleanUpDB extends TimedJob
  {

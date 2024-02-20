@@ -1,6 +1,7 @@
 <?php
 namespace OCA\DuplicateFinder\Controller;
 
+ use OCP\AppFramework\Http\DataResponse;
  use OCP\IRequest;
  use OCP\IUserSession;
  use Psr\Log\LoggerInterface;
@@ -61,13 +62,13 @@ namespace OCA\DuplicateFinder\Controller;
       * @param \Exception $e The exception to handle.
       * @return JSONResponse The JSON response.
       */
-     protected function handleException(\Exception $e): JSONResponse
+     protected function handleException(\Exception $e): DataResponse
      {
          if ($e instanceof NotAuthenticatedException) {
-             return $this->error($e, Http::STATUS_FORBIDDEN);
+             return new DataResponse(['status' => 'error', 'message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
          }
          $this->logger->error('An unknown exception occurred', ['app' => Application::ID, 'exception' => $e]);
-         return $this->error($e, Http::STATUS_NOT_IMPLEMENTED);
+         return new DataResponse(['status' => 'error', 'message' => 'An unknown exception occurred'], Http::STATUS_INTERNAL_SERVER_ERROR);
      }
  }
  
