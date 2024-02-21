@@ -63,4 +63,4 @@ All settings should be modified only through UI. If this doesn't work for you, y
 
 ## Special thanks
 
-Big thanks to @PaulLereverend @chrros95
+Big thanks to @PaulLereverend @chrros95 @Routhinator
