@@ -1,3 +1,7 @@
+## 1.1.8 - 2024-02-21
+### Fixed
+- Fix [#52](https://github.com/eldertek/duplicatefinder/issues/52)
+
 ## 1.1.7 - 2024-02-20
 ### Fixed
 - Refactor the code to use components
