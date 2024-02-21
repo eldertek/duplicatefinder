@@ -77,7 +77,7 @@ class FileDuplicateService
         $isLastFetched = false;
         $entities = [];
 
-        while (empty($entities) && !$isLastFetched) {
+        while (count($result) < $pageSize && !$isLastFetched) {
             $offset = ($page - 1) * $pageSize; // Calculate the offset based on the current page
             $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy);
 
@@ -98,8 +98,8 @@ class FileDuplicateService
             }
 
             $isLastFetched = count($entities) < $pageSize; // Determine if this is the last page
-            if (empty($entities) && !$isLastFetched) {
-                $page++; // Move to the next page if no entities found and not the last page
+            if (count($result) && !$isLastFetched) {
+                $page++; // Move to the next page if no results found and not the last page
             }
         }
 
