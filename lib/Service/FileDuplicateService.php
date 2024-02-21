@@ -98,7 +98,7 @@ class FileDuplicateService
             }
 
             $isLastFetched = count($entities) < $pageSize; // Determine if this is the last page
-            if (count($result) && !$isLastFetched) {
+            if (count($result) < $pageSize && !$isLastFetched) {
                 $page++; // Move to the next page if no results found and not the last page
             }
         }
