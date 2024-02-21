@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "პარამეტრები შენახულია",
     "File" : "ფაილი",
-    "Delete" : "წაშლა",
-    "Settings saved" : "პარამეტრები შენახულია"
+    "Delete" : "წაშლა"
 },"pluralForm" :"nplurals=2; plural=(n!=1);"
 }

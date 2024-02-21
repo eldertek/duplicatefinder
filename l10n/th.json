@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "บันทึกการตั้งค่าแล้ว",
     "File" : "ไฟล์",
-    "Delete" : "ลบ",
-    "Settings saved" : "บันทึกการตั้งค่าแล้ว"
+    "Delete" : "ลบ"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

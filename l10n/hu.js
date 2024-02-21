@@ -1,14 +1,6 @@
 OC.L10N.register(
     "duplicatefinder",
     {
-    "File" : "Fájl",
-    "Hash:" : "Ujjlenyomat:",
-    "Path:" : "Útvonal:",
-    "Delete" : "Törlés",
-    "No duplicates found or no duplicate selected." : "Nem található duplikáció vagy nincs duplikáció kijelölve.",
-    "Could not fetch duplicates" : "Nem sikerült a duplikációk lekérése",
-    "Duplicate deleted" : "Duplikáció törlése",
-    "Could not delete the duplicate at path: ${item.path}" : "Nem lehetséges a duplikáció törlése itt: ${item.path}",
     "Ignore Mounted Files" : "Felcsatolt fájlok figyelmen kívül hagyása",
     "When true, files mounted on external storage will be ignored." : "Ha igaz, a külső tárolókon lévő fájlok kihagyásra kerülnek.",
     "Ignore mounted file" : "Felcsatolt fájl figyelmen kívül hagyása",
@@ -21,6 +13,10 @@ OC.L10N.register(
     "The interval in seconds for the find duplicates background job." : "A duplikációkeresés háttérfeladat intervalluma másodpercben.",
     "Could not fetch settings" : "Nem sikerült lekérni a beállításokat",
     "Settings saved" : "Beállítások mentve",
-    "Could not save settings" : "Nem sikerült elmenteni a beállításokat"
+    "Could not save settings" : "Nem sikerült elmenteni a beállításokat",
+    "No duplicates found or no duplicate selected." : "Nem található duplikáció vagy nincs duplikáció kijelölve.",
+    "File" : "Fájl",
+    "Path:" : "Útvonal:",
+    "Delete" : "Törlés"
 },
 "nplurals=2; plural=(n != 1);");

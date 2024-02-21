@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "Instellingen opgeslagen",
     "File" : "Bestand",
-    "Delete" : "Verwijder",
-    "Settings saved" : "Instellingen opgeslagen"
+    "Delete" : "Verwijder"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

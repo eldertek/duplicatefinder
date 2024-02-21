@@ -1,14 +1,5 @@
 { "translations": {
     "Duplicate Finder" : "Găsitor de duplicat",
-    "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Bun venit, duplicatul actual are {numberOfFiles} fișiere, dimensiune totală: {formattedSize}",
-    "File" : "Fișier",
-    "Hash:" : "Hash:",
-    "Path:" : "Cale:",
-    "Delete" : "Șterge",
-    "No duplicates found or no duplicate selected." : "Nu s-au găsit duplicate sau nu au fost selectate duplicate.",
-    "Could not fetch duplicates" : "Nu s-au putut prelua duplicate",
-    "Duplicate deleted" : "Duplicat șters",
-    "Could not delete the duplicate at path: ${item.path}" : "Nu s-a putut șterge duplicatul de la calea: ${item.path}",
     "Duplicate Finder Settings" : "Setările găsitorului de duplicat",
     "All general settings to modify Duplicate Finder behaviors." : "Toate setările generale de modificare a comportamentelor găsitorului de duplicat.",
     "Ignore Mounted Files" : "Ignorați fișierele montate",
@@ -23,6 +14,11 @@
     "The interval in seconds for the find duplicates background job." : "Intervalul în secunde pentru procesul din fundal de găsire a duplicatelor.",
     "Could not fetch settings" : "Nu s-au putut prelua setările",
     "Settings saved" : "Setările au fost salvate",
-    "Could not save settings" : "Nu s-au putut salva setările"
+    "Could not save settings" : "Nu s-au putut salva setările",
+    "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Bun venit, duplicatul actual are {numberOfFiles} fișiere, dimensiune totală: {formattedSize}",
+    "No duplicates found or no duplicate selected." : "Nu s-au găsit duplicate sau nu au fost selectate duplicate.",
+    "File" : "Fișier",
+    "Path:" : "Cale:",
+    "Delete" : "Șterge"
 },"pluralForm" :"nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));"
 }

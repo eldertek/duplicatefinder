@@ -1,8 +1,8 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "Settings saved" : "Instellings gestoor",
     "File" : "Lêer",
-    "Delete" : "Skrap",
-    "Settings saved" : "Instellings gestoor"
+    "Delete" : "Skrap"
 },
 "nplurals=2; plural=(n != 1);");

@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "Opsjonet u Ruajtën.",
     "File" : "Skedar ",
-    "Delete" : "Fshi",
-    "Settings saved" : "Opsjonet u Ruajtën."
+    "Delete" : "Fshi"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

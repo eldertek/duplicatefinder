@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "Οι ρυθμίσεις αποθηκεύτηκαν",
     "File" : "Αρχείο",
-    "Delete" : "Διαγραφή",
-    "Settings saved" : "Οι ρυθμίσεις αποθηκεύτηκαν"
+    "Delete" : "Διαγραφή"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "Настройките са запазени",
     "File" : "Файл",
-    "Delete" : "Изтриване",
-    "Settings saved" : "Настройките са запазени"
+    "Delete" : "Изтриване"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

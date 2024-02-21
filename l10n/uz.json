@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "Settings saved",
     "File" : "File",
-    "Delete" : "Delete",
-    "Settings saved" : "Settings saved"
+    "Delete" : "Delete"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "Instellings gestoor",
     "File" : "Lêer",
-    "Delete" : "Skrap",
-    "Settings saved" : "Instellings gestoor"
+    "Delete" : "Skrap"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

@@ -1,6 +1,6 @@
 { "translations": {
+    "Settings saved" : "Indstillinger gemt",
     "File" : "Fil",
-    "Delete" : "Slet",
-    "Settings saved" : "Indstillinger gemt"
+    "Delete" : "Slet"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }
