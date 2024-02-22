@@ -32,6 +32,14 @@
     "File" : "Fil",
     "Path:" : "Sti:",
     "Delete" : "Slett",
-    "Duplicate acknowledged successfully" : "Duplikat er godkjent"
+    "Unacknowledged" : "Ikke anerkjent",
+    "Acknowledged" : "Anerkjent",
+    "Duplicate acknowledged successfully" : "Duplikat er godkjent",
+    "Error acknowledging duplicate." : "Feil ved anerkjennelse av duplikat.",
+    "Duplicate unacknowledged successfully." : "Duplikat ikke anerkjent",
+    "Error unacknowledging duplicate." : "Feil ved ikke anerkjennelse av duplikat.",
+    "File deleted successfully." : "Fil slettet.",
+    "Error deleting file." : "Feil ved sletting av fil.",
+    "The viewer is not available" : "Fremviseren er ikke tilgjengelig"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

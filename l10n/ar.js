@@ -34,6 +34,14 @@ OC.L10N.register(
     "File" : "ملف",
     "Path:" : "المسار Pathـ :",
     "Delete" : "حذف",
-    "Duplicate acknowledged successfully" : "تمّ الاعتراف بالتكرار بنجاح"
+    "Unacknowledged" : "غير مُعتَرَفٍ به",
+    "Acknowledged" : "مُعتَرَفٌ به",
+    "Duplicate acknowledged successfully" : "تمّ بنجاحٍ الاعتراف بالتكرار ",
+    "Error acknowledging duplicate." : "خطأ عند الاعتراف بالتكرار.",
+    "Duplicate unacknowledged successfully." : "تمّ بنجاحٍ نفي الاعتراف بالتكرار ",
+    "Error unacknowledging duplicate." : "خطأ عند الاعتراف بالتكرارات",
+    "File deleted successfully." : "تمّ حذف الملف بنجاح",
+    "Error deleting file." : "خطأ في حذف الملف.",
+    "The viewer is not available" : "عارض الملف غير موجود"
 },
 "nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;");

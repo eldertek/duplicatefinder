@@ -34,6 +34,14 @@ OC.L10N.register(
     "File" : "Фајл",
     "Path:" : "Путања:",
     "Delete" : "Избриши",
-    "Duplicate acknowledged successfully" : "Дупликат је успешно потврђен"
+    "Unacknowledged" : "Непотврђено",
+    "Acknowledged" : "Потврђено",
+    "Duplicate acknowledged successfully" : "Дупликат је успешно потврђен",
+    "Error acknowledging duplicate." : "Грешка приликом потврђивања дупликата.",
+    "Duplicate unacknowledged successfully." : "Дупликат је успешно непотврђен.",
+    "Error unacknowledging duplicate." : "Грешка приликом непотврђивања дупликата.",
+    "File deleted successfully." : "Фајл успешно обрисан.",
+    "Error deleting file." : "Грешка приликом брисања фајла.",
+    "The viewer is not available" : "Приказивач није доступан"
 },
 "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);");
