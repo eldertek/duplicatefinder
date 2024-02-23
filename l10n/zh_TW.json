@@ -32,6 +32,14 @@
     "File" : "檔案",
     "Path:" : "路徑：",
     "Delete" : "刪除",
-    "Duplicate acknowledged successfully" : "重複項目已成功確認"
+    "Unacknowledged" : "未確認",
+    "Acknowledged" : "確認",
+    "Duplicate acknowledged successfully" : "重複項目已成功確認",
+    "Error acknowledging duplicate." : "確認重複項目時發生錯誤。",
+    "Duplicate unacknowledged successfully." : "重複項目已成功取消確認。",
+    "Error unacknowledging duplicate." : "取消確認重複項目時發生錯誤。",
+    "File deleted successfully." : "檔案成功刪除。",
+    "Error deleting file." : "刪除檔案時發生錯誤。",
+    "The viewer is not available" : "檢視程式不可用"
 },"pluralForm" :"nplurals=1; plural=0;"
 }
