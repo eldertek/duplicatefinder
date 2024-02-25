@@ -1,7 +1,7 @@
 OC.L10N.register(
     "duplicatefinder",
     {
-    "Settings saved" : "Impostatziones sarvadas",
+    "Settings saved" : "Cunfiguratzione sarvada",
     "File" : "Archìviu",
     "Delete" : "Cantzella"
 },
