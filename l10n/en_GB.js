@@ -34,6 +34,14 @@ OC.L10N.register(
     "File" : "File",
     "Path:" : "Path:",
     "Delete" : "Delete",
-    "Duplicate acknowledged successfully" : "Duplicate acknowledged successfully"
+    "Unacknowledged" : "Unacknowledged",
+    "Acknowledged" : "Acknowledged",
+    "Duplicate acknowledged successfully" : "Duplicate acknowledged successfully",
+    "Error acknowledging duplicate." : "Error acknowledging duplicate.",
+    "Duplicate unacknowledged successfully." : "Duplicate unacknowledged successfully.",
+    "Error unacknowledging duplicate." : "Error unacknowledging duplicate.",
+    "File deleted successfully." : "File deleted successfully.",
+    "Error deleting file." : "Error deleting file.",
+    "The viewer is not available" : "The viewer is not available"
 },
 "nplurals=2; plural=(n != 1);");
