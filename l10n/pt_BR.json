@@ -32,6 +32,14 @@
     "File" : "Arquivo",
     "Path:" : "Caminho:",
     "Delete" : "Excluir",
-    "Duplicate acknowledged successfully" : "Duplicado reconhecido com sucesso"
+    "Unacknowledged" : "Não reconhecido",
+    "Acknowledged" : "Reconhecido",
+    "Duplicate acknowledged successfully" : "Duplicado reconhecido com sucesso",
+    "Error acknowledging duplicate." : "Reconhecido",
+    "Duplicate unacknowledged successfully." : "Duplicado não reconhecido com sucesso.",
+    "Error unacknowledging duplicate." : "Erro ao cancelar o reconhecimento da duplicata.",
+    "File deleted successfully." : "Arquivo excluído com sucesso.",
+    "Error deleting file." : "Erro ao excluir arquivo.",
+    "The viewer is not available" : "O visualizador não está disponível"
 },"pluralForm" :"nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
 }
