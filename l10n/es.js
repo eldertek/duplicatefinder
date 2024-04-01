@@ -34,6 +34,14 @@ OC.L10N.register(
     "File" : "Archivo",
     "Path:" : "Ruta:",
     "Delete" : "Eliminar",
-    "Duplicate acknowledged successfully" : "El duplicado fue reconocido exitosamente"
+    "Unacknowledged" : "No reconocido",
+    "Acknowledged" : "Reconocido",
+    "Duplicate acknowledged successfully" : "El duplicado fue reconocido exitosamente",
+    "Error acknowledging duplicate." : "Error al reconocer el duplicado.",
+    "Duplicate unacknowledged successfully." : "El duplicado ha sido marcado como no reconocido exitosamente.",
+    "Error unacknowledging duplicate." : "Error al marcar como no reconocido el duplicado.",
+    "File deleted successfully." : "Archivo eliminado exitosamente.",
+    "Error deleting file." : "Error al eliminar archivo.",
+    "The viewer is not available" : "El visor no está disponible"
 },
 "nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");
