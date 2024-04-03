@@ -34,6 +34,14 @@ OC.L10N.register(
     "File" : "Dosya",
     "Path:" : "Yol:",
     "Delete" : "Sil",
-    "Duplicate acknowledged successfully" : "Çift olduğu onaylandı"
+    "Unacknowledged" : "Onayı kaldırılmış",
+    "Acknowledged" : "Onaylanmış",
+    "Duplicate acknowledged successfully" : "Çift olduğu onaylandı",
+    "Error acknowledging duplicate." : "Çift onaylanırken sorun çıktı.",
+    "Duplicate unacknowledged successfully." : "Çift onayı kaldırıldı.",
+    "Error unacknowledging duplicate." : "Çift onayı kaldırılırken sorun çıktı.",
+    "File deleted successfully." : "Dosya silindi",
+    "Error deleting file." : "Dosya silinirken sorun çıktı.",
+    "The viewer is not available" : "Görüntüleyici kullanılamıyor"
 },
 "nplurals=2; plural=(n > 1);");
