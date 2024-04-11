@@ -37,11 +37,11 @@ OC.L10N.register(
     "Unacknowledged" : "Nicht bestätigt",
     "Acknowledged" : "Bestätigt",
     "Duplicate acknowledged successfully" : "Duplikat erfolgreich bestätigt",
-    "Error acknowledging duplicate." : "Fehler bei der Bestätigung des Duplikats",
+    "Error acknowledging duplicate." : "Fehler bei der Bestätigung des Duplikats.",
     "Duplicate unacknowledged successfully." : "Bestätigung des Duplikats erfolgreich aufgehoben",
     "Error unacknowledging duplicate." : "Fehler bei der Aufhebung der Bestätigung des Duplikats",
     "File deleted successfully." : "Datei erfolgreich gelöscht.",
     "Error deleting file." : "Fehler beim Löschen der Datei.",
-    "The viewer is not available" : "Der Viewer ist nicht verfügbar"
+    "The viewer is not available" : "Der Betrachter ist nicht verfügbar"
 },
 "nplurals=2; plural=(n != 1);");
