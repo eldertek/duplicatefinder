@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Buscador de duplicaos",
     "Duplicate Finder Settings" : "Configuración del buscador de duplicaos",
+    "All general settings to modify Duplicate Finder behaviors." : "Toles opciones xenerales pa modificar el comportamientu del buscador de duplicaos",
     "Ignore Mounted Files" : "Inorar los ficheros montaos",
     "Ignore mounted file" : "Inorar el ficheru montáu",
     "Disable Filesystem Events" : "Desactivar los eventos del sistema de ficheros",
@@ -17,6 +18,8 @@ OC.L10N.register(
     "All duplicates cleared" : "Borráronse tolos duplicaos",
     "Could not clear duplicates" : "Nun se pudieron borrar los duplicaos",
     "All duplicates found" : "Atopáronse tolos duplicaos",
+    "Could not initiate duplicate search" : "Nun se pudo aniciar la busca de duplicaos",
+    "Show Preview" : "Amosar la previsualización",
     "File" : "Ficheru",
     "Path:" : "Camín:",
     "Delete" : "Desaniciar",
