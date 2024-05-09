@@ -8,6 +8,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IDBConnection;
 use OCP\IUserManager;
+use OCP\IUser;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
 
