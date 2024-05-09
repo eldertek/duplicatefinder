@@ -57,8 +57,8 @@ ifeq ($(detected_OS),Windows)
 	xcopy "$(CURDIR)\\*" "$(sign_dir)\\$(app_name)" /E /H /C /I /Q /Y
 	cd "$(sign_dir)" && tar -czf "$(build_dir)\\$(app_name).tar.gz" "$(app_name)"
 else
-	[ -d "$(source_build_directory)" ] && rm -rf "$(source_build_directory)"
+	rm -rf "$(source_build_directory)"
 	mkdir -p "$(sign_dir)"
-	cp -r "$(CURDIR)"/* "$(sign_dir)/$(app_name)" $(EXCLUDES)
-	cd "$(sign_dir)" && tar -czf "$(build_dir)/$(app_name).tar.gz" "$(app_name)"
+	rsync -a $(EXCLUDES) $(CURDIR)/  $(sign_dir)/$(app_name)
+	tar -czf $(build_dir)/$(app_name).tar.gz -C $(sign_dir) $(app_name)
 endif
