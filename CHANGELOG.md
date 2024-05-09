@@ -1,3 +1,7 @@
+## 1.1.9 - 2024-05-09
+### Fixed
+- Fix [#57](https://github.com/eldertek/duplicatefinder/issues/57)
+
 ## 1.1.8 - 2024-02-21
 ### Fixed
 - Fix [#52](https://github.com/eldertek/duplicatefinder/issues/52)

@@ -1,10 +1,8 @@
-app_name=$(notdir $(CURDIR))
-source_build_directory=$(CURDIR)/build/artifacts/source
-build_dir=$(CURDIR)/build/artifacts
-sign_dir=$(source_build_directory)/sign
-npm=$(shell which npm 2> /dev/null)
-composer=$(shell which composer 2> /dev/null)
-EXCLUDES=--exclude="/.git" \
+app_name := $(notdir $(CURDIR))
+source_build_directory := $(CURDIR)/build/artifacts/source
+build_dir := $(CURDIR)/build/artifacts
+sign_dir := $(source_build_directory)/sign
+EXCLUDES := --exclude="/.git" \
 	--exclude="/build" \
 	--exclude="Makefile" \
 	--exclude="/*.log" \
@@ -24,25 +22,20 @@ all: build
 # Installs npm dependencies and builds the app
 .PHONY: build
 build:
-ifeq ($(composer),)
-	$(error "composer is not installed. Please install composer to proceed.")
-endif
 	composer install
-ifeq ($(npm),)
-	$(error "npm is not installed. Please install npm to proceed.")
-endif
 	npm install
 	npm run build
 
 # Removes the build directory
 .PHONY: clean
 clean:
-	rm -rf ./build ./vendor
+	if exist "./build" rd /s /q "./build"
+	if exist "./vendor" rd /s /q "./vendor"
 
 # Builds the source package for the app store
 .PHONY: appstore
 appstore:
-	rm -rf $(source_build_directory)
-	mkdir -p $(sign_dir)
-	rsync -a $(EXCLUDES) $(CURDIR)/  $(sign_dir)/$(app_name)
-	tar -czf $(build_dir)/$(app_name).tar.gz -C $(sign_dir) $(app_name)
+	if exist "$(source_build_directory)" rd /s /q "$(source_build_directory)"
+	mkdir -p "$(sign_dir)"
+	xcopy "$(CURDIR)\*" "$(sign_dir)\$(app_name)" /E /H /C /I /Q /Y
+	cd "$(sign_dir)" && tar -czf "$(build_dir)\$(app_name).tar.gz" "$(app_name)"
