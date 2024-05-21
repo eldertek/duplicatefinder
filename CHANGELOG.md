@@ -1,3 +1,7 @@
+## 1.1.10 - 2024-05-21
+### Added
+- Support for Nextcloud 29
+
 ## 1.1.9 - 2024-05-09
 ### Fixed
 - Fix [#57](https://github.com/eldertek/duplicatefinder/issues/57)
