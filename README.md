@@ -54,7 +54,7 @@ All settings should be modified only through UI. If this doesn't work for you, y
 |---|---|---|---|
 | ignore_mounted_files | boolean | false | When true, files mounted on external storage will be ignored.<br>Computing the hash for an external file may require transferring the whole file to the Nextcloud server.<br>So, this setting can be useful when you need to reduce traffic e.g if you need to pay for the traffic. |
 | disable_filesystem_events | boolean | false | When true, the event-based detection will be disabled.<br>This gives you more control when the hashes are generated. |
-| backgroundjob_interval_cleanup | integer | 432000 | Interval in seconds in which the clean-up background job will be run |
+| backgroundjob_interval_cleanup | integer | 86400 | Interval in seconds in which the clean-up background job will be run |
 | backgroundjob_interval_find | integer | 172800 | Interval in seconds in which the background job, to find duplicates, will be run |
 
 ## Preview
