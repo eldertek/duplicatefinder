@@ -71,7 +71,7 @@ class FileInfoService
             }
         } catch (\Exception $e) {
             // Log exception details
-            $this->logger->error("Error enriching FileInfo: " . $e->getMessage());
+            $this->logger->error("Error enriching FileInfo: " . $e->getMessage(), ['exception' => $e]);
         }
         return $fileInfo;
     }
