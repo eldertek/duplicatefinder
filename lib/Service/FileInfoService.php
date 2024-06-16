@@ -70,8 +70,13 @@ class FileInfoService
                 $this->logger->error("No node found for file info ID: " . $fileInfo->getId());
             }
         } catch (\Exception $e) {
-            // Log exception details
-            $this->logger->error("Error enriching FileInfo: " . $e->getMessage(), ['exception' => $e]);
+            // If node is not found, ignore the exception
+            if ($e instanceof NotFoundException) {
+                $this->logger->error("Node not found for file info ID: " . $fileInfo->getId());
+            } else {
+                // Log exception details
+                $this->logger->error("Error enriching FileInfo: " . $e->getMessage(), ['exception' => $e]);
+            }
         }
         return $fileInfo;
     }
