@@ -34,6 +34,8 @@ OC.L10N.register(
     "File" : "Ficheiro",
     "Path:" : "Ruta:",
     "Delete" : "Eliminar",
-    "Duplicate acknowledged successfully" : "Recoñeceuse correctamente o duplicado"
+    "Duplicate acknowledged successfully" : "Recoñeceuse correctamente o duplicado",
+    "Error deleting file." : "Produciuse un erro ao eliminar o ficheiro.",
+    "The viewer is not available" : "O visor non está dispoñíbel"
 },
 "nplurals=2; plural=(n != 1);");
