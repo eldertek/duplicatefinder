@@ -60,11 +60,17 @@ class ScannerUtil
         if (!$isShared) {
             $this->showOutput('Start searching files for '.$user.' in path '.$path);
         }
-        $scanner = $this->initializeScanner($user, $isShared);
-        $scanner->scan($path, true);
-        if (!$isShared) {
-            $this->scanSharedFiles($user, $path);
-            $this->showOutput('Finished searching files');
+        try {
+            $scanner = $this->initializeScanner($user, $isShared);
+            $scanner->scan($path, true);
+            if (!$isShared) {
+                $this->scanSharedFiles($user, $path);
+                $this->showOutput('Finished searching files');
+            }
+        } catch (\Exception $e) {
+            $errorMessage = 'An error occurred during scanning: ' . $e->getMessage();
+            $this->logger->error($errorMessage, ['app' => Application::ID, 'exception' => $e]);
+            $this->showOutput('<error>' . $errorMessage . '</error>');
         }
     }
 
