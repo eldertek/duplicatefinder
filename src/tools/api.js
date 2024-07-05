@@ -76,3 +76,21 @@ export const deleteFile = async (file) => {
         showErrorNotification(t('duplicatefinder', 'Error deleting file.'));
     }
 };
+
+/**
+ * Deletes multiple files.
+ * @param {Array} files The files to delete.
+ * @returns {Promise<void>}
+ */
+export const deleteFiles = async (files) => {
+    try {
+        for (const file of files) {
+            await deleteFile(file);
+        }
+        showSuccessNotification(t('duplicatefinder', 'Selected files deleted successfully.'));
+    } catch (error) {
+        console.error('Error deleting selected files:', error);
+        showErrorNotification(t('duplicatefinder', 'Error deleting selected files.'));
+        throw error;
+    }
+};

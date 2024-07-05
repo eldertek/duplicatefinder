@@ -1,3 +1,12 @@
+## 1.1.11 - 2024-07-05
+### Added
+- Multi-select feature for duplicates
+- "Delete Selected" button to remove multiple duplicates at once
+- Search and filter functionality for duplicates by file path or name
+
+### Fixed
+- Improved error handling for batch deletion of duplicates
+
 ## 1.1.10 - 2024-05-21
 ### Added
 - Support for Nextcloud 29

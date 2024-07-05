@@ -25,6 +25,12 @@ Normally the detection methods should be used in the order as listed, but if you
 ## Ignoring Duplicates
 To prevent a folder from being scanned for duplicates, place a `.nodupefinder` file inside it. Any files in this folder will be excluded from the duplicate detection process.
 
+## Search and Filter Duplicates
+You can search and filter duplicates by file path or name using the search input at the top of the "Unacknowledged" and "Acknowledged" sections. 
+
+- To include files containing a specific term, simply type the term (e.g., `.png` to show all PNG files).
+- To exclude files containing a specific term, prefix the term with an exclamation mark (e.g., `!.ptx` to exclude all PTX files).
+
 ## Command usage
 
   `occ [-v] duplicates:ACTION [options]`

@@ -14,8 +14,10 @@
       <a v-else class="acknowledge-link" @click="unOrAcknowledgeDuplicate(duplicate)" href="#">
         {{ t('duplicatefinder', 'Acknowledge it') }}
       </a>
+      <button @click="deleteSelectedDuplicates">{{ t('duplicatefinder', 'Delete Selected') }}</button>
     </div>
     <div v-for="(file, index) in duplicate.files" :key="file.id" class="file-display">
+      <input type="checkbox" v-model="selectedFiles" :value="file" />
       <DuplicateFileDisplay :file="file" :index="index" @fileDeleted="removeFileFromListAndUpdate(file)">
       </DuplicateFileDisplay>
     </div>
@@ -29,7 +31,7 @@
 </template>
 
 <script>
-import { acknowledgeDuplicate, unacknowledgeDuplicate } from '@/tools/api';
+import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles } from '@/tools/api';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList } from '@/tools/utils';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -39,6 +41,11 @@ export default {
   },
   props: {
     duplicate: Object
+  },
+  data() {
+    return {
+      selectedFiles: []
+    };
   },
   methods: {
     unOrAcknowledgeDuplicate(duplicate) {
@@ -62,6 +69,17 @@ export default {
         this.$emit('lastFileDeleted', this.duplicate);
       }
     },
+    async deleteSelectedDuplicates() {
+      try {
+        await deleteFiles(this.selectedFiles);
+        this.selectedFiles.forEach(file => {
+          this.removeFileFromListAndUpdate(file);
+        });
+        this.selectedFiles = [];
+      } catch (error) {
+        console.error('Error deleting selected files:', error);
+      }
+    }
   }
 }
 </script>

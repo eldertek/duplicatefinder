@@ -18,8 +18,11 @@ RUN apt-get update && apt-get install -y \
     php-bcmath \
     php-gmp \
     wget \
+    make \
     unzip \
     git \
+    composer \
+    npm \
     && apt-get clean
 
 # Supprimer les fichiers de configuration Apache par défaut
