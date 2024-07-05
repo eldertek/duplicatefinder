@@ -1,0 +1,24 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+	"name": "Nextcloud 29 Dev Container",
+	// Use a Dockerfile to set up the container
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [80],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "service apache2 start && service mariadb start && cd /var/www/nextcloud && sudo -u www-data php occ app:enable duplicatefinder",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"bmewburn.vscode-intelephense-client"
+			]
+		}
+	}
+}
