@@ -1,6 +1,7 @@
 ## 1.2.0 - 2024-07-09
 ### Fixed
 - File locking when interupting the scan
+- Fix an issue where the same duplicate was displayed multiple times
 
 ## 1.1.11 - 2024-07-05
 ### Added
