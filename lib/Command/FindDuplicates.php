@@ -11,6 +11,8 @@ use OCP\Files\NotFoundException;
 use OCP\IDBConnection;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -111,6 +113,12 @@ class FindDuplicates extends Command
         $users = (array)$input->getOption('user');
         $paths = (array)$input->getOption('path');
 
+        // Set up signal handler for SIGINT (Ctrl+C)
+        pcntl_signal(SIGINT, function () {
+            $this->output->writeln("\n<comment>Scan aborted by user.</comment>");
+            exit(1);
+        });
+
         return (!empty($users)) ? $this->findDuplicatesForUsers($users, $paths) : $this->findAllDuplicates($paths);
     }
 
@@ -164,7 +172,8 @@ class FindDuplicates extends Command
     private function findDuplicates(string $user, array $paths): void
     {
         $callback = function () {
-            // Handle interruption if needed
+            pcntl_signal_dispatch();
+            return false; // Continue scanning
         };
 
         if (empty($paths)) {

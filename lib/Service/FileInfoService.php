@@ -7,6 +7,10 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
 use Symfony\Component\Console\Output\OutputInterface;
+use OCP\Lock\ILockingProvider;
+use OCP\Files\Storage\IStorage;
+use OCP\Files\IRootFolder;
+use OCP\IDBConnection;
 
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\FileInfo;
@@ -35,6 +39,9 @@ class FileInfoService
     private $scannerUtil;
     /** @var FilterService */
     private $filterService;
+    private $lockingProvider;
+    private $rootFolder;
+    private $connection;
 
     public function __construct(
         FileInfoMapper $mapper,
@@ -43,7 +50,10 @@ class FileInfoService
         ShareService $shareService,
         FilterService $filterService,
         FolderService $folderService,
-        ScannerUtil $scannerUtil
+        ScannerUtil $scannerUtil,
+        ILockingProvider $lockingProvider,
+        IRootFolder $rootFolder,
+        IDBConnection $connection
     ) {
         $this->mapper = $mapper;
         $this->eventDispatcher = $eventDispatcher;
@@ -52,6 +62,9 @@ class FileInfoService
         $this->filterService = $filterService;
         $this->folderService = $folderService;
         $this->scannerUtil = $scannerUtil;
+        $this->lockingProvider = $lockingProvider;
+        $this->rootFolder = $rootFolder;
+        $this->connection = $connection;
     }
 
     /**
@@ -269,6 +282,8 @@ class FileInfoService
         try {
             $this->scannerUtil->setHandles($this, $output, $abortIfInterrupted);
             $this->scannerUtil->scan($user, $scanPath);
+        } catch (\OCP\Lock\LockedException $e) {
+            $this->handleLockedFile($e->getPath(), $output);
         } catch (NotFoundException $e) {
             $this->logger->error('The given scan path doesn\'t exists.', ['app' => Application::ID, 'exception' => $e]);
             CMDUtils::showIfOutputIsPresent(
@@ -284,26 +299,86 @@ class FileInfoService
         }
     }
 
-    public function hasAccessRight(FileInfo $fileInfo, string $user): ?FileInfo
+    private function handleLockedFile(string $path, ?OutputInterface $output): void
     {
-        $result = null;
-        if ($fileInfo->getOwner() === $user) {
-            $result = $fileInfo;
-        } else {
-            try {
-                $path = $this->shareService->hasAccessRight(
-                    $this->folderService->getNodeByFileInfo($fileInfo, $user),
-                    $user
+        try {
+            // Get the file node
+            $node = $this->rootFolder->get($path);
+            $storage = $node->getStorage();
+
+            if ($storage instanceof IStorage) {
+                // Try to release the lock at the storage level
+                $storage->unlockFile($path, ILockingProvider::LOCK_SHARED);
+                CMDUtils::showIfOutputIsPresent(
+                    "Released storage-level lock for file: $path",
+                    $output
                 );
-                if (!is_null($path)) {
-                    $fileInfo->setPath($path);
-                    $result = $fileInfo;
-                }
-            } catch (NotFoundException $e) {
-                $result = null;
             }
+
+            // Try to release the lock at the application level
+            $this->lockingProvider->releaseAll($path, ILockingProvider::LOCK_SHARED);
+            CMDUtils::showIfOutputIsPresent(
+                "Released application-level lock for file: $path",
+                $output
+            );
+
+            // Check if the file is still locked
+            if ($this->lockingProvider->isLocked($path, ILockingProvider::LOCK_SHARED)) {
+                CMDUtils::showIfOutputIsPresent(
+                    "<error>File is still locked after release attempt: $path</error>",
+                    $output
+                );
+                // Call the method to disable all locks
+                $this->disableAllLocks($output);
+            } else {
+                CMDUtils::showIfOutputIsPresent(
+                    "<info>Successfully released all locks for file: $path</info>",
+                    $output
+                );
+            }
+        } catch (\Exception $e) {
+            CMDUtils::showIfOutputIsPresent(
+                "<error>Failed to release lock for file: $path - " . $e->getMessage() . "</error>",
+                $output
+            );
+            $this->logger->error("Failed to release lock for file: $path", ['exception' => $e]);
+            // Call the method to disable all locks
+            $this->disableAllLocks($output);
+        }
+    }
+
+    private function disableAllLocks(?OutputInterface $output): void
+    {
+        try {
+            $query = $this->connection->prepare('DELETE FROM oc_file_locks WHERE true');
+            $query->execute();
+            CMDUtils::showIfOutputIsPresent(
+                "<info>All locks have been disabled by emptying the oc_file_locks table.</info>",
+                $output
+            );
+        } catch (\Exception $e) {
+            CMDUtils::showIfOutputIsPresent(
+                "<error>Failed to disable all locks: " . $e->getMessage() . "</error>",
+                $output
+            );
+            $this->logger->error("Failed to disable all locks", ['exception' => $e]);
+        }
+    }
+
+    public function hasAccessRight(FileInfo $fileInfo, string $user): bool
+    {
+        if ($fileInfo->getOwner() === $user) {
+            return true;
         }
 
-        return $result;
+        try {
+            $path = $this->shareService->hasAccessRight(
+                $this->folderService->getNodeByFileInfo($fileInfo, $user),
+                $user
+            );
+            return !is_null($path);
+        } catch (NotFoundException $e) {
+            return false;
+        }
     }
 }

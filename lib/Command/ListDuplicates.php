@@ -128,8 +128,11 @@ namespace OCA\DuplicateFinder\Command;
       */
      private function listAllDuplicates(): int
      {
-         CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function() {});
+         // Assuming you want to list duplicates for all users, you might need to iterate over all users
+         $users = $this->userManager->search('');
+         foreach ($users as $user) {
+             CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function() {}, $user->getUID());
+         }
          return 0;
      }
  }
- 

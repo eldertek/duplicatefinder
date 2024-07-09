@@ -82,7 +82,9 @@ class FileDuplicateService
             $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy);
 
             foreach ($entities as $entity) {
-                $entity = $this->stripFilesWithoutAccessRights($entity, $user);
+                if ($user !== null) {
+                    $entity = $this->stripFilesWithoutAccessRights($entity, $user);
+                }
                 if ($enrich) {
                     $entity = $this->enrich($entity);
                 }
@@ -112,22 +114,18 @@ class FileDuplicateService
 
     private function stripFilesWithoutAccessRights(
         FileDuplicate $duplicate,
-        ?string $user
+        string $user
     ): FileDuplicate {
         $files = $this->fileInfoService->findByHash($duplicate->getHash(), $duplicate->getType());
-        $duplicate->setFiles($files);
-        if (is_null($user)) {
-            return $duplicate;
-        }
-        foreach ($duplicate->getFiles() as $fileId => $fileInfo) {
-            if (is_string($fileInfo)) {
-                continue;
-            }
-            if (!$this->fileInfoService->hasAccessRight($fileInfo, $user)) {
-                $duplicate->removeDuplicate($fileId);
+        $accessibleFiles = [];
+
+        foreach ($files as $fileInfo) {
+            if ($this->fileInfoService->hasAccessRight($fileInfo, $user)) {
+                $accessibleFiles[] = $fileInfo;
             }
         }
-        unset($fileInfo);
+
+        $duplicate->setFiles($accessibleFiles);
         return $duplicate;
     }
 

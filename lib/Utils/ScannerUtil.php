@@ -7,6 +7,7 @@ use OC\Files\Utils\Scanner;
 use OCP\IDBConnection;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\NotFoundException;
+use OCP\Lock\LockedException;
 
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
@@ -67,6 +68,9 @@ class ScannerUtil
                 $this->scanSharedFiles($user, $path);
                 $this->showOutput('Finished searching files');
             }
+        } catch (LockedException $e) {
+            $this->showOutput('<error>File locked, attempting to release: ' . $e->getPath() . '</error>');
+            throw $e; // Rethrow to be handled in FileInfoService
         } catch (\Exception $e) {
             $errorMessage = 'An error occurred during scanning: ' . $e->getMessage();
             $this->logger->error($errorMessage, ['app' => Application::ID, 'exception' => $e]);
@@ -106,7 +110,9 @@ class ScannerUtil
         }
         if ($this->abortIfInterrupted) {
             $abort = $this->abortIfInterrupted;
-            $abort();
+            if ($abort()) {
+                throw new \Exception('Scan aborted by user');
+            }
         }
     }
 
