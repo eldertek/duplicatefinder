@@ -1,7 +1,7 @@
 {
   "name": "duplicatefinder",
   "description": "Save some space by finding your duplicate files",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "author": "André Théo LAURET <andrelauret@eclipse-technology.eu>",
   "contributors": [],
   "bugs": {
@@ -27,12 +27,12 @@
     "npm": "^9.0.0"
   },
   "devDependencies": {
-    "@nextcloud/axios": "^2.4.0",
-    "@nextcloud/babel-config": "^1.0.0",
-    "@nextcloud/browserslist-config": "^3.0.0",
-    "@nextcloud/dialogs": "^5.0.0",
-    "@nextcloud/router": "^3.0.0",
-    "@nextcloud/vue": "^8.6.2",
+    "@nextcloud/axios": "^2.5.0",
+    "@nextcloud/babel-config": "^1.2.0",
+    "@nextcloud/browserslist-config": "^3.0.1",
+    "@nextcloud/dialogs": "^5.3.5",
+    "@nextcloud/router": "^3.0.1",
+    "@nextcloud/vue": "^8.14.0",
     "@nextcloud/webpack-vue-config": "^6.0.1",
     "vue-material-design-icons": "^5.3.0"
   }

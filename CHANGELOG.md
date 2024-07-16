@@ -1,3 +1,11 @@
+## 1.2.3 - 2024-07-16
+### Added
+- Parallel processing of duplicates
+
+## 1.2.2 - 2024-07-16
+### Added
+- Select all files in duplicate
+
 ## 1.2.1 - 2024-07-16
 ### Fixed
 - Line endings from CRLF to LF

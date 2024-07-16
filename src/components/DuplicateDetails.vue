@@ -15,6 +15,8 @@
         {{ t('duplicatefinder', 'Acknowledge it') }}
       </a>
       <button @click="deleteSelectedDuplicates">{{ t('duplicatefinder', 'Delete Selected') }}</button>
+      <!-- New Select All Button -->
+      <button @click="selectAllFiles">{{ t('duplicatefinder', 'Select All') }}</button>
     </div>
     <div v-for="(file, index) in duplicate.files" :key="file.id" class="file-display">
       <input type="checkbox" v-model="selectedFiles" :value="file" />
@@ -32,7 +34,7 @@
 
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles } from '@/tools/api';
-import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList } from '@/tools/utils';
+import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList } from '@/tools/utils';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
 export default {
@@ -71,14 +73,17 @@ export default {
     },
     async deleteSelectedDuplicates() {
       try {
-        await deleteFiles(this.selectedFiles);
-        this.selectedFiles.forEach(file => {
-          this.removeFileFromListAndUpdate(file);
-        });
+        // Perform deletions in parallel
+        await Promise.all(this.selectedFiles.map(file => deleteFiles([file])));
+        removeFilesFromList(this.selectedFiles, this.duplicate.files);
         this.selectedFiles = [];
       } catch (error) {
         console.error('Error deleting selected files:', error);
       }
+    },
+    // New method to select all files
+    selectAllFiles() {
+      this.selectedFiles = [...this.duplicate.files];
     }
   }
 }

@@ -55,6 +55,21 @@ export function removeFileFromList(file, list) {
     }
 }
 
+/**
+ * Remove multiple files from a list of files.
+ * 
+ * @param {Array} files - The files to remove from the list.
+ * @param {Array} list - The list from which to remove the files.
+ */
+export function removeFilesFromList(files, list) {
+    files.forEach(file => {
+        const index = list.findIndex(f => f.id === file.id);
+        if (index !== -1) {
+            list.splice(index, 1);
+        }
+    });
+}
+
 /** 
  * Remove a duplicate from a list of duplicates
  * 
