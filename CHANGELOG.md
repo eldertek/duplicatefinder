@@ -1,3 +1,7 @@
+## 1.2.1 - 2024-07-16
+### Fixed
+- Line endings from CRLF to LF
+
 ## 1.2.0 - 2024-07-09
 ### Fixed
 - File locking when interupting the scan
