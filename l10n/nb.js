@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Vis forhåndsvisning",
     "Unacknowledge it" : "Ikke erkjenn det",
     "Acknowledge it" : "Erkjenn det",
+    "Select All" : "Velg alle",
     "No duplicates found or no duplicate selected." : "Ingen duplikater funnet eller ingen duplikat valgt.",
     "File" : "Fil",
     "Path:" : "Sti:",

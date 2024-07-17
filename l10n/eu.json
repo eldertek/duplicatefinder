@@ -1,5 +1,6 @@
 { "translations": {
     "Settings saved" : "Ezarpenak gordeta",
+    "Select All" : "Hautatu denak",
     "File" : "Fitxategia",
     "Delete" : "Ezabatu"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"

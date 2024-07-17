@@ -30,6 +30,8 @@ OC.L10N.register(
     "Show Preview" : "顯示預覽",
     "Unacknowledge it" : "不確認它",
     "Acknowledge it" : "承認它",
+    "Delete Selected" : "刪除所選",
+    "Select All" : "全選",
     "No duplicates found or no duplicate selected." : "未找到重複項或未選擇重複項。",
     "File" : "檔案",
     "Path:" : "路徑：",
@@ -42,6 +44,8 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "取消確認重複項目時發生錯誤。",
     "File deleted successfully." : "檔案成功刪除。",
     "Error deleting file." : "刪除檔案時發生錯誤。",
+    "Selected files deleted successfully." : "所選檔案已成功刪除。",
+    "Error deleting selected files." : "刪除所選檔案時發生錯誤。",
     "The viewer is not available" : "檢視程式不可用"
 },
 "nplurals=1; plural=0;");

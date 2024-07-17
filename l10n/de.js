@@ -11,6 +11,7 @@ OC.L10N.register(
     "Settings saved" : "Einstellungen gespeichert",
     "Could not save settings" : "Konnte Einstellungen nicht speichern",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Willkommen. Das aktuelle Duplikat besteht aus {numberOfFiles} Dateien, Gesamtgröße: {formattedSize}",
+    "Select All" : "Alle auswählen",
     "No duplicates found or no duplicate selected." : "Keine Duplikate gefunden oder keine Duplikate ausgewählt.",
     "File" : "Datei",
     "Path:" : "Pfad:",

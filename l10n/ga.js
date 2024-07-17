@@ -30,6 +30,8 @@ OC.L10N.register(
     "Show Preview" : "Taispeáin Réamhamharc",
     "Unacknowledge it" : "Aithnigh é",
     "Acknowledge it" : "Admhaigh é",
+    "Delete Selected" : "Scrios Roghnaithe",
+    "Select All" : "Roghnú go léir",
     "No duplicates found or no duplicate selected." : "Níor aimsíodh aon dúblach nó níor roghnaíodh aon dúblach.",
     "File" : "Comhad",
     "Path:" : "Conair:",
@@ -42,6 +44,8 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Earráid agus an dúblach á aithint.",
     "File deleted successfully." : "Scriosadh an comhad go rathúil.",
     "Error deleting file." : "Earráid agus an comhad á scriosadh.",
+    "Selected files deleted successfully." : "Scriosadh na comhaid roghnaithe go rathúil.",
+    "Error deleting selected files." : "Earráid agus comhaid roghnaithe á scriosadh.",
     "The viewer is not available" : "Níl an breathnóir ar fáil"
 },
 "nplurals=5; plural=(n==1 ? 0 : n==2 ? 1 : n<7 ? 2 : n<11 ? 3 : 4);");

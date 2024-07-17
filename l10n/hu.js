@@ -14,6 +14,7 @@ OC.L10N.register(
     "Could not fetch settings" : "Nem sikerült lekérni a beállításokat",
     "Settings saved" : "Beállítások mentve",
     "Could not save settings" : "Nem sikerült elmenteni a beállításokat",
+    "Select All" : "Összes kiválasztása",
     "No duplicates found or no duplicate selected." : "Nem található duplikáció vagy nincs duplikáció kijelölve.",
     "File" : "Fájl",
     "Path:" : "Útvonal:",

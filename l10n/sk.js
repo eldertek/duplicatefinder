@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Settings saved" : "Nastavenia uložené",
     "Could not save settings" : "Nastavenia sa nepodarilo uložiť",
+    "Select All" : "Vybrať všetko",
     "File" : "Súbor",
     "Delete" : "Vymazať"
 },

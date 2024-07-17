@@ -8,6 +8,7 @@ OC.L10N.register(
     "Settings saved" : "Inställningar sparade",
     "Could not save settings" : "Det gick inte att spara inställningarna",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Välkommen, den aktuella dubbletten har {numberOfFiles} filer, total storlek: {formattedSize}",
+    "Select All" : "Välj Alla",
     "No duplicates found or no duplicate selected." : "Inga dubbletter hittades eller ingen dubblett har valts.",
     "File" : "Fil",
     "Path:" : "Sökväg:",

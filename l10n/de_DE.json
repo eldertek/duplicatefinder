@@ -28,6 +28,8 @@
     "Show Preview" : "Vorschau anzeigen",
     "Unacknowledge it" : "Nicht bestätigen",
     "Acknowledge it" : "Bestätigen",
+    "Delete Selected" : "Ausgewählte löschen",
+    "Select All" : "Alle auswählen",
     "No duplicates found or no duplicate selected." : "Keine Duplikate gefunden oder keine Duplikate ausgewählt.",
     "File" : "Datei",
     "Path:" : "Pfad:",
@@ -40,6 +42,8 @@
     "Error unacknowledging duplicate." : "Fehler bei der Aufhebung der Bestätigung des Duplikats",
     "File deleted successfully." : "Datei erfolgreich gelöscht.",
     "Error deleting file." : "Fehler beim Löschen der Datei.",
+    "Selected files deleted successfully." : "Ausgewählte Dateien erfolgreich gelöscht.",
+    "Error deleting selected files." : "Fehler beim Löschen der ausgewählten Dateien.",
     "The viewer is not available" : "Der Betrachter ist nicht verfügbar"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Afficher l'aperçu",
     "Unacknowledge it" : "Marquer comme non validé",
     "Acknowledge it" : "Marquer comme validé",
+    "Select All" : "Tout sélectionner",
     "No duplicates found or no duplicate selected." : "Aucun doublon n'a été trouvé ou aucun doublon n'a été sélectionné.",
     "File" : "Fichier",
     "Path:" : "Chemin :",

@@ -2,6 +2,7 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Settings saved" : "Nastavitve so shranjene",
+    "Select All" : "Izberi vse",
     "File" : "Datoteka",
     "Delete" : "Izbriši"
 },

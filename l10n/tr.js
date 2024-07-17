@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Ön izlemeyi görüntüle",
     "Unacknowledge it" : "Çift olmadığını onayla",
     "Acknowledge it" : "Çift olduğunu onayla",
+    "Select All" : "Tümünü seç",
     "No duplicates found or no duplicate selected." : "Herhangi bir çift dosya bulunamadı ya da bir çift seçilmemiş.",
     "File" : "Dosya",
     "Path:" : "Yol:",

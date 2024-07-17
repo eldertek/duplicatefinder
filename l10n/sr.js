@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Прикажи преглед",
     "Unacknowledge it" : "Уклони потврду",
     "Acknowledge it" : "Потврди",
+    "Select All" : "Изабери све",
     "No duplicates found or no duplicate selected." : "Није пронађен ниједан дупликат, или није изабран ниједан.",
     "File" : "Фајл",
     "Path:" : "Путања:",

@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Zobrazit náhled",
     "Unacknowledge it" : "Zrušit potvrzení toho",
     "Acknowledge it" : "Potvrdit to",
+    "Select All" : "Vybrat vše",
     "No duplicates found or no duplicate selected." : "Nenalezeny žádné duplicity nebo nevybrán žádný duplikát.",
     "File" : "Soubor",
     "Path:" : "Umístění:",

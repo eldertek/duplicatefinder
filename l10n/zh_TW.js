@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "顯示預覽",
     "Unacknowledge it" : "取消確認它",
     "Acknowledge it" : "確認它",
+    "Select All" : "選取全部",
     "No duplicates found or no duplicate selected." : "找不到重複的項目或未選取重複的項目。",
     "File" : "檔案",
     "Path:" : "路徑：",

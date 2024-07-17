@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "عرض المعاينة",
     "Unacknowledge it" : "إنكاره",
     "Acknowledge it" : "الاعتراف به",
+    "Delete Selected" : "حذف ما تمّ تحديده",
     "No duplicates found or no duplicate selected." : "لم يتم اكتشاف أي تكررات و لم يتم تحديد أي تكرار.",
     "File" : "ملف",
     "Path:" : "المسار Pathـ :",
@@ -42,6 +43,8 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "خطأ عند الاعتراف بالتكرارات",
     "File deleted successfully." : "تمّ حذف الملف بنجاح",
     "Error deleting file." : "خطأ في حذف الملف.",
+    "Selected files deleted successfully." : "تمّ حذف الملفات المحددة بنجاحٍ.",
+    "Error deleting selected files." : "حدث خطأ أثناء حذف الملفات المحددة.",
     "The viewer is not available" : "عارض الملف غير موجود"
 },
 "nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;");

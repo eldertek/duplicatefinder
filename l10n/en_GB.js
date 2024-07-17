@@ -30,6 +30,8 @@ OC.L10N.register(
     "Show Preview" : "Show Preview",
     "Unacknowledge it" : "Unacknowledge it",
     "Acknowledge it" : "Acknowledge it",
+    "Delete Selected" : "Delete Selected",
+    "Select All" : "Select All",
     "No duplicates found or no duplicate selected." : "No duplicates found or no duplicate selected.",
     "File" : "File",
     "Path:" : "Path:",
@@ -42,6 +44,8 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Error unacknowledging duplicate.",
     "File deleted successfully." : "File deleted successfully.",
     "Error deleting file." : "Error deleting file.",
+    "Selected files deleted successfully." : "Selected files deleted successfully.",
+    "Error deleting selected files." : "Error deleting selected files.",
     "The viewer is not available" : "The viewer is not available"
 },
 "nplurals=2; plural=(n != 1);");

@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Mostrar visualização",
     "Unacknowledge it" : "Não reconheça",
     "Acknowledge it" : "Reconheça",
+    "Select All" : "Select All",
     "No duplicates found or no duplicate selected." : "Nenhuma duplicata encontrada ou nenhuma duplicata selecionada.",
     "File" : "Arquivo",
     "Path:" : "Caminho:",
