@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Mostrar visualização",
     "Unacknowledge it" : "Não reconheça",
     "Acknowledge it" : "Reconheça",
+    "Delete Selected" : "Excluir selecionado",
     "Select All" : "Select All",
     "No duplicates found or no duplicate selected." : "Nenhuma duplicata encontrada ou nenhuma duplicata selecionada.",
     "File" : "Arquivo",
@@ -43,6 +44,8 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Erro ao cancelar o reconhecimento da duplicata.",
     "File deleted successfully." : "Arquivo excluído com sucesso.",
     "Error deleting file." : "Erro ao excluir arquivo.",
+    "Selected files deleted successfully." : "Arquivos selecionados excluídos com sucesso.",
+    "Error deleting selected files." : "Erro ao excluir arquivos selecionados.",
     "The viewer is not available" : "O visualizador não está disponível"
 },
 "nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");

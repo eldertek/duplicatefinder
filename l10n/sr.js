@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Прикажи преглед",
     "Unacknowledge it" : "Уклони потврду",
     "Acknowledge it" : "Потврди",
+    "Delete Selected" : "Брисање изабраног",
     "Select All" : "Изабери све",
     "No duplicates found or no duplicate selected." : "Није пронађен ниједан дупликат, или није изабран ниједан.",
     "File" : "Фајл",
@@ -43,6 +44,8 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Грешка приликом непотврђивања дупликата.",
     "File deleted successfully." : "Фајл успешно обрисан.",
     "Error deleting file." : "Грешка приликом брисања фајла.",
+    "Selected files deleted successfully." : "Изабрани фајлови су успешно обрисани.",
+    "Error deleting selected files." : "Грешка приликом брисања изабраних фајлова.",
     "The viewer is not available" : "Приказивач није доступан"
 },
 "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);");
