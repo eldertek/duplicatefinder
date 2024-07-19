@@ -30,6 +30,7 @@ OC.L10N.register(
     "Show Preview" : "Vis forhåndsvisning",
     "Unacknowledge it" : "Ikke erkjenn det",
     "Acknowledge it" : "Erkjenn det",
+    "Delete Selected" : "Slett valgte",
     "Select All" : "Velg alle",
     "No duplicates found or no duplicate selected." : "Ingen duplikater funnet eller ingen duplikat valgt.",
     "File" : "Fil",
@@ -43,6 +44,8 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Feil ved ikke anerkjennelse av duplikat.",
     "File deleted successfully." : "Fil slettet.",
     "Error deleting file." : "Feil ved sletting av fil.",
+    "Selected files deleted successfully." : "Valgte filer slettet.",
+    "Error deleting selected files." : "Feil ved sletting av valgte filer.",
     "The viewer is not available" : "Fremviseren er ikke tilgjengelig"
 },
 "nplurals=2; plural=(n != 1);");
