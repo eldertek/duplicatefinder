@@ -1,3 +1,7 @@
+## 1.2.5 - 2024-08-06
+### Changed
+- Confirm box to prevent deleting all files of a duplicate
+
 ## 1.2.4 - 2024-07-24
 ### Added
 - Loading indicator while fetching duplicates

@@ -1,7 +1,7 @@
 {
   "name": "duplicatefinder",
   "description": "Save some space by finding your duplicate files",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "author": "André Théo LAURET <andrelauret@eclipse-technology.eu>",
   "contributors": [],
   "bugs": {

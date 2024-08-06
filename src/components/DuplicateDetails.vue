@@ -73,6 +73,15 @@ export default {
     },
     async deleteSelectedDuplicates() {
       try {
+        // Check for potential deletion of all instances of a file
+        const fileHashes = this.selectedFiles.map(file => file.hash);
+        const allInstances = this.duplicate.files.filter(file => fileHashes.includes(file.hash));
+
+        if (allInstances.length === this.duplicate.files.length) {
+          const confirmDelete = confirm(this.t('duplicatefinder', 'This action will delete all instances of the selected files. Are you sure you want to proceed?'));
+          if (!confirmDelete) return; // Exit if the user does not confirm
+        }
+
         // Perform deletions in parallel
         await Promise.all(this.selectedFiles.map(file => deleteFiles([file])));
         removeFilesFromList(this.selectedFiles, this.duplicate.files);
