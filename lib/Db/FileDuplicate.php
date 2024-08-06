@@ -11,7 +11,6 @@ namespace OCA\DuplicateFinder\Db;
  */
 class FileDuplicate extends EEntity
 {
-
     /** @var string */
     protected $type;
     /** @var string|null */
@@ -20,7 +19,8 @@ class FileDuplicate extends EEntity
     protected $files = [];
     /** @var bool */
     protected $acknowledged = false;
-
+    /** @var int|null */
+    protected $userId;
 
     public function __construct(?string $hash = null, string $type = 'file_hash')
     {
@@ -36,17 +36,17 @@ class FileDuplicate extends EEntity
      * @param int $id
      * @param string|FileInfo $value
      */
-    public function addDuplicate(int $id, $value):void
+    public function addDuplicate(int $id, $value): void
     {
         $this->files[$id] = $value;
     }
 
-    public function removeDuplicate(int $id):void
+    public function removeDuplicate(int $id): void
     {
         unset($this->files[$id]);
     }
 
-    public function clear():void
+    public function clear(): void
     {
         $this->files = [];
     }
@@ -54,7 +54,7 @@ class FileDuplicate extends EEntity
     /**
      * @return array<string|FileInfo>
      */
-    public function getFiles():array
+    public function getFiles(): array
     {
         return $this->files;
     }
@@ -95,5 +95,24 @@ class FileDuplicate extends EEntity
     {
         $this->acknowledged = $acknowledged;
     }
-    
+
+    /**
+     * Get the value of the userId property.
+     * 
+     * @return int|null
+     */
+    public function getUserId(): ?int
+    {
+        return $this->userId;
+    }
+
+    /**
+     * Set the value of the userId property.
+     * 
+     * @param int|null $userId
+     */
+    public function setUserId(?int $userId): void
+    {
+        $this->userId = $userId;
+    }
 }

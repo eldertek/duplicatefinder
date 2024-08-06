@@ -127,7 +127,7 @@ class EEntity extends Entity implements JsonSerializable
     }
 
   /**
-   * Method-Wrapper setter of the Entity to support new types (date, json)
+   * Method-Wrapper getter of the Entity to support new types (date, json)
      * @param string $name
      * @return mixed
    */
