@@ -20,6 +20,7 @@ OC.L10N.register(
     "All duplicates found" : "Atopáronse tolos duplicaos",
     "Could not initiate duplicate search" : "Nun se pudo aniciar la busca de duplicaos",
     "Show Preview" : "Amosar la previsualización",
+    "Select All" : "Seleicionar too",
     "File" : "Ficheru",
     "Path:" : "Camín:",
     "Delete" : "Desaniciar",

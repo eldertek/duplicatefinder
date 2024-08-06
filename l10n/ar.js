@@ -31,6 +31,7 @@ OC.L10N.register(
     "Unacknowledge it" : "إنكاره",
     "Acknowledge it" : "الاعتراف به",
     "Delete Selected" : "حذف ما تمّ تحديده",
+    "Select All" : "اختيار الكُل",
     "No duplicates found or no duplicate selected." : "لم يتم اكتشاف أي تكررات و لم يتم تحديد أي تكرار.",
     "File" : "ملف",
     "Path:" : "المسار Pathـ :",
