@@ -21,6 +21,7 @@ export const fetchDuplicates = async (type = 'all', limit = 5, page = 1) => {
         const response = await axios.get(url);
         return response.data;
     } catch (error) {
+        showErrorNotification(t('duplicatefinder', 'Error fetching duplicates.'));
         console.error(`Error fetching ${type} duplicates:`, error);
         throw error;
     }

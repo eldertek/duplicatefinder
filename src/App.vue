@@ -1,18 +1,21 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<DuplicateNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
-			:acknowledged-duplicates="acknowledgedDuplicates" :unacknowledged-duplicates="unacknowledgedDuplicates"
-			@open-duplicate="openDuplicate" />
-		<NcAppContent>
-			<DuplicateDetails :duplicate="currentDuplicate" @lastFileDeleted="removeDuplicate(currentDuplicate)"
-				@duplicateUpdated="updateDuplicate(currentDuplicate)" />
-		</NcAppContent>
+		<NcLoadingSpinner v-if="isLoading" />
+		<template v-else>
+			<DuplicateNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
+				:acknowledged-duplicates="acknowledgedDuplicates" :unacknowledged-duplicates="unacknowledgedDuplicates"
+				@open-duplicate="openDuplicate" />
+			<NcAppContent>
+				<DuplicateDetails :duplicate="currentDuplicate" @lastFileDeleted="removeDuplicate(currentDuplicate)"
+					@duplicateUpdated="updateDuplicate(currentDuplicate)" />
+			</NcAppContent>
+		</template>
 	</NcContent>
 </template>
   
   
 <script>
-import { NcAppContent, NcContent } from '@nextcloud/vue';
+import { NcAppContent, NcContent, NcLoadingSpinner } from '@nextcloud/vue';
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
 import { fetchDuplicates } from '@/tools/api';
@@ -23,6 +26,7 @@ export default {
 	components: {
 		NcAppContent,
 		NcContent,
+		NcLoadingSpinner,
 		DuplicateNavigation,
 		DuplicateDetails,
 	},
@@ -30,7 +34,8 @@ export default {
 		return {
 			acknowledgedDuplicates: [],
 			unacknowledgedDuplicates: [],
-			currentDuplicate: null
+			currentDuplicate: null,
+			isLoading: false,
 		};
 	},
 	methods: {
@@ -51,6 +56,7 @@ export default {
 			this.currentDuplicate = duplicate;
 		},
 		async refreshDuplicates() {
+			this.isLoading = true;
 			try {
 				// Reload all duplicates if needed
 				if (this.acknowledgedDuplicates.length < 5 || this.unacknowledgedDuplicates.length < 5) {
@@ -58,8 +64,8 @@ export default {
 					this.acknowledgedDuplicates = allData.entities.filter(duplicate => duplicate.acknowledged);
 					this.unacknowledgedDuplicates = allData.entities.filter(duplicate => !duplicate.acknowledged);
 				}
-			} catch (error) {
-				console.error('Failed to refresh duplicates:', error);
+			} finally {
+				this.isLoading = false;
 			}
 		},
 	},

@@ -1,3 +1,9 @@
+## 1.2.4 - 2024-07-24
+### Added
+- Loading indicator while fetching duplicates
+### Fixed
+- Screen responsiveness
+
 ## 1.2.3 - 2024-07-16
 ### Added
 - Parallel processing of duplicates
