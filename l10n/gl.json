@@ -13,7 +13,7 @@
     "Background Job Find Duplicates Interval (seconds)" : "Intervalo do traballo en segundo plano de busca de duplicados (segundos)",
     "The interval in seconds for the find duplicates background job." : "O intervalo en segundos para o traballo en segundo plano de atopar duplicados.",
     "Advanced settings (be cautious)" : "Axustes avanzados (vaia amodo)",
-    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Estes axustes son só para usuarios avanzados. Se non está seguro do que está a  facer, non cambie nada.",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Estes axustes son só para usuarios avanzados. Se non está seguro do que está a  facer, non cambie ren.",
     "Clear all duplicates" : "Limpar todos os duplicados",
     "Find all duplicates" : "Atopar todos os duplicados",
     "Could not fetch settings" : "Non foi posíbel recuperar os axustes",
