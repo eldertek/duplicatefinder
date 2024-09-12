@@ -14,6 +14,8 @@ OC.L10N.register(
     "The interval in seconds for the cleanup background job." : "Интервал в секундах для фонового задания очистки.",
     "Background Job Find Duplicates Interval (seconds)" : "Интервал фонового задания поиска дубликатов (секунды)",
     "The interval in seconds for the find duplicates background job." : "Интервал в секундах фонового задания поиска дубликатов.",
+    "Advanced settings (be cautious)" : "Расширенные настройки (будьте осторожны)",
+    "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Эти настройки предназначены только для продвинутых пользователей. Если вы не уверены в том, что делаете, пожалуйста, не меняйте их.",
     "Could not fetch settings" : "Не удалось получить настройки",
     "Settings saved" : "Настройки сохранены",
     "Could not save settings" : "Не удалось сохранить настройки",
