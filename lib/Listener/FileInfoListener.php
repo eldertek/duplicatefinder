@@ -6,6 +6,7 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCA\DuplicateFinder\Event\AbstractFileInfoEvent;
 use OCA\DuplicateFinder\Service\FileInfoService;
+use OCP\Files\NotFoundException;
 
 /**
  * @template T of Event
@@ -43,8 +44,9 @@ class FileInfoListener implements IEventListener
                     $this->fileInfoService->calculateHashes($fileInfo, $event->getUserID(), false);
                 }
             }
-        } catch (\OCP\Files\NotFoundException $e) {
+        } catch (NotFoundException $e) {
             $this->logger->warning('File not found: ' . $e->getMessage());
+            return;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to handle NewFileInfoEvent.', ['exception' => $e]);
         }

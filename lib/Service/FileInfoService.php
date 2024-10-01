@@ -234,6 +234,10 @@ class FileInfoService
     {
         $oldHash = $fileInfo->getFileHash();
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
+        if ($file === null) {
+            $this->logger->warning('File not found for FileInfo ID: ' . $fileInfo->getId());
+            return $fileInfo;
+        }
         $path = $this->isRecalculationRequired($fileInfo, $fallbackUID, $file);
         if ($path !== false) {
             if ($requiresHash) {
