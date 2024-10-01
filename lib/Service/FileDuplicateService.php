@@ -162,6 +162,10 @@ class FileDuplicateService
     {
         try {
             $fileDuplicate = $this->mapper->find($hash, $type);
+            $files = $fileDuplicate->getFiles();
+            if (count($files) <= 1) {
+                throw new \Exception("Cannot delete the last instance of a file.");
+            }
             $this->mapper->delete($fileDuplicate);
             return $fileDuplicate;
         } catch (DoesNotExistException $e) {

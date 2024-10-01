@@ -70,6 +70,15 @@ export const deleteFile = async (file) => {
     const fileClient = OC.Files.getClient();
     const filePath = normalizeItemPath(file.path);
     try {
+        // Check if there are other instances of the file
+        const duplicates = await fetchDuplicates('all', 50);
+        const fileInstances = duplicates.entities.filter(duplicate => duplicate.hash === file.hash);
+
+        if (fileInstances.length <= 1) {
+            showErrorNotification(t('duplicatefinder', 'Cannot delete the last instance of a file.'));
+            return;
+        }
+
         await fileClient.remove(filePath);
         showSuccessNotification(t('duplicatefinder', 'File deleted successfully.'));
     } catch (error) {

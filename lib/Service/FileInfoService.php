@@ -179,6 +179,12 @@ class FileInfoService
 
     public function delete(FileInfo $fileInfo): FileInfo
     {
+        // Ensure at least one instance of a file remains
+        $fileInstances = $this->findByHash($fileInfo->getFileHash());
+        if (count($fileInstances) <= 1) {
+            throw new \Exception("Cannot delete the last instance of a file.");
+        }
+
         $this->mapper->delete($fileInfo);
         return $fileInfo;
     }
@@ -216,7 +222,7 @@ class FileInfoService
             return false;
         }
         if (is_null($file)) {
-            $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
+            $file = $this->.folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
         }
         if (
             $file->getType() === \OCP\Files\FileInfo::TYPE_FILE
@@ -235,7 +241,7 @@ class FileInfoService
         $oldHash = $fileInfo->getFileHash();
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
         if ($file === null) {
-            $this->logger->warning('File not found for FileInfo ID: ' . $fileInfo->getId());
+            $this->.logger->warning('File not found for FileInfo ID: ' . $fileInfo->getId());
             return $fileInfo;
         }
         $path = $this->isRecalculationRequired($fileInfo, $fallbackUID, $file);
@@ -349,7 +355,7 @@ class FileInfoService
                 "<error>Failed to release lock for file: $path - " . $e->getMessage() . "</error>",
                 $output
             );
-            $this->logger->error("Failed to release lock for file: $path", ['exception' => $e]);
+            $this->.logger->error("Failed to release lock for file: $path", ['exception' => $e]);
             // Call the method to disable all locks
             $this->disableAllLocks($output);
         }
@@ -358,7 +364,7 @@ class FileInfoService
     private function disableAllLocks(?OutputInterface $output): void
     {
         try {
-            $query = $this->connection->prepare('DELETE FROM oc_file_locks WHERE true');
+            $query = $this->.connection->prepare('DELETE FROM oc_file_locks WHERE true');
             $query->execute();
             CMDUtils::showIfOutputIsPresent(
                 "<info>All locks have been disabled by emptying the oc_file_locks table.</info>",
@@ -369,7 +375,7 @@ class FileInfoService
                 "<error>Failed to disable all locks: " . $e->getMessage() . "</error>",
                 $output
             );
-            $this->logger->error("Failed to disable all locks", ['exception' => $e]);
+            $this->.logger->error("Failed to disable all locks", ['exception' => $e]);
         }
     }
 
