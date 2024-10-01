@@ -66,6 +66,7 @@ class CleanUpDB extends TimedJob
             try {
                 $this->folderService->getNodeByFileInfo($fileInfo);
             } catch (NotFoundException $e) {
+                $this->logger->warning('File not found: ' . $fileInfo->getPath());
                 $this->logger->info('FileInfo ' . $fileInfo->getPath() . ' will be deleted');
                 $this->fileInfoService->delete($fileInfo);
             }

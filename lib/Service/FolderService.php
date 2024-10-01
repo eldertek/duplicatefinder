@@ -5,6 +5,7 @@ use OCP\Files\Node;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
+use Psr\Log\LoggerInterface;
 
 use OCA\DuplicateFinder\Utils\PathConversionUtils;
 use OCA\DuplicateFinder\Db\FileInfo;
@@ -14,10 +15,15 @@ class FolderService
     /** @var IRootFolder */
     private $rootFolder;
 
+    /** @var LoggerInterface */
+    private $logger;
+
     public function __construct(
-        IRootFolder $rootFolder
+        IRootFolder $rootFolder,
+        LoggerInterface $logger
     ) {
         $this->rootFolder = $rootFolder;
+        $this->logger = $logger;
     }
 
     public function getUserFolder(string $user) : Folder
@@ -25,15 +31,7 @@ class FolderService
         return $this->rootFolder->getUserFolder($user);
     }
 
-
-    /*
-     *  The Node specified by the FileInfo isn't always in the cache.
-     *  if so, a get on the root folder will raise an |OCP\Files\NotFoundException
-     *  To avoid this, it is first tried to get the Node by the user folder. Because
-     *  the user folder supports lazy loading, it works even if the file isn't in the cache
-     *  If the owner is unknown, it is at least tried to get the Node from the root folder
-     */
-    public function getNodeByFileInfo(FileInfo $fileInfo, ?string $fallbackUID = null): Node
+    public function getNodeByFileInfo(FileInfo $fileInfo, ?string $fallbackUID = null): ?Node
     {
         $userFolder = null;
         if ($fileInfo->getOwner()) {
@@ -47,9 +45,15 @@ class FolderService
                 $relativePath = PathConversionUtils::convertRelativePathToUserFolder($fileInfo, $userFolder);
                 return $userFolder->get($relativePath);
             } catch (NotFoundException $e) {
-                //If the file is not known in the user root (cached) it's fine to use the root
+                $this->logger->warning('File not found in user folder: ' . $fileInfo->getPath());
+                return null;
             }
         }
-        return $this->rootFolder->get($fileInfo->getPath());
+        try {
+            return $this->rootFolder->get($fileInfo->getPath());
+        } catch (NotFoundException $e) {
+            $this->logger->warning('File not found in root folder: ' . $fileInfo->getPath());
+            return null;
+        }
     }
 }

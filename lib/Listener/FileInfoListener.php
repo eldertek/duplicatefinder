@@ -43,6 +43,8 @@ class FileInfoListener implements IEventListener
                     $this->fileInfoService->calculateHashes($fileInfo, $event->getUserID(), false);
                 }
             }
+        } catch (\OCP\Files\NotFoundException $e) {
+            $this->logger->warning('File not found: ' . $e->getMessage());
         } catch (\Throwable $e) {
             $this->logger->error('Failed to handle NewFileInfoEvent.', ['exception' => $e]);
         }
