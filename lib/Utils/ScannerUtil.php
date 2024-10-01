@@ -17,8 +17,6 @@ use OCA\DuplicateFinder\Utils\CMDUtils;
 
 class ScannerUtil
 {
-
-
     /** @var IDBConnection */
     private $connection;
     /** @var IEventDispatcher */
@@ -40,7 +38,7 @@ class ScannerUtil
         LoggerInterface $logger,
         ShareService $shareService
     ) {
-        $this->connection =$connection;
+        $this->connection = $connection;
         $this->eventDispatcher = $eventDispatcher;
         $this->logger = $logger;
         $this->shareService = $shareService;
@@ -50,16 +48,16 @@ class ScannerUtil
         FileInfoService $fileInfoService,
         ?OutputInterface $output,
         ?\Closure $abortIfInterrupted
-    ) : void {
+    ): void {
         $this->fileInfoService = $fileInfoService;
         $this->output = $output;
         $this->abortIfInterrupted = $abortIfInterrupted;
     }
 
-    public function scan(string $user, string $path, bool $isShared = false) : void
+    public function scan(string $user, string $path, bool $isShared = false): void
     {
         if (!$isShared) {
-            $this->showOutput('Start searching files for '.$user.' in path '.$path);
+            $this->showOutput('Start searching files for ' . $user . ' in path ' . $path);
         }
         try {
             $scanner = $this->initializeScanner($user, $isShared);
@@ -78,14 +76,14 @@ class ScannerUtil
         }
     }
 
-    private function initializeScanner(string $user, bool $isShared = false) : Scanner
+    private function initializeScanner(string $user, bool $isShared = false): Scanner
     {
         $scanner = new Scanner($user, $this->connection, $this->eventDispatcher, $this->logger);
         $scanner->listen(
             '\OC\Files\Utils\Scanner',
             'postScanFile',
             function ($path) use ($user, $isShared) {
-                $this->showOutput('Scanning '.($isShared ? 'Shared Node ':'').$path, true);
+                $this->showOutput('Scanning ' . ($isShared ? 'Shared Node ' : '') . $path, true);
                 $this->saveScannedFile($path, $user);
             }
         );
@@ -95,18 +93,18 @@ class ScannerUtil
     private function saveScannedFile(
         string $path,
         string $user
-    ) : void {
+    ): void {
         try {
             $this->fileInfoService->save($path, $user);
         } catch (NotFoundException $e) {
-            $this->logger->error('The given path doesn\'t exists ('.$path.').', [
+            $this->logger->error('The given path doesn\'t exist (' . $path . ').', [
                 'app' => Application::ID,
                 'exception' => $e
             ]);
-            $this->showOutput('<error>The given path doesn\'t exists ('.$path.').</error>');
+            $this->showOutput('<error>The given path doesn\'t exist (' . $path . ').</error>');
         } catch (ForcedToIgnoreFileException $e) {
-            $this->logger->info($e->getMessage(), ['exception'=> $e]);
-            $this->showOutput('Skipped '.$path, true);
+            $this->logger->info($e->getMessage(), ['exception' => $e]);
+            $this->showOutput('Skipped ' . $path, true);
         }
         if ($this->abortIfInterrupted) {
             $abort = $this->abortIfInterrupted;
@@ -121,7 +119,7 @@ class ScannerUtil
         ?string $path
     ): void {
         $shares = $this->shareService->getShares($user);
-        
+
         foreach ($shares as $share) {
             $node = $share->getNode();
             if (is_null($path) || strpos($node->getPath(), $path) == 0) {
@@ -135,7 +133,7 @@ class ScannerUtil
         unset($share);
     }
 
-    private function showOutput(string $message, bool $isVerbose = false) : void
+    private function showOutput(string $message, bool $isVerbose = false): void
     {
         CMDUtils::showIfOutputIsPresent(
             $message,
@@ -143,5 +141,4 @@ class ScannerUtil
             $isVerbose ? OutputInterface::VERBOSITY_VERBOSE : OutputInterface::VERBOSITY_NORMAL
         );
     }
-    
 }
