@@ -20,9 +20,8 @@ export default {
   methods: {
     getPreviewImage,
     normalizeItemPath,
-    deleteFile() {
-      deleteFile(this.file);
-
+    async deleteFile() {
+      await deleteFile(this.file);
       this.$emit('fileDeleted', this.file);
     },
   }
