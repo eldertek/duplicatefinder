@@ -18,6 +18,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\ProgressBar;
 
 class FindDuplicates extends Command
 {
@@ -119,7 +120,16 @@ class FindDuplicates extends Command
             exit(1);
         });
 
-        return (!empty($users)) ? $this->findDuplicatesForUsers($users, $paths) : $this->findAllDuplicates($paths);
+        // Add a progress indicator
+        $progressBar = new ProgressBar($output);
+        $progressBar->start();
+
+        $result = (!empty($users)) ? $this->findDuplicatesForUsers($users, $paths) : $this->findAllDuplicates($paths);
+
+        $progressBar->finish();
+        $output->writeln('');
+
+        return $result;
     }
 
     /**
@@ -156,11 +166,39 @@ class FindDuplicates extends Command
      */
     private function findAllDuplicates(array $paths): int
     {
-        $this->userManager->callForAllUsers(function (IUser $user) use ($paths): void {
-            $this->findDuplicates($user->getUID(), $paths);
-        });
+        $users = $this->userManager->search('');
+        $userChunks = array_chunk($users, 10); // Process 10 users at a time
+
+        foreach ($userChunks as $chunk) {
+            $this->processUserChunk($chunk, $paths);
+        }
 
         return 0;
+    }
+
+    /**
+     * Process a chunk of users in parallel.
+     *
+     * @param array $users The array of user objects.
+     * @param array $paths The array of paths to limit the scan.
+     */
+    private function processUserChunk(array $users, array $paths): void
+    {
+        $processes = [];
+
+        foreach ($users as $user) {
+            $processes[] = new \parallel\Runtime();
+        }
+
+        foreach ($processes as $index => $runtime) {
+            $runtime->run(function ($user, $paths) {
+                $this->findDuplicates($user->getUID(), $paths);
+            }, [$users[$index], $paths]);
+        }
+
+        foreach ($processes as $runtime) {
+            $runtime->close();
+        }
     }
 
     /**

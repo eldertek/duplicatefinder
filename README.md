@@ -70,3 +70,25 @@ All settings should be modified only through UI. If this doesn't work for you, y
 ## Special thanks
 
 Big thanks to @PaulLereverend @chrros95 @Routhinator
+
+## New Optimizations
+
+The `duplicates:find-all` command has been optimized to handle large Nextcloud installations more efficiently. The following improvements have been made:
+
+1. **Parallel Processing**: The scan now uses parallel processing to scan files concurrently, significantly reducing the time required for large datasets.
+2. **Progress Indicator**: A progress indicator has been added to the `duplicates:find-all` command to provide real-time feedback on the scan progress.
+
+### Usage Instructions
+
+To use the optimized `duplicates:find-all` command, follow these steps:
+
+1. **Run the Command**: Execute the `occ duplicates:find-all` command with the desired options. For example:
+   ```
+   sudo -u www-data php /var/www/nextcloud/occ -v duplicates:find-all
+   ```
+
+2. **Monitor Progress**: The progress indicator will display the current progress of the scan, allowing you to monitor its status in real-time.
+
+3. **Parallel Processing**: The scan will automatically utilize parallel processing to speed up the scan for large datasets. No additional configuration is required.
+
+These optimizations ensure that the `duplicates:find-all` command completes the scan in a reasonable time, even for large Nextcloud installations.
