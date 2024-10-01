@@ -146,4 +146,50 @@ class FileDuplicateMapper extends EQBMapper
         // Return the count result as an integer
         return (int) ($row ? $row['total_count'] : 0);
     }
+
+    /**
+     * Marks the specified duplicate as suppressed.
+     * 
+     * @param string $hash The hash of the duplicate to suppress.
+     * @return bool True if successful, false otherwise.
+     */
+    public function markAsSuppressed(string $hash): bool
+    {
+        $qb = $this->db->getQueryBuilder();
+
+        try {
+            $qb->update($this->getTableName())
+                ->set('suppressed', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
+                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+                ->execute();
+
+            return true;
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Removes the suppressed status from the specified duplicate.
+     * 
+     * @param string $hash The hash of the duplicate to unsuppress.
+     * @return bool True if successful, false otherwise.
+     */
+    public function unmarkSuppressed(string $hash): bool
+    {
+        $qb = $this->db->getQueryBuilder();
+
+        try {
+            $qb->update($this->getTableName())
+                ->set('suppressed', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
+                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+                ->execute();
+
+            return true;
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            return false;
+        }
+    }
 }

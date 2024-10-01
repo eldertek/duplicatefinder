@@ -76,6 +76,11 @@ use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
                     $this->logger->info($e->getMessage(), ['exception' => $e]);
                 }
             }
+
+            // Handle suppressed files
+            if ($node->isDeleted()) {
+                $this->handleDeleteEvent($node);
+            }
         }
     }
 

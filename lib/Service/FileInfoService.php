@@ -200,6 +200,7 @@ class FileInfoService
             }
         }
         $fileInfo->setIgnored($this->filterService->isIgnored($fileInfo, $file));
+        $fileInfo->setSuppressed($file->isDeleted());
         return $fileInfo;
     }
 
@@ -208,7 +209,7 @@ class FileInfoService
      */
     public function isRecalculationRequired(FileInfo $fileInfo, ?string $fallbackUID = null, ?Node $file = null)
     {
-        if ($fileInfo->isIgnored()) {
+        if ($fileInfo->isIgnored() || $fileInfo->isSuppressed()) {
             return false;
         }
         if (is_null($file)) {
