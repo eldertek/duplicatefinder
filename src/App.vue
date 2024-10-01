@@ -41,11 +41,9 @@ export default {
 	methods: {
 		async removeDuplicate(duplicate) {
 			await removeDuplicateFromList(duplicate, this.acknowledgedDuplicates, this.unacknowledgedDuplicates);
-			await this.refreshDuplicates();
 			await this.moveToNext(duplicate);
 		},
 		async updateDuplicate(duplicate) {
-			await this.refreshDuplicates();
 			await this.moveToNext(duplicate);
 		},
 		async moveToNext(duplicate) {
@@ -56,7 +54,6 @@ export default {
 			this.currentDuplicate = duplicate;
 		},
 		async refreshDuplicates() {
-			this.isLoading = true;
 			try {
 				// Reload all duplicates if needed
 				if (this.acknowledgedDuplicates.length < 5 || this.unacknowledgedDuplicates.length < 5) {
@@ -81,4 +78,3 @@ export default {
 	overflow-y: auto;
 }
 </style>
-  
