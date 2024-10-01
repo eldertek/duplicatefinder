@@ -79,4 +79,15 @@ class FindDuplicates extends TimedJob
             $this->fileInfoService->scanFiles($user->getUID());
         });
     }
+
+    /**
+     * Remove the background job when Duplicate Finder is disabled or deleted.
+     *
+     * @return void
+     */
+    public function removeJob(): void
+    {
+        $this->logger->info('Removing Duplicate Finder background job.');
+        $this->connection->executeQuery('DELETE FROM oc_jobs WHERE class = ?', [self::class]);
+    }
 }
