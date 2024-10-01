@@ -58,6 +58,7 @@ export default {
 		},
 		async refreshDuplicates() {
 			try {
+				this.isLoading = true; // Show loading indicator
 				// Reload all duplicates if needed
 				if (this.acknowledgedDuplicates.length < 5 || this.unacknowledgedDuplicates.length < 5) {
 					const allData = await fetchDuplicates('all', 50);
@@ -65,7 +66,7 @@ export default {
 					this.unacknowledgedDuplicates = allData.entities.filter(duplicate => !duplicate.acknowledged);
 				}
 			} finally {
-				this.isLoading = false;
+				this.isLoading = false; // Hide loading indicator
 			}
 		},
 		async initiateUserDuplicateSearch() {
