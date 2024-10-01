@@ -93,6 +93,26 @@ class DuplicateApiController extends AbstractAPIController
     }
 
     /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function suppress(string $hash): DataResponse
+    {
+        $this->fileDuplicateMapper->markAsSuppressed($hash);
+        return new DataResponse(['status' => 'success']);
+    }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function unsuppress(string $hash): DataResponse
+    {
+        $this->fileDuplicateMapper->unmarkSuppressed($hash);
+        return new DataResponse(['status' => 'success']);
+    }
+
+    /**
      * @NoCSRFRequired
      */
     public function clear(): DataResponse
