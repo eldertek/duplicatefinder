@@ -26,8 +26,8 @@ class FileDuplicateMapper extends EQBMapper
         $qb->select('*')
             ->from($this->getTableName())
             ->where(
-                $qb->expr()->eq('hash', $qb->createNamedParameter($hash)),
-                $qb->expr()->eq('type', $qb->createNamedParameter($type))
+                $qb->expr()->eq('hash', $qb->createNamedParameter($hash, IQueryBuilder::PARAM_STR)),
+                $qb->expr()->eq('type', $qb->createNamedParameter($type, IQueryBuilder::PARAM_STR))
             );
         return $this->findEntity($qb);
     }
@@ -83,7 +83,7 @@ class FileDuplicateMapper extends EQBMapper
         try {
             $qb->update($this->getTableName())
                 ->set('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
-                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash, IQueryBuilder::PARAM_STR)))
                 ->execute();
 
             return true;
@@ -107,7 +107,7 @@ class FileDuplicateMapper extends EQBMapper
         try {
             $qb->update($this->getTableName())
                 ->set('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
-                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash, IQueryBuilder::PARAM_STR)))
                 ->execute();
 
             return true;
@@ -160,7 +160,7 @@ class FileDuplicateMapper extends EQBMapper
         try {
             $qb->update($this->getTableName())
                 ->set('suppressed', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
-                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash, IQueryBuilder::PARAM_STR)))
                 ->execute();
 
             return true;
@@ -183,7 +183,7 @@ class FileDuplicateMapper extends EQBMapper
         try {
             $qb->update($this->getTableName())
                 ->set('suppressed', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
-                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+                ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash, IQueryBuilder::PARAM_STR)))
                 ->execute();
 
             return true;
