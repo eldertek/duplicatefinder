@@ -17,6 +17,8 @@
       <button @click="deleteSelectedDuplicates">{{ t('duplicatefinder', 'Delete Selected') }}</button>
       <!-- New Select All Button -->
       <button @click="selectAllFiles">{{ t('duplicatefinder', 'Select All') }}</button>
+      <!-- Add a button for non-admin users to initiate a duplicate search -->
+      <button v-if="!isAdmin" @click="initiateUserDuplicateSearch">{{ t('duplicatefinder', 'Find My Duplicates') }}</button>
     </div>
     <div v-for="(file, index) in duplicate.files" :key="file.id" class="file-display">
       <input type="checkbox" v-model="selectedFiles" :value="file" />
@@ -33,7 +35,7 @@
 </template>
 
 <script>
-import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles } from '@/tools/api';
+import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, initiateUserDuplicateSearch } from '@/tools/api';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList } from '@/tools/utils';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -93,6 +95,14 @@ export default {
     // New method to select all files
     selectAllFiles() {
       this.selectedFiles = [...this.duplicate.files];
+    },
+    async initiateUserDuplicateSearch() {
+      try {
+        await initiateUserDuplicateSearch();
+        this.$emit('duplicateUpdated', this.duplicate);
+      } catch (error) {
+        console.error('Error initiating user duplicate search:', error);
+      }
     }
   }
 }
