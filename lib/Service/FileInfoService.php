@@ -42,6 +42,7 @@ class FileInfoService
     private $lockingProvider;
     private $rootFolder;
     private $connection;
+    private $configService;
 
     public function __construct(
         FileInfoMapper $mapper,
@@ -53,7 +54,8 @@ class FileInfoService
         ScannerUtil $scannerUtil,
         ILockingProvider $lockingProvider,
         IRootFolder $rootFolder,
-        IDBConnection $connection
+        IDBConnection $connection,
+        ConfigService $configService
     ) {
         $this->mapper = $mapper;
         $this->eventDispatcher = $eventDispatcher;
@@ -65,6 +67,7 @@ class FileInfoService
         $this->lockingProvider = $lockingProvider;
         $this->rootFolder = $rootFolder;
         $this->connection = $connection;
+        $this->configService = $configService;
     }
 
     /**
@@ -262,7 +265,7 @@ class FileInfoService
         ?bool $isShared = false
     ): void {
         $userFolder = $this->folderService->getUserFolder($user);
-        $scanPath = $userFolder->getPath();
+        $scanPath = $this->configService->getDuplicateSearchRoot();
         if (!is_null($path) && !$isShared) {
             $scanPath .= DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
             if (!$userFolder->nodeExists(ltrim($path, DIRECTORY_SEPARATOR))) {

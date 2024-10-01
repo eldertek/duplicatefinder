@@ -3,6 +3,7 @@
 namespace OCA\DuplicateFinder\Command;
 
 use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Utils\CMDUtils;
@@ -58,6 +59,11 @@ class FindDuplicates extends Command
     private $output;
 
     /**
+     * @var ConfigService The config service instance.
+     */
+    private $configService;
+
+    /**
      * FindDuplicates constructor.
      *
      * @param IUserManager $userManager The user manager instance.
@@ -66,6 +72,7 @@ class FindDuplicates extends Command
      * @param FileInfoService $fileInfoService The file info service instance.
      * @param FileDuplicateService $fileDuplicateService The file duplicate service instance.
      * @param LoggerInterface $logger The logger instance.
+     * @param ConfigService $configService The config service instance.
      */
     public function __construct(
         IUserManager $userManager,
@@ -73,7 +80,8 @@ class FindDuplicates extends Command
         IDBConnection $connection,
         FileInfoService $fileInfoService,
         FileDuplicateService $fileDuplicateService,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ConfigService $configService
     ) {
         parent::__construct('duplicates:find-all');
         $this->userManager = $userManager;
@@ -82,6 +90,7 @@ class FindDuplicates extends Command
         $this->fileInfoService = $fileInfoService;
         $this->fileDuplicateService = $fileDuplicateService;
         $this->logger = $logger;
+        $this->configService = $configService;
     }
 
     /**
@@ -214,11 +223,13 @@ class FindDuplicates extends Command
             return false; // Continue scanning
         };
 
+        $rootPath = $this->configService->getDuplicateSearchRoot();
+
         if (empty($paths)) {
-            $this->fileInfoService->scanFiles($user, null, $callback, $this->output);
+            $this->fileInfoService->scanFiles($user, $rootPath, $callback, $this->output);
         } else {
             foreach ($paths as $path) {
-                $this->fileInfoService->scanFiles($user, $path, $callback, $this->output);
+                $this->fileInfoService->scanFiles($user, $rootPath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR), $callback, $this->output);
             }
         }
 

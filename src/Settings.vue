@@ -36,6 +36,13 @@
         @update:value="saveSettings('backgroundjob_interval_find', settings.backgroundjob_interval_find)"></NcTextField>
     </NcSettingsSection>
 
+    <NcSettingsSection :name="t('duplicatefinder', 'Duplicate Search Root Directory')"
+      :description="t('duplicatefinder', 'The root directory for the duplicate search.')"
+      :limit-width="true">
+      <NcTextField :value.sync="settings.duplicate_search_root"
+        @update:value="saveSettings('duplicate_search_root', settings.duplicate_search_root)"></NcTextField>
+    </NcSettingsSection>
+
     <NcSettingsSection :name="t('duplicatefinder', 'Advanced settings (be cautious)')" 
       :description="t('duplicatefinder', 'These settings are for advanced users only. If you are not sure what you are doing, please do not change them.')"
       :limit-width="true">
@@ -119,4 +126,3 @@ export default {
 }
 
 </style>
-

@@ -104,4 +104,14 @@ class ConfigService
     {
         $this->setBoolVal('ignore_mounted_files', $value);
     }
+
+    public function getDuplicateSearchRoot(): string
+    {
+        return $this->config->getAppValue(Application::ID, 'duplicate_search_root', '/');
+    }
+
+    public function setDuplicateSearchRoot(string $value): void
+    {
+        $this->config->setAppValue(Application::ID, 'duplicate_search_root', $value);
+    }
 }
