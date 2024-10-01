@@ -30,23 +30,29 @@
       <h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
     </div>
   </div>
+  <div v-if="isLoading" class="loading-indicator">
+    <NcLoadingSpinner />
+  </div>
 </template>
 
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles } from '@/tools/api';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList } from '@/tools/utils';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
+import { NcLoadingSpinner } from '@nextcloud/vue';
 
 export default {
   components: {
-    DuplicateFileDisplay
+    DuplicateFileDisplay,
+    NcLoadingSpinner
   },
   props: {
     duplicate: Object
   },
   data() {
     return {
-      selectedFiles: []
+      selectedFiles: [],
+      isLoading: false
     };
   },
   methods: {
@@ -82,12 +88,18 @@ export default {
           if (!confirmDelete) return; // Exit if the user does not confirm
         }
 
+        // Show loading indicator
+        this.isLoading = true;
+
         // Perform deletions in parallel
         await Promise.all(this.selectedFiles.map(file => deleteFiles([file])));
         removeFilesFromList(this.selectedFiles, this.duplicate.files);
         this.selectedFiles = [];
       } catch (error) {
         console.error('Error deleting selected files:', error);
+      } finally {
+        // Hide loading indicator
+        this.isLoading = false;
       }
     },
     // New method to select all files
@@ -149,6 +161,14 @@ export default {
 .preview-link:hover {
   color: #1e7e34;
   /* Darker green on hover */
+}
+
+.loading-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
 }
 
 @media (max-width: 800px) {
