@@ -118,7 +118,7 @@ class FileInfoService
 
     public function findById(int $id, bool $enrich = false): FileInfo
     {
-        $entity = $->mapper->findById($id);
+        $entity = $this->mapper->findById($id);
         if ($enrich) {
             $entity = $this->enrich($entity);
         }
@@ -148,7 +148,7 @@ class FileInfoService
 
     public function countBySize(int $size): int
     {
-        return $this->mapper->countBySize($size);
+        return $->mapper->countBySize($size);
     }
 
     public function update(FileInfo $fileInfo, ?string $fallbackUID = null): FileInfo
@@ -305,9 +305,12 @@ class FileInfoService
                 $output
             );
         }
+
+        // Update the duplicate list after scanning
+        $this->updateDuplicateList($user, $scanPath);
     }
 
-    private void handleLockedFile(string $path, ?OutputInterface $output): void
+    private function handleLockedFile(string $path, ?OutputInterface $output): void
     {
         try {
             // Get the file node
@@ -381,12 +384,23 @@ class FileInfoService
 
         try {
             $path = $this->shareService->hasAccessRight(
-                $this->.folderService->getNodeByFileInfo($fileInfo, $user),
+                $this->folderService->getNodeByFileInfo($fileInfo, $user),
                 $user
             );
             return !is_null($path);
         } catch (NotFoundException $e) {
             return false;
+        }
+    }
+
+    private function updateDuplicateList(string $user, string $scanPath): void
+    {
+        // Get all file infos for the user and scan path
+        $fileInfos = $this->mapper->findByUserAndPath($user, $scanPath);
+
+        // Iterate through each file info and update the duplicate list
+        foreach ($fileInfos as $fileInfo) {
+            $this->calculateHashes($fileInfo, $user);
         }
     }
 }

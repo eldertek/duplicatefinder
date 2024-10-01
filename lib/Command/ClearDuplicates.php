@@ -62,6 +62,7 @@ namespace OCA\DuplicateFinder\Command;
          if ($input->getOption('force') || $this->confirmClearing($input, $output)) {
              $this->fileDuplicateService->clear();
              $this->fileInfoService->clear();
+             $this->updateDuplicateList();
              return Command::SUCCESS;
          }
  
@@ -81,6 +82,17 @@ namespace OCA\DuplicateFinder\Command;
          $helper = $this->getHelper('question');
          $question = new ConfirmationQuestion('Do you really want to clear all duplicates and information for discovery?', false);
          return $helper->ask($input, $output, $question);
+     }
+
+     /**
+      * Update the duplicate list after clearing duplicates.
+      */
+     private function updateDuplicateList(): void
+     {
+         $fileInfos = $this->fileInfoService->findAll();
+         foreach ($fileInfos as $fileInfo) {
+             $this->fileInfoService->calculateHashes($fileInfo);
+         }
      }
  }
  
