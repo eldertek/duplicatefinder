@@ -22,6 +22,33 @@ There are three possible ways duplicates can be detected.
 
 Normally the detection methods should be used in the order as listed, but if you are installing the app on an existing installation it can be quite useful to start with a full scan by using command-based detection.
 
+## Web Interface Usage
+The application is fully configurable and usable from the Nextcloud web interface without the command line. All duplicate finder settings can be edited from the settings page in the web interface. The duplicate detection and management features are accessible through the web interface.
+
+### Accessing Duplicate Finder Settings
+1. Navigate to the settings page in the Nextcloud web interface.
+2. Locate the "Duplicate Finder" section.
+3. Edit the settings as needed.
+
+### Managing Duplicates
+The application provides a user-friendly interface for managing duplicates, including acknowledging, unacknowledging, and deleting duplicates.
+
+#### Acknowledging Duplicates
+1. Open the Duplicate Finder app in the Nextcloud web interface.
+2. Locate the duplicate you want to acknowledge.
+3. Click the "Acknowledge" button.
+
+#### Unacknowledging Duplicates
+1. Open the Duplicate Finder app in the Nextcloud web interface.
+2. Locate the duplicate you want to unacknowledge.
+3. Click the "Unacknowledge" button.
+
+#### Deleting Duplicates
+1. Open the Duplicate Finder app in the Nextcloud web interface.
+2. Locate the duplicate you want to delete.
+3. Select the files you want to delete.
+4. Click the "Delete Selected" button.
+
 ## Ignoring Duplicates
 To prevent a folder from being scanned for duplicates, place a `.nodupefinder` file inside it. Any files in this folder will be excluded from the duplicate detection process.
 
