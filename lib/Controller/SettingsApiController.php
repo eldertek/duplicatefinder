@@ -33,7 +33,8 @@ class SettingsApiController extends AbstractAPIController
             'backgroundjob_interval_cleanup' => $this->configService->getCleanupJobInterval(),
             'disable_filesystem_events' => $this->configService->areFilesytemEventsDisabled(),
             'ignore_mounted_files' => $this->configService->areMountedFilesIgnored(),
-            'installed_version' => $this->configService->getInstalledVersion()
+            'installed_version' => $this->configService->getInstalledVersion(),
+            'duplicate_search_root' => $this->configService->getDuplicateSearchRoot()
         ];
     }
 
@@ -52,7 +53,8 @@ class SettingsApiController extends AbstractAPIController
             'backgroundjob_interval_find' => 'setFindJobInterval',
             'backgroundjob_interval_cleanup' => 'setCleanupJobInterval',
             'disable_filesystem_events' => 'setFilesytemEventsDisabled',
-            'ignore_mounted_files' => 'setMountedFilesIgnored'
+            'ignore_mounted_files' => 'setMountedFilesIgnored',
+            'duplicate_search_root' => 'setDuplicateSearchRoot'
         ];
 
         if (!array_key_exists($key, $configKeys)) {
@@ -72,5 +74,25 @@ class SettingsApiController extends AbstractAPIController
         }
 
         return new DataResponse(['status' => 'success', 'data' => $this->getConfigArray()]);
+    }
+
+    public function saveDuplicateSearchRoot(string $root): DataResponse
+    {
+        try {
+            $this->configService->setDuplicateSearchRoot($root);
+            return new DataResponse(['status' => 'success']);
+        } catch (\Exception $e) {
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function getDuplicateSearchRoot(): DataResponse
+    {
+        try {
+            $root = $this->configService->getDuplicateSearchRoot();
+            return new DataResponse(['status' => 'success', 'data' => $root]);
+        } catch (\Exception $e) {
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 }
