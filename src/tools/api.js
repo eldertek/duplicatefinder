@@ -95,3 +95,19 @@ export const deleteFiles = async (files) => {
         throw error;
     }
 };
+
+/**
+ * Initiates a duplicate search for the current user.
+ * @returns {Promise<void>}
+ */
+export const initiateUserDuplicateSearch = async () => {
+    try {
+        const url = generateApiBaseUrl('/duplicates/findUserDuplicates');
+        await axios.post(url);
+        showSuccessNotification(t('duplicatefinder', 'User duplicate search initiated successfully.'));
+    } catch (error) {
+        console.error('Error initiating user duplicate search:', error);
+        showErrorNotification(t('duplicatefinder', 'Error initiating user duplicate search.'));
+        throw error;
+    }
+};

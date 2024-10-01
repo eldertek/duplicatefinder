@@ -133,9 +133,13 @@ class DuplicateApiController extends AbstractAPIController
     public function find(): DataResponse
     {
         try {
-            $this->userManager->callForAllUsers(function (IUser $user): void {
-                $this->fileInfoService->scanFiles($user->getUID());
-            });
+            if ($this->userSession->isAdminUser()) {
+                $this->userManager->callForAllUsers(function (IUser $user): void {
+                    $this->fileInfoService->scanFiles($user->getUID());
+                });
+            } else {
+                $this->findUserDuplicates();
+            }
             return new DataResponse(['status' => 'success']);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
@@ -143,4 +147,18 @@ class DuplicateApiController extends AbstractAPIController
         }
     }
 
+    /**
+     * @NoCSRFRequired
+     */
+    public function findUserDuplicates(): DataResponse
+    {
+        try {
+            $userId = $this->getUserId();
+            $this->fileInfoService->scanFiles($userId);
+            return new DataResponse(['status' => 'success']);
+        } catch (\Exception $e) {
+            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
 }

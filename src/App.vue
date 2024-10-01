@@ -8,6 +8,8 @@
 			<NcAppContent>
 				<DuplicateDetails :duplicate="currentDuplicate" @lastFileDeleted="removeDuplicate(currentDuplicate)"
 					@duplicateUpdated="updateDuplicate(currentDuplicate)" />
+				<!-- Add a button for non-admin users to initiate a duplicate search -->
+				<button v-if="!isAdmin" @click="initiateUserDuplicateSearch">{{ t('duplicatefinder', 'Find My Duplicates') }}</button>
 			</NcAppContent>
 		</template>
 	</NcContent>
@@ -18,7 +20,7 @@
 import { NcAppContent, NcContent, NcLoadingSpinner } from '@nextcloud/vue';
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
-import { fetchDuplicates } from '@/tools/api';
+import { fetchDuplicates, initiateUserDuplicateSearch } from '@/tools/api';
 import { removeDuplicateFromList } from '@/tools/utils';
 
 export default {
@@ -36,6 +38,7 @@ export default {
 			unacknowledgedDuplicates: [],
 			currentDuplicate: null,
 			isLoading: false,
+			isAdmin: false, // Add a new data property to track if the user is an admin
 		};
 	},
 	methods: {
@@ -65,10 +68,20 @@ export default {
 				this.isLoading = false;
 			}
 		},
+		async initiateUserDuplicateSearch() {
+			try {
+				await initiateUserDuplicateSearch();
+				this.refreshDuplicates();
+			} catch (error) {
+				console.error('Error initiating user duplicate search:', error);
+			}
+		},
 	},
 	mounted() {
 		// Fetch initial duplicates
 		this.refreshDuplicates();
+		// Check if the user is an admin
+		this.isAdmin = OC.currentUser.isAdmin;
 	}
 }
 </script>

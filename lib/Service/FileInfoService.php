@@ -115,7 +115,7 @@ class FileInfoService
 
     public function findById(int $id, bool $enrich = false): FileInfo
     {
-        $entity = $this->mapper->findById($id);
+        $entity = $->mapper->findById($id);
         if ($enrich) {
             $entity = $this->enrich($entity);
         }
@@ -300,7 +300,7 @@ class FileInfoService
         }
     }
 
-    private function handleLockedFile(string $path, ?OutputInterface $output): void
+    private void handleLockedFile(string $path, ?OutputInterface $output): void
     {
         try {
             // Get the file node
@@ -374,7 +374,7 @@ class FileInfoService
 
         try {
             $path = $this->shareService->hasAccessRight(
-                $this->folderService->getNodeByFileInfo($fileInfo, $user),
+                $this->.folderService->getNodeByFileInfo($fileInfo, $user),
                 $user
             );
             return !is_null($path);
