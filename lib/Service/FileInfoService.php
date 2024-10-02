@@ -290,6 +290,21 @@ class FileInfoService
                 '<error>The given scan path doesn\'t exists.</error>',
                 $output
             );
+        } catch (\Doctrine\DBAL\Exception\DriverException $e) {
+            if ($e->getSQLState() === '25P02') {
+                $this->logger->error('SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage(), ['app' => Application::ID, 'exception' => $e]);
+                CMDUtils::showIfOutputIsPresent(
+                    '<error>SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage() . '</error>',
+                    $output
+                );
+                // Handle the error, possibly by rolling back the transaction or taking other actions
+            } else {
+                $this->logger->error('An error occurred during scanning.', ['app' => Application::ID, 'exception' => $e]);
+                CMDUtils::showIfOutputIsPresent(
+                    '<error>An error occurred during scanning.</error>',
+                    $output
+                );
+            }
         } catch (\Exception $e) {
             $this->logger->error('An error occurred during scanning.', ['app' => Application::ID, 'exception' => $e]);
             CMDUtils::showIfOutputIsPresent(

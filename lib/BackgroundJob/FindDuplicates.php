@@ -11,6 +11,7 @@ use OCP\IUserManager;
 use OCP\IUser;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
+use Doctrine\DBAL\Exception\DriverException;
 
 class FindDuplicates extends TimedJob
 {
@@ -83,7 +84,18 @@ class FindDuplicates extends TimedJob
 
         foreach ($batches as $batch) {
             foreach ($batch as $user) {
-                $this->fileInfoService->scanFiles($user->getUID());
+                try {
+                    $this->fileInfoService->scanFiles($user->getUID());
+                } catch (DriverException $e) {
+                    if ($e->getSQLState() === '25P02') {
+                        $this->logger->error('SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage(), ['app' => 'duplicatefinder', 'exception' => $e]);
+                        // Handle the error, possibly by rolling back the transaction or taking other actions
+                    } else {
+                        $this->logger->error('An error occurred during scanning.', ['app' => 'duplicatefinder', 'exception' => $e]);
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error('An error occurred during scanning.', ['app' => 'duplicatefinder', 'exception' => $e]);
+                }
             }
         }
     }

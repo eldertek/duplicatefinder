@@ -5,6 +5,8 @@ namespace OCA\DuplicateFinder\Db;
 use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\ILogger;
+use Doctrine\DBAL\Platforms\PostgreSQL94Platform;
+use Doctrine\DBAL\Platforms\PostgreSQL100Platform;
 
 /**
  * @extends EQBMapper<FileDuplicate>
@@ -62,6 +64,13 @@ class FileDuplicateMapper extends EQBMapper
             }
             unset($order);
         }
+
+        // Handle PostgreSQL-specific SQL syntax issues
+        if ($this->db->getDatabasePlatform() instanceof PostgreSQL94Platform ||
+            $this->db->getDatabasePlatform() instanceof PostgreSQL100Platform) {
+            $qb->addSelect('pg_column_size(d.hash) as hash_size');
+        }
+
         return $this->findEntities($qb);
     }
 
@@ -145,5 +154,16 @@ class FileDuplicateMapper extends EQBMapper
 
         // Return the count result as an integer
         return (int) ($row ? $row['total_count'] : 0);
+    }
+
+    /**
+     * Handle byte sequences for UTF8 encoding.
+     *
+     * @param string $input The input string.
+     * @return string The sanitized string.
+     */
+    public function handleUTF8ByteSequences(string $input): string
+    {
+        return mb_convert_encoding($input, 'UTF-8', 'UTF-8');
     }
 }

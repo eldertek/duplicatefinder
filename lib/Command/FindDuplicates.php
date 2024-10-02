@@ -18,6 +18,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Doctrine\DBAL\Exception\DriverException;
 
 class FindDuplicates extends Command
 {
@@ -184,6 +185,20 @@ class FindDuplicates extends Command
             }
         }
 
-        CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, $callback, $user);
+        try {
+            CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, $callback, $user);
+        } catch (DriverException $e) {
+            if ($e->getSQLState() === '25P02') {
+                $this->logger->error('SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage(), ['app' => 'duplicatefinder', 'exception' => $e]);
+                $this->output->writeln('<error>SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage() . '</error>');
+                // Handle the error, possibly by rolling back the transaction or taking other actions
+            } else {
+                $this->logger->error('An error occurred during scanning.', ['app' => 'duplicatefinder', 'exception' => $e]);
+                $this->output->writeln('<error>An error occurred during scanning.</error>');
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('An error occurred during scanning.', ['app' => 'duplicatefinder', 'exception' => $e]);
+            $this->output->writeln('<error>An error occurred during scanning.</error>');
+        }
     }
 }
