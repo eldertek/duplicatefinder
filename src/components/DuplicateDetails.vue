@@ -69,6 +69,7 @@ export default {
 
       if (this.duplicate.files.length === 1) {
         this.$emit('lastFileDeleted', this.duplicate);
+        this.removeDuplicateFromList(this.duplicate);
       }
     },
     async deleteSelectedDuplicates() {
@@ -93,6 +94,9 @@ export default {
     // New method to select all files
     selectAllFiles() {
       this.selectedFiles = [...this.duplicate.files];
+    },
+    removeDuplicateFromList(duplicate) {
+      this.$emit('removeDuplicate', duplicate);
     }
   }
 }

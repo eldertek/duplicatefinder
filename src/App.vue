@@ -42,15 +42,13 @@ export default {
 	},
 	methods: {
 		async removeDuplicate(duplicate) {
-			await removeDuplicateFromList(duplicate, this.acknowledgedDuplicates, this.unacknowledgedDuplicates);
-			await this.refreshDuplicates();
-			await this.moveToNext(duplicate);
+			removeDuplicateFromList(duplicate, this.acknowledgedDuplicates, this.unacknowledgedDuplicates);
+			this.moveToNext(duplicate);
 		},
 		async updateDuplicate(duplicate) {
-			await this.refreshDuplicates();
-			await this.moveToNext(duplicate);
+			this.moveToNext(duplicate);
 		},
-		async moveToNext(duplicate) {
+		moveToNext(duplicate) {
 			let currentList = duplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates;
 			this.currentDuplicate = currentList[0];
 		},
