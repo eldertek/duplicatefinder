@@ -36,6 +36,8 @@ export default {
 			unacknowledgedDuplicates: [],
 			currentDuplicate: null,
 			isLoading: false,
+			page: 1,
+			limit: 50,
 		};
 	},
 	methods: {
@@ -59,8 +61,8 @@ export default {
 			this.isLoading = true;
 			try {
 				// Reload all duplicates if needed
-				if (this.acknowledgedDuplicates.length < 5 || this.unacknowledgedDuplicates.length < 5) {
-					const allData = await fetchDuplicates('all', 50);
+				if (this.acknowledgedDuplicates.length < this.limit || this.unacknowledgedDuplicates.length < this.limit) {
+					const allData = await fetchDuplicates('all', this.limit, this.page);
 					this.acknowledgedDuplicates = allData.entities.filter(duplicate => duplicate.acknowledged);
 					this.unacknowledgedDuplicates = allData.entities.filter(duplicate => !duplicate.acknowledged);
 				}
@@ -81,4 +83,3 @@ export default {
 	overflow-y: auto;
 }
 </style>
-  

@@ -74,9 +74,17 @@ class FindDuplicates extends TimedJob
      */
     protected function run($argument): void
     {
-        // Call the scanFiles method for all users using the userManager.
-        $this->userManager->callForAllUsers(function (IUser $user): void {
-            $this->fileInfoService->scanFiles($user->getUID());
-        });
+        // Fetch all users in a single query
+        $users = $this->userManager->search('');
+
+        // Process users in batches
+        $batchSize = 100;
+        $batches = array_chunk($users, $batchSize);
+
+        foreach ($batches as $batch) {
+            foreach ($batch as $user) {
+                $this->fileInfoService->scanFiles($user->getUID());
+            }
+        }
     }
 }

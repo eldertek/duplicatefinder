@@ -15,6 +15,7 @@
                         <DuplicateListItem :duplicate="duplicate" :isActive="currentDuplicateId === duplicate.id"
                             @duplicate-selected="openDuplicate" />
                     </div>
+                    <button @click="loadMoreUnacknowledgedDuplicates">{{ t('duplicatefinder', 'Load More') }}</button>
                 </template>
             </NcAppNavigationItem>
             <!-- Navigation for Acknowledged Duplicates -->
@@ -27,6 +28,7 @@
                         <DuplicateListItem :duplicate="duplicate" :isActive="currentDuplicateId === duplicate.id"
                             @duplicate-selected="openDuplicate" />
                     </div>
+                    <button @click="loadMoreAcknowledgedDuplicates">{{ t('duplicatefinder', 'Load More') }}</button>
                 </template>
             </NcAppNavigationItem>
         </template>
@@ -38,13 +40,17 @@ import { NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue';
 import DuplicateListItem from './DuplicateListItem.vue';
 import CloseCircle from 'vue-material-design-icons/CloseCircle';
 import CheckCircle from 'vue-material-design-icons/CheckCircle';
+import { fetchDuplicates } from '@/tools/api';
 
 export default {
     components: { DuplicateListItem, NcAppNavigation, NcAppNavigationItem, CheckCircle, CloseCircle },
     props: ['acknowledgedDuplicates', 'unacknowledgedDuplicates', 'currentDuplicateId'],
     data() {
         return {
-            searchQuery: ''
+            searchQuery: '',
+            acknowledgedPage: 1,
+            unacknowledgedPage: 1,
+            limit: 50,
         };
     },
     computed: {
@@ -68,6 +74,16 @@ export default {
         },
         openDuplicate(duplicate) {
             this.$emit('open-duplicate', duplicate);
+        },
+        async loadMoreUnacknowledgedDuplicates() {
+            this.unacknowledgedPage++;
+            const newDuplicates = await fetchDuplicates('unacknowledged', this.limit, this.unacknowledgedPage);
+            this.$emit('update-unacknowledged-duplicates', newDuplicates.entities);
+        },
+        async loadMoreAcknowledgedDuplicates() {
+            this.acknowledgedPage++;
+            const newDuplicates = await fetchDuplicates('acknowledged', this.limit, this.acknowledgedPage);
+            this.$emit('update-acknowledged-duplicates', newDuplicates.entities);
         }
     }
 };

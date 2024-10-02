@@ -62,13 +62,26 @@ class CleanUpDB extends TimedJob
         // Clean up any unhandled delete or rename events
         $fileInfos = $this->fileInfoService->findAll();
 
+        $batchSize = 100; // Define the batch size
+        $batch = [];
+
         foreach ($fileInfos as $fileInfo) {
             try {
                 $this->folderService->getNodeByFileInfo($fileInfo);
             } catch (NotFoundException $e) {
                 $this->logger->info('FileInfo ' . $fileInfo->getPath() . ' will be deleted');
-                $this->fileInfoService->delete($fileInfo);
+                $batch[] = $fileInfo;
+
+                if (count($batch) >= $batchSize) {
+                    $this->fileInfoService->deleteBatch($batch);
+                    $batch = [];
+                }
             }
+        }
+
+        // Delete any remaining fileInfos in the batch
+        if (!empty($batch)) {
+            $this->fileInfoService->deleteBatch($batch);
         }
 
         unset($fileInfo);

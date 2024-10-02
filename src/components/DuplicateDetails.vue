@@ -83,7 +83,7 @@ export default {
         }
 
         // Perform deletions in parallel
-        await Promise.all(this.selectedFiles.map(file => deleteFiles([file])));
+        await deleteFiles(this.selectedFiles);
         removeFilesFromList(this.selectedFiles, this.duplicate.files);
         this.selectedFiles = [];
       } catch (error) {
