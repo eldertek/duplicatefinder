@@ -3,7 +3,7 @@
         <template #list>
             <!-- Search Input -->
             <div class="search-container">
-                <input type="text" v-model="searchQuery" placeholder="Search by path or name" />
+                <input type="text" v-model="searchQuery" @input="filterDuplicates" placeholder="Rechercher des doublons..." />
             </div>
             <!-- Navigation for Unacknowledged Duplicates -->
             <NcAppNavigationItem :name="t('duplicatefinder', 'Unacknowledged')" :allowCollapse="true" :open="true">
@@ -11,9 +11,14 @@
                     <CloseCircle :size="20" />
                 </template>
                 <template>
-                    <div v-for="duplicate in filteredUnacknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
-                        <DuplicateListItem :duplicate="duplicate" :isActive="currentDuplicateId === duplicate.id"
-                            @duplicate-selected="openDuplicate" />
+                    <div v-show="filteredUnacknowledgedDuplicates.length > 0">
+                        <div v-for="duplicate in filteredUnacknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
+                            <DuplicateListItem :duplicate="duplicate" :isActive="currentDuplicateId === duplicate.id"
+                                @duplicate-selected="openDuplicate" />
+                        </div>
+                    </div>
+                    <div v-show="filteredUnacknowledgedDuplicates.length === 0">
+                        <p>{{ t('duplicatefinder', 'No unacknowledged duplicates found.') }}</p>
                     </div>
                     <button @click="loadMoreUnacknowledgedDuplicates">{{ t('duplicatefinder', 'Load More') }}</button>
                 </template>
@@ -24,9 +29,14 @@
                     <CheckCircle :size="20" />
                 </template>
                 <template>
-                    <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
-                        <DuplicateListItem :duplicate="duplicate" :isActive="currentDuplicateId === duplicate.id"
-                            @duplicate-selected="openDuplicate" />
+                    <div v-show="filteredAcknowledgedDuplicates.length > 0">
+                        <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
+                            <DuplicateListItem :duplicate="duplicate" :isActive="currentDuplicateId === duplicate.id"
+                                @duplicate-selected="openDuplicate" />
+                        </div>
+                    </div>
+                    <div v-show="filteredAcknowledgedDuplicates.length === 0">
+                        <p>{{ t('duplicatefinder', 'No acknowledged duplicates found.') }}</p>
                     </div>
                     <button @click="loadMoreAcknowledgedDuplicates">{{ t('duplicatefinder', 'Load More') }}</button>
                 </template>
