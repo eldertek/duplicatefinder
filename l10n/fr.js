@@ -35,6 +35,7 @@ OC.L10N.register(
     "File" : "Fichier",
     "Path:" : "Chemin :",
     "Delete" : "Supprimer",
+    "Load More" : "Charger d'avantage",
     "Duplicate acknowledged successfully" : "Doublon validé",
     "File deleted successfully." : "Fichier supprimé avec succès",
     "Error deleting file." : "Erreur de suppression du fichier."

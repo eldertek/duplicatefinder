@@ -10,6 +10,7 @@
     "No duplicates found or no duplicate selected." : "Inga dubbletter hittades eller ingen dubblett har valts.",
     "File" : "Fil",
     "Path:" : "Sökväg:",
-    "Delete" : "Radera"
+    "Delete" : "Radera",
+    "Load More" : "Ladda mer"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

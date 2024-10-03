@@ -36,6 +36,7 @@ OC.L10N.register(
     "Path:" : "Ruta:",
     "Delete" : "Eliminar",
     "Unacknowledged" : "No reconocido",
+    "Load More" : "Cargar más",
     "Acknowledged" : "Reconocido",
     "Duplicate acknowledged successfully" : "El duplicado fue reconocido exitosamente",
     "Error acknowledging duplicate." : "Error al reconocer el duplicado.",

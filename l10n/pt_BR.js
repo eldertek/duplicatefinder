@@ -38,6 +38,7 @@ OC.L10N.register(
     "Path:" : "Caminho:",
     "Delete" : "Excluir",
     "Unacknowledged" : "Não reconhecido",
+    "Load More" : "Carregar Mais",
     "Acknowledged" : "Reconhecido",
     "Error fetching duplicates." : "Erro ao buscar duplicatas.",
     "Duplicate acknowledged successfully" : "Duplicado reconhecido com sucesso",

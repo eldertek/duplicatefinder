@@ -4,6 +4,7 @@ OC.L10N.register(
     "Settings saved" : "Impostazioni salvate",
     "Select All" : "Seleziona tutto",
     "File" : "File",
-    "Delete" : "Elimina"
+    "Delete" : "Elimina",
+    "Load More" : "Carica altro"
 },
 "nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");

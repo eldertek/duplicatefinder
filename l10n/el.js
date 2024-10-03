@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Settings saved" : "Οι ρυθμίσεις αποθηκεύτηκαν",
     "File" : "Αρχείο",
-    "Delete" : "Διαγραφή"
+    "Delete" : "Διαγραφή",
+    "Load More" : "Φόρτωση Περισσότερων"
 },
 "nplurals=2; plural=(n != 1);");

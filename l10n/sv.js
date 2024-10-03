@@ -12,6 +12,7 @@ OC.L10N.register(
     "No duplicates found or no duplicate selected." : "Inga dubbletter hittades eller ingen dubblett har valts.",
     "File" : "Fil",
     "Path:" : "Sökväg:",
-    "Delete" : "Radera"
+    "Delete" : "Radera",
+    "Load More" : "Ladda mer"
 },
 "nplurals=2; plural=(n != 1);");

@@ -38,6 +38,7 @@ OC.L10N.register(
     "Path:" : "Ruta:",
     "Delete" : "Eliminar",
     "Unacknowledged" : "Non recoñecido",
+    "Load More" : "Cargar máis",
     "Acknowledged" : "Recoñecido",
     "Error fetching duplicates." : "Produciuse un erro ao recuperar os duplicados.metadatos",
     "Duplicate acknowledged successfully" : "O duplicado foi recoñecido correctamente",

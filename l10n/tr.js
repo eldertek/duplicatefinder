@@ -38,6 +38,7 @@ OC.L10N.register(
     "Path:" : "Yol:",
     "Delete" : "Sil",
     "Unacknowledged" : "Onayı kaldırılmış",
+    "Load More" : "Diğerlerini Yükle",
     "Acknowledged" : "Onaylanmış",
     "Error fetching duplicates." : "Çiftler alınırken sorun çıktı.",
     "Duplicate acknowledged successfully" : "Çift olduğu onaylandı",
