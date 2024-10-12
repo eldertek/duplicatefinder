@@ -1,3 +1,7 @@
+## 1.2.6 - 2024-08-07
+### Added
+- Support for Nextcloud 30
+
 ## 1.2.5 - 2024-08-06
 ### Changed
 - Confirm box to prevent deleting all files of a duplicate
