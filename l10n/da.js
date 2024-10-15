@@ -3,6 +3,9 @@ OC.L10N.register(
     {
     "Settings saved" : "Indstillinger gemt",
     "File" : "Fil",
-    "Delete" : "Slet"
+    "Delete" : "Slet",
+    "No unacknowledged duplicates found." : "Der blev ikke fundet nogen ikke-godkendte dubletter.",
+    "Load More" : "Hent flere",
+    "No acknowledged duplicates found." : "Ingen anerkendte dubletter fundet."
 },
 "nplurals=2; plural=(n != 1);");
