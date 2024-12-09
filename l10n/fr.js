@@ -50,6 +50,7 @@ OC.L10N.register(
     "File deleted successfully." : "Fichier supprimé avec succès",
     "Error deleting file." : "Erreur de suppression du fichier.",
     "Selected files deleted successfully." : "Fichiers sélectionnés supprimés avec succès.",
-    "Error deleting selected files." : "Erreur lors de la suppression des fichiers sélectionnés."
+    "Error deleting selected files." : "Erreur lors de la suppression des fichiers sélectionnés.",
+    "The viewer is not available" : "La visionneuse n'est pas disponible"
 },
 "nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");
