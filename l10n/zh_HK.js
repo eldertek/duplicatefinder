@@ -26,7 +26,7 @@ OC.L10N.register(
     "Duplicates search initiated (this may take a while)" : "已啟動重複項目搜尋（這可能需要一段時間）",
     "All duplicates found" : "找到所有重複項目",
     "Could not initiate duplicate search" : "無法啟動重複項目搜尋",
-    "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "歡迎，當前副本有 {numberOfFiles} 個檔案，總大小：{formattedSize}",
+    "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "歡迎，目前副本有 {numberOfFiles} 個檔案，總大小：{formattedSize}",
     "Show Preview" : "顯示預覽",
     "Unacknowledge it" : "不確認它",
     "Acknowledge it" : "承認它",
