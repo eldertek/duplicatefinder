@@ -290,21 +290,6 @@ class FileInfoService
                 '<error>The given scan path doesn\'t exists.</error>',
                 $output
             );
-        } catch (\Doctrine\DBAL\Exception\DriverException $e) {
-            if ($e->getSQLState() === '25P02') {
-                $this->logger->error('SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage(), ['app' => Application::ID, 'exception' => $e]);
-                CMDUtils::showIfOutputIsPresent(
-                    '<error>SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage() . '</error>',
-                    $output
-                );
-                // Handle the error, possibly by rolling back the transaction or taking other actions
-            } else {
-                $this->logger->error('An error occurred during scanning.', ['app' => Application::ID, 'exception' => $e]);
-                CMDUtils::showIfOutputIsPresent(
-                    '<error>An error occurred during scanning.</error>',
-                    $output
-                );
-            }
         } catch (\Exception $e) {
             $this->logger->error('An error occurred during scanning.', ['app' => Application::ID, 'exception' => $e]);
             CMDUtils::showIfOutputIsPresent(
@@ -319,6 +304,16 @@ class FileInfoService
         try {
             // Get the file node
             $node = $this->rootFolder->get($path);
+            $storage = $node->getStorage();
+
+            if ($storage instanceof IStorage) {
+                // Try to release the lock at the storage level
+                $storage->unlockFile($path, ILockingProvider::LOCK_SHARED);
+                CMDUtils::showIfOutputIsPresent(
+                    "Released storage-level lock for file: $path",
+                    $output
+                );
+            }
 
             // Try to release the lock at the application level
             $this->lockingProvider->releaseAll($path, ILockingProvider::LOCK_SHARED);

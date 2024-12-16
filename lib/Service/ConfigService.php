@@ -13,17 +13,6 @@ class ConfigService
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var int|null */
-    private $findJobInterval = null;
-    /** @var int|null */
-    private $cleanupJobInterval = null;
-    /** @var bool|null */
-    private $filesystemEventsDisabled = null;
-    /** @var bool|null */
-    private $mountedFilesIgnored = null;
-    /** @var string|null */
-    private $installedVersion = null;
-
     public function __construct(
         IConfig $config,
         LoggerInterface $logger
@@ -73,65 +62,46 @@ class ConfigService
 
     public function getFindJobInterval() : int
     {
-        if ($this->findJobInterval === null) {
-            $this->findJobInterval = $this->getIntVal('backgroundjob_interval_find', 60*60*24*5);
-        }
-        return $this->findJobInterval;
+        return $this->getIntVal('backgroundjob_interval_find', 60*60*24*5);
     }
 
     public function getCleanupJobInterval() : int
     {
-        if ($this->cleanupJobInterval === null) {
-            $this->cleanupJobInterval = $this->getIntVal('backgroundjob_interval_cleanup', 60*60*24*2);
-        }
-        return $this->cleanupJobInterval;
+        return $this->getIntVal('backgroundjob_interval_cleanup', 60*60*24*2);
     }
 
     public function areFilesytemEventsDisabled():bool
     {
-        if ($this->filesystemEventsDisabled === null) {
-            $this->filesystemEventsDisabled = $this->getBoolVal('disable_filesystem_events', false);
-        }
-        return $this->filesystemEventsDisabled;
+        return $this->getBoolVal('disable_filesystem_events', false);
     }
 
     public function areMountedFilesIgnored() : bool
     {
-        if ($this->mountedFilesIgnored === null) {
-            $this->mountedFilesIgnored = $this->getBoolVal('ignore_mounted_files', false);
-        }
-        return $this->mountedFilesIgnored;
+        return $this->getBoolVal('ignore_mounted_files', false);
     }
 
     public function getInstalledVersion() : string
     {
-        if ($this->installedVersion === null) {
-            $this->installedVersion = $this->config->getAppValue(Application::ID, 'installed_version', '0.0.0');
-        }
-        return $this->installedVersion;
+        return $this->config->getAppValue(Application::ID, 'installed_version', '0.0.0');
     }
 
     public function setFindJobInterval(int $value) : void
     {
         $this->setIntVal('backgroundjob_interval_find', $value);
-        $this->findJobInterval = $value;
     }
 
     public function setCleanupJobInterval(int $value) : void
     {
         $this->setIntVal('backgroundjob_interval_cleanup', $value);
-        $this->cleanupJobInterval = $value;
     }
 
     public function setFilesytemEventsDisabled(bool $value):void
     {
         $this->setBoolVal('disable_filesystem_events', $value);
-        $this->filesystemEventsDisabled = $value;
     }
 
     public function setMountedFilesIgnored(bool $value) : void
     {
         $this->setBoolVal('ignore_mounted_files', $value);
-        $this->mountedFilesIgnored = $value;
     }
 }
