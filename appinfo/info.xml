@@ -7,7 +7,7 @@
     <summary lang="fr">Économisez de l’espace en trouvant vos fichiers en doublon</summary>
     <description>Are you tired of sifting through piles of files and folders, only to discover multiple copies of the same content cluttering your storage space?</description>
     <description lang="fr">Vous en avez assez de passer au crible des piles de fichiers et de dossiers pour découvrir que plusieurs copies du même contenu encombrent votre espace de stockage ?</description>
-    <version>1.2.7</version>
+    <version>1.2.8</version>
     <licence>agpl</licence>
     <author mail="andrelauret@eclipse-technology.eu" >André Théo LAURET</author>
     <namespace>DuplicateFinder</namespace>

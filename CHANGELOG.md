@@ -1,3 +1,7 @@
+## 1.2.8 - 2024-12-16
+### Fixed
+- Revert back to v1.2.5 lib
+
 ## 1.2.7 - 2024-12-16
 ### Fixed
 - Fix POSTGRESQL issues
