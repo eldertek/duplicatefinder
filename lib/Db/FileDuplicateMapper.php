@@ -5,8 +5,7 @@ namespace OCA\DuplicateFinder\Db;
 use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\ILogger;
-use Doctrine\DBAL\Platforms\PostgreSQL94Platform;
-use Doctrine\DBAL\Platforms\PostgreSQL100Platform;
+use Doctrine\DBAL\Platforms\PostgreSQL\PostgreSQLPlatform;
 
 /**
  * @extends EQBMapper<FileDuplicate>
@@ -22,16 +21,30 @@ class FileDuplicateMapper extends EQBMapper
         $this->logger = $logger;
     }
 
+    /**
+     * Find a duplicate by hash and type
+     * 
+     * @param string $hash The hash to search for
+     * @param string $type The type of hash (defaults to 'file_hash')
+     * @return FileDuplicate
+     * @throws \OCP\AppFramework\Db\DoesNotExistException
+     * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+     */
     public function find(string $hash, string $type = 'file_hash'): FileDuplicate
     {
-        $qb = $this->db->getQueryBuilder();
-        $qb->select('*')
-            ->from($this->getTableName())
-            ->where(
-                $qb->expr()->eq('hash', $qb->createNamedParameter($hash)),
-                $qb->expr()->eq('type', $qb->createNamedParameter($type))
-            );
-        return $this->findEntity($qb);
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('*')
+                ->from($this->getTableName())
+                ->where(
+                    $qb->expr()->eq('hash', $qb->createNamedParameter($hash)),
+                    $qb->expr()->eq('type', $qb->createNamedParameter($type))
+                );
+            return $this->findEntity($qb);
+        } catch (\Exception $e) {
+            $this->logger->error('Error in find: ' . $e->getMessage(), ['app' => 'duplicatefinder']);
+            throw $e;
+        }
     }
 
     /**
@@ -40,6 +53,9 @@ class FileDuplicateMapper extends EQBMapper
      * @param int|null $offset
      * @param array<array<string>> $orderBy
      * @return array<FileDuplicate>
+     * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+     * @throws \OCP\Files\NotFoundException
+     * @throws \OCP\Files\NotPermittedException
      */
     public function findAll(
         ?string $user = null,
@@ -47,38 +63,58 @@ class FileDuplicateMapper extends EQBMapper
         ?int $offset = null,
         ?array $orderBy = [['hash'], ['type']]
     ): array {
-        $qb = $this->db->getQueryBuilder();
-        $qb->select('d.id as id', 'd.type', 'd.hash', 'd.acknowledged')
-            ->from($this->getTableName(), 'd');
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('d.id as id', 'd.type', 'd.hash', 'd.acknowledged')
+                ->from($this->getTableName(), 'd');
 
-        if ($limit !== null) {
-            $qb->setMaxResults($limit); // Set the limit of rows to fetch
-        }
-        if ($offset !== null) {
-            $qb->setFirstResult($offset); // Set the offset to start fetching rows
-        }
-
-        if ($orderBy !== null) {
-            foreach ($orderBy as $order) {
-                $qb->addOrderBy($order[0], isset($order[1]) ? $order[1] : null);
+            if ($user !== null) {
+                $qb->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($user)));
             }
-            unset($order);
-        }
 
-        // Handle PostgreSQL-specific SQL syntax issues
-        if ($this->db->getDatabasePlatform() instanceof PostgreSQL94Platform ||
-            $this->db->getDatabasePlatform() instanceof PostgreSQL100Platform) {
-            $qb->addSelect('pg_column_size(d.hash) as hash_size');
-        }
+            if ($limit !== null) {
+                $qb->setMaxResults($limit);
+            }
+            if ($offset !== null) {
+                $qb->setFirstResult($offset);
+            }
 
-        return $this->findEntities($qb);
+            if ($orderBy !== null) {
+                foreach ($orderBy as $order) {
+                    $qb->addOrderBy($order[0], isset($order[1]) ? $order[1] : null);
+                }
+                unset($order);
+            }
+
+            // Handle PostgreSQL-specific SQL syntax issues
+            if ($this->db->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+                $qb->addSelect('pg_column_size("d"."hash") as hash_size');
+            }
+
+            return $this->findEntities($qb);
+        } catch (\Exception $e) {
+            $this->logger->error('Error in findAll: ' . $e->getMessage(), ['app' => 'duplicatefinder']);
+            throw $e;
+        }
     }
 
+    /**
+     * Clears the duplicate entries from the database
+     * 
+     * @param string|null $table Optional specific table to clear
+     * @throws \OCP\AppFramework\Db\DoesNotExistException
+     */
     public function clear(?string $table = null): void
     {
-        parent::clear($this->getTableName() . '_f');
-        parent::clear();
+        try {
+            parent::clear($this->getTableName() . '_f');
+            parent::clear();
+        } catch (\Exception $e) {
+            $this->logger->error('Error in clear: ' . $e->getMessage(), ['app' => 'duplicatefinder']);
+            throw $e;
+        }
     }
+
     /**
      * Marks the specified duplicate as acknowledged.
      * 
@@ -97,11 +133,10 @@ class FileDuplicateMapper extends EQBMapper
 
             return true;
         } catch (\Exception $e) {
-            $this->logger->error($e->getMessage());
+            $this->logger->error('Error in markAsAcknowledged: ' . $e->getMessage(), ['app' => 'duplicatefinder']);
             return false;
         }
     }
-
 
     /**
      * Removes the acknowledged status from the specified duplicate.
