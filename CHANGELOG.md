@@ -1,3 +1,7 @@
+## 1.2.7 - 2024-12-16
+### Fixed
+- Fix POSTGRESQL issues
+
 ## 1.2.6 - 2024-08-07
 ### Added
 - Support for Nextcloud 30
