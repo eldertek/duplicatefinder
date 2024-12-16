@@ -24,7 +24,7 @@
     "Duplicates search initiated (this may take a while)" : "كۆپەيتىلگەن ئىزدەش باشلانغان (بۇنىڭغا بىر ئاز ۋاقىت كېتىشى مۇمكىن)",
     "All duplicates found" : "بارلىق كۆپەيتىلگەن نۇسخىسى تېپىلدى",
     "Could not initiate duplicate search" : "تەكرار ئىزدەشنى قوزغىتالمىدى",
-    "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "خۇش كەپسىز ، نۆۋەتتىكى كۆپەيتىلگەن نۇسخىدا {numberOfFiles} ھۆججىتى بار ، ئومۇمىي چوڭلۇقى: {formatSize}",
+    "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "خۇش كەپسىز ، نۆۋەتتىكى كۆپەيتىلگەن نۇسخىدا {numberOfFiles} ھۆججىتى بار ، ئومۇمىي چوڭلۇقى: {formattedSize}",
     "Show Preview" : "ئالدىن كۆرۈش",
     "Unacknowledge it" : "بىلمەيدۇ",
     "Acknowledge it" : "ئېتىراپ قىلىڭ",
