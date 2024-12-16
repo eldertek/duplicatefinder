@@ -4,7 +4,7 @@ namespace OCA\DuplicateFinder\Db;
 
 use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
-use OCP\ILogger;
+use Psr\Log\LoggerInterface;
 use Doctrine\DBAL\Platforms\PostgreSQL\PostgreSQLPlatform;
 
 /**
@@ -12,10 +12,10 @@ use Doctrine\DBAL\Platforms\PostgreSQL\PostgreSQLPlatform;
  */
 class FileDuplicateMapper extends EQBMapper
 {
-    /** @var ILogger */
+    /** @var LoggerInterface */
     private $logger;
 
-    public function __construct(IDBConnection $db, ILogger $logger)
+    public function __construct(IDBConnection $db, LoggerInterface $logger)
     {
         parent::__construct($db, 'duplicatefinder_dups', FileDuplicate::class);
         $this->logger = $logger;
@@ -85,9 +85,8 @@ class FileDuplicateMapper extends EQBMapper
                 }
                 unset($order);
             }
-
             // Handle PostgreSQL-specific SQL syntax issues
-            if ($this->db->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            if ($this->db->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
                 $qb->addSelect('pg_column_size("d"."hash") as hash_size');
             }
 
@@ -129,7 +128,7 @@ class FileDuplicateMapper extends EQBMapper
             $qb->update($this->getTableName())
                 ->set('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
                 ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
-                ->execute();
+                ->executeStatement();
 
             return true;
         } catch (\Exception $e) {
@@ -152,7 +151,7 @@ class FileDuplicateMapper extends EQBMapper
             $qb->update($this->getTableName())
                 ->set('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
                 ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
-                ->execute();
+                ->executeStatement();
 
             return true;
         } catch (\Exception $e) {
@@ -171,23 +170,19 @@ class FileDuplicateMapper extends EQBMapper
     {
         $qb = $this->db->getQueryBuilder();
 
-        // Start with a basic SELECT COUNT query
         $qb->select($qb->func()->count('*', 'total_count'))
             ->from($this->getTableName());
 
-        // Add conditions based on the type
         if ($type === 'acknowledged') {
             $qb->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
         } elseif ($type === 'unacknowledged') {
             $qb->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)));
-        } // No condition needed for 'all', as we want to count all rows
+        }
 
-        // Execute the query and fetch the result
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $row = $result->fetch();
         $result->closeCursor();
 
-        // Return the count result as an integer
         return (int) ($row ? $row['total_count'] : 0);
     }
 

@@ -191,7 +191,6 @@ class FindDuplicates extends Command
             if ($e->getSQLState() === '25P02') {
                 $this->logger->error('SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage(), ['app' => 'duplicatefinder', 'exception' => $e]);
                 $this->output->writeln('<error>SQLSTATE[25P02]: In failed sql transaction: ' . $e->getMessage() . '</error>');
-                // Handle the error, possibly by rolling back the transaction or taking other actions
             } else {
                 $this->logger->error('An error occurred during scanning.', ['app' => 'duplicatefinder', 'exception' => $e]);
                 $this->output->writeln('<error>An error occurred during scanning.</error>');

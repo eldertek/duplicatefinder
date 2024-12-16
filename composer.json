@@ -21,6 +21,7 @@
 	},
 	"require": {
 		"nextcloud/ocp": "^28.0",
-		"symfony/console": "^6.3"
+		"symfony/console": "^6.3",
+		"doctrine/dbal": "^3.7"
 	}
 }
