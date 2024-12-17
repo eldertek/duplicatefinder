@@ -5,7 +5,12 @@
       <p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong></p>
       <p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizeItemPath(file.path) }}</p>
     </div>
-    <button @click="deleteFile" class="delete-button">{{ t('duplicatefinder', 'Delete') }}</button>
+    <button v-if="!file.isInOriginFolder" @click="deleteFile" class="delete-button">
+      {{ t('duplicatefinder', 'Delete') }}
+    </button>
+    <button v-else class="protected-button" disabled>
+      {{ t('duplicatefinder', 'Protected') }}
+    </button>
   </div>
 </template>
 <script>
@@ -15,15 +20,29 @@ import { getPreviewImage, normalizeItemPath } from '@/tools/utils';
 export default {
   props: {
     file: Object,
-    index: Number
+    index: Number,
+    duplicateAcknowledged: {
+      type: Boolean,
+      required: true
+    }
   },
   methods: {
     getPreviewImage,
     normalizeItemPath,
-    deleteFile() {
-      deleteFile(this.file);
-
-      this.$emit('fileDeleted', this.file);
+    async deleteFile() {
+      try {
+        console.log('DuplicateFileDisplay: Deleting file:', this.file);
+        await deleteFile(this.file);
+        const eventData = {
+          file: this.file,
+          acknowledged: this.duplicateAcknowledged
+        };
+        console.log('DuplicateFileDisplay: Emitting fileDeleted event with data:', eventData);
+        this.$emit('fileDeleted', eventData);
+      } catch (error) {
+         console.error('DuplicateFileDisplay: Error deleting file:', error);
+         // Handled by api.js
+      }
     },
   }
 }
@@ -65,15 +84,24 @@ export default {
   background-color: #e43f51;
 }
 
+.protected-button {
+  background-color: #ccc;
+  color: #666;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: not-allowed;
+  margin-left: 10px;
+}
+
 /* Desktop styles */
 @media (min-width: 801px) {
-  .delete-button {
+  .delete-button, .protected-button {
     position: absolute;
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
     margin-left: 0;
-    /* <-- reset margin for desktop */
   }
 }
 
@@ -105,7 +133,7 @@ export default {
     max-width: 90%;
   }
 
-  .delete-button {
+  .delete-button, .protected-button {
     width: 100%;
     margin-left: 0;
     margin-right: 0;

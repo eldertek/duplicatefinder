@@ -1,3 +1,15 @@
+## 1.2.9 - 2024-12-17
+### Added
+- Origin folders configuration to protect files from deletion
+- Backend API for file deletion with improved error handling
+- Detailed error messages for file operations
+### Changed
+- File deletion now uses backend API instead of FileClient
+- Improved error handling in frontend with specific error messages
+### Fixed
+- Better handling of protected files in origin folders
+- More informative error messages when file deletion fails
+
 ## 1.2.8 - 2024-12-16
 ### Fixed
 - Revert back to v1.2.5 lib

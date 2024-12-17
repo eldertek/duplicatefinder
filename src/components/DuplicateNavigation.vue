@@ -13,8 +13,11 @@
                 <template>
                     <div v-show="filteredUnacknowledgedDuplicates.length > 0">
                         <div v-for="duplicate in filteredUnacknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
-                            <DuplicateListItem :duplicate="duplicate" :isActive="currentDuplicateId === duplicate.id"
-                                @duplicate-selected="openDuplicate" />
+                            <DuplicateListItem 
+                                :duplicate="duplicate" 
+                                :isActive="currentDuplicateId === duplicate.id"
+                                @duplicate-selected="openDuplicate"
+                                @duplicate-resolved="handleDuplicateResolved" />
                         </div>
                     </div>
                     <div v-show="filteredUnacknowledgedDuplicates.length === 0">
@@ -31,8 +34,11 @@
                 <template>
                     <div v-show="filteredAcknowledgedDuplicates.length > 0">
                         <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
-                            <DuplicateListItem :duplicate="duplicate" :isActive="currentDuplicateId === duplicate.id"
-                                @duplicate-selected="openDuplicate" />
+                            <DuplicateListItem 
+                                :duplicate="duplicate" 
+                                :isActive="currentDuplicateId === duplicate.id"
+                                @duplicate-selected="openDuplicate"
+                                @duplicate-resolved="handleDuplicateResolved" />
                         </div>
                     </div>
                     <div v-show="filteredAcknowledgedDuplicates.length === 0">
@@ -101,6 +107,44 @@ export default {
             this.acknowledgedPage++;
             const newDuplicates = await fetchDuplicates('acknowledged', this.limit, this.acknowledgedPage);
             this.$emit('update-acknowledged-duplicates', newDuplicates.entities);
+        },
+        handleDuplicateResolved({ duplicate, type }) {
+            if (duplicate.files.length <= 1) {
+                if (type === 'acknowledged') {
+                    this.$emit('update-acknowledged-duplicates', this.acknowledgedDuplicates.filter(d => d.id !== duplicate.id));
+                } else {
+                    this.$emit('update-unacknowledged-duplicates', this.unacknowledgedDuplicates.filter(d => d.id !== duplicate.id));
+                }
+                const nextDuplicate = this.findNextAvailableDuplicate(duplicate, type);
+                if (nextDuplicate) {
+                    this.openDuplicate(nextDuplicate);
+                } else {
+                    this.$emit('open-duplicate', null);
+                }
+            }
+        },
+
+        findNextAvailableDuplicate(currentDuplicate, type) {
+            const acknowledgedList = this.filteredAcknowledgedDuplicates;
+            const unacknowledgedList = this.filteredUnacknowledgedDuplicates;
+
+            if (type === 'acknowledged') {
+                // Try to find next in acknowledged list
+                const index = acknowledgedList.findIndex(d => d.id === currentDuplicate.id);
+                if (index < acknowledgedList.length - 1) {
+                    return acknowledgedList[index + 1];
+                }
+                // If no more in acknowledged, try unacknowledged
+                return unacknowledgedList[0] || null;
+            } else {
+                // Try to find next in unacknowledged list
+                const index = unacknowledgedList.findIndex(d => d.id === currentDuplicate.id);
+                if (index < unacknowledgedList.length - 1) {
+                    return unacknowledgedList[index + 1];
+                }
+                // If no more in unacknowledged, try acknowledged
+                return acknowledgedList[0] || null;
+            }
         }
     }
 };

@@ -5,95 +5,109 @@
         </div>
 
         <div class="folders-list">
-            <div v-for="(folder, index) in originFolders" :key="index" class="folder-item">
-                <NcButton type="tertiary" @click="removeFolder(index)">
+            <div v-for="folder in originFolders" :key="folder.id" class="folder-item">
+                <NcButton type="tertiary" @click="removeFolder(folder)">
                     <template #icon>
                         <Delete :size="20" />
                     </template>
                 </NcButton>
-                <span class="folder-path">{{ folder }}</span>
+                <span class="folder-path">{{ folder.path }}</span>
             </div>
         </div>
 
         <div class="add-folder">
-            <NcButton @click="showFolderPicker = true">
+            <NcButton @click="pickFolder">
                 <template #icon>
                     <Plus :size="20" />
                 </template>
                 {{ t('duplicatefinder', 'Add Origin Folder') }}
             </NcButton>
         </div>
-
-        <NcModal v-if="showFolderPicker" 
-                @close="showFolderPicker = false"
-                :title="t('duplicatefinder', 'Select Origin Folder')">
-            <!-- Here we'll need to implement a folder picker component -->
-            <div class="folder-picker">
-                <!-- Placeholder for folder picker -->
-                <p>{{ t('duplicatefinder', 'Folder picker will be implemented here') }}</p>
-            </div>
-            <template #actions>
-                <NcButton type="primary" @click="addFolder">
-                    {{ t('duplicatefinder', 'Add') }}
-                </NcButton>
-                <NcButton type="tertiary" @click="showFolderPicker = false">
-                    {{ t('duplicatefinder', 'Cancel') }}
-                </NcButton>
-            </template>
-        </NcModal>
     </div>
 </template>
 
 <script>
-import { NcButton, NcModal } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { getFilePickerBuilder } from '@nextcloud/dialogs'
+import { NcButton } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete'
 import Plus from 'vue-material-design-icons/Plus'
+import { loadOriginFolders, saveOriginFolders, deleteOriginFolder } from '@/tools/api'
 
 export default {
     name: 'OriginFoldersSettings',
     components: {
         NcButton,
-        NcModal,
         Delete,
         Plus,
     },
     data() {
         return {
             originFolders: [],
-            showFolderPicker: false,
+            selectedFolder: null,
         }
     },
     methods: {
-        removeFolder(index) {
-            this.originFolders.splice(index, 1)
-            this.saveOriginFolders()
-        },
-        addFolder() {
-            // TODO: Implement folder selection logic
-            this.showFolderPicker = false
-            this.saveOriginFolders()
-        },
-        async saveOriginFolders() {
-            // TODO: Implement API call to save origin folders
+        async pickFolder() {
+            const picker = getFilePickerBuilder(t('duplicatefinder', 'Select Origin Folder'))
+                .setMultiSelect(false)
+                .setMimeTypeFilter(['httpd/unix-directory'])
+                .setType(1)
+                .allowDirectories()
+                .build()
+
             try {
-                // await saveOriginFolders(this.originFolders)
-                // Show success message
+                const path = await picker.pick()
+                if (path) {
+                    if (this.originFolders.some(folder => folder.path === path)) {
+                        showError(t('duplicatefinder', 'This folder is already an origin folder'))
+                        return
+                    }
+                    
+                    await saveOriginFolders([path])
+                    await this.loadFolders()
+                    
+                    showSuccess(t('duplicatefinder', 'Folder added to origin folders'))
+                }
             } catch (error) {
-                // Show error message
+                console.error('Error picking folder:', error)
+                await this.loadFolders()
             }
         },
-        async loadOriginFolders() {
-            // TODO: Implement API call to load origin folders
+        async removeFolder(folder) {
+            if (!folder.id) {
+                console.error('Cannot remove folder without ID:', folder)
+                showError(t('duplicatefinder', 'Invalid folder data'))
+                return
+            }
+
             try {
-                // const folders = await loadOriginFolders()
-                // this.originFolders = folders
+                // Supprimer du backend d'abord
+                await deleteOriginFolder(folder.id)
+                
+                const index = this.originFolders.findIndex(f => f.id === folder.id)
+                if (index !== -1) {
+                    this.originFolders.splice(index, 1)
+                }
+                
+                showSuccess(t('duplicatefinder', 'Folder {folder} removed from origin folders', { folder: folder.path }))
             } catch (error) {
-                // Show error message
+                console.error('Error removing folder:', error)
+                showError(t('duplicatefinder', 'Failed to remove folder'))
+                await this.loadFolders()
+            }
+        },
+        async loadFolders() {
+            try {
+                this.originFolders = await loadOriginFolders()
+            } catch (error) {
+                console.error('Error loading origin folders:', error)
+                showError(t('duplicatefinder', 'Failed to load origin folders'))
             }
         }
     },
     mounted() {
-        this.loadOriginFolders()
+        this.loadFolders()
     }
 }
 </script>
@@ -116,27 +130,18 @@ export default {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    padding: 5px;
+    padding: 8px;
     background-color: var(--color-background-hover);
     border-radius: var(--border-radius);
 }
 
 .folder-path {
     margin-left: 10px;
+    flex-grow: 1;
+    word-break: break-all;
 }
 
 .add-folder {
     margin-top: 20px;
-}
-
-.folder-picker {
-    min-height: 300px;
-    border: 2px dashed var(--color-border);
-    border-radius: var(--border-radius);
-    margin: 20px 0;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 </style> 

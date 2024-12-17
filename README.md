@@ -25,6 +25,14 @@ Normally the detection methods should be used in the order as listed, but if you
 ## Ignoring Duplicates
 To prevent a folder from being scanned for duplicates, place a `.nodupefinder` file inside it. Any files in this folder will be excluded from the duplicate detection process.
 
+## Protected Files in Origin Folders
+You can configure "Origin Folders" to protect specific files from accidental deletion. Files located in these designated folders cannot be deleted through the duplicate finder interface, ensuring that original files are preserved. This is particularly useful when you want to:
+- Keep original files in specific directories
+- Prevent accidental deletion of important files
+- Maintain a source of truth for your files
+
+You can configure Origin Folders in the app settings. Files in these folders will be marked as "Protected" in the interface instead of showing a delete button.
+
 ## Search and Filter Duplicates
 You can search and filter duplicates by file path or name using the search input at the top of the "Unacknowledged" and "Acknowledged" sections. 
 

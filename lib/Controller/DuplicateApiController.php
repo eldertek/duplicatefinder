@@ -11,6 +11,7 @@ use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
+use OCA\DuplicateFinder\Service\OriginFolderService;
 
 class DuplicateApiController extends AbstractAPIController
 {
@@ -24,6 +25,8 @@ class DuplicateApiController extends AbstractAPIController
     private $userManager;
     /** @var LoggerInterface */
     protected $logger;
+    /** @var OriginFolderService */
+    private $originFolderService;
 
     public function __construct(
         $appName,
@@ -33,7 +36,8 @@ class DuplicateApiController extends AbstractAPIController
         FileInfoService $fileInfoService,
         FileDuplicateMapper $fileDuplidateMapper,
         IUserManager $userManager,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        OriginFolderService $originFolderService
     ) {
         parent::__construct($appName, $request, $userSession, $logger);
         $this->fileInfoService = $fileInfoService;
@@ -41,6 +45,7 @@ class DuplicateApiController extends AbstractAPIController
         $this->fileDuplicateService = $fileDuplicateService;
         $this->logger = $logger;
         $this->fileDuplicateMapper = $fileDuplidateMapper;
+        $this->originFolderService = $originFolderService;
     }
 
     /**

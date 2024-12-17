@@ -101,12 +101,12 @@ class RepairFileInfos implements IRepairStep
             ->from('duplicatefinder_finfo')
             ->where($qb->expr()->isNull('path_hash'))
             ->orWhere($qb->expr()->eq('path_hash', $qb->createNamedParameter('')));
-        $qb = $qb->execute();
-        if (is_int($qb)) {
+        $result = $qb->executeQuery();
+        if (!$result) {
             return array();
         }
-        $rows = $qb->fetchAll();
-        $qb->closeCursor();
+        $rows = $result->fetchAll();
+        $result->closeCursor();
         return $rows;
     }
 

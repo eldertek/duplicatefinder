@@ -13,6 +13,7 @@ use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Db\FileDuplicate;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\OriginFolderService;
 
 class FileDuplicateService
 {
@@ -23,15 +24,19 @@ class FileDuplicateService
     private $logger;
     /** @var FileInfoService */
     private $fileInfoService;
+    /** @var OriginFolderService */
+    private $originFolderService;
 
     public function __construct(
         LoggerInterface $logger,
         FileDuplicateMapper $mapper,
-        FileInfoService $fileInfoService
+        FileInfoService $fileInfoService,
+        OriginFolderService $originFolderService
     ) {
         $this->mapper = $mapper;
         $this->logger = $logger;
         $this->fileInfoService = $fileInfoService;
+        $this->originFolderService = $originFolderService;
     }
 
     /**
@@ -40,10 +45,27 @@ class FileDuplicateService
     public function enrich(FileDuplicate $duplicate): FileDuplicate
     {
         $files = $duplicate->getFiles();
+        $this->logger->debug('Enriching duplicate with hash: {hash}', ['hash' => $duplicate->getHash()]);
+        
         // Iterate through each FileInfo object to enrich it
         foreach ($files as $key => $fileInfo) {
             // Enrich the FileInfo object
             $files[$key] = $this->fileInfoService->enrich($fileInfo);
+            
+            // Normalize path by removing /admin/files/ prefix
+            $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $fileInfo->getPath());
+            $this->logger->debug('Normalized path for file: {original} -> {normalized}', [
+                'original' => $fileInfo->getPath(),
+                'normalized' => $normalizedPath
+            ]);
+            
+            // Check if file is in an origin folder
+            $protectionInfo = $this->originFolderService->isPathProtected($normalizedPath);
+            $files[$key]->setIsInOriginFolder($protectionInfo['isProtected']);
+            $this->logger->debug('Protection status for file {path}: {status}', [
+                'path' => $normalizedPath,
+                'status' => $protectionInfo['isProtected'] ? 'protected' : 'not protected'
+            ]);
         }
 
         // Sort the enriched FileInfo objects
@@ -53,6 +75,7 @@ class FileDuplicateService
 
         // Set the sorted and enriched FileInfo objects back to the duplicate
         $duplicate->setFiles(array_values($files));
+        $this->logger->debug('Finished enriching duplicate with hash: {hash}', ['hash' => $duplicate->getHash()]);
 
         return $duplicate;
     }
@@ -73,12 +96,25 @@ class FileDuplicateService
         bool $enrich = false,
         ?array $orderBy = [['hash'], ['type']]
     ): array {
+        $this->logger->debug('Finding duplicates with parameters: type={type}, user={user}, page={page}, pageSize={pageSize}, enrich={enrich}', [
+            'type' => $type ?? 'all',
+            'user' => $user ?? 'none',
+            'page' => $page,
+            'pageSize' => $pageSize,
+            'enrich' => $enrich ? 'true' : 'false'
+        ]);
+
         $result = [];
         $isLastFetched = false;
         $entities = [];
 
         while (count($result) < $pageSize && !$isLastFetched) {
-            $offset = ($page - 1) * $pageSize; // Calculate the offset based on the current page
+            $offset = ($page - 1) * $pageSize;
+            $this->logger->debug('Fetching duplicates with offset={offset}, limit={limit}', [
+                'offset' => $offset,
+                'limit' => $pageSize
+            ]);
+            
             $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy);
 
             foreach ($entities as $entity) {
@@ -99,12 +135,14 @@ class FileDuplicateService
                 }
             }
 
-            $isLastFetched = count($entities) < $pageSize; // Determine if this is the last page
+            $isLastFetched = count($entities) < $pageSize;
             if (count($result) < $pageSize && !$isLastFetched) {
-                $page++; // Move to the next page if no results found and not the last page
+                $page++;
+                $this->logger->debug('Moving to next page: {page}', ['page' => $page]);
             }
         }
 
+        $this->logger->debug('Found {count} duplicates', ['count' => count($result)]);
         return [
             "entities" => $result,
             "pageKey" => $offset,
@@ -116,6 +154,8 @@ class FileDuplicateService
         FileDuplicate $duplicate,
         string $user
     ): FileDuplicate {
+        $this->logger->debug('Stripping files without access rights for user: {user}', ['user' => $user]);
+        
         $files = $this->fileInfoService->findByHash($duplicate->getHash(), $duplicate->getType());
         $accessibleFiles = [];
 
@@ -124,6 +164,11 @@ class FileDuplicateService
                 $accessibleFiles[] = $fileInfo;
             }
         }
+
+        $this->logger->debug('Found {count} accessible files out of {total}', [
+            'count' => count($accessibleFiles),
+            'total' => count($files)
+        ]);
 
         $duplicate->setFiles($accessibleFiles);
         return $duplicate;

@@ -17,13 +17,24 @@
             <a v-else class="acknowledge-link" @click="unOrAcknowledgeDuplicate(duplicate)" href="#">
               {{ t('duplicatefinder', 'Acknowledge it') }}
             </a>
-            <button @click="deleteSelectedDuplicates">{{ t('duplicatefinder', 'Delete Selected') }}</button>
-            <!-- New Select All Button -->
+            <button @click="deleteSelectedDuplicates" :disabled="selectedFiles.length === 0">
+              {{ t('duplicatefinder', 'Delete Selected') }}
+            </button>
             <button @click="selectAllFiles">{{ t('duplicatefinder', 'Select All') }}</button>
           </div>
           <div v-for="(file, index) in duplicate.files" :key="file.id" class="file-display">
-            <input type="checkbox" v-model="selectedFiles" :value="file" />
-            <DuplicateFileDisplay :file="file" :index="index" @fileDeleted="removeFileFromListAndUpdate(file)">
+            <input 
+              type="checkbox" 
+              v-model="selectedFiles" 
+              :value="file" 
+              :disabled="file.isInOriginFolder"
+              @change="handleFileSelection(file)"
+            />
+            <DuplicateFileDisplay 
+              :file="file" 
+              :index="index" 
+              :duplicate-acknowledged="duplicate.acknowledged"
+              @fileDeleted="removeFileFromListAndUpdate(file)">
             </DuplicateFileDisplay>
           </div>
         </div>
@@ -62,41 +73,98 @@ export default {
     };
   },
   methods: {
-    unOrAcknowledgeDuplicate(duplicate) {
-      if (duplicate.acknowledged) {
-        unacknowledgeDuplicate(duplicate.hash);
-      } else {
-        acknowledgeDuplicate(duplicate.hash);
+    async unOrAcknowledgeDuplicate(duplicate) {
+      try {
+        // Créer une copie du doublon pour viter les mutations directes
+        const updatedDuplicate = { ...duplicate };
+        
+        if (updatedDuplicate.acknowledged) {
+          await unacknowledgeDuplicate(updatedDuplicate.hash);
+          updatedDuplicate.acknowledged = false;
+        } else {
+          await acknowledgeDuplicate(updatedDuplicate.hash);
+          updatedDuplicate.acknowledged = true;
+        }
+        
+        // Émettre l'événement avec le doublon mis à jour
+        this.$emit('duplicateUpdated', updatedDuplicate);
+      } catch (error) {
+        console.error('Error updating duplicate acknowledgement status:', error);
       }
-      this.$emit('duplicateUpdated', duplicate);
     },
     openFileInViewer,
     getDuplicateSize(duplicate) {
       return getFormattedSizeOfCurrentDuplicate(duplicate);
     },
     removeFileFromListAndUpdate(file) {
+      console.log('DuplicateDetails: Removing file from list:', file);
       removeFileFromList(file, this.duplicate.files);
-      if (this.duplicate.files.length === 0) {
-        this.$emit('lastFileDeleted', this.duplicate);
+      console.log('DuplicateDetails: Files remaining:', this.duplicate.files.length);
+      
+      if (this.duplicate.files.length <= 1) {
+        console.log('DuplicateDetails: Emitting duplicate-resolved event');
+        // Émettre un événement pour indiquer que ce doublon doit être retiré
+        this.$emit('duplicate-resolved', {
+          duplicate: {
+            ...this.duplicate,
+            files: [...this.duplicate.files]
+          },
+          type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged'
+        });
       }
     },
     async deleteSelectedDuplicates() {
       try {
         const fileHashes = this.selectedFiles.map(file => file.hash);
         const allInstances = this.duplicate.files.filter(file => fileHashes.includes(file.hash));
+        
+        // Vérifier si des fichiers protégés sont sélectionnés
+        const hasProtectedFiles = this.selectedFiles.some(file => file.isInOriginFolder);
+        if (hasProtectedFiles) {
+          this.$emit('showError', this.t('duplicatefinder', 'Cannot delete protected files'));
+          return;
+        }
+
         if (allInstances.length === this.duplicate.files.length) {
           const confirmDelete = confirm(this.t('duplicatefinder', 'This action will delete all instances of the selected files. Are you sure you want to proceed?'));
           if (!confirmDelete) return;
         }
-        await deleteFiles(this.selectedFiles);
-        removeFilesFromList(this.selectedFiles, this.duplicate.files);
-        this.selectedFiles = [];
+        
+        const { success, errors } = await deleteFiles(this.selectedFiles);
+        if (success.length > 0) {
+          removeFilesFromList(success, this.duplicate.files);
+          this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
+          
+          if (this.duplicate.files.length <= 1) {
+            this.$emit('duplicate-resolved', {
+              duplicate: this.duplicate,
+              type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged'
+            });
+          }
+        }
       } catch (error) {
         console.error('Error deleting selected files:', error);
       }
     },
     selectAllFiles() {
-      this.selectedFiles = [...this.duplicate.files];
+      // Ne sélectionner que les fichiers non protégés
+      this.selectedFiles = this.duplicate.files.filter(file => !file.isInOriginFolder);
+    },
+    // Ajouter une méthode pour vérifier si un fichier peut être sélectionné
+    canSelectFile(file) {
+      return !file.isInOriginFolder;
+    },
+    // Ajouter une méthode pour gérer la sélection d'un fichier
+    handleFileSelection(file) {
+      if (!this.canSelectFile(file)) {
+        return;
+      }
+      const index = this.selectedFiles.indexOf(file);
+      if (index === -1) {
+        this.selectedFiles.push(file);
+      } else {
+        this.selectedFiles.splice(index, 1);
+      }
     },
     removeDuplicateFromList(duplicate) {
       this.$emit('removeDuplicate', duplicate);
@@ -184,5 +252,16 @@ export default {
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active pour <2.1.8 */ {
   opacity: 0;
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #cccccc;
 }
 </style>

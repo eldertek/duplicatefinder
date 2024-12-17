@@ -9,5 +9,9 @@
         ['name' => 'duplicate_api#clear', 'url' => '/api/duplicates/clear', 'verb' => 'POST'],
         ['name' => 'settings_api#list', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings_api#save', 'url' => '/api/settings/{key}/{value}', 'verb' => 'POST'],
+        ['name' => 'origin_folder_api#index', 'url' => '/api/origin-folders', 'verb' => 'GET'],
+        ['name' => 'origin_folder_api#create', 'url' => '/api/origin-folders', 'verb' => 'POST'],
+        ['name' => 'origin_folder_api#destroy', 'url' => '/api/origin-folders/{id}', 'verb' => 'DELETE'],
+        ['name' => 'file_api#delete', 'url' => '/api/files/delete', 'verb' => 'POST'],
     ],
 ];

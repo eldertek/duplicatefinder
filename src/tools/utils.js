@@ -76,15 +76,46 @@ export function removeFilesFromList(files, list) {
  * @param {Object} duplicate - The duplicate to remove from the list.
  * @param {Array} acknowledgedDuplicates - The list of acknowledged duplicates.
  * @param {Array} unacknowledgedDuplicates - The list of unacknowledged duplicates.
+ * @returns {Object} Updated lists of duplicates
  */
 export function removeDuplicateFromList(duplicate, acknowledgedDuplicates, unacknowledgedDuplicates) {
-    if (duplicate.acknowledged) {
-        const index = acknowledgedDuplicates.findIndex(d => d.id === duplicate.id);
-        acknowledgedDuplicates.splice(index, 1);
+    console.log('removeDuplicateFromList: Starting with duplicate:', duplicate);
+    console.log('removeDuplicateFromList: Initial lists state:', {
+        acknowledgedCount: acknowledgedDuplicates.length,
+        unacknowledgedCount: unacknowledgedDuplicates.length
+    });
+
+    if (duplicate.files.length <= 1) {
+        console.log('removeDuplicateFromList: Duplicate has <= 1 files, proceeding with removal');
+        // Remove from the appropriate list based on acknowledged status
+        if (duplicate.acknowledged) {
+            const index = acknowledgedDuplicates.findIndex(d => d.id === duplicate.id);
+            console.log('removeDuplicateFromList: Acknowledged duplicate index:', index);
+            if (index !== -1) {
+                acknowledgedDuplicates.splice(index, 1);
+                console.log('removeDuplicateFromList: Removed from acknowledged list');
+            }
+        } else {
+            const index = unacknowledgedDuplicates.findIndex(d => d.id === duplicate.id);
+            console.log('removeDuplicateFromList: Unacknowledged duplicate index:', index);
+            if (index !== -1) {
+                unacknowledgedDuplicates.splice(index, 1);
+                console.log('removeDuplicateFromList: Removed from unacknowledged list');
+            }
+        }
     } else {
-        const index = unacknowledgedDuplicates.findIndex(d => d.id === duplicate.id);
-        unacknowledgedDuplicates.splice(index, 1);
+        console.log('removeDuplicateFromList: Duplicate has > 1 files, skipping removal');
     }
+
+    console.log('removeDuplicateFromList: Final lists state:', {
+        acknowledgedCount: acknowledgedDuplicates.length,
+        unacknowledgedCount: unacknowledgedDuplicates.length
+    });
+
+    return {
+        acknowledgedDuplicates,
+        unacknowledgedDuplicates
+    };
 }
 
 /**

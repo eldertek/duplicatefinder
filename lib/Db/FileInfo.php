@@ -12,6 +12,7 @@ namespace OCA\DuplicateFinder\Db;
  * @method void setMimetype(string $s)
  * @method void setSize(int $i)
  * @method void setIgnored(bool $b)
+ * @method void setIsInOriginFolder(bool $b)
  * @method string getOwner()
  * @method string getPath()
  * @method string getPathHash()
@@ -22,6 +23,7 @@ namespace OCA\DuplicateFinder\Db;
  * @method string getMimetype()
  * @method int getSize()
  * @method bool isIgnored()
+ * @method bool isInOriginFolder()
  */
 class FileInfo extends EEntity
 {
@@ -46,6 +48,8 @@ class FileInfo extends EEntity
     protected $size;
     /** @var boolean */
     protected $ignored;
+    /** @var boolean */
+    protected $isInOriginFolder;
 
     public function __construct(?string $path = null, ?string $owner = null)
     {
@@ -53,6 +57,8 @@ class FileInfo extends EEntity
         $this->addInternalProperty('nodeId');
         $this->addType('size', 'integer');
         $this->addType('ignored', 'boolean');
+        $this->addType('isInOriginFolder', 'boolean');
+        $this->isInOriginFolder = false;
 
         if (!is_null($path)) {
             $this->setPath($path);
