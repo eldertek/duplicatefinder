@@ -41,6 +41,12 @@
                     <button @click="loadMoreAcknowledgedDuplicates">{{ t('duplicatefinder', 'Load More') }}</button>
                 </template>
             </NcAppNavigationItem>
+            <!-- Settings Navigation Item -->
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Settings')" @click="$emit('open-settings')" :exact="true">
+                <template #icon>
+                    <Cog :size="20" />
+                </template>
+            </NcAppNavigationItem>
         </template>
     </NcAppNavigation>
 </template>
@@ -50,10 +56,11 @@ import { NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue';
 import DuplicateListItem from './DuplicateListItem.vue';
 import CloseCircle from 'vue-material-design-icons/CloseCircle';
 import CheckCircle from 'vue-material-design-icons/CheckCircle';
+import Cog from 'vue-material-design-icons/Cog';
 import { fetchDuplicates } from '@/tools/api';
 
 export default {
-    components: { DuplicateListItem, NcAppNavigation, NcAppNavigationItem, CheckCircle, CloseCircle },
+    components: { DuplicateListItem, NcAppNavigation, NcAppNavigationItem, CheckCircle, CloseCircle, Cog },
     props: ['acknowledgedDuplicates', 'unacknowledgedDuplicates', 'currentDuplicateId'],
     data() {
         return {

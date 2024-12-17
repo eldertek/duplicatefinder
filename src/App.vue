@@ -4,22 +4,40 @@
 		<template v-else>
 			<DuplicateNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
 				:acknowledged-duplicates="acknowledgedDuplicates" :unacknowledged-duplicates="unacknowledgedDuplicates"
-				@open-duplicate="openDuplicate" />
+				@open-duplicate="openDuplicate"
+				@open-settings="settingsOpen = true" />
 			<NcAppContent>
 				<DuplicateDetails ref="duplicateDetails" :duplicate="currentDuplicate" @lastFileDeleted="removeDuplicate(currentDuplicate)"
 					@duplicateUpdated="updateDuplicate(currentDuplicate)" />
 			</NcAppContent>
+
+			<NcAppSettingsDialog 
+				:open.sync="settingsOpen" 
+				:show-navigation="true" 
+				:name="t('duplicatefinder', 'Duplicate Finder Settings')">
+				<NcAppSettingsSection 
+					id="origin-folders" 
+					:name="t('duplicatefinder', 'Origin Folders')">
+					<template #icon>
+						<Folder :size="20" />
+					</template>
+					<OriginFoldersSettings />
+				</NcAppSettingsSection>
+			</NcAppSettingsDialog>
 		</template>
 	</NcContent>
 </template>
   
   
 <script>
-import { NcAppContent, NcContent, NcLoadingSpinner } from '@nextcloud/vue';
+import { NcAppContent, NcContent, NcLoadingSpinner, NcButton, NcAppSettingsDialog, NcAppSettingsSection } from '@nextcloud/vue';
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
+import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import { fetchDuplicates } from '@/tools/api';
 import { removeDuplicateFromList } from '@/tools/utils';
+import Cog from 'vue-material-design-icons/Cog';
+import Folder from 'vue-material-design-icons/Folder';
 
 export default {
 	name: 'DuplicateFinder',
@@ -27,8 +45,14 @@ export default {
 		NcAppContent,
 		NcContent,
 		NcLoadingSpinner,
+		NcButton,
 		DuplicateNavigation,
 		DuplicateDetails,
+		OriginFoldersSettings,
+		NcAppSettingsDialog,
+		NcAppSettingsSection,
+		Cog,
+		Folder,
 	},
 	data() {
 		return {
@@ -38,6 +62,7 @@ export default {
 			isLoading: false,
 			page: 1,
 			limit: 50,
+			settingsOpen: false,
 		};
 	},
 	methods: {
