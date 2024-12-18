@@ -40,15 +40,14 @@
     "Load More" : "Carregar Mais",
     "Acknowledged" : "Reconhecido",
     "No acknowledged duplicates found." : "Nenhuma duplicata reconhecida encontrada.",
+    "Settings" : "Configurações",
     "Error fetching duplicates." : "Erro ao buscar duplicatas.",
     "Duplicate acknowledged successfully" : "Duplicado reconhecido com sucesso",
     "Error acknowledging duplicate." : "Reconhecido",
     "Duplicate unacknowledged successfully." : "Duplicado não reconhecido com sucesso.",
     "Error unacknowledging duplicate." : "Erro ao cancelar o reconhecimento da duplicata.",
     "File deleted successfully." : "Arquivo excluído com sucesso.",
-    "Error deleting file." : "Erro ao excluir arquivo.",
-    "Selected files deleted successfully." : "Arquivos selecionados excluídos com sucesso.",
-    "Error deleting selected files." : "Erro ao excluir arquivos selecionados.",
+    "File not found" : "Arquivo não encontrado",
     "The viewer is not available" : "O visualizador não está disponível"
 },"pluralForm" :"nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
 }

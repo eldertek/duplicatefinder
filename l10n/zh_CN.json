@@ -40,15 +40,14 @@
     "Load More" : "加载更多",
     "Acknowledged" : "确认",
     "No acknowledged duplicates found." : "未发现已确认重复项",
+    "Settings" : "设置",
     "Error fetching duplicates." : "获取重复项时发生错误",
     "Duplicate acknowledged successfully" : "重复项已成功确认",
     "Error acknowledging duplicate." : "确认重复项时发生错误",
     "Duplicate unacknowledged successfully." : "复制项已成功取消确认。",
     "Error unacknowledging duplicate." : "取消确认重复项时发生错误",
     "File deleted successfully." : "文件删除成功。",
-    "Error deleting file." : "文件删除时发生错误。",
-    "Selected files deleted successfully." : "所选文件删除成功。",
-    "Error deleting selected files." : "所选文件删除时发生错误",
+    "File not found" : "文件未找到",
     "The viewer is not available" : "查看器不可用"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

@@ -39,15 +39,14 @@ OC.L10N.register(
     "Delete" : "Slett",
     "Unacknowledged" : "Ikke anerkjent",
     "Acknowledged" : "Anerkjent",
+    "Settings" : "Innstillinger",
     "Error fetching duplicates." : "Feil ved henting av duplikater.",
     "Duplicate acknowledged successfully" : "Duplikat er godkjent",
     "Error acknowledging duplicate." : "Feil ved anerkjennelse av duplikat.",
     "Duplicate unacknowledged successfully." : "Duplikat ikke anerkjent",
     "Error unacknowledging duplicate." : "Feil ved ikke anerkjennelse av duplikat.",
     "File deleted successfully." : "Fil slettet.",
-    "Error deleting file." : "Feil ved sletting av fil.",
-    "Selected files deleted successfully." : "Valgte filer slettet.",
-    "Error deleting selected files." : "Feil ved sletting av valgte filer.",
+    "File not found" : "Finner ikke filen",
     "The viewer is not available" : "Fremviseren er ikke tilgjengelig"
 },
 "nplurals=2; plural=(n != 1);");

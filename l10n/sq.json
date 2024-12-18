@@ -1,6 +1,8 @@
 { "translations": {
     "Settings saved" : "Opsjonet u Ruajtën.",
     "File" : "Skedar ",
-    "Delete" : "Fshi"
+    "Delete" : "Fshi",
+    "Settings" : "Rregullimet",
+    "File not found" : "S’u gjet kartelë"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

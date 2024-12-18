@@ -18,6 +18,8 @@ OC.L10N.register(
     "No duplicates found or no duplicate selected." : "Nem található duplikáció vagy nincs duplikáció kijelölve.",
     "File" : "Fájl",
     "Path:" : "Útvonal:",
-    "Delete" : "Törlés"
+    "Delete" : "Törlés",
+    "Settings" : "Beállítások",
+    "File not found" : "A fájl nem található"
 },
 "nplurals=2; plural=(n != 1);");

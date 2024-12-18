@@ -21,6 +21,8 @@ OC.L10N.register(
     "No duplicates found or no duplicate selected." : "Nu s-au găsit duplicate sau nu au fost selectate duplicate.",
     "File" : "Fișier",
     "Path:" : "Cale:",
-    "Delete" : "Șterge"
+    "Delete" : "Șterge",
+    "Settings" : "Setări",
+    "File not found" : "Fișierul nu a fost găsit"
 },
 "nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));");

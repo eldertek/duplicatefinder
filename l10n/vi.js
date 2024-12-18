@@ -3,6 +3,8 @@ OC.L10N.register(
     {
     "Settings saved" : "Cấu hình đã được lưu",
     "File" : "Tệp",
-    "Delete" : "Xóa"
+    "Delete" : "Xóa",
+    "Settings" : "Cài đặt",
+    "File not found" : "Không tìm thấy tập tin"
 },
 "nplurals=1; plural=0;");

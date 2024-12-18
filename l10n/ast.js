@@ -25,7 +25,6 @@ OC.L10N.register(
     "Path:" : "Camín:",
     "Delete" : "Desaniciar",
     "File deleted successfully." : "El ficheru desanicióse correutamente",
-    "Error deleting file." : "Hebo un error al desaniciar el ficheru.",
     "The viewer is not available" : "El visor nun ta disponible"
 },
 "nplurals=2; plural=(n != 1);");

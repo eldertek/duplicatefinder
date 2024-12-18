@@ -42,15 +42,14 @@ OC.L10N.register(
     "Load More" : "تېخىمۇ كۆپ يۈكلەڭ",
     "Acknowledged" : "ئېتىراپ قىلىندى",
     "No acknowledged duplicates found." : "ئېتىراپ قىلىنغان كۆپەيتىلگەن نۇسخىسى تېپىلمىدى.",
+    "Settings" : "تەڭشەكلەر",
     "Error fetching duplicates." : "كۆپەيتىلگەن نۇسخىسىنى ئېلىشتا خاتالىق.",
     "Duplicate acknowledged successfully" : "كۆپەيتىلگەن نۇسخىسى مۇۋەپپەقىيەتلىك ئېتىراپ قىلىندى",
     "Error acknowledging duplicate." : "كۆپەيتىلگەنلىكىنى ئېتىراپ قىلىشتا خاتالىق.",
     "Duplicate unacknowledged successfully." : "مۇۋەپپەقىيەتلىك ھالدا نامەلۇم.",
     "Error unacknowledging duplicate." : "تەكرارلانمىغان خاتالىق.",
     "File deleted successfully." : "ھۆججەت مۇۋەپپەقىيەتلىك ئۆچۈرۈلدى.",
-    "Error deleting file." : "ھۆججەتنى ئۆچۈرۈشتە خاتالىق.",
-    "Selected files deleted successfully." : "تاللانغان ھۆججەتلەر مۇۋەپپەقىيەتلىك ئۆچۈرۈلدى.",
-    "Error deleting selected files." : "تاللانغان ھۆججەتلەرنى ئۆچۈرۈشتە خاتالىق.",
+    "File not found" : "ھۆججەت تېپىلمىدى",
     "The viewer is not available" : "كۆرۈرمەننى ئىشلەتكىلى بولمايدۇ"
 },
 "nplurals=2; plural=(n != 1);");

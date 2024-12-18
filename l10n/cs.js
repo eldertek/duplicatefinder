@@ -48,9 +48,6 @@ OC.L10N.register(
     "Duplicate unacknowledged successfully." : "Potvrzení duplicity úspěšně zrušeno.",
     "Error unacknowledging duplicate." : "Chyba při rušení potvrzení duplicity.",
     "File deleted successfully." : "Soubor úspěšně smazán.",
-    "Error deleting file." : "Chyba při mazání souboru.",
-    "Selected files deleted successfully." : "Vybrané soubory úspěšně smazány.",
-    "Error deleting selected files." : "Chyba při mazání označených souborů.",
     "The viewer is not available" : "Prohlížeč není k dispozici"
 },
 "nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;");

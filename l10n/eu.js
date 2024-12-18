@@ -11,6 +11,8 @@ OC.L10N.register(
     "Path:" : "Bide-izena:",
     "Delete" : "Ezabatu",
     "Unacknowledged" : "Aitortu gabe",
-    "Acknowledged" : "Aitortuta"
+    "Acknowledged" : "Aitortuta",
+    "Settings" : "Ezarpenak",
+    "File not found" : "Ez da fitxategia aurkitu"
 },
 "nplurals=2; plural=(n != 1);");

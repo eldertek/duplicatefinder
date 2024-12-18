@@ -1,6 +1,8 @@
 { "translations": {
     "Settings saved" : "პარამეტრები შენახულია",
     "File" : "ფაილი",
-    "Delete" : "წაშლა"
+    "Delete" : "წაშლა",
+    "Settings" : "პარამეტრები",
+    "File not found" : "ფაილი ვერ იქნა ნაპოვნი"
 },"pluralForm" :"nplurals=2; plural=(n!=1);"
 }

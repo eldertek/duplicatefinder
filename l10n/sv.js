@@ -13,6 +13,8 @@ OC.L10N.register(
     "File" : "Fil",
     "Path:" : "Sökväg:",
     "Delete" : "Radera",
-    "Load More" : "Ladda mer"
+    "Load More" : "Ladda mer",
+    "Settings" : "Inställningar",
+    "File not found" : "Filen kunde inte hittas"
 },
 "nplurals=2; plural=(n != 1);");

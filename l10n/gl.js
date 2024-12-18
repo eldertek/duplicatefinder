@@ -42,15 +42,14 @@ OC.L10N.register(
     "Load More" : "Cargar máis",
     "Acknowledged" : "Recoñecido",
     "No acknowledged duplicates found." : "Non foi atopado ningún duplicado recoñecido.",
+    "Settings" : "Axustes",
     "Error fetching duplicates." : "Produciuse un erro ao recuperar os duplicados.metadatos",
     "Duplicate acknowledged successfully" : "O duplicado foi recoñecido correctamente",
     "Error acknowledging duplicate." : "Produciuse un erro ao recoñecer o duplicado.",
     "Duplicate unacknowledged successfully." : "O duplicado non foi recoñecido correctamente",
     "Error unacknowledging duplicate." : "Produciuse un erro ao non recoñecer o duplicado.",
     "File deleted successfully." : "Ficheiro eliminado correctamente",
-    "Error deleting file." : "Produciuse un erro ao eliminar o ficheiro.",
-    "Selected files deleted successfully." : "Os ficheiros seleccionados elimináronse correctamente.",
-    "Error deleting selected files." : "Produciuse un erro ao eliminar os ficheiros seleccionados.",
+    "File not found" : "Ficheiro non atopado",
     "The viewer is not available" : "O visor non está dispoñíbel"
 },
 "nplurals=2; plural=(n != 1);");

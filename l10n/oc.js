@@ -3,6 +3,8 @@ OC.L10N.register(
     {
     "Settings saved" : "Paramètres salvats",
     "File" : "Fichièr",
-    "Delete" : "Suprimir"
+    "Delete" : "Suprimir",
+    "Settings" : "Paramètres",
+    "File not found" : "Fichièr pas trobat"
 },
 "nplurals=2; plural=(n > 1);");

@@ -3,6 +3,8 @@ OC.L10N.register(
     {
     "Settings saved" : "Opsjonet u Ruajtën.",
     "File" : "Skedar ",
-    "Delete" : "Fshi"
+    "Delete" : "Fshi",
+    "Settings" : "Rregullimet",
+    "File not found" : "S’u gjet kartelë"
 },
 "nplurals=2; plural=(n != 1);");

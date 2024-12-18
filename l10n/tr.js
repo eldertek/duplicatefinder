@@ -42,15 +42,14 @@ OC.L10N.register(
     "Load More" : "Diğerlerini yükle",
     "Acknowledged" : "Onaylanmış",
     "No acknowledged duplicates found." : "Onaylanmış bir çift bulunamadı.",
+    "Settings" : "Ayarlar",
     "Error fetching duplicates." : "Çiftler alınırken sorun çıktı.",
     "Duplicate acknowledged successfully" : "Çift olduğu onaylandı",
     "Error acknowledging duplicate." : "Çift onaylanırken sorun çıktı.",
     "Duplicate unacknowledged successfully." : "Çift onayı kaldırıldı.",
     "Error unacknowledging duplicate." : "Çift onayı kaldırılırken sorun çıktı.",
     "File deleted successfully." : "Dosya silindi",
-    "Error deleting file." : "Dosya silinirken sorun çıktı.",
-    "Selected files deleted successfully." : "Seçilmiş dosyalar silindi.",
-    "Error deleting selected files." : "Seçilmiş dosyalar silinirken sorun çıktı.",
+    "File not found" : "Dosya bulunamadı",
     "The viewer is not available" : "Görüntüleyici kullanılamıyor"
 },
 "nplurals=2; plural=(n > 1);");

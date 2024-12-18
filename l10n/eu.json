@@ -9,6 +9,8 @@
     "Path:" : "Bide-izena:",
     "Delete" : "Ezabatu",
     "Unacknowledged" : "Aitortu gabe",
-    "Acknowledged" : "Aitortuta"
+    "Acknowledged" : "Aitortuta",
+    "Settings" : "Ezarpenak",
+    "File not found" : "Ez da fitxategia aurkitu"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

@@ -4,6 +4,8 @@ OC.L10N.register(
     "Settings saved" : "Instellingen opgeslagen",
     "Select All" : "Alles Selecteren",
     "File" : "Bestand",
-    "Delete" : "Verwijder"
+    "Delete" : "Verwijder",
+    "Settings" : "Instellingen",
+    "File not found" : "Bestand niet gevonden"
 },
 "nplurals=2; plural=(n != 1);");

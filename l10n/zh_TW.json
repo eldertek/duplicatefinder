@@ -40,15 +40,14 @@
     "Load More" : "載入更多",
     "Acknowledged" : "確認",
     "No acknowledged duplicates found." : "找不到已確認的重複項目。",
+    "Settings" : "設定",
     "Error fetching duplicates." : "擷取重複項目時發生錯誤。",
     "Duplicate acknowledged successfully" : "重複項目已成功確認",
     "Error acknowledging duplicate." : "確認重複項目時發生錯誤。",
     "Duplicate unacknowledged successfully." : "重複項目已成功取消確認。",
     "Error unacknowledging duplicate." : "取消確認重複項目時發生錯誤。",
     "File deleted successfully." : "檔案成功刪除。",
-    "Error deleting file." : "刪除檔案時發生錯誤。",
-    "Selected files deleted successfully." : "已成功刪除選定的檔案。",
-    "Error deleting selected files." : "刪除選定的檔案時發生錯誤。",
+    "File not found" : "找不到檔案",
     "The viewer is not available" : "檢視程式不可用"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

@@ -40,15 +40,14 @@
     "Load More" : "Luchtaigh Níos mó",
     "Acknowledged" : "Admhaítear",
     "No acknowledged duplicates found." : "Níor aimsíodh aon dúbailt admhaithe.",
+    "Settings" : "Socruithe",
     "Error fetching duplicates." : "Earráid ag fáil dúbailtí.",
     "Duplicate acknowledged successfully" : "D’éirigh le dúblach a admháil",
     "Error acknowledging duplicate." : "Earráid agus dúblach á admháil.",
     "Duplicate unacknowledged successfully." : "D'éirigh le dúblach gan admháil.",
     "Error unacknowledging duplicate." : "Earráid agus an dúblach á aithint.",
     "File deleted successfully." : "Scriosadh an comhad go rathúil.",
-    "Error deleting file." : "Earráid agus an comhad á scriosadh.",
-    "Selected files deleted successfully." : "Scriosadh na comhaid roghnaithe go rathúil.",
-    "Error deleting selected files." : "Earráid agus comhaid roghnaithe á scriosadh.",
+    "File not found" : "Comhad gan aimsiú",
     "The viewer is not available" : "Níl an breathnóir ar fáil"
 },"pluralForm" :"nplurals=5; plural=(n==1 ? 0 : n==2 ? 1 : n<7 ? 2 : n<11 ? 3 : 4);"
 }

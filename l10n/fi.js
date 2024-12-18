@@ -37,15 +37,14 @@ OC.L10N.register(
     "Load More" : "Lataa lisää",
     "Acknowledged" : "Kuitatut",
     "No acknowledged duplicates found." : "Ei kuitattuja kaksoiskappaleita.",
+    "Settings" : "Asetukset",
     "Error fetching duplicates." : "Kaksoiskappaleiden haku epäonnistui.",
     "Duplicate acknowledged successfully" : "Kaksoiskappale kuitattu",
     "Error acknowledging duplicate." : "Kaksoiskappaleen kuittaus epäonnistui",
     "Duplicate unacknowledged successfully." : "Kaksoiskappaleen kuittaus peruttu.",
     "Error unacknowledging duplicate." : "Kaksoiskappaleen kuittauksen peruminen epäonnistui.",
     "File deleted successfully." : "Tiedosto poistettu onnistuneesti.",
-    "Error deleting file." : "Virhe tiedostoa poistaessa.",
-    "Selected files deleted successfully." : "Valitut tiedostot poistettu.",
-    "Error deleting selected files." : "Valittujen tiedostojen poisto epäonnistui.",
+    "File not found" : "Tiedostoa ei löytynyt",
     "The viewer is not available" : "Esikatselu ei ole saatavilla"
 },
 "nplurals=2; plural=(n != 1);");

@@ -3,6 +3,8 @@ OC.L10N.register(
     {
     "Settings saved" : "Seaded salvestatud",
     "File" : "Fail",
-    "Delete" : "Kustuta"
+    "Delete" : "Kustuta",
+    "Settings" : "Seaded",
+    "File not found" : "Faili ei leitud"
 },
 "nplurals=2; plural=(n != 1);");

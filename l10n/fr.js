@@ -42,15 +42,14 @@ OC.L10N.register(
     "Load More" : "Charger d'avantage",
     "Acknowledged" : "Reconnu",
     "No acknowledged duplicates found." : "Aucun doublon reconnu n'a été trouvé.",
+    "Settings" : "Paramètres",
     "Error fetching duplicates." : "Erreur lors de la récupération des doublons.",
     "Duplicate acknowledged successfully" : "Doublon validé",
     "Error acknowledging duplicate." : "Erreur lors de la reconnaissance du doublon.",
     "Duplicate unacknowledged successfully." : "Duplication non reconnue avec succès.",
     "Error unacknowledging duplicate." : "Erreur lors de la non-reconnaissance du doublon.",
     "File deleted successfully." : "Fichier supprimé avec succès",
-    "Error deleting file." : "Erreur de suppression du fichier.",
-    "Selected files deleted successfully." : "Fichiers sélectionnés supprimés avec succès.",
-    "Error deleting selected files." : "Erreur lors de la suppression des fichiers sélectionnés.",
+    "File not found" : "Fichier non trouvé",
     "The viewer is not available" : "La visionneuse n'est pas disponible"
 },
 "nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");
