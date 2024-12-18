@@ -26,6 +26,8 @@ class FileDuplicateService
     private $fileInfoService;
     /** @var OriginFolderService */
     private $originFolderService;
+    /** @var ?string */
+    private $currentUserId = null;
 
     public function __construct(
         LoggerInterface $logger,
@@ -37,6 +39,13 @@ class FileDuplicateService
         $this->logger = $logger;
         $this->fileInfoService = $fileInfoService;
         $this->originFolderService = $originFolderService;
+    }
+
+    public function setCurrentUserId(?string $userId): void {
+        $this->currentUserId = $userId;
+        if ($this->originFolderService !== null) {
+            $this->originFolderService->setUserId($userId);
+        }
     }
 
     /**
@@ -96,6 +105,9 @@ class FileDuplicateService
         bool $enrich = false,
         ?array $orderBy = [['hash'], ['type']]
     ): array {
+        if ($user !== null) {
+            $this->setCurrentUserId($user);
+        }
         $this->logger->debug('Finding duplicates with parameters: type={type}, user={user}, page={page}, pageSize={pageSize}, enrich={enrich}', [
             'type' => $type ?? 'all',
             'user' => $user ?? 'none',

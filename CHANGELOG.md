@@ -1,3 +1,8 @@
+## 1.3.0 - 2024-12-18
+### Fixed
+- Error during occ update:check when no user context is available
+- Database migration issue with MySQL when column length exceeded maximum key length
+
 ## 1.2.9 - 2024-12-17
 ### Added
 - Origin folders configuration to protect files from deletion

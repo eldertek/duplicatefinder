@@ -23,19 +23,26 @@ class OriginFolderService {
     public function __construct(
         OriginFolderMapper $mapper,
         IRootFolder $rootFolder,
-        string $userId,
+        ?string $userId,
         LoggerInterface $logger
     ) {
         $this->mapper = $mapper;
         $this->rootFolder = $rootFolder;
-        $this->userId = $userId;
+        $this->userId = $userId ?? '';
         $this->logger = $logger;
+    }
+
+    private function validateUserContext(): void {
+        if (empty($this->userId)) {
+            throw new \RuntimeException('User context required for this operation');
+        }
     }
 
     /**
      * @return array
      */
     public function findAll(): array {
+        $this->validateUserContext();
         return $this->mapper->findAll($this->userId);
     }
 
@@ -46,6 +53,7 @@ class OriginFolderService {
      * @throws Exception if the folder is already an origin folder
      */
     public function create(string $folderPath): OriginFolder {
+        $this->validateUserContext();
         $this->logger->debug('Creating origin folder: {path}', ['path' => $folderPath]);
                 
         // Verify that the folder exists
@@ -79,6 +87,7 @@ class OriginFolderService {
      * @throws MultipleObjectsReturnedException
      */
     public function delete(int $id): OriginFolder {
+        $this->validateUserContext();
         try {
             $originFolder = $this->mapper->find($id);
             if ($originFolder->getUserId() !== $this->userId) {
@@ -97,6 +106,7 @@ class OriginFolderService {
      * @return array{isProtected: bool, protectingFolder: string|null}
      */
     public function isPathProtected(string $path): array {
+        $this->validateUserContext();
         $originFolders = $this->findAll();
         foreach ($originFolders as $folder) {
             $folderPath = $folder->getFolderPath();
@@ -113,5 +123,9 @@ class OriginFolderService {
             'isProtected' => false,
             'protectingFolder' => null
         ];
+    }
+
+    public function setUserId(?string $userId): void {
+        $this->userId = $userId ?? '';
     }
 } 
