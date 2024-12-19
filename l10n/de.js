@@ -42,12 +42,14 @@ OC.L10N.register(
     "Load More" : "Mehr laden",
     "Acknowledged" : "Bestätigt",
     "No acknowledged duplicates found." : "Keine bestätigten Duplikate gefunden.",
+    "Settings" : "Einstellungen",
     "Error fetching duplicates." : "Fehler beim Abruf von Duplikaten.",
     "Duplicate acknowledged successfully" : "Duplikat erfolgreich bestätigt",
     "Error acknowledging duplicate." : "Fehler bei der Bestätigung des Duplikats.",
     "Duplicate unacknowledged successfully." : "Bestätigung des Duplikats erfolgreich aufgehoben",
     "Error unacknowledging duplicate." : "Fehler bei der Aufhebung der Bestätigung des Duplikats",
     "File deleted successfully." : "Datei erfolgreich gelöscht.",
+    "File not found" : "Datei nicht gefunden",
     "The viewer is not available" : "Der Betrachter ist nicht verfügbar"
 },
 "nplurals=2; plural=(n != 1);");

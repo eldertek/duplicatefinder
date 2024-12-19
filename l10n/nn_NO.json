@@ -1,0 +1,7 @@
+{ "translations": {
+    "File" : "Fil",
+    "Delete" : "Slett",
+    "Settings" : "Innstillingar",
+    "File not found" : "Fann ikkje fila"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

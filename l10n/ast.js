@@ -24,7 +24,9 @@ OC.L10N.register(
     "File" : "Ficheru",
     "Path:" : "Camín:",
     "Delete" : "Desaniciar",
+    "Settings" : "Configuración",
     "File deleted successfully." : "El ficheru desanicióse correutamente",
+    "File not found" : "Nun s'atopó'l ficheru",
     "The viewer is not available" : "El visor nun ta disponible"
 },
 "nplurals=2; plural=(n != 1);");

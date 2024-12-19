@@ -2,6 +2,8 @@
     "Settings saved" : "Настройките са запазени",
     "Select All" : "Избор на всички",
     "File" : "Файл",
-    "Delete" : "Изтриване"
+    "Delete" : "Изтриване",
+    "Settings" : "Настройки",
+    "File not found" : "Файлът не е намерен"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

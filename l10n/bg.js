@@ -4,6 +4,8 @@ OC.L10N.register(
     "Settings saved" : "Настройките са запазени",
     "Select All" : "Избор на всички",
     "File" : "Файл",
-    "Delete" : "Изтриване"
+    "Delete" : "Изтриване",
+    "Settings" : "Настройки",
+    "File not found" : "Файлът не е намерен"
 },
 "nplurals=2; plural=(n != 1);");

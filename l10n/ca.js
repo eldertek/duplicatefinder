@@ -34,6 +34,8 @@ OC.L10N.register(
     "File" : "Fitxer",
     "Path:" : "Camí:",
     "Delete" : "Suprimir",
-    "Duplicate acknowledged successfully" : "El duplicat s'ha reconegut correctament"
+    "Settings" : "Paràmetres",
+    "Duplicate acknowledged successfully" : "El duplicat s'ha reconegut correctament",
+    "File not found" : "No s'ha trobat el fitxer"
 },
 "nplurals=2; plural=(n != 1);");

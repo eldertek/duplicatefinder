@@ -40,12 +40,14 @@
     "Load More" : "Načíst více",
     "Acknowledged" : "Potvrzeno",
     "No acknowledged duplicates found." : "Nenalezeny žádné potvrzené duplicity.",
+    "Settings" : "Settings",
     "Error fetching duplicates." : "Chyba při získávání duplicit.",
     "Duplicate acknowledged successfully" : "Duplikát úspěšně potvrzen",
     "Error acknowledging duplicate." : "Chyba při potvrzování duplicity.",
     "Duplicate unacknowledged successfully." : "Potvrzení duplicity úspěšně zrušeno.",
     "Error unacknowledging duplicate." : "Chyba při rušení potvrzení duplicity.",
     "File deleted successfully." : "Soubor úspěšně smazán.",
+    "File not found" : "Soubor nenalezen",
     "The viewer is not available" : "Prohlížeč není k dispozici"
 },"pluralForm" :"nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;"
 }

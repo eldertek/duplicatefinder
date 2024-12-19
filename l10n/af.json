@@ -1,6 +1,8 @@
 { "translations": {
     "Settings saved" : "Instellings gestoor",
     "File" : "Lêer",
-    "Delete" : "Skrap"
+    "Delete" : "Skrap",
+    "Settings" : "Instellings",
+    "File not found" : "Lêer nie gevind nie"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }
