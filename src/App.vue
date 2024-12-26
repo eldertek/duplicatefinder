@@ -4,11 +4,23 @@
 		<template v-else>
 			<DuplicateNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
 				:acknowledged-duplicates="acknowledgedDuplicates" :unacknowledged-duplicates="unacknowledgedDuplicates"
+				:currentDuplicateId="currentDuplicate?.id"
+				:acknowledgedPagination="acknowledgedPagination"
+				:unacknowledgedPagination="unacknowledgedPagination"
+				:activeView="activeView"
 				@open-duplicate="openDuplicate"
-				@open-settings="settingsOpen = true" />
+				@open-settings="settingsOpen = true"
+				@open-bulk-delete="openBulkDelete"
+				@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
+				@update-unacknowledged-duplicates="updateUnacknowledgedDuplicates" />
 			<NcAppContent>
-				<DuplicateDetails ref="duplicateDetails" :duplicate="currentDuplicate" @duplicate-resolved="handleDuplicateResolved"
-					@duplicateUpdated="updateDuplicate" />
+				<template v-if="activeView === 'bulk-delete'">
+					<BulkDeletionSettings @duplicates-deleted="refreshDuplicates" />
+				</template>
+				<template v-else>
+					<DuplicateDetails ref="duplicateDetails" :duplicate="currentDuplicate" @duplicate-resolved="handleDuplicateResolved"
+						@duplicateUpdated="updateDuplicate" />
+				</template>
 			</NcAppContent>
 
 			<NcAppSettingsDialog 
@@ -22,15 +34,6 @@
 						<Folder :size="20" />
 					</template>
 					<OriginFoldersSettings />
-				</NcAppSettingsSection>
-
-				<NcAppSettingsSection 
-					id="bulk-deletion" 
-					:name="t('duplicatefinder', 'Bulk Deletion')">
-					<template #icon>
-						<Delete :size="20" />
-					</template>
-					<BulkDeletionSettings @duplicates-deleted="refreshDuplicates" />
 				</NcAppSettingsSection>
 			</NcAppSettingsDialog>
 		</template>
@@ -73,7 +76,19 @@ export default {
 			page: 1,
 			limit: 50,
 			settingsOpen: false,
+			activeView: 'details',
+			acknowledgedPagination: {
+				currentPage: 1,
+				totalPages: 1
+			},
+			unacknowledgedPagination: {
+				currentPage: 1,
+				totalPages: 1
+			}
 		};
+	},
+	async created() {
+		await this.loadInitialData()
 	},
 	methods: {
 		handleDuplicateResolved({ duplicate, type }) {
@@ -179,7 +194,8 @@ export default {
 			}
 		},
 		async openDuplicate(duplicate) {
-			this.currentDuplicate = duplicate;
+			this.activeView = 'details'
+			this.currentDuplicate = duplicate
 		},
 		async refreshDuplicates() {
 			this.isLoading = true;
@@ -208,6 +224,32 @@ export default {
 				this.isLoading = false;
 			}
 		},
+		async loadInitialData() {
+			try {
+				const [acknowledgedResponse, unacknowledgedResponse] = await Promise.all([
+					fetchDuplicates('acknowledged', 50, 1),
+					fetchDuplicates('unacknowledged', 50, 1)
+				])
+				
+				this.acknowledgedDuplicates = acknowledgedResponse.entities
+				this.unacknowledgedDuplicates = unacknowledgedResponse.entities
+				this.acknowledgedPagination = acknowledgedResponse.pagination
+				this.unacknowledgedPagination = unacknowledgedResponse.pagination
+			} catch (error) {
+				console.error('Error loading initial data:', error)
+				showError(t('duplicatefinder', 'Could not load duplicates'))
+			}
+		},
+		updateAcknowledgedDuplicates(newDuplicates) {
+			this.acknowledgedDuplicates = [...this.acknowledgedDuplicates, ...newDuplicates]
+		},
+		updateUnacknowledgedDuplicates(newDuplicates) {
+			this.unacknowledgedDuplicates = [...this.unacknowledgedDuplicates, ...newDuplicates]
+		},
+		openBulkDelete() {
+			this.activeView = 'bulk-delete'
+			this.currentDuplicate = null
+		}
 	},
 	mounted() {
 		// Fetch initial duplicates

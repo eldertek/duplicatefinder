@@ -1,4 +1,6 @@
 ## 1.3.1 - 2024-12-26
+### Added
+- New bulk deletion feature allowing users to delete multiple duplicates at once
 ### Changed
 - Improved documentation for the cleanup background job to clarify it only affects the database
 - Updated settings interface with clearer descriptions about database cleanup operations

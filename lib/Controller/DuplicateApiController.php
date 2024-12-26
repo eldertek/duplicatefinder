@@ -52,16 +52,34 @@ class DuplicateApiController extends AbstractAPIController
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function list(int $page = 1, int $limit = 30, string $type = 'unacknowledged'): DataResponse
+    public function list(int $page = 1, int $limit = 30, string $type = 'unacknowledged', bool $onlyNonProtected = false): DataResponse
     {
         try {
             $duplicates = $this->fileDuplicateService->findAll($type, $this->getUserId(), $page, $limit, true);
             $totalItems = $this->fileDuplicateService->getTotalCount($type); 
             $totalPages = ceil($totalItems / $limit);
 
+            if ($onlyNonProtected) {
+                // For each duplicate group, keep only non-protected files
+                foreach ($duplicates['entities'] as $key => $duplicate) {
+                    $nonProtectedFiles = array_filter($duplicate->getFiles(), function($file) {
+                        return !$file->getIsInOriginFolder();
+                    });
+                    
+                    // If no files remain after filtering, remove the group
+                    if (empty($nonProtectedFiles)) {
+                        unset($duplicates['entities'][$key]);
+                        continue;
+                    }
+                    
+                    // Update the duplicate group with only non-protected files
+                    $duplicate->setFiles(array_values($nonProtectedFiles));
+                }
+            }
+
             $data = [
                 'status' => 'success',
-                'entities' => $duplicates['entities'],
+                'entities' => array_values($duplicates['entities']),
                 'pagination' => [
                     'currentPage' => $page,
                     'totalPages' => $totalPages,
@@ -123,9 +141,8 @@ class DuplicateApiController extends AbstractAPIController
             });
             return new DataResponse(['status' => 'success']);
         } catch (\Exception $e) {
-            $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
+            $this->logger->error('A unknown exception occurred', ['app' => Application::ID, 'exception' => $e]);
             return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
-
 }

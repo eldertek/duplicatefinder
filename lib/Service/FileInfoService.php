@@ -302,23 +302,10 @@ class FileInfoService
     private function handleLockedFile(string $path, ?OutputInterface $output): void
     {
         try {
-            // Get the file node
-            $node = $this->rootFolder->get($path);
-            $storage = $node->getStorage();
-
-            if ($storage instanceof IStorage) {
-                // Try to release the lock at the storage level
-                $storage->unlockFile($path, ILockingProvider::LOCK_SHARED);
-                CMDUtils::showIfOutputIsPresent(
-                    "Released storage-level lock for file: $path",
-                    $output
-                );
-            }
-
-            // Try to release the lock at the application level
+            // Release the lock using the locking provider
             $this->lockingProvider->releaseAll($path, ILockingProvider::LOCK_SHARED);
             CMDUtils::showIfOutputIsPresent(
-                "Released application-level lock for file: $path",
+                "Released lock for file: $path",
                 $output
             );
 

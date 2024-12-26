@@ -5,8 +5,21 @@
             <div class="search-container">
                 <input type="text" v-model="searchQuery" @input="filterDuplicates" placeholder="Rechercher des doublons..." />
             </div>
+
+            <!-- Bulk Delete Button -->
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Bulk Delete')" 
+                :active="activeView === 'bulk-delete'"
+                @click="$emit('open-bulk-delete')">
+                <template #icon>
+                    <Delete :size="20" />
+                </template>
+            </NcAppNavigationItem>
+
             <!-- Navigation for Unacknowledged Duplicates -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Unacknowledged')" :allowCollapse="true" :open="true">
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Unacknowledged')" 
+                :allowCollapse="true" 
+                :open="true"
+                :active="activeView === 'details'">
                 <template #icon>
                     <CloseCircle :size="20" />
                 </template>
@@ -23,7 +36,9 @@
                     <div v-show="filteredUnacknowledgedDuplicates.length === 0">
                         <p>{{ t('duplicatefinder', 'No unacknowledged duplicates found.') }}</p>
                     </div>
-                    <button @click="loadMoreUnacknowledgedDuplicates">{{ t('duplicatefinder', 'Load More') }}</button>
+                    <button v-if="hasMoreUnacknowledged" @click="loadMoreUnacknowledgedDuplicates">
+                        {{ t('duplicatefinder', 'Load More') }}
+                    </button>
                 </template>
             </NcAppNavigationItem>
             <!-- Navigation for Acknowledged Duplicates -->
@@ -44,7 +59,9 @@
                     <div v-show="filteredAcknowledgedDuplicates.length === 0">
                         <p>{{ t('duplicatefinder', 'No acknowledged duplicates found.') }}</p>
                     </div>
-                    <button @click="loadMoreAcknowledgedDuplicates">{{ t('duplicatefinder', 'Load More') }}</button>
+                    <button v-if="hasMoreAcknowledged" @click="loadMoreAcknowledgedDuplicates">
+                        {{ t('duplicatefinder', 'Load More') }}
+                    </button>
                 </template>
             </NcAppNavigationItem>
             <!-- Settings Navigation Item -->
@@ -58,16 +75,48 @@
 </template>
 
 <script>
-import { NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue';
+import { NcAppNavigation, NcAppNavigationItem, NcButton } from '@nextcloud/vue';
 import DuplicateListItem from './DuplicateListItem.vue';
 import CloseCircle from 'vue-material-design-icons/CloseCircle';
 import CheckCircle from 'vue-material-design-icons/CheckCircle';
 import Cog from 'vue-material-design-icons/Cog';
+import Delete from 'vue-material-design-icons/Delete';
 import { fetchDuplicates } from '@/tools/api';
 
 export default {
-    components: { DuplicateListItem, NcAppNavigation, NcAppNavigationItem, CheckCircle, CloseCircle, Cog },
-    props: ['acknowledgedDuplicates', 'unacknowledgedDuplicates', 'currentDuplicateId'],
+    components: { 
+        DuplicateListItem, 
+        NcAppNavigation, 
+        NcAppNavigationItem, 
+        NcButton,
+        CheckCircle, 
+        CloseCircle, 
+        Cog,
+        Delete
+    },
+    props: {
+        acknowledgedDuplicates: Array,
+        unacknowledgedDuplicates: Array,
+        currentDuplicateId: [String, Number],
+        activeView: {
+            type: String,
+            default: 'details'
+        },
+        acknowledgedPagination: {
+            type: Object,
+            default: () => ({
+                currentPage: 1,
+                totalPages: 1
+            })
+        },
+        unacknowledgedPagination: {
+            type: Object,
+            default: () => ({
+                currentPage: 1,
+                totalPages: 1
+            })
+        }
+    },
     data() {
         return {
             searchQuery: '',
@@ -77,6 +126,12 @@ export default {
         };
     },
     computed: {
+        hasMoreAcknowledged() {
+            return this.acknowledgedPagination.currentPage < this.acknowledgedPagination.totalPages;
+        },
+        hasMoreUnacknowledged() {
+            return this.unacknowledgedPagination.currentPage < this.unacknowledgedPagination.totalPages;
+        },
         filteredUnacknowledgedDuplicates() {
             return this.unacknowledgedDuplicates.filter(duplicate => {
                 return this.filterDuplicate(duplicate);
@@ -165,5 +220,17 @@ export default {
 
 .duplicate-item {
     width: 100%;
+}
+
+.bulk-delete-container {
+    padding: 10px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.bulk-delete-button {
+    width: 100%;
+    justify-content: left;
+    padding: 10px;
+    font-weight: normal;
 }
 </style>

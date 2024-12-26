@@ -191,3 +191,27 @@ export const deleteOriginFolder = async (folderId) => {
         throw error;
     }
 };
+
+/**
+ * Fetches duplicates for bulk deletion preview.
+ * @param {number} limit The maximum number of duplicates to return.
+ * @param {number} page The page number for pagination.
+ * @returns {Promise<Object>} An object containing arrays of duplicates.
+ */
+export const fetchDuplicatesForBulk = async (limit = 30, page = 1) => {
+    try {
+        const url = generateApiBaseUrl('/duplicates/all');
+        const response = await axios.get(url, {
+            params: {
+                onlyNonProtected: true,
+                page,
+                limit
+            }
+        });
+        return response.data;
+    } catch (error) {
+        showErrorNotification(t('duplicatefinder', 'Error fetching duplicates for preview.'));
+        console.error('Error fetching duplicates for bulk preview:', error);
+        throw error;
+    }
+};

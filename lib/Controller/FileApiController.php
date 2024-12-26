@@ -34,7 +34,7 @@ class FileApiController extends Controller {
     }
 
     /**
-     * Delete a file
+     * Delete one or multiple files
      * 
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -42,19 +42,43 @@ class FileApiController extends Controller {
      */
     public function delete(): JSONResponse {
         $path = $this->request->getParam('path');
-        if (empty($path)) {
+        $paths = $this->request->getParam('paths');
+
+        if (empty($path) && empty($paths)) {
             return new JSONResponse(
-                ['error' => 'Path parameter is required'],
+                ['error' => 'Path or paths parameter is required'],
                 Http::STATUS_BAD_REQUEST
             );
         }
 
-        try {
-            $this->logger->debug('Attempting to delete file: {path}', ['path' => $path]);
-            $this->service->deleteFile($this->userId, $path);
-            $this->logger->info('Successfully deleted file: {path}', ['path' => $path]);
+        $results = ['success' => [], 'errors' => []];
 
-            return new JSONResponse(['status' => 'success']);
+        try {
+            if (!empty($paths) && is_array($paths)) {
+                foreach ($paths as $singlePath) {
+                    try {
+                        $this->logger->debug('Attempting to delete file: {path}', ['path' => $singlePath]);
+                        $this->service->deleteFile($this->userId, $singlePath);
+                        $this->logger->info('Successfully deleted file: {path}', ['path' => $singlePath]);
+                        $results['success'][] = $singlePath;
+                    } catch (Exception $e) {
+                        $this->logger->error('Error deleting file: {error}', [
+                            'error' => $e->getMessage(),
+                            'path' => $singlePath
+                        ]);
+                        $results['errors'][] = [
+                            'path' => $singlePath,
+                            'error' => $e->getMessage()
+                        ];
+                    }
+                }
+                return new JSONResponse($results);
+            } else {
+                $this->logger->debug('Attempting to delete single file: {path}', ['path' => $path]);
+                $this->service->deleteFile($this->userId, $path);
+                $this->logger->info('Successfully deleted file: {path}', ['path' => $path]);
+                return new JSONResponse(['status' => 'success']);
+            }
         } catch (Exception $e) {
             $this->logger->error('Error deleting file: {error}', [
                 'error' => $e->getMessage(),

@@ -1,105 +1,305 @@
 <template>
-  <div class="bulk-deletion-settings">
-    <div class="settings-section">
-      <h3>{{ t('duplicatefinder', 'Bulk Deletion Settings') }}</h3>
-      <p class="settings-hint">
-        {{ t('duplicatefinder', 'Configure how to handle duplicates outside of protected folders') }}
-      </p>
+  <div class="bulk-deletion">
+    <div v-if="!previewResults" class="bulk-deletion__content">
+      <div class="summary-section">
+        <NcEmptyContent
+          :title="t('duplicatefinder', 'Bulk Delete Duplicates')"
+          :description="t('duplicatefinder', 'Preview and delete multiple duplicates at once while preserving files in protected folders.')"
+          :icon="'icon-delete'">
+          <template #action>
+            <div class="summary-actions">
+              <NcButton type="primary" @click="performDryRun" :disabled="isLoading">
+                <template #icon>
+                  <NcLoadingIcon v-if="isLoading" />
+                </template>
+                {{ t('duplicatefinder', 'Start Preview') }}
+              </NcButton>
+            </div>
+          </template>
+        </NcEmptyContent>
+      </div>
+    </div>
 
-      <div class="preview-section" v-if="previewResults.length">
-        <h4>{{ t('duplicatefinder', 'Preview of files to be deleted') }}</h4>
-        <div class="preview-list">
-          <div v-for="(result, index) in previewResults" :key="index" class="preview-item">
-            <NcCheckboxRadioSwitch
-              :checked.sync="result.selected"
-              @update:checked="updateSelection(index)">
-              {{ result.path }}
-            </NcCheckboxRadioSwitch>
-            <span class="preview-reason">
-              {{ t('duplicatefinder', 'Duplicate of {originalPath}', { originalPath: result.originalPath }) }}
-            </span>
-          </div>
+    <div v-else class="bulk-deletion__content">
+      <div class="summary-section">
+        <p>{{ t('duplicatefinder',
+          'Total files to delete: {count}, Space that will be freed: {size}',
+          { count: totalFilesToDelete, size: formatBytes(totalSpaceFreed) }) }}</p>
+        <div v-if="isLoading" class="loading-info">
+          {{ t('duplicatefinder', 'Loading page {current} of {total}...', 
+            { current: currentPage, total: previewResults.pagination.totalPages }) }}
+        </div>
+        <div class="summary-actions">
+          <NcButton type="tertiary" @click="toggleSelectAll">
+            {{ isAllSelected ? t('duplicatefinder', 'Unselect All') : t('duplicatefinder', 'Select All') }}
+          </NcButton>
+          <NcButton type="error" @click="confirmBulkDelete" 
+            :disabled="isLoading || !hasSelectedFiles">
+            <template #icon>
+              <NcLoadingIcon v-if="isLoading" />
+            </template>
+            {{ t('duplicatefinder', 'Delete Selected Files') }}
+          </NcButton>
         </div>
       </div>
 
-      <div class="actions">
-        <NcButton type="primary" @click="performDryRun" :disabled="isLoading">
-          {{ t('duplicatefinder', 'Preview Deletions') }}
-        </NcButton>
-        <NcButton type="error" @click="confirmBulkDelete" 
-          :disabled="isLoading || !hasSelectedFiles">
-          {{ t('duplicatefinder', 'Delete Selected Files') }}
-        </NcButton>
+      <div class="preview-section">
+        <div class="preview-details">
+          <h3>{{ t('duplicatefinder', 'Files to be deleted') }}</h3>
+          <div class="preview-list">
+            <div v-for="(group, hash) in previewResults.duplicateGroups" :key="hash" class="duplicate-group">
+              <div class="group-header">
+                <NcCheckboxRadioSwitch
+                  :checked="isGroupSelected(hash)"
+                  @update:checked="toggleGroup(hash)"
+                  type="checkbox"
+                  name="group-select">
+                  <span class="group-title">
+                    {{ t('duplicatefinder', 'Duplicate Group') }}
+                    <span class="group-stats">
+                      ({{ t('duplicatefinder', '{selected} of {total} files selected', 
+                        { 
+                          selected: selectedFiles[hash]?.length || 0,
+                          total: group.filesToDelete.length 
+                        }) }})
+                    </span>
+                  </span>
+                </NcCheckboxRadioSwitch>
+              </div>
+              <div class="group-content">
+                <div v-for="(file, index) in group.filesToDelete" :key="index" class="file-display">
+                  <div class="file-checkbox">
+                    <NcCheckboxRadioSwitch
+                      :checked="isFileSelected(hash, index)"
+                      @update:checked="toggleFile(hash, index)"
+                      type="checkbox"
+                      name="file-select">
+                      <div class="file-info">
+                        <span v-html="file.humanizedPath"></span>
+                        <span class="file-size">{{ formatBytes(file.size) }}</span>
+                      </div>
+                    </NcCheckboxRadioSwitch>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { fetchDuplicatesForBulk, deleteFiles } from '@/tools/api'
 
 export default {
   name: 'BulkDeletionSettings',
   components: {
     NcButton,
-    NcCheckboxRadioSwitch
+    NcCheckboxRadioSwitch,
+    NcEmptyContent,
+    NcLoadingIcon
   },
   data() {
     return {
       isLoading: false,
-      previewResults: [],
+      previewResults: null,
+      currentPage: 1,
+      hasMorePages: false,
+      limit: 100,
+      selectedFiles: {}
     }
   },
   computed: {
     hasSelectedFiles() {
-      return this.previewResults.some(result => result.selected)
+      if (!this.previewResults) return false
+      return Object.values(this.selectedFiles).some(files => files.length > 0)
+    },
+    totalFilesToDelete() {
+      if (!this.previewResults) return 0
+      return Object.values(this.selectedFiles).reduce((total, files) => total + files.length, 0)
+    },
+    totalSpaceFreed() {
+      if (!this.previewResults) return 0
+      return Object.entries(this.selectedFiles).reduce((total, [hash, selectedIndexes]) => {
+        const group = this.previewResults.duplicateGroups[hash]
+        return total + selectedIndexes.reduce((sum, index) => 
+          sum + group.filesToDelete[index].size, 0)
+      }, 0)
+    },
+    isAllSelected() {
+      if (!this.previewResults) return false
+      return Object.values(this.previewResults.duplicateGroups).every(group => 
+        this.selectedFiles[group.hash]?.length === group.filesToDelete.length
+      )
     }
   },
   methods: {
+    formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes'
+      const k = 1024
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    },
+    humanizePath(path) {
+      // Remove /admin/files/ prefix
+      let humanized = path.replace(/^\/[^/]+\/files\//, '/')
+      
+      // Split path into directory and filename
+      const parts = humanized.split('/')
+      const fileName = parts.pop()
+      const directory = parts.join('/')
+      
+      // If there's a directory path, show it in a lighter color
+      if (directory) {
+        return `<span class="path-directory">${directory}/</span><span class="path-filename">${fileName}</span>`
+      }
+      
+      return `<span class="path-filename">${fileName}</span>`
+    },
+    async loadPage(page) {
+      try {
+        const response = await fetchDuplicatesForBulk(this.limit, page)
+        
+        // Transform entities into expected interface format
+        const duplicateGroups = { ...(this.previewResults?.duplicateGroups || {}) }
+        
+        // Initialize arrays for each group
+        response.entities.forEach(entity => {
+          if (!this.selectedFiles[entity.hash]) {
+            this.$set(this.selectedFiles, entity.hash, [])
+          }
+        })
+        
+        response.entities.forEach(entity => {
+          duplicateGroups[entity.hash] = {
+            hash: entity.hash,
+            filesToDelete: entity.files.map(file => ({
+              path: file.path,
+              humanizedPath: this.humanizePath(file.path),
+              size: file.size
+            }))
+          }
+        })
+
+        this.previewResults = {
+          duplicateGroups,
+          pagination: response.pagination
+        }
+
+        this.hasMorePages = page < response.pagination.totalPages
+        this.currentPage = page
+      } catch (error) {
+        console.error('Error loading page:', error)
+      }
+    },
     async performDryRun() {
       this.isLoading = true
       try {
-        const response = await axios.get(generateUrl('/apps/duplicatefinder/api/duplicates/dry-run'))
-        this.previewResults = response.data.results.map(result => ({
-          ...result,
-          selected: true
-        }))
-        showSuccess(t('duplicatefinder', 'Preview generated successfully'))
+        await this.loadPage(1)
+        if (this.hasMorePages) {
+          await this.loadRemainingPages()
+        }
       } catch (error) {
         console.error('Error during dry run:', error)
-        showError(t('duplicatefinder', 'Could not generate preview'))
       } finally {
         this.isLoading = false
       }
     },
-    updateSelection(index) {
-      this.previewResults[index].selected = !this.previewResults[index].selected
+    async loadRemainingPages() {
+      const totalPages = this.previewResults.pagination.totalPages
+      const remainingPages = Array.from(
+        { length: totalPages - this.currentPage },
+        (_, i) => i + this.currentPage + 1
+      )
+
+      // Load remaining pages in parallel with a reasonable chunk size
+      const chunkSize = 5
+      for (let i = 0; i < remainingPages.length; i += chunkSize) {
+        const chunk = remainingPages.slice(i, i + chunkSize)
+        await Promise.all(chunk.map(page => this.loadPage(page)))
+      }
+    },
+    isGroupSelected(hash) {
+      const group = this.previewResults.duplicateGroups[hash]
+      return this.selectedFiles[hash]?.length === group.filesToDelete.length
+    },
+    isFileSelected(hash, index) {
+      return this.selectedFiles[hash]?.includes(index) || false
+    },
+    toggleGroup(hash) {
+      const group = this.previewResults.duplicateGroups[hash]
+      const isSelected = !this.isGroupSelected(hash)
+      
+      if (isSelected) {
+        this.$set(this.selectedFiles, hash, 
+          Array.from({ length: group.filesToDelete.length }, (_, i) => i)
+        )
+      } else {
+        this.$set(this.selectedFiles, hash, [])
+      }
+    },
+    toggleFile(hash, index) {
+      if (!this.selectedFiles[hash]) {
+        this.$set(this.selectedFiles, hash, [])
+      }
+
+      const selectedIndex = this.selectedFiles[hash].indexOf(index)
+      if (selectedIndex === -1) {
+        this.selectedFiles[hash].push(index)
+      } else {
+        this.selectedFiles[hash].splice(selectedIndex, 1)
+      }
     },
     async confirmBulkDelete() {
       if (!confirm(t('duplicatefinder', 'Are you sure you want to delete all selected duplicates? This action cannot be undone.'))) {
         return
       }
 
-      const selectedPaths = this.previewResults
-        .filter(result => result.selected)
-        .map(result => result.path)
+      const filesToDelete = Object.entries(this.selectedFiles).flatMap(([hash, selectedIndexes]) => {
+        const group = this.previewResults.duplicateGroups[hash]
+        return selectedIndexes.map(index => ({
+          path: group.filesToDelete[index].path,
+          size: group.filesToDelete[index].size
+        }))
+      })
 
       this.isLoading = true
       try {
-        await axios.post(generateUrl('/apps/duplicatefinder/api/duplicates/bulk-delete'), {
-          paths: selectedPaths
-        })
-        showSuccess(t('duplicatefinder', 'Selected duplicates deleted successfully'))
-        this.$emit('duplicates-deleted')
-        this.previewResults = []
+        const { success, errors } = await deleteFiles(filesToDelete)
+        
+        if (success.length > 0) {
+          this.$emit('duplicates-deleted')
+          this.previewResults = null
+          this.selectedFiles = {}
+        }
+        
+        if (errors.length > 0) {
+          console.error('Some files could not be deleted:', errors)
+        }
       } catch (error) {
         console.error('Error during bulk deletion:', error)
-        showError(t('duplicatefinder', 'Could not delete duplicates'))
       } finally {
         this.isLoading = false
+      }
+    },
+    toggleSelectAll() {
+      if (this.isAllSelected) {
+        // Unselect all
+        Object.keys(this.selectedFiles).forEach(hash => {
+          this.$set(this.selectedFiles, hash, [])
+        })
+      } else {
+        // Select all
+        Object.keys(this.previewResults.duplicateGroups).forEach(hash => {
+          const group = this.previewResults.duplicateGroups[hash]
+          this.$set(this.selectedFiles, hash, 
+            Array.from({ length: group.filesToDelete.length }, (_, i) => i)
+          )
+        })
       }
     }
   }
@@ -107,39 +307,130 @@ export default {
 </script>
 
 <style scoped>
-.bulk-deletion-settings {
-  margin: 20px 0;
+.bulk-deletion {
+  height: 100%;
+  padding: var(--default-grid-baseline, 4px) 0;
 }
 
-.settings-hint {
-  color: var(--color-text-maxcontrast);
+.bulk-deletion__content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--default-grid-baseline, 4px);
+}
+
+.summary-section {
+  margin-top: 50px;
   margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  text-align: center;
+  width: 100%;
+}
+
+.summary-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
 .preview-section {
-  margin: 20px 0;
-  max-height: 400px;
-  overflow-y: auto;
+  background-color: var(--color-main-background);
+  border-radius: var(--border-radius-large);
+  padding: 20px;
 }
 
-.preview-item {
+.file-display {
+  width: calc(100% - 20px);
   display: flex;
   align-items: center;
-  margin: 8px 0;
-  padding: 8px;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+  border: 1px solid var(--color-border);
+  padding: 10px;
+  border-radius: var(--border-radius);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.file-display:hover {
+  background: var(--color-background-hover);
+  border-color: var(--color-primary);
+}
+
+.duplicate-group {
+  margin: 15px 0;
+  padding: 15px;
   background: var(--color-background-hover);
   border-radius: var(--border-radius);
+  transition: background-color 0.2s ease;
 }
 
-.preview-reason {
-  margin-left: 10px;
+.duplicate-group:hover {
+  background: var(--color-background-dark);
+}
+
+.group-header {
+  margin-bottom: 10px;
+}
+
+.group-content {
+  margin-left: 20px;
+}
+
+.path-directory {
+  color: var(--color-text-maxcontrast);
+}
+
+.path-filename {
+  color: var(--color-text-default);
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+}
+
+.group-stats {
+  color: var(--color-text-maxcontrast);
+  font-weight: normal;
+}
+
+.file-checkbox {
+  width: 100%;
+}
+
+.file-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.file-size {
+  color: var(--color-text-maxcontrast);
+  white-space: nowrap;
+}
+
+@media (max-width: 800px) {
+  .file-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .file-size {
+    margin-left: 20px;
+  }
+}
+
+.loading-info {
   color: var(--color-text-maxcontrast);
   font-size: 0.9em;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  margin: 10px 0;
 }
 </style> 
