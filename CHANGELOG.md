@@ -1,3 +1,9 @@
+## 1.3.1 - 2024-12-26
+### Changed
+- Improved documentation for the cleanup background job to clarify it only affects the database
+- Updated settings interface with clearer descriptions about database cleanup operations
+- Enhanced README documentation about background job behaviors
+
 ## 1.3.0 - 2024-12-18
 ### Fixed
 - Error during occ update:check when no user context is available

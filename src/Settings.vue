@@ -23,7 +23,7 @@
     </NcSettingsSection>
 
     <NcSettingsSection :name="t('duplicatefinder', 'Background Job Cleanup Interval (seconds)')"
-      :description="t('duplicatefinder', 'The interval in seconds for the cleanup background job.')" :limit-width="true">
+      :description="t('duplicatefinder', 'The interval in seconds between database cleanup operations. This job only maintains the database and does not delete any files from your storage. It helps keep the app running smoothly by removing outdated database entries.')" :limit-width="true">
       <NcTextField :value.sync="settings.backgroundjob_interval_cleanup"
         @update:value="saveSettings('backgroundjob_interval_cleanup', settings.backgroundjob_interval_cleanup)">
       </NcTextField>

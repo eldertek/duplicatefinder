@@ -62,3 +62,13 @@ else
 	rsync -a $(EXCLUDES) $(CURDIR)/  $(sign_dir)/$(app_name)
 	tar -czf $(build_dir)/$(app_name).tar.gz -C $(sign_dir) $(app_name)
 endif
+
+publish:
+	@if [ -z "$(version)" ]; then \
+		echo "Please provide a version number: make publish version=X.X.X"; \
+		exit 1; \
+	fi
+	@echo "Updating version to $(version)"
+	@sed -i 's/<version>[0-9]*\.[0-9]*\.[0-9]*<\/version>/<version>$(version)<\/version>/' appinfo/info.xml
+	@sed -i 's/"version": "[0-9]*\.[0-9]*\.[0-9]*"/"version": "$(version)"/' package.json
+	@echo "Version updated to $(version)"

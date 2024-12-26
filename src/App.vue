@@ -23,6 +23,15 @@
 					</template>
 					<OriginFoldersSettings />
 				</NcAppSettingsSection>
+
+				<NcAppSettingsSection 
+					id="bulk-deletion" 
+					:name="t('duplicatefinder', 'Bulk Deletion')">
+					<template #icon>
+						<Delete :size="20" />
+					</template>
+					<BulkDeletionSettings @duplicates-deleted="refreshDuplicates" />
+				</NcAppSettingsSection>
 			</NcAppSettingsDialog>
 		</template>
 	</NcContent>
@@ -34,9 +43,11 @@ import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSetti
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
+import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
 import { fetchDuplicates } from '@/tools/api';
 import { removeDuplicateFromList } from '@/tools/utils';
 import Folder from 'vue-material-design-icons/Folder';
+import Delete from 'vue-material-design-icons/Delete';
 
 export default {
 	name: 'DuplicateFinder',
@@ -47,9 +58,11 @@ export default {
 		DuplicateNavigation,
 		DuplicateDetails,
 		OriginFoldersSettings,
+		BulkDeletionSettings,
 		NcAppSettingsDialog,
 		NcAppSettingsSection,
 		Folder,
+		Delete,
 	},
 	data() {
 		return {
