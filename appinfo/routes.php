@@ -22,5 +22,10 @@
         
         // File routes
         ['name' => 'file_api#delete', 'url' => '/api/files/delete', 'verb' => 'POST'],
+        
+        // Excluded folder routes
+        ['name' => 'excluded_folder#index', 'url' => '/api/excluded-folders', 'verb' => 'GET'],
+        ['name' => 'excluded_folder#create', 'url' => '/api/excluded-folders', 'verb' => 'POST'],
+        ['name' => 'excluded_folder#destroy', 'url' => '/api/excluded-folders/{id}', 'verb' => 'DELETE'],
     ],
 ];

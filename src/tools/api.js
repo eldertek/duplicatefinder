@@ -8,6 +8,10 @@ function generateApiBaseUrl(path) {
     return OC.generateUrl(`/apps/duplicatefinder/api${path}`);
 }
 
+// Configure axios defaults for Nextcloud
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+axios.defaults.headers.common.requesttoken = OC.requestToken;
+
 /**
  * Fetches lists of duplicates, either acknowledged or unacknowledged.
  * @param {string} type The type of duplicates to fetch ('acknowledged' or 'unacknowledged').
@@ -215,3 +219,54 @@ export const fetchDuplicatesForBulk = async (limit = 30, page = 1) => {
         throw error;
     }
 };
+
+/**
+ * Load all excluded folders for the current user
+ * @returns {Promise<Array>} Array of excluded folders
+ */
+export async function loadExcludedFolders() {
+    try {
+        const url = generateApiBaseUrl('/excluded-folders')
+        const response = await axios.get(url)
+        return response.data
+    } catch (error) {
+        console.error('Error loading excluded folders:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to load excluded folders'))
+        throw error
+    }
+}
+
+/**
+ * Save a new excluded folder
+ * @param {string} path The path to exclude
+ * @returns {Promise<Object>} The created excluded folder
+ */
+export async function saveExcludedFolder(path) {
+    try {
+        const url = generateApiBaseUrl('/excluded-folders')
+        const response = await axios.post(url, { path })
+        showSuccessNotification(t('duplicatefinder', 'Folder added to excluded folders'))
+        return response.data
+    } catch (error) {
+        console.error('Error saving excluded folder:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to add folder to excluded folders'))
+        throw error
+    }
+}
+
+/**
+ * Delete an excluded folder
+ * @param {number} id The ID of the excluded folder to delete
+ * @returns {Promise<void>}
+ */
+export async function deleteExcludedFolder(id) {
+    try {
+        const url = generateApiBaseUrl(`/excluded-folders/${id}`)
+        await axios.delete(url)
+        showSuccessNotification(t('duplicatefinder', 'Folder removed from excluded folders'))
+    } catch (error) {
+        console.error('Error deleting excluded folder:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to remove folder from excluded folders'))
+        throw error
+    }
+}

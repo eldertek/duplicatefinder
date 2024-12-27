@@ -35,6 +35,15 @@
 					</template>
 					<OriginFoldersSettings />
 				</NcAppSettingsSection>
+
+				<NcAppSettingsSection 
+					id="excluded-folders" 
+					:name="t('duplicatefinder', 'Excluded Folders')">
+					<template #icon>
+						<FolderRemove :size="20" />
+					</template>
+					<ExcludedFoldersSettings />
+				</NcAppSettingsSection>
 			</NcAppSettingsDialog>
 		</template>
 	</NcContent>
@@ -46,10 +55,12 @@ import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSetti
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
+import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
 import { fetchDuplicates } from '@/tools/api';
 import { removeDuplicateFromList } from '@/tools/utils';
 import Folder from 'vue-material-design-icons/Folder';
+import FolderRemove from 'vue-material-design-icons/FolderRemove';
 import Delete from 'vue-material-design-icons/Delete';
 
 export default {
@@ -61,10 +72,12 @@ export default {
 		DuplicateNavigation,
 		DuplicateDetails,
 		OriginFoldersSettings,
+		ExcludedFoldersSettings,
 		BulkDeletionSettings,
 		NcAppSettingsDialog,
 		NcAppSettingsSection,
 		Folder,
+		FolderRemove,
 		Delete,
 	},
 	data() {

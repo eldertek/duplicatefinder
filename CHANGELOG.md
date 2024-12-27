@@ -1,3 +1,9 @@
+## 1.4.0 - 2024-12-27
+### Added
+- Added ability to exclude specific folders from duplicate scanning via settings page
+### Fixed
+- Handle when there is no file to delete in bulk deletion
+
 ## 1.3.1 - 2024-12-26
 ### Added
 - New bulk deletion feature allowing users to delete multiple duplicates at once
