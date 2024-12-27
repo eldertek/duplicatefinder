@@ -56,12 +56,29 @@ class FileDuplicateService
         $files = $duplicate->getFiles();
         $this->logger->debug('Enriching duplicate with hash: {hash}', ['hash' => $duplicate->getHash()]);
         
+        // Track unique node IDs to prevent showing the same file multiple times
+        $seenNodeIds = [];
+        $uniqueFiles = [];
+        
         // Iterate through each FileInfo object to enrich it
         foreach ($files as $key => $fileInfo) {
             // Enrich the FileInfo object
             $files[$key] = $this->fileInfoService->enrich($fileInfo);
             
-            // Normalize path by removing /admin/files/ prefix
+            // Skip if we've already seen this node ID (same physical file)
+            if ($files[$key]->getNodeId() && isset($seenNodeIds[$files[$key]->getNodeId()])) {
+                $this->logger->debug('Skipping duplicate node ID: {nodeId} for path: {path}', [
+                    'nodeId' => $files[$key]->getNodeId(),
+                    'path' => $fileInfo->getPath()
+                ]);
+                continue;
+            }
+            
+            if ($files[$key]->getNodeId()) {
+                $seenNodeIds[$files[$key]->getNodeId()] = true;
+            }
+            
+            // Store normalized path for logging
             $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $fileInfo->getPath());
             $this->logger->debug('Normalized path for file: {original} -> {normalized}', [
                 'original' => $fileInfo->getPath(),
@@ -75,16 +92,21 @@ class FileDuplicateService
                 'path' => $normalizedPath,
                 'status' => $protectionInfo['isProtected'] ? 'protected' : 'not protected'
             ]);
+            
+            $uniqueFiles[] = $files[$key];
         }
 
         // Sort the enriched FileInfo objects
-        uasort($files, function (FileInfo $a, FileInfo $b) {
+        uasort($uniqueFiles, function (FileInfo $a, FileInfo $b) {
             return strnatcmp($a->getPath(), $b->getPath());
         });
 
         // Set the sorted and enriched FileInfo objects back to the duplicate
-        $duplicate->setFiles(array_values($files));
-        $this->logger->debug('Finished enriching duplicate with hash: {hash}', ['hash' => $duplicate->getHash()]);
+        $duplicate->setFiles(array_values($uniqueFiles));
+        $this->logger->debug('Finished enriching duplicate with hash: {hash}, found {count} unique files', [
+            'hash' => $duplicate->getHash(),
+            'count' => count($uniqueFiles)
+        ]);
 
         return $duplicate;
     }
