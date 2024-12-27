@@ -1,3 +1,9 @@
+## 1.4.1 - 2024-12-27
+### Added
+- Added a help tooltip to explain how to use the app
+- Added an onboarding guide to help users get started
+- Added a FAQ section to help users
+
 ## 1.4.0 - 2024-12-27
 ### Added
 - Added ability to exclude specific folders from duplicate scanning via settings page

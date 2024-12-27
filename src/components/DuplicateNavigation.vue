@@ -15,6 +15,70 @@
                 </template>
             </NcAppNavigationItem>
 
+            <!-- Settings Navigation Item -->
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Settings')" @click="$emit('open-settings')" :exact="true">
+                <template #icon>
+                    <Cog :size="20" />
+                </template>
+            </NcAppNavigationItem>
+
+            <!-- Help Section -->
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Help')" 
+                :allowCollapse="true" 
+                :open="false">
+                <template #icon>
+                    <HelpCircle :size="20" />
+                </template>
+                <template>
+                    <NcAppNavigationItem :name="t('duplicatefinder', 'Getting Started')"
+                        @click="$emit('show-help', 'guide')">
+                        <template #icon>
+                            <School :size="20" />
+                        </template>
+                    </NcAppNavigationItem>
+
+                    <NcAppNavigationItem :name="t('duplicatefinder', 'Usage Examples')"
+                        @click="$emit('show-help', 'examples')">
+                        <template #icon>
+                            <PlayCircle :size="20" />
+                        </template>
+                    </NcAppNavigationItem>
+
+                    <NcAppNavigationItem :name="t('duplicatefinder', 'FAQ')"
+                        @click="$emit('show-help', 'faq')">
+                        <template #icon>
+                            <FrequentlyAskedQuestions :size="20" />
+                        </template>
+                    </NcAppNavigationItem>
+                </template>
+            </NcAppNavigationItem>
+
+            <!-- Navigation for Acknowledged Duplicates -->
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Acknowledged')" 
+                :allowCollapse="true" 
+                :open="true">
+                <template #icon>
+                    <CheckCircle :size="20" />
+                </template>
+                <template>
+                    <div v-show="filteredAcknowledgedDuplicates.length > 0">
+                        <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
+                            <DuplicateListItem 
+                                :duplicate="duplicate" 
+                                :isActive="currentDuplicateId === duplicate.id"
+                                @duplicate-selected="openDuplicate"
+                                @duplicate-resolved="handleDuplicateResolved" />
+                        </div>
+                    </div>
+                    <div v-show="filteredAcknowledgedDuplicates.length === 0">
+                        <p>{{ t('duplicatefinder', 'No acknowledged duplicates found.') }}</p>
+                    </div>
+                    <button v-if="hasMoreAcknowledged" @click="loadMoreAcknowledgedDuplicates">
+                        {{ t('duplicatefinder', 'Load More') }}
+                    </button>
+                </template>
+            </NcAppNavigationItem>
+
             <!-- Navigation for Unacknowledged Duplicates -->
             <NcAppNavigationItem :name="t('duplicatefinder', 'Unacknowledged')" 
                 :allowCollapse="true" 
@@ -41,35 +105,6 @@
                     </button>
                 </template>
             </NcAppNavigationItem>
-            <!-- Navigation for Acknowledged Duplicates -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Acknowledged')" :allowCollapse="true" :open="true">
-                <template #icon>
-                    <CheckCircle :size="20" />
-                </template>
-                <template>
-                    <div v-show="filteredAcknowledgedDuplicates.length > 0">
-                        <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
-                            <DuplicateListItem 
-                                :duplicate="duplicate" 
-                                :isActive="currentDuplicateId === duplicate.id"
-                                @duplicate-selected="openDuplicate"
-                                @duplicate-resolved="handleDuplicateResolved" />
-                        </div>
-                    </div>
-                    <div v-show="filteredAcknowledgedDuplicates.length === 0">
-                        <p>{{ t('duplicatefinder', 'No acknowledged duplicates found.') }}</p>
-                    </div>
-                    <button v-if="hasMoreAcknowledged" @click="loadMoreAcknowledgedDuplicates">
-                        {{ t('duplicatefinder', 'Load More') }}
-                    </button>
-                </template>
-            </NcAppNavigationItem>
-            <!-- Settings Navigation Item -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Settings')" @click="$emit('open-settings')" :exact="true">
-                <template #icon>
-                    <Cog :size="20" />
-                </template>
-            </NcAppNavigationItem>
         </template>
     </NcAppNavigation>
 </template>
@@ -81,6 +116,10 @@ import CloseCircle from 'vue-material-design-icons/CloseCircle';
 import CheckCircle from 'vue-material-design-icons/CheckCircle';
 import Cog from 'vue-material-design-icons/Cog';
 import Delete from 'vue-material-design-icons/Delete';
+import HelpCircle from 'vue-material-design-icons/HelpCircle';
+import School from 'vue-material-design-icons/School';
+import PlayCircle from 'vue-material-design-icons/PlayCircle';
+import FrequentlyAskedQuestions from 'vue-material-design-icons/FrequentlyAskedQuestions';
 import { fetchDuplicates } from '@/tools/api';
 
 export default {
@@ -92,7 +131,11 @@ export default {
         CheckCircle, 
         CloseCircle, 
         Cog,
-        Delete
+        Delete,
+        HelpCircle,
+        School,
+        PlayCircle,
+        FrequentlyAskedQuestions
     },
     props: {
         acknowledgedDuplicates: Array,

@@ -2,17 +2,21 @@
 	<NcContent app-name="duplicatefinder">
 		<NcLoadingIcon v-if="isLoading" />
 		<template v-else>
-			<DuplicateNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
-				:acknowledged-duplicates="acknowledgedDuplicates" :unacknowledged-duplicates="unacknowledgedDuplicates"
-				:currentDuplicateId="currentDuplicate?.id"
-				:acknowledgedPagination="acknowledgedPagination"
-				:unacknowledgedPagination="unacknowledgedPagination"
-				:activeView="activeView"
-				@open-duplicate="openDuplicate"
-				@open-settings="settingsOpen = true"
-				@open-bulk-delete="openBulkDelete"
-				@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
-				@update-unacknowledged-duplicates="updateUnacknowledgedDuplicates" />
+			<div class="app-navigation-header">
+				<DuplicateNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
+					:acknowledged-duplicates="acknowledgedDuplicates" :unacknowledged-duplicates="unacknowledgedDuplicates"
+					:currentDuplicateId="currentDuplicate?.id"
+					:acknowledgedPagination="acknowledgedPagination"
+					:unacknowledgedPagination="unacknowledgedPagination"
+					:activeView="activeView"
+					@open-duplicate="openDuplicate"
+					@open-settings="settingsOpen = true"
+					@show-help="showHelp"
+					@open-bulk-delete="openBulkDelete"
+					@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
+					@update-unacknowledged-duplicates="updateUnacknowledgedDuplicates" />
+			</div>
+
 			<NcAppContent>
 				<template v-if="activeView === 'bulk-delete'">
 					<BulkDeletionSettings @duplicates-deleted="refreshDuplicates" />
@@ -45,18 +49,32 @@
 					<ExcludedFoldersSettings />
 				</NcAppSettingsSection>
 			</NcAppSettingsDialog>
+
+			<NcModal
+				v-if="helpModalOpen"
+				:title="helpModalTitle"
+				@close="helpModalOpen = false">
+				<div class="help-content">
+					<OnboardingGuide v-if="currentHelpSection === 'guide'" :show="true" @close="helpModalOpen = false" />
+					<UsageExamples v-if="currentHelpSection === 'examples'" :show="true" @close="helpModalOpen = false" />
+					<FAQ v-if="currentHelpSection === 'faq'" :show="true" @close="helpModalOpen = false" />
+				</div>
+			</NcModal>
 		</template>
 	</NcContent>
 </template>
   
   
 <script>
-import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSettingsSection } from '@nextcloud/vue';
+import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSettingsSection, NcButton, NcModal } from '@nextcloud/vue';
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
+import OnboardingGuide from './components/help/OnboardingGuide.vue';
+import UsageExamples from './components/help/UsageExamples.vue';
+import FAQ from './components/help/FAQ.vue';
 import { fetchDuplicates } from '@/tools/api';
 import { removeDuplicateFromList } from '@/tools/utils';
 import Folder from 'vue-material-design-icons/Folder';
@@ -69,6 +87,8 @@ export default {
 		NcAppContent,
 		NcContent,
 		NcLoadingIcon,
+		NcButton,
+		NcModal,
 		DuplicateNavigation,
 		DuplicateDetails,
 		OriginFoldersSettings,
@@ -79,6 +99,9 @@ export default {
 		Folder,
 		FolderRemove,
 		Delete,
+		OnboardingGuide,
+		UsageExamples,
+		FAQ
 	},
 	data() {
 		return {
@@ -97,8 +120,28 @@ export default {
 			unacknowledgedPagination: {
 				currentPage: 1,
 				totalPages: 1
-			}
+			},
+			helpModalOpen: false,
+			currentHelpSection: 'guide',
 		};
+	},
+	computed: {
+		helpModalTitle() {
+			const titles = {
+				guide: t('duplicatefinder', 'Getting Started'),
+				examples: t('duplicatefinder', 'Usage Examples'),
+				faq: t('duplicatefinder', 'FAQ')
+			}
+			return titles[this.currentHelpSection] || t('duplicatefinder', 'Help')
+		},
+		currentHelpComponent() {
+			const components = {
+				guide: OnboardingGuide,
+				examples: UsageExamples,
+				faq: FAQ
+			}
+			return components[this.currentHelpSection]
+		}
 	},
 	async created() {
 		await this.loadInitialData()
@@ -262,6 +305,10 @@ export default {
 		openBulkDelete() {
 			this.activeView = 'bulk-delete'
 			this.currentDuplicate = null
+		},
+		showHelp(section) {
+			this.currentHelpSection = section || 'guide'
+			this.helpModalOpen = true
 		}
 	},
 	mounted() {
@@ -273,6 +320,51 @@ export default {
   
 <style>
 .app-content {
+	overflow-y: auto;
+}
+
+.help-content {
+	padding: var(--spacing-3);
+	max-width: 800px;
+	margin: 0 auto;
+}
+
+:deep(.modal-container) {
+	background-color: var(--color-main-background);
+	border-radius: var(--border-radius-large);
+	box-shadow: var(--shadow-modal);
+	border: 1px solid var(--color-border);
+	overflow: hidden;
+}
+
+:deep(.modal-wrapper) {
+	border-radius: var(--border-radius-large);
+}
+
+:deep(.modal-header) {
+	background-color: var(--color-primary-element-light);
+	border-bottom: 1px solid var(--color-border);
+	padding: 16px 20px;
+}
+
+:deep(.modal-title) {
+	color: var(--color-main-text);
+	font-weight: bold;
+	font-size: 20px;
+}
+
+:deep(.modal-container__close) {
+	opacity: 0.7;
+	transition: opacity 0.2s ease;
+}
+
+:deep(.modal-container__close:hover) {
+	opacity: 1;
+}
+
+:deep(.modal-container__content) {
+	padding: 0;
+	max-height: 80vh;
 	overflow-y: auto;
 }
 </style>
