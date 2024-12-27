@@ -107,7 +107,7 @@ class ExcludedFolderMapper extends QBMapper {
         ]);
         
         // Remove /userId/files prefix from path for comparison
-        $normalizedPath = preg_replace('#^/' . preg_quote($userId) . '/files#', '', $path);
+        $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $path);
         $normalizedPath = '/' . trim($normalizedPath, '/') . '/';
         
         $this->logger->debug('Normalized path for comparison', [
