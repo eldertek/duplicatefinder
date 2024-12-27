@@ -4,17 +4,17 @@ namespace OCA\DuplicateFinder\Db;
 
 use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
-use OCP\ILogger;
+use Psr\Log\LoggerInterface;
 
 /**
  * @extends EQBMapper<FileDuplicate>
  */
 class FileDuplicateMapper extends EQBMapper
 {
-    /** @var ILogger */
+    /** @var LoggerInterface */
     private $logger;
 
-    public function __construct(IDBConnection $db, ILogger $logger)
+    public function __construct(IDBConnection $db, LoggerInterface $logger)
     {
         parent::__construct($db, 'duplicatefinder_dups', FileDuplicate::class);
         $this->logger = $logger;
@@ -84,7 +84,7 @@ class FileDuplicateMapper extends EQBMapper
             $qb->update($this->getTableName())
                 ->set('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
                 ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
-                ->execute();
+                ->executeStatement();
 
             return true;
         } catch (\Exception $e) {
@@ -108,7 +108,7 @@ class FileDuplicateMapper extends EQBMapper
             $qb->update($this->getTableName())
                 ->set('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
                 ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
-                ->execute();
+                ->executeStatement();
 
             return true;
         } catch (\Exception $e) {
@@ -139,7 +139,7 @@ class FileDuplicateMapper extends EQBMapper
         } // No condition needed for 'all', as we want to count all rows
 
         // Execute the query and fetch the result
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $row = $result->fetch();
         $result->closeCursor();
 
