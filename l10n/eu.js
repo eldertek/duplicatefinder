@@ -3,10 +3,10 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Bikoiztuen bilatzailea",
     "Settings saved" : "Ezarpenak gordeta",
+    "Select All" : "Hautatu denak",
     "Show Preview" : "Erakutsi aurreikuspena",
     "Unacknowledge it" : "Aitormena kendu",
     "Acknowledge it" : "Aitortu",
-    "Select All" : "Hautatu denak",
     "File" : "Fitxategia",
     "Path:" : "Bide-izena:",
     "Delete" : "Ezabatu",

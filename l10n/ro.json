@@ -9,7 +9,6 @@
     "When true, the event-based detection will be disabled." : "Când este adevărat, detectarea bazată pe evenimente va fi dezactivată.",
     "Disable filesystem events" : "Dezactivați evenimentele sistemului de fișiere",
     "Background Job Cleanup Interval (seconds)" : "Interval de curățare a procesului de fundal (secunde)",
-    "The interval in seconds for the cleanup background job." : "Intervalul în secunde pentru procesul de curățare în fundal.",
     "Background Job Find Duplicates Interval (seconds)" : "Intervalul procesului din fundal de găsire a duplicatelor (secunde)",
     "The interval in seconds for the find duplicates background job." : "Intervalul în secunde pentru procesul din fundal de găsire a duplicatelor.",
     "Could not fetch settings" : "Nu s-au putut prelua setările",

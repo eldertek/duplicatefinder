@@ -11,7 +11,6 @@ OC.L10N.register(
     "When true, the event-based detection will be disabled." : "Quan és cert, la detecció basada en esdeveniments es desactivarà.",
     "Disable filesystem events" : "Inhabilitar els esdeveniments del sistema de fitxers",
     "Background Job Cleanup Interval (seconds)" : "Interval de neteja de treball en segon pla (segons)",
-    "The interval in seconds for the cleanup background job." : "L'interval en segons per a la tasca de neteja en segon pla.",
     "Background Job Find Duplicates Interval (seconds)" : "Interval de recerca de duplicats de treball en segon pla (segons)",
     "The interval in seconds for the find duplicates background job." : "L'interval en segons per al treball de fons de cerca duplicats.",
     "Advanced settings (be cautious)" : "Paràmetres avançats (aneu amb compte)",

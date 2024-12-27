@@ -3,6 +3,8 @@ OC.L10N.register(
     {
     "Settings saved" : "Agordoj konservitaj",
     "File" : "Dosiero",
-    "Delete" : "Forigi"
+    "Delete" : "Forigi",
+    "Settings" : "Agordoj",
+    "File not found" : "Netrovita dosiero"
 },
 "nplurals=2; plural=(n != 1);");

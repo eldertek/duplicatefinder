@@ -8,7 +8,6 @@ OC.L10N.register(
     "When true, the event-based detection will be disabled." : "Ha igaz, az eseményalapú észlelés le lesz tiltva.",
     "Disable filesystem events" : "Fájlrendszer események kikapcsolása",
     "Background Job Cleanup Interval (seconds)" : "Háttérfeladatok takarítási intervallum (másodpercben)",
-    "The interval in seconds for the cleanup background job." : "A tisztítási háttérfeladat intervalluma másodpercben.",
     "Background Job Find Duplicates Interval (seconds)" : "Duplikációkeresés háttérfeladat intervallum (másodpercben)",
     "The interval in seconds for the find duplicates background job." : "A duplikációkeresés háttérfeladat intervalluma másodpercben.",
     "Could not fetch settings" : "Nem sikerült lekérni a beállításokat",
