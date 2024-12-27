@@ -10,15 +10,19 @@ jobs:
       - uses: actions/github-script@v6
         with:
           script: |
-            github.rest.issues.createComment({
+            const message = [
+              'Thank you for your input and suggestions! 🙌',
+              '',
+              'The issue has been resolved/implemented in the latest updates. 🎉 If you have any further feedback or ideas, feel free to open a new issue or join the discussion on GitHub.',
+              '',
+              'Your support helps us make Duplicate Finder even better—thank you for being part of our journey! 🚀',
+              '',
+              'If you haven\'t already, don\'t forget to ⭐ star the project on GitHub. Your support means the world to us and keeps the project thriving!'
+            ].join('\n');
+            
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Thank you for your input and suggestions! 🙌
-
-The issue has been resolved/implemented in the latest updates. 🎉 If you have any further feedback or ideas, feel free to open a new issue or join the discussion on GitHub.
-
-Your support helps us make Duplicate Finder even better, thank you for being part of our journey! 🚀
-
-If you haven't already, don't forget to ⭐ star the project on GitHub. Your support means the world to us and keeps the project thriving!`
-            }) 
+              body: message
+            }); 
