@@ -35,13 +35,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BODY=$(cat << 'EOF'
-${latest}
-
-## Full Changelog
-[Compare v${previous_version}...v${current_version}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/v${previous_version}...v${current_version})
-EOF
-)
+          BODY=$(cat << EOT
+          $latest
+          )
           
           # Update release notes
           gh api \
