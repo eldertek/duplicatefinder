@@ -15,8 +15,20 @@ jobs:
       - name: Extract latest changelog and version
         id: extract_changelog
         run: |
-          # Get everything between the first two '## ' lines
-          LATEST=$(awk '/^## /{p=NR+3}(NR<=p){print}' CHANGELOG.md | head -n 4)
+          # Get everything between the first two version headers
+          LATEST=$(awk '
+            /^## [0-9]+\.[0-9]+\.[0-9]+/ {
+              if (count == 0) {
+                count = 1
+                print
+                next
+              }
+              if (count == 1) {
+                exit
+              }
+            }
+            count == 1 { print }
+          ' CHANGELOG.md)
           
           # Extract version numbers
           CURRENT_VERSION=$(echo "$LATEST" | head -n1 | grep -oP '## \K[0-9]+\.[0-9]+\.[0-9]+')
@@ -35,9 +47,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BODY=$(cat << EOT
-          $latest
-          )
+          # Directly assign the environment variable
+          BODY="$latest"
           
           # Update release notes
           gh api \
