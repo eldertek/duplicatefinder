@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Cercador de duplicats",
     "Duplicate Finder Settings" : "Paràmetres del cercador de duplicats",
+    "FAQ" : "PMF",
     "All general settings to modify Duplicate Finder behaviors." : "Tota la configuració general per modificar els comportaments del cercador de duplicats.",
     "Ignore Mounted Files" : "Ignora els fitxers muntats",
     "When true, files mounted on external storage will be ignored." : "Quan és cert, els fitxers muntats a l'emmagatzematge extern s'ignoraran.",

@@ -1,9 +1,0 @@
-{ "translations": {
-    "Settings saved" : "Οι ρυθμίσεις αποθηκεύτηκαν",
-    "File" : "Αρχείο",
-    "Delete" : "Διαγραφή",
-    "Load More" : "Φόρτωση Περισσότερων",
-    "Settings" : "Ρυθμίσεις",
-    "File not found" : "Δε βρέθηκε το αρχείο"
-},"pluralForm" :"nplurals=2; plural=(n != 1);"
-}

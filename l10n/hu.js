@@ -1,6 +1,8 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "FAQ" : "GYIK",
+    "Help" : "Súgó",
     "Ignore Mounted Files" : "Felcsatolt fájlok figyelmen kívül hagyása",
     "When true, files mounted on external storage will be ignored." : "Ha igaz, a külső tárolókon lévő fájlok kihagyásra kerülnek.",
     "Ignore mounted file" : "Felcsatolt fájl figyelmen kívül hagyása",
@@ -14,11 +16,13 @@ OC.L10N.register(
     "Settings saved" : "Beállítások mentve",
     "Could not save settings" : "Nem sikerült elmenteni a beállításokat",
     "Select All" : "Összes kiválasztása",
+    "Back" : "Vissza",
     "No duplicates found or no duplicate selected." : "Nem található duplikáció vagy nincs duplikáció kijelölve.",
     "File" : "Fájl",
     "Path:" : "Útvonal:",
     "Delete" : "Törlés",
     "Settings" : "Beállítások",
+    "Note:" : "Megjegyzés:",
     "File not found" : "A fájl nem található"
 },
 "nplurals=2; plural=(n != 1);");

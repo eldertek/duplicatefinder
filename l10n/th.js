@@ -1,6 +1,7 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "Help" : "ช่วยเหลือ",
     "Settings saved" : "บันทึกการตั้งค่าแล้ว",
     "File" : "ไฟล์",
     "Delete" : "ลบ",

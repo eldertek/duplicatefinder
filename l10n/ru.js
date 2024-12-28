@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Поиск дубликатов",
     "Duplicate Finder Settings" : "Настройки поиска дубликатов",
+    "Help" : "Справка",
     "All general settings to modify Duplicate Finder behaviors." : "Все общие настройки для изменения поведения Поиска дубликатов.",
     "Ignore Mounted Files" : "Игнорировать смонтированные файлы",
     "When true, files mounted on external storage will be ignored." : "Если установлено значение true, файлы, смонтированные на внешнем хранилище, будут игнорироваться.",
@@ -19,6 +20,7 @@ OC.L10N.register(
     "Settings saved" : "Настройки сохранены",
     "Could not save settings" : "Не удалось сохранить настройки",
     "Select All" : "Выбрать все",
+    "Back" : "Назад",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Добро пожаловать, текущий дубликат содержит файлы: {numberOfFiles}, общий размер: {formattedSize}.",
     "Unacknowledge it" : "Не признавать это",
     "Acknowledge it" : "Признать это",
@@ -26,8 +28,9 @@ OC.L10N.register(
     "File" : "Файл",
     "Path:" : "Путь:",
     "Delete" : "Удалить",
-    "Load More" : "Загрузить ещё",
     "Settings" : "Настройки",
+    "Load More" : "Загрузить ещё",
+    "Note:" : "Примечание:",
     "Duplicate acknowledged successfully" : "Дубликат успешно признан",
     "File not found" : "Файл не найден"
 },

@@ -1,6 +1,7 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "Help" : "Abiinfo",
     "Settings saved" : "Seaded salvestatud",
     "File" : "Fail",
     "Delete" : "Kustuta",
