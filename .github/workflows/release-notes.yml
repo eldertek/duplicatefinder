@@ -15,14 +15,14 @@ jobs:
       - name: Extract latest changelog and version
         id: extract_changelog
         run: |
-          # Get the latest version section (everything between the first and second '## ')
-          LATEST=$(sed -n '1,/^## /{/^## /p; /^## /q}' CHANGELOG.md | sed '1d')
+          # Get the latest version section
+          LATEST=$(sed -n '1,/^## /{p}' CHANGELOG.md | head -n -1)
           
-          # Extract current version number
-          CURRENT_VERSION=$(echo "$LATEST" | head -n 1 | sed 's/## \([0-9.]*\).*/\1/')
+          # Extract current version number (first line, remove everything except version)
+          CURRENT_VERSION=$(head -n 1 CHANGELOG.md | grep -oP '## \K[0-9]+\.[0-9]+\.[0-9]+')
           
-          # Find previous version by getting the second version header
-          PREVIOUS_VERSION=$(sed -n '/^## [0-9]/{n;/^## /s/^## \([0-9.]*\).*/\1/p;q}' CHANGELOG.md)
+          # Get the second version number
+          PREVIOUS_VERSION=$(grep -oP '## \K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 2 | tail -n 1)
           
           # Prepare the content for GitHub Actions
           echo "latest<<EOF" >> $GITHUB_ENV
@@ -40,22 +40,20 @@ jobs:
           REPO_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
           COMPARE_URL="${REPO_URL}/compare/v${previous_version}...v${current_version}"
           
-          BODY="# Latest Changes
+          BODY="
           ${LATEST}
           
-          # Full Changelog
+          ## Full Changelog
           [Compare v${previous_version}...v${current_version}](${COMPARE_URL})"
           
-          # Get release ID
-          RELEASE_ID=$(gh api \
+          # Get release ID and update it
+          gh api \
             --method GET \
             -H "Accept: application/vnd.github+json" \
             /repos/${{ github.repository }}/releases/tags/${{ github.event.release.tag_name }} \
-            | jq .id)
-          
-          # Update release notes
-          gh api \
+            --jq .id \
+          | xargs -I {} gh api \
             --method PATCH \
             -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/releases/$RELEASE_ID \
+            /repos/${{ github.repository }}/releases/{} \
             -f body="$BODY" 
