@@ -15,42 +15,37 @@ jobs:
       - name: Extract latest changelog and version
         id: extract_changelog
         run: |
-          # Get the latest version section
-          LATEST=$(sed -n '1,/^## /{p}' CHANGELOG.md | head -n -1)
+          # Get everything between the first two '## ' lines
+          LATEST=$(awk '/^## /{p=NR+3}(NR<=p){print}' CHANGELOG.md | head -n 4)
           
-          # Extract current version number (first line, remove everything except version)
-          CURRENT_VERSION=$(head -n 1 CHANGELOG.md | grep -oP '## \K[0-9]+\.[0-9]+\.[0-9]+')
+          # Extract version numbers
+          CURRENT_VERSION=$(echo "$LATEST" | head -n1 | grep -oP '## \K[0-9]+\.[0-9]+\.[0-9]+')
+          PREVIOUS_VERSION=$(grep -oP '## \K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n2 | tail -n1)
           
-          # Get the second version number
-          PREVIOUS_VERSION=$(grep -oP '## \K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 2 | tail -n 1)
-          
-          # Prepare the content for GitHub Actions
-          echo "latest<<EOF" >> $GITHUB_ENV
-          echo "$LATEST" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_ENV
-          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_ENV
+          # Save to GITHUB_ENV with proper formatting
+          {
+            echo 'latest<<EOF'
+            echo "$LATEST"
+            echo 'EOF'
+            echo "current_version=$CURRENT_VERSION"
+            echo "previous_version=$PREVIOUS_VERSION"
+          } >> $GITHUB_ENV
 
       - name: Update Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Combine latest release notes with comparison URL
-          REPO_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
-          COMPARE_URL="${REPO_URL}/compare/v${previous_version}...v${current_version}"
-          
-          BODY="
-          ${LATEST}
-          
-          ## Full Changelog
-          [Compare v${previous_version}...v${current_version}](${COMPARE_URL})"
-          
-          # Get release ID and update it
+          # Format release body with proper markdown
+          BODY="${latest}
+
+## Full Changelog
+[Compare v${previous_version}...v${current_version}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/v${previous_version}...v${current_version})"
+
+          # Update release notes
           gh api \
             --method GET \
             -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/releases/tags/${{ github.event.release.tag_name }} \
+            /repos/${{ github.repository }}/releases/tags/v${current_version} \
             --jq .id \
           | xargs -I {} gh api \
             --method PATCH \
