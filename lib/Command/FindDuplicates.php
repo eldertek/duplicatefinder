@@ -5,6 +5,8 @@ namespace OCA\DuplicateFinder\Command;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\ExcludedFolderService;
+use OCA\DuplicateFinder\Service\OriginFolderService;
 use OCA\DuplicateFinder\Utils\CMDUtils;
 use OCP\Encryption\IManager;
 use OCP\Files\NotFoundException;
@@ -47,6 +49,16 @@ class FindDuplicates extends Command
     private $fileDuplicateService;
 
     /**
+     * @var ExcludedFolderService The excluded folder service instance.
+     */
+    private $excludedFolderService;
+
+    /**
+     * @var OriginFolderService The origin folder service instance.
+     */
+    private $originFolderService;
+
+    /**
      * @var LoggerInterface The logger instance.
      */
     private $logger;
@@ -64,6 +76,8 @@ class FindDuplicates extends Command
      * @param IDBConnection $connection The database connection instance.
      * @param FileInfoService $fileInfoService The file info service instance.
      * @param FileDuplicateService $fileDuplicateService The file duplicate service instance.
+     * @param ExcludedFolderService $excludedFolderService The excluded folder service instance.
+     * @param OriginFolderService $originFolderService The origin folder service instance.
      * @param LoggerInterface $logger The logger instance.
      */
     public function __construct(
@@ -72,6 +86,8 @@ class FindDuplicates extends Command
         IDBConnection $connection,
         FileInfoService $fileInfoService,
         FileDuplicateService $fileDuplicateService,
+        ExcludedFolderService $excludedFolderService,
+        OriginFolderService $originFolderService,
         LoggerInterface $logger
     ) {
         parent::__construct('duplicates:find-all');
@@ -80,6 +96,8 @@ class FindDuplicates extends Command
         $this->connection = $connection;
         $this->fileInfoService = $fileInfoService;
         $this->fileDuplicateService = $fileDuplicateService;
+        $this->excludedFolderService = $excludedFolderService;
+        $this->originFolderService = $originFolderService;
         $this->logger = $logger;
     }
 
@@ -171,6 +189,11 @@ class FindDuplicates extends Command
      */
     private function findDuplicates(string $user, array $paths): void
     {
+        // Set the user context for required services
+        $this->fileDuplicateService->setCurrentUserId($user);
+        $this->excludedFolderService->setUserId($user);
+        $this->originFolderService->setUserId($user);
+
         $callback = function () {
             pcntl_signal_dispatch();
             return false; // Continue scanning

@@ -129,4 +129,14 @@ class ExcludedFolderService {
         ]);
         return $isExcluded;
     }
+
+    /**
+     * Set the user ID for the service.
+     *
+     * @param string|null $userId The user ID to set
+     */
+    public function setUserId(?string $userId): void {
+        $this->userId = $userId ?? '';
+        $this->logger->debug('Set user ID: {userId}', ['userId' => $this->userId]);
+    }
 } 

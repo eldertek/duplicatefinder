@@ -1,3 +1,9 @@
+## 1.5.0 - 2024-12-28
+### Added
+- Open folder/file in new window from duplicate details page
+### Fixed
+- Fix an issue with user context not being set correctly in command line
+
 ## 1.4.1 - 2024-12-27
 ### Added
 - Added a help tooltip to explain how to use the app

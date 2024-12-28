@@ -1,0 +1,61 @@
+name: Release Notes
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  update-release-notes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract latest changelog and version
+        id: extract_changelog
+        run: |
+          # Get the latest version section (everything between the first and second '## ')
+          LATEST=$(sed -n '1,/^## /{/^## /p; /^## /q}' CHANGELOG.md | sed '1d')
+          
+          # Extract current version number
+          CURRENT_VERSION=$(echo "$LATEST" | head -n 1 | sed 's/## \([0-9.]*\).*/\1/')
+          
+          # Find previous version by getting the second version header
+          PREVIOUS_VERSION=$(sed -n '/^## [0-9]/{n;/^## /s/^## \([0-9.]*\).*/\1/p;q}' CHANGELOG.md)
+          
+          # Prepare the content for GitHub Actions
+          echo "latest<<EOF" >> $GITHUB_ENV
+          echo "$LATEST" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_ENV
+
+      - name: Update Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Combine latest release notes with comparison URL
+          REPO_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+          COMPARE_URL="${REPO_URL}/compare/v${previous_version}...v${current_version}"
+          
+          BODY="# Latest Changes
+          ${LATEST}
+          
+          # Full Changelog
+          [Compare v${previous_version}...v${current_version}](${COMPARE_URL})"
+          
+          # Get release ID
+          RELEASE_ID=$(gh api \
+            --method GET \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/releases/tags/${{ github.event.release.tag_name }} \
+            | jq .id)
+          
+          # Update release notes
+          gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/releases/$RELEASE_ID \
+            -f body="$BODY" 

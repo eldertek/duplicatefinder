@@ -5,17 +5,26 @@
       <p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong></p>
       <p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizeItemPath(file.path) }}</p>
     </div>
-    <button v-if="!file.isInOriginFolder" @click="deleteFile" class="delete-button">
-      {{ t('duplicatefinder', 'Delete') }}
-    </button>
-    <button v-else class="protected-button" disabled>
-      {{ t('duplicatefinder', 'Protected') }}
-    </button>
+    <div class="action-buttons">
+      <button @click="openInNewWindow" class="action-button">
+        {{ t('duplicatefinder', 'Open File') }}
+      </button>
+      <button @click="openFolderInNewWindow" class="action-button">
+        {{ t('duplicatefinder', 'Open Folder') }}
+      </button>
+      <button v-if="!file.isInOriginFolder" @click="deleteFile" class="delete-button">
+        {{ t('duplicatefinder', 'Delete') }}
+      </button>
+      <button v-else class="protected-button" disabled>
+        {{ t('duplicatefinder', 'Protected') }}
+      </button>
+    </div>
   </div>
 </template>
 <script>
 import { deleteFile } from '@/tools/api';
 import { getPreviewImage, normalizeItemPath } from '@/tools/utils';
+import { generateUrl } from '@nextcloud/router';
 
 export default {
   props: {
@@ -29,6 +38,24 @@ export default {
   methods: {
     getPreviewImage,
     normalizeItemPath,
+    openInNewWindow() {
+      const url = generateUrl('/apps/files/files/' + this.file.nodeId + '?dir={dir}&openfile=true', {
+        dir: this.getParentPath()
+      });
+      window.open(url, '_blank');
+    },
+    openFolderInNewWindow() {
+      const url = generateUrl('/apps/files/files?dir={dir}', {
+        dir: this.getParentPath()
+      });
+      window.open(url, '_blank');
+    },
+    getParentPath() {
+      const path = this.file.path.replace(/^\/[^/]+\/files/, '');
+      const lastSlashIndex = path.lastIndexOf('/');
+      const parentPath = path.substring(0, lastSlashIndex);
+      return parentPath || '/';
+    },
     async deleteFile() {
       try {
         console.log('DuplicateFileDisplay: Deleting file:', this.file);
@@ -84,6 +111,26 @@ export default {
   background-color: #e43f51;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-button {
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.action-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
 .protected-button {
   background-color: #ccc;
   color: #666;
@@ -96,7 +143,7 @@ export default {
 
 /* Desktop styles */
 @media (min-width: 801px) {
-  .delete-button, .protected-button {
+  .action-buttons {
     position: absolute;
     right: 10px;
     top: 50%;
@@ -105,7 +152,7 @@ export default {
   }
 }
 
-/* Mobile stles */
+/* Mobile styles */
 @media (max-width: 800px) {
   .file-info-container {
     display: flex;
@@ -113,13 +160,14 @@ export default {
     align-items: center;
     margin-bottom: 10px;
     justify-content: space-between;
+    flex-direction: column;
   }
 
-	.thumbnail {
-		margin-right: 20px;
-		margin-bottom: 0;
-		flex-shrink: 0;
-	} 
+  .thumbnail {
+    margin-right: 20px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  } 
 
   .file-details {
     flex-grow: 1;
@@ -133,13 +181,19 @@ export default {
     max-width: 90%;
   }
 
-  .delete-button, .protected-button {
+  .action-buttons {
     width: 100%;
-    margin-left: 0;
-    margin-right: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .action-button, .delete-button, .protected-button {
+    flex: 1;
+    min-width: 80px;
+    margin: 5px;
     padding: 3px 7px;
     font-size: 12px;
-    margin-top: 10px;
   }
 }
 
