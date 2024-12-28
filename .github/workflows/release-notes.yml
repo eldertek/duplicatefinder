@@ -35,12 +35,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Format release body with proper markdown
-          BODY="${latest}
+          BODY=$(cat << 'EOF'
+${latest}
 
 ## Full Changelog
-[Compare v${previous_version}...v${current_version}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/v${previous_version}...v${current_version})"
-
+[Compare v${previous_version}...v${current_version}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/v${previous_version}...v${current_version})
+EOF
+)
+          
           # Update release notes
           gh api \
             --method GET \
