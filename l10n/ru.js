@@ -30,7 +30,11 @@ OC.L10N.register(
     "Delete" : "Удалить",
     "Settings" : "Настройки",
     "Load More" : "Загрузить ещё",
+    "No results found" : "Результаты отсутствуют",
+    "Previous" : "Назад",
+    "Next" : "Далее",
     "Note:" : "Примечание:",
+    "Advanced Settings" : "Дополнительные настройки",
     "Duplicate acknowledged successfully" : "Дубликат успешно признан",
     "File not found" : "Файл не найден"
 },

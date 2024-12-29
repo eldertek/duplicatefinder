@@ -5,6 +5,9 @@
     "File" : "Skedar ",
     "Delete" : "Fshi",
     "Settings" : "Rregullimet",
+    "Previous" : "I mëparshëm",
+    "Next" : "I ardhshëm",
+    "Advanced Settings" : "Cilësime të Avancuara",
     "File not found" : "S’u gjet kartelë"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

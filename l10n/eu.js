@@ -16,7 +16,11 @@ OC.L10N.register(
     "Settings" : "Ezarpenak",
     "Acknowledged" : "Aitortuta",
     "Unacknowledged" : "Aitortu gabe",
+    "No results found" : "Ez da emaitzarik aurkitu",
+    "Previous" : "Aurrekoa",
+    "Next" : "Hurrengoa",
     "Note:" : "Oharra:",
+    "Advanced Settings" : "Ezarpen aurreratuak",
     "File not found" : "Ez da fitxategia aurkitu"
 },
 "nplurals=2; plural=(n != 1);");

@@ -7,6 +7,10 @@ OC.L10N.register(
     "File" : "Archìviu",
     "Delete" : "Cantzella",
     "Settings" : "Cunfiguratzione",
+    "No results found" : "Perunu resurtadu agatadu",
+    "Previous" : "Pretzedente",
+    "Next" : "Imbeniente",
+    "Advanced Settings" : "Cunfiguratzione avantzada",
     "File not found" : "Archìviu no agatadu"
 },
 "nplurals=2; plural=(n != 1);");

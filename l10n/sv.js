@@ -18,7 +18,11 @@ OC.L10N.register(
     "Delete" : "Radera",
     "Settings" : "Inställningar",
     "Load More" : "Ladda mer",
+    "No results found" : "Inga resultat funna",
+    "Previous" : "Föregående",
+    "Next" : "Nästa",
     "Note:" : "Notering:",
+    "Advanced Settings" : "Avancerade inställningar",
     "File not found" : "Filen kunde inte hittas"
 },
 "nplurals=2; plural=(n != 1);");
