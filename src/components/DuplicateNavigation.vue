@@ -274,7 +274,7 @@ export default {
 }
 
 .bulk-delete-container {
-    padding: 10px;
+    padding: 4px 10px;
     border-bottom: 1px solid var(--color-border);
 }
 
@@ -283,5 +283,15 @@ export default {
     justify-content: left;
     padding: 10px;
     font-weight: normal;
+}
+
+/* Ajustement de la marge de la barre de recherche */
+:deep(.search-container) {
+    margin: 0.5rem 0;
+}
+
+/* Ajustement de l'espacement des éléments de navigation */
+:deep(.app-navigation-entry) {
+    padding: 3px 0;
 }
 </style>
