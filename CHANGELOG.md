@@ -1,3 +1,8 @@
+## 1.5.1 - 2024-12-29
+### Fixed
+- Fix database installation issue on MariaDB/MySQL when column length exceeded maximum key length (3072 bytes)
+- Reduce folder path column lengths to be compatible with all database configurations
+
 ## 1.5.0 - 2024-12-28
 ### Added
 - Open folder/file in new window from duplicate details page

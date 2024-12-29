@@ -33,7 +33,7 @@ class Version0009Date20240116000000 extends SimpleMigrationStep {
             ]);
             $table->addColumn('folder_path', 'string', [
                 'notnull' => true,
-                'length' => 700,
+                'length' => 768,
             ]);
             $table->addColumn('created_at', 'datetime', [
                 'notnull' => true,

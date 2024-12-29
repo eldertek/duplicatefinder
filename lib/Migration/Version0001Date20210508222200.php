@@ -28,7 +28,7 @@ class Version0001Date20210508222200 extends SimpleMigrationStep
             if ($table->hasColumn('path')) {
                 $pathColumn = $table->getColumn('path');
                 $pathColumn->setType(Type::getType(Types::STRING));
-                $pathColumn->setOptions(['length' => 4000]);
+                $pathColumn->setOptions(['length' => 768]);
             }
             return $schema;
         }
