@@ -28,11 +28,6 @@
           <li>{{ t('duplicatefinder', 'Manual scans can be triggered from settings') }}</li>
         </ul>
       </div>
-
-      <div class="tip-box">
-        <strong>{{ t('duplicatefinder', 'Quick Tip:') }}</strong>
-        {{ t('duplicatefinder', 'Use the help icon next to the search bar for detailed examples of each search mode.') }}
-      </div>
     </div>
   </div>
 </template>
