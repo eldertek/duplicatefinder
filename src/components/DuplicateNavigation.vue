@@ -1,10 +1,8 @@
 <template>
     <NcAppNavigation>
         <template #list>
-            <!-- Search Input -->
-            <div class="search-container">
-                <input type="text" v-model="searchQuery" @input="filterDuplicates" placeholder="Rechercher des doublons..." />
-            </div>
+            <!-- Search Bar -->
+            <SearchBar @search="handleSearch" />
 
             <!-- Bulk Delete Button -->
             <NcAppNavigationItem :name="t('duplicatefinder', 'Bulk Delete')" 
@@ -112,6 +110,7 @@
 <script>
 import { NcAppNavigation, NcAppNavigationItem, NcButton } from '@nextcloud/vue';
 import DuplicateListItem from './DuplicateListItem.vue';
+import SearchBar from './SearchBar.vue';
 import CloseCircle from 'vue-material-design-icons/CloseCircle';
 import CheckCircle from 'vue-material-design-icons/CheckCircle';
 import Cog from 'vue-material-design-icons/Cog';
@@ -125,6 +124,7 @@ import { fetchDuplicates } from '@/tools/api';
 export default {
     components: { 
         DuplicateListItem, 
+        SearchBar,
         NcAppNavigation, 
         NcAppNavigationItem, 
         NcButton,
@@ -162,7 +162,8 @@ export default {
     },
     data() {
         return {
-            searchQuery: '',
+            searchPattern: '',
+            searchType: 'simple',
             acknowledgedPage: 1,
             unacknowledgedPage: 1,
             limit: 50,
@@ -187,11 +188,30 @@ export default {
         }
     },
     methods: {
+        handleSearch({ query, type }) {
+            this.searchPattern = query;
+            this.searchType = type;
+        },
         filterDuplicate(duplicate) {
-            const query = this.searchQuery.toLowerCase();
-            const filePathMatch = duplicate.files.some(file => file.path && file.path.toLowerCase().includes(query));
-            const excludeMatch = query.startsWith('!') && duplicate.files.some(file => (file.name && file.name.toLowerCase().includes(query.slice(1))) || (file.path && file.path.toLowerCase().includes(query.slice(1))));
-            return (filePathMatch || excludeMatch);
+            if (!this.searchPattern) {
+                return true;
+            }
+
+            const matchFile = (file) => {
+                const path = file.path.toLowerCase();
+                if (this.searchType === 'simple') {
+                    return path.includes(this.searchPattern.toLowerCase());
+                }
+                try {
+                    const regex = new RegExp(this.searchPattern, 'i');
+                    return regex.test(path);
+                } catch (e) {
+                    // If regex is invalid, fall back to simple search
+                    return path.includes(this.searchPattern.toLowerCase());
+                }
+            };
+
+            return duplicate.files.some(matchFile);
         },
         openDuplicate(duplicate) {
             this.$emit('open-duplicate', duplicate);
@@ -249,18 +269,6 @@ export default {
 </script>
 
 <style scoped>
-.search-container {
-    padding: 10px;
-    text-align: center;
-}
-
-.search-container input {
-    width: 100%;
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
-
 .duplicate-item {
     width: 100%;
 }

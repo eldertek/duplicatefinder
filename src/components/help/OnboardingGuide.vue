@@ -83,6 +83,35 @@ export default {
           content: t('duplicatefinder', 'This guide will help you get started with finding and managing duplicate files.')
         },
         {
+          title: t('duplicatefinder', 'Finding Duplicates'),
+          content: t('duplicatefinder', 'The app provides powerful search capabilities to help you find specific duplicates:') +
+            '<div class="info-section">' +
+            '<div class="info-block">' +
+            '<h3>' + t('duplicatefinder', 'Search Modes') + '</h3>' +
+            '<ul>' +
+            '<li><strong>' + t('duplicatefinder', 'Simple Search:') + '</strong> ' + 
+            t('duplicatefinder', 'Basic text search in file names') + '</li>' +
+            '<li><strong>' + t('duplicatefinder', 'Wildcard Search:') + '</strong> ' + 
+            t('duplicatefinder', 'Use * and ? to match patterns (e.g., IMG*.jpg)') + '</li>' +
+            '<li><strong>' + t('duplicatefinder', 'Regular Expression:') + '</strong> ' + 
+            t('duplicatefinder', 'Advanced pattern matching for precise searches') + '</li>' +
+            '</ul>' +
+            '</div>' +
+            '<div class="info-block">' +
+            '<h3>' + t('duplicatefinder', 'Automatic Detection') + '</h3>' +
+            '<ul>' +
+            '<li>' + t('duplicatefinder', 'Files are automatically scanned when uploaded or modified') + '</li>' +
+            '<li>' + t('duplicatefinder', 'Background jobs regularly scan for new duplicates') + '</li>' +
+            '<li>' + t('duplicatefinder', 'Manual scans can be triggered from settings') + '</li>' +
+            '</ul>' +
+            '</div>' +
+            '<div class="tip-box">' +
+            '<strong>' + t('duplicatefinder', 'Quick Tip:') + '</strong> ' +
+            t('duplicatefinder', 'Use the help icon next to the search bar for detailed examples of each search mode.') +
+            '</div>' +
+            '</div>'
+        },
+        {
           title: t('duplicatefinder', 'Scanning for Duplicates'),
           content: t('duplicatefinder', 'The app automatically scans for duplicates when files are added or modified. You can configure and trigger scans in several ways:') +
             '<div class="info-section">' +
@@ -722,5 +751,60 @@ export default {
   text-align: center !important;
   padding: 0 !important;
   font-family: var(--font-face-default) !important;
+}
+
+.guide-section {
+  margin-top: 40px;
+  padding: 40px;
+  background: var(--color-main-background);
+  border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+}
+
+.guide-section h3 {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--color-main-text);
+  margin-bottom: 20px;
+}
+
+.feature-highlight {
+  background: var(--color-background-hover);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.feature-highlight h4 {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--color-main-text);
+  margin-bottom: 16px;
+}
+
+.feature-highlight ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.feature-highlight li {
+  margin: 12px 0;
+  color: var(--color-text-light);
+}
+
+.tip-box {
+  background: var(--color-background-hover);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.tip-box p {
+  font-size: 18px;
+  color: var(--color-text-light);
+}
+
+.tip-box strong {
+  color: var(--color-primary-element);
+  margin-right: 8px;
 }
 </style> 

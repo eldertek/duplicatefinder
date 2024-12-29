@@ -1,3 +1,10 @@
+## 1.5.2 - 2024-12-29
+### Added
+- Advanced search functionality with three modes:
+  - Simple search: Basic text search in file names
+  - Wildcard search: Support for * and ? patterns (e.g., IMG*.jpg)
+  - Regular expression search: Full regex pattern support
+
 ## 1.5.1 - 2024-12-29
 ### Fixed
 - Fix database installation issue on MariaDB/MySQL when column length exceeded maximum key length (3072 bytes)

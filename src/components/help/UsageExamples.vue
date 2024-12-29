@@ -89,6 +89,59 @@ export default {
           ]
         },
         {
+          title: t('duplicatefinder', 'Advanced Search Features'),
+          description: t('duplicatefinder', 'The app provides three different search modes to help you find specific duplicates:'),
+          examples: [
+            {
+              title: t('duplicatefinder', 'Simple Search'),
+              list: [
+                t('duplicatefinder', 'Basic text search that looks for the exact text in file names'),
+                t('duplicatefinder', 'Example: typing "vacation" will find all files with "vacation" in their name')
+              ]
+            },
+            {
+              title: t('duplicatefinder', 'Wildcard Search'),
+              list: [
+                t('duplicatefinder', 'Use * and ? as wildcards to match patterns in file names')
+              ],
+              code: [
+                {
+                  label: t('duplicatefinder', 'Match all JPG files starting with IMG:'),
+                  command: 'IMG*.jpg'
+                },
+                {
+                  label: t('duplicatefinder', 'Match NEF files with exact pattern:'),
+                  command: 'DSC_????.NEF'
+                },
+                {
+                  label: t('duplicatefinder', 'Match all PDF files:'),
+                  command: '*.pdf'
+                }
+              ]
+            },
+            {
+              title: t('duplicatefinder', 'Regular Expression Search'),
+              list: [
+                t('duplicatefinder', 'For advanced users, full regex pattern support for precise matching')
+              ],
+              code: [
+                {
+                  label: t('duplicatefinder', 'Match IMG_ followed by 4 digits:'),
+                  command: '^IMG_\\d{4}\\.jpg$'
+                },
+                {
+                  label: t('duplicatefinder', 'Match image files:'),
+                  command: '\\.(jpg|jpeg|png)$'
+                },
+                {
+                  label: t('duplicatefinder', 'Match IMG_ or DSC_ prefix:'),
+                  command: '^(IMG|DSC)_.*'
+                }
+              ],
+            }
+          ]
+        },
+        {
           title: t('duplicatefinder', 'Managing Duplicates'),
           description: t('duplicatefinder', 'Once duplicates are detected, you have several options to manage them:'),
           examples: [

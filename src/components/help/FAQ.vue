@@ -133,6 +133,42 @@ export default {
               answer: t('duplicatefinder', 'Yes! The project is open source under the AGPL license. Visit our <a href="https://github.com/eldertek/duplicatefinder" target="_blank" rel="noopener noreferrer">GitHub repository</a> to contribute.')
             }
           ]
+        },
+        {
+          title: t('duplicatefinder', 'Search & Navigation'),
+          items: [
+            {
+              id: 'search-features',
+              question: t('duplicatefinder', 'How can I efficiently search for specific duplicates?'),
+              answer: t('duplicatefinder', 'The app offers three powerful search modes:<br><br>' +
+                '<strong>1. Simple Search:</strong><br>' +
+                '• Perfect for basic text searches<br>' +
+                '• Just type any part of the filename<br>' +
+                '• Example: typing "vacation" finds all files containing that word<br><br>' +
+                '<strong>2. Wildcard Search:</strong><br>' +
+                '• Use * for multiple characters and ? for a single character<br>' +
+                '• Great for finding patterns in filenames<br>' +
+                '• Examples:<br>' +
+                '  - IMG*.jpg finds all JPG files starting with IMG<br>' +
+                '  - DSC_????.NEF finds NEF files with exactly 4 characters after DSC_<br><br>' +
+                '<strong>3. Regular Expression Search:</strong><br>' +
+                '• For advanced pattern matching<br>' +
+                '• Supports full regex syntax<br>' +
+                '• Examples:<br>' +
+                '  - ^IMG_\\d{4}\\.jpg$ matches IMG_ followed by exactly 4 digits and .jpg<br>' +
+                '  - \\.(jpg|jpeg|png)$ finds files ending in .jpg, .jpeg, or .png')
+            },
+            {
+              id: 'search-tips',
+              question: t('duplicatefinder', 'What are some tips for effective searching?'),
+              answer: t('duplicatefinder', '• Start with simple search for basic queries<br>' +
+                '• Use wildcards when you know part of the filename pattern<br>' +
+                '• Switch to regex for complex pattern matching needs<br>' +
+                '• Combine with filters to narrow down results<br>' +
+                '• Check the help modal for pattern examples<br>' +
+                '• Remember that search is case-insensitive')
+            }
+          ]
         }
       ]
     }

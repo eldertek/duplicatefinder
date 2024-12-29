@@ -80,6 +80,7 @@ import { removeDuplicateFromList } from '@/tools/utils';
 import Folder from 'vue-material-design-icons/Folder';
 import FolderRemove from 'vue-material-design-icons/FolderRemove';
 import Delete from 'vue-material-design-icons/Delete';
+import SearchBar from './components/SearchBar.vue'
 
 export default {
 	name: 'DuplicateFinder',
@@ -101,7 +102,8 @@ export default {
 		Delete,
 		OnboardingGuide,
 		UsageExamples,
-		FAQ
+		FAQ,
+		SearchBar
 	},
 	data() {
 		return {
@@ -309,6 +311,27 @@ export default {
 		showHelp(section) {
 			this.currentHelpSection = section || 'guide'
 			this.helpModalOpen = true
+		},
+		handleSearch({ query, type }) {
+			// Convert the search pattern to a RegExp object
+			let searchRegex
+			try {
+				searchRegex = new RegExp(query, 'i') // case-insensitive search
+			} catch (e) {
+				// If invalid regex, do a simple text search
+				searchRegex = new RegExp(this.escapeRegex(query), 'i')
+			}
+
+			// Filter duplicates based on the search pattern
+			this.filteredDuplicates = this.duplicates.filter(duplicate => {
+				return duplicate.files.some(file => {
+					const fileName = file.path.split('/').pop() // Get just the filename
+					return searchRegex.test(fileName)
+				})
+			})
+		},
+		escapeRegex(string) {
+			return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 		}
 	},
 	mounted() {
