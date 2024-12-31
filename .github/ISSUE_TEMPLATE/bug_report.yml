@@ -35,9 +35,12 @@ body:
       label: Version
       description: What version of Nextcloud are you running?
       options:
-        - 27.x
-        - 26.x
-        - 25.x
+        - 30.x
+        - 29.x
+        - 28.x
+        - 27.x (unsupported)
+        - 26.x (unsupported)
+        - 25.x (unsupported)
         - Other (specify in description)
     validations:
       required: true
