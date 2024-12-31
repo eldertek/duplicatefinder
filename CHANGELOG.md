@@ -1,3 +1,8 @@
+## 1.5.3 - 2024-12-31
+### Added
+- Improved duplicate display: show filename instead of hash when all duplicates share the same name
+- Shortened hash display (8 characters) for better readability when files have different names
+
 ## 1.5.2 - 2024-12-29
 ### Added
 - Advanced search functionality with three modes:

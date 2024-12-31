@@ -1,5 +1,5 @@
 <template>
-    <NcAppNavigationItem :name="duplicate.hash" :class="{ 'is-active': isActive }" @click="handleClick">
+    <NcAppNavigationItem :name="getDisplayName" :class="{ 'is-active': isActive }" @click="handleClick">
         <template #icon>
             <div class="nav-thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }">
             </div>
@@ -15,6 +15,22 @@ export default {
     props: {
         duplicate: Object,
         isActive: Boolean
+    },
+    computed: {
+        getDisplayName() {
+            // Get all filenames from the duplicate files
+            const filenames = this.duplicate.files.map(file => {
+                const pathParts = file.path.split('/');
+                return pathParts[pathParts.length - 1];
+            });
+            
+            // Check if all filenames are the same
+            const allSameFilename = filenames.every(name => name === filenames[0]);
+            
+            // If all files have the same name, return that name
+            // Otherwise return a shortened version of the hash
+            return allSameFilename ? filenames[0] : this.duplicate.hash.substring(0, 8);
+        }
     },
     methods: {
         handleClick() {
