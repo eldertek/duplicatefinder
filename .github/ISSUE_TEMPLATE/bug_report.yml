@@ -1,0 +1,61 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        
+        > **Tip**: You can use the `!log` command in a comment after creating the issue to get instructions for sharing debug logs.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        Please share your Nextcloud logs to help us diagnose the issue. You can get detailed instructions by commenting `!log` after creating the issue.
+        
+        > **Important**: Please review and remove any sensitive information before sharing logs.
+      render: shell
+
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of Nextcloud are you running?
+      options:
+        - 27.x
+        - 26.x
+        - 25.x
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation Type
+      options:
+        - Standard Installation
+        - Snap Package
+        - Docker
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here. 
