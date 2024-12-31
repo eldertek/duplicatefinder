@@ -6,8 +6,8 @@ on:
 jobs:
   log-instructions:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '!log')
-    
+    if: contains(github.event.comment.body, '!log') 
+
     steps:
       - name: Delete trigger comment
         uses: actions/github-script@v6
@@ -26,35 +26,37 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const instructions = `To help us better understand and diagnose the issue, please provide your Nextcloud logs by following these steps:
-
-1. Enable debug logging in your \`config.php\` file:
-
-   \`\`\`php
-   'debug' => true,
-   \`\`\`
-
-2. Clear existing logs to ensure we only see relevant information:
-
-   \`\`\`bash
-   # For standard installations:
-   sudo rm /path/to/nextcloud/data/nextcloud.log
-
-   # For Snap installations:
-   sudo rm /var/snap/nextcloud/current/nextcloud/data/nextcloud.log
-   \`\`\`
-
-3. Reproduce the issue you're experiencing.
-
-4. Collect and share the contents of your new \`nextcloud.log\` file.
-
-5. After sharing the logs, remember to disable debug mode:
-
-   \`\`\`php
-   'debug' => false,
-   \`\`\`
-
-> **Note**: Please make sure to review the logs and remove any sensitive information before sharing.`;
+            const instructions = [
+              'To help us better understand and diagnose the issue, please provide your Nextcloud logs by following these steps:',
+              '',
+              '1. Enable debug logging in your `config.php` file:',
+              '',
+              '```php',
+              '\'debug\' => true,',
+              '```',
+              '',
+              '2. Clear existing logs to ensure we only see relevant information:',
+              '',
+              '```bash',
+              '# For standard installations:',
+              'sudo rm /var/www/nextcloud/data/nextcloud.log',
+              '',
+              '# For Snap installations:',
+              'sudo rm /var/snap/nextcloud/current/nextcloud/data/nextcloud.log',
+              '```',
+              '',
+              '3. Reproduce the issue you\'re experiencing.',
+              '',
+              '4. Collect and share the contents of your new `nextcloud.log` file.',
+              '',
+              '5. After sharing the logs, remember to disable debug mode:',
+              '',
+              '```php',
+              '\'debug\' => false,',
+              '```',
+              '',
+              '> **Note**: Please make sure to review the logs and remove any sensitive information before sharing.'
+            ].join('\n');
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
