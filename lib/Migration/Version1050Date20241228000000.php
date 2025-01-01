@@ -25,7 +25,7 @@ class Version1050Date20241228000000 extends SimpleMigrationStep {
 
             // Modify the folder_path column to use a shorter length
             $folderPathColumn = $table->getColumn('folder_path');
-            $folderPathColumn->setLength(768);
+            $folderPathColumn->setLength(700);
 
             // Recreate the index with the shorter column
             $table->addUniqueIndex(['user_id', 'folder_path'], 'df_excl_folders_unique');
@@ -42,7 +42,7 @@ class Version1050Date20241228000000 extends SimpleMigrationStep {
 
             // Modify the folder_path column to use a shorter length
             $folderPathColumn = $table->getColumn('folder_path');
-            $folderPathColumn->setLength(768);
+            $folderPathColumn->setLength(700);
 
             // Recreate the index with the shorter column
             $table->addUniqueIndex(['user_id', 'folder_path'], 'df_folders_unique_idx');

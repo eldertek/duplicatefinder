@@ -2,6 +2,9 @@
 ### Added
 - Improved duplicate display: show filename instead of hash when all duplicates share the same name
 - Shortened hash display (8 characters) for better readability when files have different names
+### Fixed
+- Further reduced folder path column lengths to 700 characters to ensure compatibility with MariaDB/MySQL UTF8MB4 encoding and key length limits
+- Fix [#112](https://github.com/eldertek/duplicatefinder/issues/112)
 
 ## 1.5.2 - 2024-12-29
 ### Added
@@ -242,3 +245,7 @@
 ## 1.0.0 - 2023-08-11
 ### Added
 - Added the first version of the app which is able to find duplicates. Working on NC26, NC27, NC28
+
+## 1.5.4 - 2024-01-07
+### Fixed
+- Further reduced folder path column lengths to 700 characters to ensure compatibility with MariaDB/MySQL UTF8MB4 encoding and key length limits
