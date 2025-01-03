@@ -4,6 +4,11 @@
         // Page routes
         ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
         
+        // Filter routes
+        ['name' => 'filter#index', 'url' => '/api/filters', 'verb' => 'GET'],
+        ['name' => 'filter#create', 'url' => '/api/filters', 'verb' => 'POST'],
+        ['name' => 'filter#destroy', 'url' => '/api/filters/{id}', 'verb' => 'DELETE'],
+        
         // Duplicate routes
         ['name' => 'duplicate_api#find', 'url' => '/api/duplicates/find', 'verb' => 'POST'],
         ['name' => 'duplicate_api#clear', 'url' => '/api/duplicates/clear', 'verb' => 'POST'],

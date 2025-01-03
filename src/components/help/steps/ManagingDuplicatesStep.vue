@@ -20,6 +20,15 @@
         </ul>
       </div>
 
+      <div class="info-block">
+        <h3>3. {{ t('duplicatefinder', 'Filter Management') }}</h3>
+        <ul>
+          <li>{{ t('duplicatefinder', 'Use file hash filters to ignore specific files') }}</li>
+          <li>{{ t('duplicatefinder', 'Create name patterns to exclude files (e.g., *.tmp, backup_*)') }}</li>
+          <li>{{ t('duplicatefinder', 'Manage filters through Settings → Filters') }}</li>
+        </ul>
+      </div>
+
       <div class="note">
         <strong>{{ t('duplicatefinder', 'Note:') }}</strong>
         {{ t('duplicatefinder', 'All deleted files can be recovered from the Nextcloud trash bin during the retention period.') }}

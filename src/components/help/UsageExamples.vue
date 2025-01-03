@@ -38,6 +38,17 @@
             <strong>{{ t('duplicatefinder', 'Note:') }}</strong>
             {{ example.note }}
           </div>
+
+          <!-- Managing Filters -->
+          <div v-if="example.managingFilters" class="managing-filters">
+            <h3 class="managing-filters-title">{{ t('duplicatefinder', 'Managing Filters') }}</h3>
+            <div class="managing-filters-steps">
+              <div v-for="(step, stepIndex) in example.managingFilters.steps" :key="stepIndex" class="managing-filters-step">
+                <span class="managing-filters-step-description">{{ step.description }}</span>
+                <span class="managing-filters-step-details">{{ step.details }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -184,6 +195,50 @@ export default {
                   name: t('duplicatefinder', 'Background Job Interval'),
                   description: t('duplicatefinder', 'Adjust frequency of automatic scans')
                 }
+              ]
+            }
+          ]
+        },
+        {
+          title: t('duplicatefinder', 'Managing Filters'),
+          description: t('duplicatefinder', 'Learn how to use filters to exclude specific files from duplicate detection:'),
+          examples: [
+            {
+              title: t('duplicatefinder', 'Setting Up Filters'),
+              list: [
+                t('duplicatefinder', 'Go to Settings → Filters to access the filter management'),
+                t('duplicatefinder', 'Choose between two types of filters:') + '\n' +
+                  '- ' + t('duplicatefinder', 'File Hash: For excluding specific files') + '\n' +
+                  '- ' + t('duplicatefinder', 'File Name Pattern: For excluding files matching a pattern')
+              ]
+            },
+            {
+              title: t('duplicatefinder', 'Using File Hash Filters'),
+              list: [
+                t('duplicatefinder', '1. Open the duplicate details of a file you want to exclude'),
+                t('duplicatefinder', '2. Copy the file hash from the details view'),
+                t('duplicatefinder', '3. Switch to the File Hash tab in Filters'),
+                t('duplicatefinder', '4. Paste the hash and click "Add Filter"')
+              ]
+            },
+            {
+              title: t('duplicatefinder', 'Using File Name Patterns'),
+              list: [
+                t('duplicatefinder', '1. Switch to the File Name Pattern tab in Filters'),
+                t('duplicatefinder', '2. Enter a pattern using * as wildcard. Examples:'),
+                '   *.pdf - ' + t('duplicatefinder', 'Excludes all PDF files'),
+                '   *.tmp - ' + t('duplicatefinder', 'Excludes all temporary files'),
+                '   backup_* - ' + t('duplicatefinder', 'Excludes files starting with "backup_"'),
+                '   *cache* - ' + t('duplicatefinder', 'Excludes files containing "cache"')
+              ]
+            },
+            {
+              title: t('duplicatefinder', 'Managing Your Filters'),
+              list: [
+                t('duplicatefinder', 'View all your active filters in the list'),
+                t('duplicatefinder', 'Remove unwanted filters using the delete button'),
+                t('duplicatefinder', 'Add new filters at any time'),
+                t('duplicatefinder', 'Note: Changes take effect on the next scan')
               ]
             }
           ]
@@ -357,5 +412,46 @@ export default {
 .note strong {
   color: var(--color-primary-element);
   margin-right: 8px;
+}
+
+/* Managing Filters Styles */
+.managing-filters {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--color-background-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.managing-filters-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-primary-element);
+  margin-bottom: 16px;
+}
+
+.managing-filters-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.managing-filters-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.managing-filters-step-description {
+  font-size: 16px;
+  color: var(--color-primary-element);
+  font-weight: bold;
+}
+
+.managing-filters-step-details {
+  font-size: 14px;
+  color: var(--color-text-maxcontrast);
+  margin-left: 16px;
+  line-height: 1.4;
 }
 </style> 

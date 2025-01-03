@@ -94,13 +94,37 @@ export default {
             },
             {
               id: 'exclude-folders',
-              question: t('duplicatefinder', 'Can I exclude certain folders from scanning?'),
-              answer: t('duplicatefinder', 'Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude')
+              question: t('duplicatefinder', 'How can I exclude folders from scanning?'),
+              answer: t('duplicatefinder', 'You can exclude folders in two ways:\n\n' +
+                '1. Add them to Excluded Folders in settings\n' +
+                '2. Place a .nodupefinder file in any folder you want to exclude')
             },
             {
               id: 'recover-files',
               question: t('duplicatefinder', 'Can I recover deleted files?'),
               answer: t('duplicatefinder', 'Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator.')
+            },
+            {
+              id: 'prevent-scan',
+              question: t('duplicatefinder', 'How can I prevent specific files from being scanned?'),
+              answer: t('duplicatefinder', 'There are several ways to exclude files from scanning:\n\n' +
+                '1. Use File Hash Filters: Add specific file hashes in the settings to ignore exact files.\n' +
+                '2. Use File Name Patterns: Add patterns like "*.tmp" or "backup_*" to ignore files matching these patterns.\n' +
+                '3. Place a .nodupefinder file: Add this file in a folder to exclude the entire folder and its subfolders.\n' +
+                '4. Configure Origin Folders: Mark folders as origin folders to protect their files.\n' +
+                '5. Use Excluded Folders: Explicitly exclude specific folders from scanning.\n\n' +
+                'You can manage filters in Settings → Filters.')
+            },
+            {
+              id: 'filter-work',
+              question: t('duplicatefinder', 'How do file filters work?'),
+              answer: t('duplicatefinder', 'File filters work in two ways:\n\n' +
+                '1. Hash Filters: These match exact files by their content hash. Use this when you want to ignore specific files regardless of their name or location.\n' +
+                '2. Name Pattern Filters: These use wildcards to match file names. For example:\n' +
+                '   - *.tmp: Ignores all files ending with .tmp\n' +
+                '   - backup_*: Ignores all files starting with "backup_"\n' +
+                '   - *cache*: Ignores all files containing "cache"\n\n' +
+                'Filters are user-specific and persist across scans.')
             }
           ]
         },

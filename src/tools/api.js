@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { generateUrl } from '@nextcloud/router';
 import { showSuccessNotification, showErrorNotification } from '@/tools/notifications';
 import { normalizeItemPath } from '@/tools/utils';
 
@@ -267,6 +268,44 @@ export async function deleteExcludedFolder(id) {
     } catch (error) {
         console.error('Error deleting excluded folder:', error)
         showErrorNotification(t('duplicatefinder', 'Failed to remove folder from excluded folders'))
+        throw error
+    }
+}
+
+export async function loadFilters() {
+    try {
+        const url = generateApiBaseUrl('/filters')
+        const response = await axios.get(url)
+        return response.data
+    } catch (error) {
+        console.error('Error loading filters:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to load filters'))
+        throw error
+    }
+}
+
+export async function saveFilter(filter) {
+    try {
+        const url = generateApiBaseUrl('/filters')
+        const response = await axios.post(url, filter)
+        showSuccessNotification(t('duplicatefinder', 'Filter added successfully'))
+        return response.data
+    } catch (error) {
+        console.error('Error saving filter:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to add filter'))
+        throw error
+    }
+}
+
+export async function deleteFilter(id) {
+    try {
+        const url = generateApiBaseUrl(`/filters/${id}`)
+        const response = await axios.delete(url)
+        showSuccessNotification(t('duplicatefinder', 'Filter removed successfully'))
+        return response.data
+    } catch (error) {
+        console.error('Error deleting filter:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to remove filter'))
         throw error
     }
 }

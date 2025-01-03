@@ -1,3 +1,11 @@
+## 1.6.0 - 2025-01-03
+### Added 
+- New filtering system to ignore files during scan:
+  - Filter by file hash to ignore specific files
+  - Filter by file name pattern with wildcard support (e.g., *.tmp, backup_*)
+  - User-specific filters management through settings
+  - Persistent filters stored in database
+
 ## 1.5.3 - 2024-12-31
 ### Added
 - Improved duplicate display: show filename instead of hash when all duplicates share the same name

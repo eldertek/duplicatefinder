@@ -32,6 +32,15 @@
 				:show-navigation="true" 
 				:name="t('duplicatefinder', 'Duplicate Finder Settings')">
 				<NcAppSettingsSection 
+					id="filters" 
+					:name="t('duplicatefinder', 'Filters')">
+					<template #icon>
+						<FilterOutline :size="20" />
+					</template>
+					<FilterSettings />
+				</NcAppSettingsSection>
+
+				<NcAppSettingsSection 
 					id="origin-folders" 
 					:name="t('duplicatefinder', 'Origin Folders')">
 					<template #icon>
@@ -80,7 +89,9 @@ import { removeDuplicateFromList } from '@/tools/utils';
 import Folder from 'vue-material-design-icons/Folder';
 import FolderRemove from 'vue-material-design-icons/FolderRemove';
 import Delete from 'vue-material-design-icons/Delete';
+import FilterOutline from 'vue-material-design-icons/FilterOutline';
 import SearchBar from './components/SearchBar.vue'
+import FilterSettings from './components/FilterSettings.vue';
 
 export default {
 	name: 'DuplicateFinder',
@@ -100,10 +111,12 @@ export default {
 		Folder,
 		FolderRemove,
 		Delete,
+		FilterOutline,
 		OnboardingGuide,
 		UsageExamples,
 		FAQ,
-		SearchBar
+		SearchBar,
+		FilterSettings
 	},
 	data() {
 		return {

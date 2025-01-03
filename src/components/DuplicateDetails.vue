@@ -21,6 +21,14 @@
               {{ t('duplicatefinder', 'Delete Selected') }}
             </button>
             <button @click="selectAllFiles">{{ t('duplicatefinder', 'Select All') }}</button>
+            <div class="dropdown">
+              <button class="dropdown-toggle" @click="toggleDropdown">
+                <span class="arrow-down"></span>
+              </button>
+              <div class="dropdown-menu" v-show="showDropdown">
+                <button @click="copyFileHash">{{ t('duplicatefinder', 'Copy File Hash') }}</button>
+              </div>
+            </div>
           </div>
           <div v-for="(file, index) in duplicate.files" :key="file.id" class="file-display">
             <input 
@@ -57,6 +65,7 @@
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles } from '@/tools/api';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList } from '@/tools/utils';
+import { showSuccess } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
 export default {
@@ -69,7 +78,8 @@ export default {
   data() {
     return {
       selectedFiles: [],
-      isLoadingNextDuplicate: false, // Add this line
+      isLoadingNextDuplicate: false,
+      showDropdown: false
     };
   },
   methods: {
@@ -168,6 +178,18 @@ export default {
     },
     removeDuplicateFromList(duplicate) {
       this.$emit('removeDuplicate', duplicate);
+    },
+    toggleDropdown() {
+      this.showDropdown = !this.showDropdown;
+    },
+    copyFileHash() {
+      if (this.duplicate && this.duplicate.files.length > 0) {
+        const hash = this.duplicate.hash;
+        navigator.clipboard.writeText(hash).then(() => {
+          showSuccess(t('duplicatefinder', 'File hash copied to clipboard'));
+          this.showDropdown = false;
+        });
+      }
     }
   }
 }
@@ -263,5 +285,54 @@ button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   background-color: #cccccc;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.dropdown-toggle {
+  padding: 8px;
+  background: var(--color-background-dark);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
+.arrow-down {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--color-main-text);
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--color-main-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-popup);
+  z-index: 100;
+  min-width: 150px;
+}
+
+.dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdown-menu button:hover {
+  background: var(--color-background-hover);
 }
 </style>

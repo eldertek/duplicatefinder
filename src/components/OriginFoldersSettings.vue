@@ -1,7 +1,10 @@
 <template>
     <div class="origin-folders-settings">
         <div class="description">
-            {{ t('duplicatefinder', 'Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted.') }}
+            <div class="header">
+                <Folder :size="20" />
+                {{ t('duplicatefinder', 'Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted.') }}
+            </div>
         </div>
 
         <div class="folders-list">
@@ -32,6 +35,7 @@ import { getFilePickerBuilder } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete'
 import Plus from 'vue-material-design-icons/Plus'
+import Folder from 'vue-material-design-icons/Folder'
 import { loadOriginFolders, saveOriginFolders, deleteOriginFolder } from '@/tools/api'
 
 export default {
@@ -40,6 +44,7 @@ export default {
         NcButton,
         Delete,
         Plus,
+        Folder,
     },
     data() {
         return {
@@ -120,6 +125,16 @@ export default {
 .description {
     margin-bottom: 20px;
     color: var(--color-text-maxcontrast);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header :deep(svg) {
+    color: var(--color-primary-element);
 }
 
 .folders-list {

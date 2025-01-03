@@ -1,7 +1,10 @@
 <template>
     <div class="excluded-folders-settings">
         <div class="description">
-            {{ t('duplicatefinder', 'Configure folders that should be excluded from duplicate scanning. Files in these folders (and subfolders) will be ignored during duplicate detection.') }}
+            <div class="header">
+                <FolderRemove :size="20" />
+                {{ t('duplicatefinder', 'Configure folders that should be excluded from duplicate scanning. Files in these folders (and subfolders) will be ignored during duplicate detection.') }}
+            </div>
         </div>
 
         <div class="folders-list">
@@ -32,6 +35,7 @@ import { getFilePickerBuilder } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete'
 import Plus from 'vue-material-design-icons/Plus'
+import FolderRemove from 'vue-material-design-icons/FolderRemove'
 import { loadExcludedFolders, saveExcludedFolder, deleteExcludedFolder } from '@/tools/api'
 
 export default {
@@ -40,6 +44,7 @@ export default {
         NcButton,
         Delete,
         Plus,
+        FolderRemove,
     },
     data() {
         return {
@@ -115,6 +120,16 @@ export default {
 .description {
     margin-bottom: 20px;
     color: var(--color-text-maxcontrast);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header :deep(svg) {
+    color: var(--color-primary-element);
 }
 
 .folders-list {
