@@ -38,11 +38,13 @@ class FilterService
 
     public function isIgnored(FileInfo $fileInfo, Node $node): bool
     {
-        $this->logger->debug('Checking if file should be ignored: {path}', [
+        $this->logger->debug('Starting ignore check for file: {path}', [
             'path' => $fileInfo->getPath(),
             'owner' => $fileInfo->getOwner(),
             'node_type' => $node->getType(),
-            'is_mounted' => $node->isMounted()
+            'is_mounted' => $node->isMounted(),
+            'size' => $node->getSize(),
+            'mimetype' => $node->getMimetype()
         ]);
 
         // Ignore mounted files
@@ -54,7 +56,13 @@ class FilterService
         }
     
         // Check if path is in user-excluded folder
+        $this->logger->debug('Checking if path is in excluded folder');
         $isExcluded = $this->excludedFolderService->isPathExcluded($fileInfo->getPath());
+        $this->logger->debug('Exclusion check result: {result}', [
+            'path' => $fileInfo->getPath(),
+            'isExcluded' => $isExcluded ? 'true' : 'false'
+        ]);
+
         if ($isExcluded) {
             $this->logger->debug('File is in an excluded folder: {path}', [
                 'path' => $fileInfo->getPath()
@@ -63,6 +71,10 @@ class FilterService
         }
 
         // Check custom filters
+        $this->logger->debug('Starting custom filter check for file: {path}', [
+            'path' => $fileInfo->getPath()
+        ]);
+
         if ($this->matchesCustomFilters($fileInfo)) {
             $this->logger->debug('File matches custom filter rules: {path}', [
                 'path' => $fileInfo->getPath()
@@ -181,7 +193,6 @@ class FilterService
                 'trace' => $e->getTraceAsString()
             ]);
         }
-
         return false;
     }
 

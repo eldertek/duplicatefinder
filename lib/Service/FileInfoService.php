@@ -159,18 +159,48 @@ class FileInfoService
 
     public function save(string $path, ?string $fallbackUID = null): FileInfo
     {
+        $this->logger->debug('Starting save operation for path: {path}', [
+            'path' => $path,
+            'fallbackUID' => $fallbackUID
+        ]);
+
         try {
             $fileInfo = $this->mapper->find($path, $fallbackUID);
+            $this->logger->debug('Found existing FileInfo for path: {path}', [
+                'path' => $path,
+                'fileInfoId' => $fileInfo->getId(),
+                'currentHash' => $fileInfo->getFileHash()
+            ]);
+
             $fileInfo = $this->update($fileInfo, $fallbackUID);
             $this->eventDispatcher->dispatchTyped(new UpdatedFileInfoEvent($fileInfo, $fallbackUID));
+            
+            $this->logger->debug('Updated existing FileInfo: {path}', [
+                'path' => $path,
+                'fileInfoId' => $fileInfo->getId(),
+                'newHash' => $fileInfo->getFileHash()
+            ]);
         } catch (\Exception $e) {
+            $this->logger->debug('Creating new FileInfo for path: {path}', [
+                'path' => $path,
+                'error' => $e->getMessage()
+            ]);
+
             $fileInfo = new FileInfo($path);
             $fileInfo = $this->updateFileMeta($fileInfo, $fallbackUID);
             $fileInfo->setKeepAsPrimary(true);
             $fileInfo = $this->mapper->insert($fileInfo);
             $fileInfo->setKeepAsPrimary(false);
+            
+            $this->logger->debug('Created new FileInfo: {path}', [
+                'path' => $path,
+                'fileInfoId' => $fileInfo->getId(),
+                'hash' => $fileInfo->getFileHash()
+            ]);
+
             $this->eventDispatcher->dispatchTyped(new NewFileInfoEvent($fileInfo, $fallbackUID));
         }
+
         return $fileInfo;
     }
 
@@ -187,19 +217,55 @@ class FileInfoService
 
     public function updateFileMeta(FileInfo $fileInfo, ?string $fallbackUID = null): FileInfo
     {
+        $this->logger->debug('Starting metadata update for file: {path}', [
+            'path' => $fileInfo->getPath(),
+            'fallbackUID' => $fallbackUID
+        ]);
+
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
+        
+        $this->logger->debug('Retrieved node info for file: {path}', [
+            'path' => $fileInfo->getPath(),
+            'size' => $file->getSize(),
+            'mimetype' => $file->getMimetype(),
+            'mtime' => $file->getMtime()
+        ]);
+
         $fileInfo->setSize($file->getSize());
         $fileInfo->setMimetype($file->getMimetype());
+        
         try {
-            $fileInfo->setOwner($file->getOwner()->getUID());
+            $owner = $file->getOwner()->getUID();
+            $fileInfo->setOwner($owner);
+            $this->logger->debug('Set owner for file: {path}', [
+                'path' => $fileInfo->getPath(),
+                'owner' => $owner
+            ]);
         } catch (\Throwable $e) {
+            $this->logger->debug('Error setting owner for file: {path}', [
+                'path' => $fileInfo->getPath(),
+                'error' => $e->getMessage(),
+                'fallbackUID' => $fallbackUID
+            ]);
+
             if (!is_null($fallbackUID)) {
                 $fileInfo->setOwner($fallbackUID);
             } elseif (!$fileInfo->getOwner()) {
                 throw $e;
             }
         }
-        $fileInfo->setIgnored($this->filterService->isIgnored($fileInfo, $file));
+
+        $isIgnored = $this->filterService->isIgnored($fileInfo, $file);
+        $fileInfo->setIgnored($isIgnored);
+        
+        $this->logger->debug('Completed metadata update for file: {path}', [
+            'path' => $fileInfo->getPath(),
+            'size' => $fileInfo->getSize(),
+            'mimetype' => $fileInfo->getMimetype(),
+            'owner' => $fileInfo->getOwner(),
+            'isIgnored' => $isIgnored ? 'true' : 'false'
+        ]);
+
         return $fileInfo;
     }
 
@@ -208,12 +274,32 @@ class FileInfoService
      */
     public function isRecalculationRequired(FileInfo $fileInfo, ?string $fallbackUID = null, ?Node $file = null)
     {
+        $this->logger->debug('Checking if recalculation is required for file: {path}', [
+            'path' => $fileInfo->getPath(),
+            'currentHash' => $fileInfo->getFileHash(),
+            'isIgnored' => $fileInfo->isIgnored() ? 'true' : 'false'
+        ]);
+
         if ($fileInfo->isIgnored()) {
+            $this->logger->debug('File is ignored, skipping recalculation: {path}', [
+                'path' => $fileInfo->getPath()
+            ]);
             return false;
         }
+
         if (is_null($file)) {
             $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
         }
+
+        $this->logger->debug('File node details: {path}', [
+            'path' => $fileInfo->getPath(),
+            'type' => $file->getType(),
+            'mtime' => $file->getMtime(),
+            'uploadTime' => $file->getUploadTime(),
+            'isMounted' => $file->isMounted() ? 'true' : 'false',
+            'lastUpdate' => $fileInfo->getUpdatedAt() ? $fileInfo->getUpdatedAt()->getTimestamp() : 'never'
+        ]);
+
         if (
             $file->getType() === \OCP\Files\FileInfo::TYPE_FILE
             && (empty($fileInfo->getFileHash())
@@ -221,35 +307,96 @@ class FileInfoService
                 || $file->getUploadTime() > $fileInfo->getUpdatedAt()->getTimestamp())
             || $file->isMounted()
         ) {
+            $this->logger->debug('Recalculation required for file: {path}', [
+                'path' => $fileInfo->getPath(),
+                'reason' => empty($fileInfo->getFileHash()) ? 'no hash' : 
+                           ($file->getMtime() > $fileInfo->getUpdatedAt()->getTimestamp() ? 'modified' : 
+                           ($file->getUploadTime() > $fileInfo->getUpdatedAt()->getTimestamp() ? 'uploaded' : 'mounted'))
+            ]);
             return $file->getInternalPath();
         }
+
+        $this->logger->debug('No recalculation needed for file: {path}', [
+            'path' => $fileInfo->getPath()
+        ]);
         return false;
     }
 
     public function calculateHashes(FileInfo $fileInfo, ?string $fallbackUID = null, bool $requiresHash = true): FileInfo
     {
+        $this->logger->debug('Starting hash calculation for file: {path}', [
+            'path' => $fileInfo->getPath(),
+            'fallbackUID' => $fallbackUID,
+            'requiresHash' => $requiresHash ? 'true' : 'false',
+            'currentHash' => $fileInfo->getFileHash()
+        ]);
+
         $oldHash = $fileInfo->getFileHash();
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
+        
+        $this->logger->debug('Retrieved node for file: {path}', [
+            'path' => $fileInfo->getPath(),
+            'nodeType' => $file ? get_class($file) : 'null',
+            'fileSize' => $file ? $file->getSize() : 'unknown'
+        ]);
+
         $path = $this->isRecalculationRequired($fileInfo, $fallbackUID, $file);
+        
+        $this->logger->debug('Recalculation check result for file: {path}', [
+            'path' => $fileInfo->getPath(),
+            'requiresRecalculation' => $path !== false ? 'true' : 'false',
+            'internalPath' => $path !== false ? $path : 'N/A'
+        ]);
+
         if ($path !== false) {
             if ($requiresHash) {
                 if ($file instanceof \OCP\Files\File) {
+                    $this->logger->debug('Calculating hash for file: {path}', [
+                        'path' => $fileInfo->getPath(),
+                        'internalPath' => $path
+                    ]);
+
                     $hash = $file->getStorage()->hash('sha256', $path);
+                    
+                    $this->logger->debug('Hash calculation result for file: {path}', [
+                        'path' => $fileInfo->getPath(),
+                        'hashResult' => is_bool($hash) ? 'failed (boolean)' : 'success',
+                        'newHash' => !is_bool($hash) ? $hash : 'N/A'
+                    ]);
+
                     if (!is_bool($hash)) {
                         $fileInfo->setFileHash($hash);
                         $fileInfo->setUpdatedAt(new \DateTime());
                     } else {
+                        $this->logger->error('Unable to calculate hash for file: {path}', [
+                            'path' => $fileInfo->getPath(),
+                            'internalPath' => $file->getInternalPath()
+                        ]);
                         throw new UnableToCalculateHash($file->getInternalPath());
                     }
                 } else {
+                    $this->logger->debug('Node is not a file, setting hash to null: {path}', [
+                        'path' => $fileInfo->getPath()
+                    ]);
                     $fileInfo->setFileHash(null);
                 }
             } else {
+                $this->logger->debug('Hash calculation not required, setting hash to null: {path}', [
+                    'path' => $fileInfo->getPath()
+                ]);
                 $fileInfo->setFileHash(null);
             }
+
             $this->update($fileInfo, $fallbackUID);
             $this->eventDispatcher->dispatchTyped(new CalculatedHashEvent($fileInfo, $oldHash));
+            
+            $this->logger->debug('Completed hash calculation for file: {path}', [
+                'path' => $fileInfo->getPath(),
+                'oldHash' => $oldHash,
+                'newHash' => $fileInfo->getFileHash()
+            ]);
         }
+
         return $fileInfo;
     }
 

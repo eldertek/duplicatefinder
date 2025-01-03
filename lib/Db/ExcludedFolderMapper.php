@@ -23,21 +23,31 @@ class ExcludedFolderMapper extends QBMapper {
      * @return ExcludedFolder[]
      */
     public function findAllForUser(string $userId): array {
-        $this->logger->debug('Finding all excluded folders for user: {userId}', ['userId' => $userId]);
-        
+        $this->logger->debug('Finding all excluded folders for user', [
+            'userId' => $userId
+        ]);
+
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
-           ->from($this->getTableName())
-           ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
-           ->orderBy('folder_path', 'ASC');
+            ->from($this->getTableName())
+            ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)));
 
-        $entities = $this->findEntities($qb);
-        $this->logger->debug('Found {count} excluded folders', [
-            'count' => count($entities),
-            'userId' => $userId,
-            'paths' => array_map(fn($e) => $e->getFolderPath(), $entities)
-        ]);
-        return $entities;
+        try {
+            $results = $this->findEntities($qb);
+            $this->logger->debug('Found excluded folders', [
+                'userId' => $userId,
+                'count' => count($results),
+                'query' => $qb->getSQL(),
+                'params' => json_encode($qb->getParameters())
+            ]);
+            return $results;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to find excluded folders', [
+                'userId' => $userId,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -52,24 +62,28 @@ class ExcludedFolderMapper extends QBMapper {
             'id' => $id,
             'userId' => $userId
         ]);
-        
+
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
-           ->from($this->getTableName())
-           ->where($qb->expr()->eq('id', $qb->createNamedParameter($id)))
-           ->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)));
+            ->from($this->getTableName())
+            ->where(
+                $qb->expr()->eq('id', $qb->createNamedParameter($id)),
+                $qb->expr()->eq('user_id', $qb->createNamedParameter($userId))
+            );
 
         try {
-            $entity = $this->findEntity($qb);
+            $result = $this->findEntity($qb);
             $this->logger->debug('Found excluded folder', [
-                'id' => $id,
-                'path' => $entity->getFolderPath()
+                'id' => $result->getId(),
+                'path' => $result->getFolderPath(),
+                'userId' => $result->getUserId()
             ]);
-            return $entity;
-        } catch (DoesNotExistException $e) {
-            $this->logger->debug('Excluded folder not found', [
+            return $result;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to find excluded folder', [
                 'id' => $id,
-                'userId' => $userId
+                'userId' => $userId,
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -81,6 +95,11 @@ class ExcludedFolderMapper extends QBMapper {
      * @return bool
      */
     public function isFolderExcluded(string $userId, string $path): bool {
+        $this->logger->debug('Checking if folder is directly excluded', [
+            'path' => $path,
+            'userId' => $userId
+        ]);
+
         $qb = $this->db->getQueryBuilder();
         
         $qb->select('id')
@@ -92,6 +111,11 @@ class ExcludedFolderMapper extends QBMapper {
         $exists = $result->fetch();
         $result->closeCursor();
 
+        $this->logger->debug('Folder exclusion check result', [
+            'path' => $path,
+            'isExcluded' => $exists !== false ? 'true' : 'false'
+        ]);
+
         return $exists !== false;
     }
 
@@ -102,50 +126,44 @@ class ExcludedFolderMapper extends QBMapper {
      */
     public function isPathInExcludedFolder(string $userId, string $path): bool {
         $this->logger->debug('Checking if path is in excluded folder', [
-            'path' => $path,
-            'userId' => $userId
+            'userId' => $userId,
+            'path' => $path
         ]);
-        
-        // Remove /userId/files prefix from path for comparison
-        $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $path);
-        $normalizedPath = '/' . trim($normalizedPath, '/') . '/';
-        
+
+        $normalizedPath = '/' . trim($path, '/');
         $this->logger->debug('Normalized path for comparison', [
             'original' => $path,
             'normalized' => $normalizedPath
         ]);
-        
-        $qb = $this->db->getQueryBuilder();
-        $qb->select('folder_path')
-           ->from($this->getTableName())
-           ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)));
 
-        $result = $qb->executeQuery();
-        $excludedFolders = $result->fetchAll();
-        $result->closeCursor();
-
-        $this->logger->debug('Found {count} excluded folders to check against', [
+        $excludedFolders = $this->findAllForUser($userId);
+        $this->logger->debug('Found excluded folders to check against', [
             'count' => count($excludedFolders),
-            'folders' => array_column($excludedFolders, 'folder_path')
+            'folders' => array_map(fn($f) => $f->getFolderPath(), $excludedFolders)
         ]);
 
         foreach ($excludedFolders as $folder) {
-            $excludedPath = '/' . trim($folder['folder_path'], '/') . '/';
+            $excludedPath = '/' . trim($folder->getFolderPath(), '/');
             $this->logger->debug('Comparing paths', [
-                'normalizedPath' => $normalizedPath,
+                'filePath' => $normalizedPath,
                 'excludedPath' => $excludedPath,
-                'isMatch' => str_starts_with($normalizedPath, $excludedPath) ? 'true' : 'false'
+                'isSubPath' => str_starts_with($normalizedPath, $excludedPath)
             ]);
+
             if (str_starts_with($normalizedPath, $excludedPath)) {
                 $this->logger->debug('Path is in excluded folder', [
                     'path' => $path,
-                    'excludedFolder' => $folder['folder_path']
+                    'excludedFolder' => $excludedPath
                 ]);
                 return true;
             }
         }
 
-        $this->logger->debug('Path is not in any excluded folder', ['path' => $path]);
+        $this->logger->debug('Path is not in any excluded folder', [
+            'path' => $path,
+            'checkedFolders' => count($excludedFolders)
+        ]);
+
         return false;
     }
 } 

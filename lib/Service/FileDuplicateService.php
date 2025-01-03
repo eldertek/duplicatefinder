@@ -54,7 +54,12 @@ class FileDuplicateService
     public function enrich(FileDuplicate $duplicate): FileDuplicate
     {
         $files = $duplicate->getFiles();
-        $this->logger->debug('Enriching duplicate with hash: {hash}', ['hash' => $duplicate->getHash()]);
+        $this->logger->debug('Starting duplicate enrichment', [
+            'hash' => $duplicate->getHash(),
+            'fileCount' => count($files),
+            'type' => $duplicate->getType(),
+            'acknowledged' => $duplicate->getAcknowledged() ? 'true' : 'false'
+        ]);
         
         // Track unique node IDs to prevent showing the same file multiple times
         $seenNodeIds = [];
@@ -62,14 +67,22 @@ class FileDuplicateService
         
         // Iterate through each FileInfo object to enrich it
         foreach ($files as $key => $fileInfo) {
+            $this->logger->debug('Processing file in duplicate group', [
+                'path' => $fileInfo->getPath(),
+                'hash' => $fileInfo->getFileHash(),
+                'size' => $fileInfo->getSize(),
+                'ignored' => $fileInfo->isIgnored() ? 'true' : 'false'
+            ]);
+
             // Enrich the FileInfo object
             $files[$key] = $this->fileInfoService->enrich($fileInfo);
             
             // Skip if we've already seen this node ID (same physical file)
             if ($files[$key]->getNodeId() && isset($seenNodeIds[$files[$key]->getNodeId()])) {
-                $this->logger->debug('Skipping duplicate node ID: {nodeId} for path: {path}', [
+                $this->logger->debug('Skipping duplicate node ID', [
                     'nodeId' => $files[$key]->getNodeId(),
-                    'path' => $fileInfo->getPath()
+                    'path' => $fileInfo->getPath(),
+                    'hash' => $fileInfo->getFileHash()
                 ]);
                 continue;
             }
@@ -80,21 +93,25 @@ class FileDuplicateService
             
             // Store normalized path for logging
             $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $fileInfo->getPath());
-            $this->logger->debug('Normalized path for file: {original} -> {normalized}', [
+            $this->logger->debug('Processing file path', [
                 'original' => $fileInfo->getPath(),
-                'normalized' => $normalizedPath
+                'normalized' => $normalizedPath,
+                'nodeId' => $files[$key]->getNodeId()
             ]);
             
             // Check if file is in an origin folder
             $protectionInfo = $this->originFolderService->isPathProtected($normalizedPath);
             $files[$key]->setIsInOriginFolder($protectionInfo['isProtected']);
-            $this->logger->debug('Protection status for file {path}: {status}', [
-                'path' => $normalizedPath,
-                'status' => $protectionInfo['isProtected'] ? 'protected' : 'not protected'
-            ]);
             
             $uniqueFiles[] = $files[$key];
         }
+
+        $this->logger->debug('Completed duplicate enrichment', [
+            'hash' => $duplicate->getHash(),
+            'originalCount' => count($files),
+            'uniqueCount' => count($uniqueFiles),
+            'skippedCount' => count($files) - count($uniqueFiles)
+        ]);
 
         // Sort the enriched FileInfo objects
         uasort($uniqueFiles, function (FileInfo $a, FileInfo $b) {
