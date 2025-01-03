@@ -5,6 +5,10 @@
   - Filter by file name pattern with wildcard support (e.g., *.tmp, backup_*)
   - User-specific filters management through settings
   - Persistent filters stored in database
+### Changed
+- Enhanced logging throughout the application with detailed debug information
+### Fixed
+- Fix an issue where deleted files were still displayed in the duplicates list
 
 ## 1.5.3 - 2024-12-31
 ### Added

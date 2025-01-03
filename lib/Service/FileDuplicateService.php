@@ -7,6 +7,7 @@ use Psr\Log\LoggerInterface;
 use OCP\AppFramework\Db\Entity;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotFoundException;
+use OCP\Lock\ILockingProvider;
 
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\FileInfo;
@@ -28,17 +29,21 @@ class FileDuplicateService
     private $originFolderService;
     /** @var ?string */
     private $currentUserId = null;
+    /** @var ILockingProvider */
+    private $lockingProvider;
 
     public function __construct(
         LoggerInterface $logger,
         FileDuplicateMapper $mapper,
         FileInfoService $fileInfoService,
-        OriginFolderService $originFolderService
+        OriginFolderService $originFolderService,
+        ILockingProvider $lockingProvider
     ) {
         $this->mapper = $mapper;
         $this->logger = $logger;
         $this->fileInfoService = $fileInfoService;
         $this->originFolderService = $originFolderService;
+        $this->lockingProvider = $lockingProvider;
     }
 
     public function setCurrentUserId(?string $userId): void {
@@ -256,12 +261,93 @@ class FileDuplicateService
 
     public function delete(string $hash, string $type = 'file_hash'): ?FileDuplicate
     {
+        $this->logger->debug('Starting deletion of duplicate', [
+            'hash' => $hash,
+            'type' => $type
+        ]);
+
         try {
+            // Try to find the duplicate first
             $fileDuplicate = $this->mapper->find($hash, $type);
+            
+            $this->logger->debug('Found duplicate to delete', [
+                'hash' => $hash,
+                'type' => $type,
+                'fileCount' => count($fileDuplicate->getFiles())
+            ]);
+
+            // Try to delete associated files first
+            $files = $fileDuplicate->getFiles();
+            $failedFiles = [];
+            
+            foreach ($files as $fileInfo) {
+                try {
+                    $this->logger->debug('Attempting to delete file info', [
+                        'path' => $fileInfo->getPath(),
+                        'hash' => $fileInfo->getFileHash()
+                    ]);
+                    
+                    // Try to release any locks first
+                    try {
+                        $this->lockingProvider->releaseAll($fileInfo->getPath(), ILockingProvider::LOCK_SHARED);
+                        $this->logger->debug('Released locks for file', [
+                            'path' => $fileInfo->getPath()
+                        ]);
+                    } catch (\Exception $e) {
+                        $this->logger->warning('Failed to release locks, continuing anyway', [
+                            'path' => $fileInfo->getPath(),
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+
+                    $this->fileInfoService->delete($fileInfo);
+                } catch (\Exception $e) {
+                    $this->logger->warning('Failed to delete file info, continuing with others', [
+                        'path' => $fileInfo->getPath(),
+                        'error' => $e->getMessage()
+                    ]);
+                    $failedFiles[] = $fileInfo->getPath();
+                }
+            }
+
+            if (!empty($failedFiles)) {
+                $this->logger->warning('Some files failed to delete', [
+                    'hash' => $hash,
+                    'failedFiles' => $failedFiles
+                ]);
+            }
+
+            // Now delete the duplicate entry
+            $this->logger->debug('Deleting duplicate entry', [
+                'hash' => $hash,
+                'type' => $type
+            ]);
+            
             $this->mapper->delete($fileDuplicate);
+            
+            $this->logger->debug('Successfully deleted duplicate', [
+                'hash' => $hash,
+                'type' => $type,
+                'failedFiles' => count($failedFiles)
+            ]);
+
             return $fileDuplicate;
+
         } catch (DoesNotExistException $e) {
+            $this->logger->debug('Duplicate not found for deletion', [
+                'hash' => $hash,
+                'type' => $type,
+                'error' => $e->getMessage()
+            ]);
             return null;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to delete duplicate', [
+                'hash' => $hash,
+                'type' => $type,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw new \RuntimeException('Failed to delete duplicate: ' . $e->getMessage(), 0, $e);
         }
     }
 

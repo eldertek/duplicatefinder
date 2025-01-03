@@ -11,6 +11,7 @@ use OCP\Lock\ILockingProvider;
 use OCP\Files\Storage\IStorage;
 use OCP\Files\IRootFolder;
 use OCP\IDBConnection;
+use OCP\AppFramework\Db\DoesNotExistException;
 
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\FileInfo;
@@ -72,19 +73,79 @@ class FileInfoService
      */
     public function enrich(FileInfo $fileInfo): FileInfo
     {
+        $this->logger->debug('Starting file info enrichment', [
+            'path' => $fileInfo->getPath(),
+            'id' => $fileInfo->getId(),
+            'currentHash' => $fileInfo->getFileHash()
+        ]);
+
         try {
             $node = $this->folderService->getNodeByFileInfo($fileInfo);
             if ($node) {
+                $this->logger->debug('Found node for file info', [
+                    'path' => $fileInfo->getPath(),
+                    'nodeId' => $node->getId(),
+                    'nodeType' => get_class($node),
+                    'size' => $node->getSize(),
+                    'mimetype' => $node->getMimetype()
+                ]);
+
                 $fileInfo->setNodeId($node->getId());
                 $fileInfo->setMimetype($node->getMimetype());
                 $fileInfo->setSize($node->getSize());
             } else {
-                // Handle the case where no node is found
-                $this->logger->error("No node found for file info ID: " . $fileInfo->getId());
+                $this->logger->warning('Node not found for file info - file may have been deleted', [
+                    'path' => $fileInfo->getPath(),
+                    'id' => $fileInfo->getId(),
+                    'hash' => $fileInfo->getFileHash()
+                ]);
+
+                // File no longer exists, we should delete this file info
+                try {
+                    $this->delete($fileInfo);
+                    $this->logger->info('Deleted file info for non-existent file', [
+                        'path' => $fileInfo->getPath(),
+                        'id' => $fileInfo->getId()
+                    ]);
+                } catch (\Exception $deleteError) {
+                    $this->logger->error('Failed to delete file info for non-existent file', [
+                        'path' => $fileInfo->getPath(),
+                        'id' => $fileInfo->getId(),
+                        'error' => $deleteError->getMessage(),
+                        'trace' => $deleteError->getTraceAsString()
+                    ]);
+                }
+            }
+        } catch (NotFoundException $e) {
+            $this->logger->warning('File not found during enrichment - file may have been deleted', [
+                'path' => $fileInfo->getPath(),
+                'id' => $fileInfo->getId(),
+                'error' => $e->getMessage()
+            ]);
+
+            // File no longer exists, we should delete this file info
+            try {
+                $this->delete($fileInfo);
+                $this->logger->info('Deleted file info for non-existent file', [
+                    'path' => $fileInfo->getPath(),
+                    'id' => $fileInfo->getId()
+                ]);
+            } catch (\Exception $deleteError) {
+                $this->logger->error('Failed to delete file info for non-existent file', [
+                    'path' => $fileInfo->getPath(),
+                    'id' => $fileInfo->getId(),
+                    'error' => $deleteError->getMessage(),
+                    'trace' => $deleteError->getTraceAsString()
+                ]);
             }
         } catch (\Exception $e) {
-            // Log exception details
-            $this->logger->error("Error enriching FileInfo: " . $e->getMessage());
+            $this->logger->error('Error enriching FileInfo', [
+                'path' => $fileInfo->getPath(),
+                'id' => $fileInfo->getId(),
+                'error' => $e->getMessage(),
+                'errorClass' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
         return $fileInfo;
     }
@@ -127,7 +188,40 @@ class FileInfoService
      */
     public function findByHash(string $hash, string $type = 'file_hash'): array
     {
-        return $this->mapper->findByHash($hash, $type);
+        $this->logger->debug('Finding files by hash', [
+            'hash' => $hash,
+            'type' => $type
+        ]);
+
+        $files = $this->mapper->findByHash($hash, $type);
+        $existingFiles = [];
+
+        foreach ($files as $fileInfo) {
+            try {
+                // Enrich and verify file existence
+                $enrichedFile = $this->enrich($fileInfo);
+                
+                // If the file still exists after enrichment (wasn't deleted during enrich)
+                if ($enrichedFile->getNodeId() !== null) {
+                    $existingFiles[] = $enrichedFile;
+                }
+            } catch (\Exception $e) {
+                $this->logger->warning('Error processing file during hash search', [
+                    'path' => $fileInfo->getPath(),
+                    'hash' => $hash,
+                    'error' => $e->getMessage()
+                ]);
+                // File will be automatically deleted in enrich() if it doesn't exist
+            }
+        }
+
+        $this->logger->debug('Found files by hash', [
+            'hash' => $hash,
+            'count' => count($existingFiles),
+            'ignored' => 'false'
+        ]);
+
+        return $existingFiles;
     }
 
     /**
@@ -206,8 +300,101 @@ class FileInfoService
 
     public function delete(FileInfo $fileInfo): FileInfo
     {
-        $this->mapper->delete($fileInfo);
-        return $fileInfo;
+        $this->logger->debug('Starting deletion of file info', [
+            'path' => $fileInfo->getPath(),
+            'hash' => $fileInfo->getFileHash(),
+            'id' => $fileInfo->getId()
+        ]);
+
+        try {
+            // Try to release any locks first
+            try {
+                $this->lockingProvider->releaseAll($fileInfo->getPath(), ILockingProvider::LOCK_SHARED);
+                $this->logger->debug('Released locks for file', [
+                    'path' => $fileInfo->getPath()
+                ]);
+            } catch (\Exception $e) {
+                $this->logger->warning('Failed to release locks, continuing anyway', [
+                    'path' => $fileInfo->getPath(),
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Verify if the file info exists before deletion
+            if ($fileInfo->getId()) {
+                $this->logger->debug('Verifying file info exists', [
+                    'id' => $fileInfo->getId(),
+                    'path' => $fileInfo->getPath()
+                ]);
+                
+                try {
+                    $existingFileInfo = $this->mapper->findById($fileInfo->getId());
+                    
+                    $this->logger->debug('Found existing file info', [
+                        'id' => $existingFileInfo->getId(),
+                        'path' => $existingFileInfo->getPath(),
+                        'hash' => $existingFileInfo->getFileHash()
+                    ]);
+                } catch (DoesNotExistException $e) {
+                    $this->logger->debug('File info already deleted', [
+                        'path' => $fileInfo->getPath(),
+                        'id' => $fileInfo->getId()
+                    ]);
+                    return $fileInfo;
+                }
+            }
+
+            // Try to delete the actual file first if it exists
+            try {
+                $node = $this->folderService->getNodeByFileInfo($fileInfo);
+                if ($node) {
+                    $this->logger->debug('Attempting to delete physical file', [
+                        'path' => $fileInfo->getPath(),
+                        'nodeId' => $node->getId()
+                    ]);
+                    $node->delete();
+                    $this->logger->debug('Successfully deleted physical file', [
+                        'path' => $fileInfo->getPath()
+                    ]);
+                }
+            } catch (NotFoundException $e) {
+                $this->logger->debug('Physical file already deleted or not found', [
+                    'path' => $fileInfo->getPath()
+                ]);
+            } catch (\Exception $e) {
+                $this->logger->warning('Failed to delete physical file, continuing with database cleanup', [
+                    'path' => $fileInfo->getPath(),
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Now delete the database entry
+            $result = $this->mapper->delete($fileInfo);
+            
+            $this->logger->debug('Successfully deleted file info from database', [
+                'path' => $fileInfo->getPath(),
+                'id' => $fileInfo->getId()
+            ]);
+
+            return $result;
+
+        } catch (DoesNotExistException $e) {
+            $this->logger->debug('File info not found for deletion', [
+                'path' => $fileInfo->getPath(),
+                'id' => $fileInfo->getId(),
+                'error' => $e->getMessage()
+            ]);
+            // Return the original file info since it's already "deleted"
+            return $fileInfo;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to delete file info', [
+                'path' => $fileInfo->getPath(),
+                'id' => $fileInfo->getId(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw new \RuntimeException('Failed to delete file info: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     public function clear(): void
