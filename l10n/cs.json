@@ -100,8 +100,6 @@
     "Features & Usage" : "Funkce a používání",
     "How can I protect important files from deletion?" : "Jak je možné ochránit důležité soubory před smazáním?",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "Použijte v nastavení funkci Složky původu. Soubory v těchto složkách nikdy nebudou označeny jako duplicity pro smazání, což zajišťuje, žer vaše původní soubory jsou vždy chráněny.",
-    "Can I exclude certain folders from scanning?" : "Je možné ze skenování vynechat určité složky?",
-    "Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude" : "Ano, složky je možné vynechat dvěma způsoby: <br>1. Přidat je do Vynechaných složek v nastavení<br>2. Umístit soubor .nodupefinder do libovolné složky, kterou chcete vynechat",
     "Can I recover deleted files?" : "Je možné smazané soubory obnovit?",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "Ano, veškeré soubory smazané prostřednictvím Hledání duplicit je možné obnovit z Nextloud Koše (po dobu periody jejich uchovávání tam, nastavené správcem).",
     "Technical & Performance" : "Technické informace a výkon",

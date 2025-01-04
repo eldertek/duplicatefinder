@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Поиск дубликатов",
     "Duplicate Finder Settings" : "Настройки поиска дубликатов",
+    "Filters" : "Фильтры",
     "Help" : "Справка",
     "All general settings to modify Duplicate Finder behaviors." : "Все общие настройки для изменения поведения Поиска дубликатов.",
     "Ignore Mounted Files" : "Игнорировать смонтированные файлы",

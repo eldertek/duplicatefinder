@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "重複項目尋找程式",
     "Duplicate Finder Settings" : "重複項目尋找程式設定",
+    "Filters" : "過濾",
     "Origin Folders" : "原始資料夾",
     "Excluded Folders" : "排除資料夾",
     "Getting Started" : "開始",
@@ -98,8 +99,6 @@ OC.L10N.register(
     "Features & Usage" : "功能與使用方式",
     "How can I protect important files from deletion?" : "我要如何保護重要檔案免於刪除？",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "使用設定中的原始資料夾功能。這些資料夾中的檔案將不會被標記為要刪除的重複檔案，確保您的原始檔案一律受到保護。",
-    "Can I exclude certain folders from scanning?" : "我可以排除某些資料夾不進行掃描嗎？",
-    "Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude" : "可以，您有兩種方式排除資料夾：<br>1. 在設定中新增到排除資料夾<br>2. 在任何您想要排除的資料夾中放一個 .nodupefinder 檔案",
     "Can I recover deleted files?" : "我可以還原已刪除的檔案嗎？",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "可以，透過重複檔案尋找程式刪除的所有檔案都可以從您的 Nextcloud 回收桶還原，但前提是在管理員設定的保留期限內，請檢查回收桶以找回所需的檔案。",
     "Technical & Performance" : "技術與效能",

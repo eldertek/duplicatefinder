@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Duplicate Finder",
     "Duplicate Finder Settings" : "Paramètres de Duplicate Finder",
+    "Filters" : "Filtres",
     "FAQ" : "FAQ",
     "Help" : "Aide",
     "All general settings to modify Duplicate Finder behaviors." : "Paramètres généraux permettant de modifier les comportements de Duplicate Finder.",

@@ -102,8 +102,6 @@ OC.L10N.register(
     "Features & Usage" : "المزايا و الاستعمال",
     "How can I protect important files from deletion?" : "كيف يمكنني حماية الملفات الهامة من الحذف؟",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "استخدم ميزة المجلد المصدر في الإعدادات. لن يتم وضع علامة على الملفات الموجودة في هذه المجلدات باعتبارها مكررة للحذف، مما يضمن حماية ملفاتك المصدرية دائمًا.",
-    "Can I exclude certain folders from scanning?" : "هل يمكنني استثناء مجلدات معينة من المسح؟",
-    "Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude" : "نعم، يمكنك استثناء مجلدات بإحدى الطريقتين:<br>1. أضِفهم إلى الملفات المستثناة في الإعدادات <br>2. ضع ملفاً امتداده .nodupefinder في المجلد الذي ترغب في استثنائه",
     "Can I recover deleted files?" : "هل يمكنني استعادة مجلدات بعد حذفها؟",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "نعم، يمكنك استرداد جميع الملفات المحذوفة عبر  \"الباحث عن التكرارات\" Duplicate Finder من سلة المهملات الخاصة بنكست كلاود أثناء فترة الاحتفاظ التي حدَّدها مشرف النظام عندك.",
     "Technical & Performance" : "التقنيات والأداء",

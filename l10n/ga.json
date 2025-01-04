@@ -1,6 +1,7 @@
 { "translations": {
     "Duplicate Finder" : "Aimsitheoir Dúblach",
     "Duplicate Finder Settings" : "Socruithe Aimsitheoir Dúblach",
+    "Filters" : "Scagairí",
     "Origin Folders" : "Fillteáin Bhunús",
     "Excluded Folders" : "Fillteáin Eisiata",
     "Getting Started" : "Tús a chur leis",
@@ -100,8 +101,6 @@
     "Features & Usage" : "Gnéithe agus Úsáid",
     "How can I protect important files from deletion?" : "Conas is féidir liom comhaid thábhachtacha a chosaint ó scriosadh?",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "Úsáid an ghné Fillteáin Bhunús i socruithe. Ní mharcálfar comhaid sna fillteáin seo mar chomhaid dúblacha le scriosadh, ag cinntiú go mbeidh do chomhaid bhunaidh cosanta i gcónaí.",
-    "Can I exclude certain folders from scanning?" : "An féidir liom fillteáin áirithe a eisiamh ón scanadh?",
-    "Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude" : "Is féidir, is féidir leat fillteáin a eisiamh ar dhá bhealach:<br>1. Cuir le Fillteáin Eisiata iad i socruithe<br>2. Cuir comhad .nodupefinder in aon fhillteán ar mhaith leat a eisiamh",
     "Can I recover deleted files?" : "An féidir liom comhaid scriosta a aisghabháil?",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "Is féidir, is féidir gach comhad a scriostar trí Aimsitheoir Dúblach a aisghabháil ó do bhosca bruscair Nextcloud le linn na tréimhse coinneála arna shocrú ag do riarthóir.",
     "Technical & Performance" : "Teicniúil & Feidhmíocht",

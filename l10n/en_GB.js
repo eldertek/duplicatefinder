@@ -102,8 +102,6 @@ OC.L10N.register(
     "Features & Usage" : "Features & Usage",
     "How can I protect important files from deletion?" : "How can I protect important files from deletion?",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected.",
-    "Can I exclude certain folders from scanning?" : "Can I exclude certain folders from scanning?",
-    "Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude" : "Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude",
     "Can I recover deleted files?" : "Can I recover deleted files?",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator.",
     "Technical & Performance" : "Technical & Performance",

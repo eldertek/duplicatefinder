@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "كۆپەيتكۈچى",
     "Duplicate Finder Settings" : "كۆپەيتكۈچىنى تەڭشەش",
+    "Filters" : "سۈزگۈچ",
     "FAQ" : "سوئال",
     "Help" : "ياردەم",
     "All general settings to modify Duplicate Finder behaviors." : "كۆپەيتمە تېپىش ھەرىكىتىنى ئۆزگەرتىش ئۈچۈن بارلىق ئادەتتىكى تەڭشەكلەر.",

@@ -100,8 +100,6 @@
     "Features & Usage" : "Ominaisuudet & käyttö",
     "How can I protect important files from deletion?" : "Miten voin suojata tärkeät tiedostot poistamiselta?",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "Määritä alkuperäiskansio asetuksista. Tiedostoja näistä kansioista ei koskaan merkitä poistettavaksi, jotta alkuperäiset tiedostosi ovat aina suojattuina.",
-    "Can I exclude certain folders from scanning?" : "Voinko ohittaa tiettyjä kansioita kaksoiskappaleiden tunnistamisessa?",
-    "Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude" : "Kyllä, voit ohittaa kansioita kahdella tavalla:<br>1. Lisää ne ohitettaviin kansioihin asetuksissa<br>2. Aseta .nodupefinder -tiedosto kansioon, jonka haluat ohittaa",
     "Can I recover deleted files?" : "Voinko palauttaa poistettuja tiedostoja?",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "Kyllä, kaikki sovelluksen poistamat tiedostot voidaan palauttaa Nextcloudin roskakorista järjestelmänvalvojan määrittämän palautusajan sisällä.",
     "Technical & Performance" : "Tekniset tiedot & suorituskyky",

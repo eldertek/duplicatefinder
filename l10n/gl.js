@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Buscador de duplicados",
     "Duplicate Finder Settings" : "Axustes do Buscador de duplicados",
+    "Filters" : "Filtros",
     "Origin Folders" : "Cartafoles de orixe",
     "Excluded Folders" : "Cartafoles excluídos",
     "Getting Started" : "Comezar",

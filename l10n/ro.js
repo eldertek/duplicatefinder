@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Găsitor de duplicat",
     "Duplicate Finder Settings" : "Setările găsitorului de duplicat",
+    "Filters" : "Filtre",
     "Help" : "Ajutor",
     "All general settings to modify Duplicate Finder behaviors." : "Toate setările generale de modificare a comportamentelor găsitorului de duplicat.",
     "Ignore Mounted Files" : "Ignorați fișierele montate",
