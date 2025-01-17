@@ -1,6 +1,7 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "Filters" : "Szűrők",
     "FAQ" : "GYIK",
     "Help" : "Súgó",
     "Ignore Mounted Files" : "Felcsatolt fájlok figyelmen kívül hagyása",

@@ -1,6 +1,7 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "Filters" : "Filter",
     "FAQ" : "FAQ",
     "Help" : "Hjälp",
     "Ignore Mounted Files" : "Ignorera monterade filer",

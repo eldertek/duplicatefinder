@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Cercador de duplicats",
     "Duplicate Finder Settings" : "Paràmetres del cercador de duplicats",
+    "Filters" : "Filtres",
     "FAQ" : "PMF",
     "Help" : "Ajuda",
     "All general settings to modify Duplicate Finder behaviors." : "Tota la configuració general per modificar els comportaments del cercador de duplicats.",

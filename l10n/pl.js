@@ -1,6 +1,7 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "Filters" : "Filtry",
     "FAQ" : "FAQ",
     "Help" : "Pomoc",
     "Settings saved" : "Ustawienia zapisane",

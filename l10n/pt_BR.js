@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Localizador de Duplicatas",
     "Duplicate Finder Settings" : "Duplicar configurações do Finder",
+    "Filters" : "Filtros",
     "FAQ" : "FAQ",
     "Help" : "Ajuda",
     "All general settings to modify Duplicate Finder behaviors." : "Todas as configurações gerais para modificar os comportamentos do Duplicate Finder.",

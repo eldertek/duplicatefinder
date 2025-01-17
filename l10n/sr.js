@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Откривач дупликата",
     "Duplicate Finder Settings" : "Поставке Откривача дупликата",
+    "Filters" : "Филтери",
     "Origin Folders" : "Фолдери изворишта",
     "FAQ" : "ЧПП",
     "Help" : "Помоћ",

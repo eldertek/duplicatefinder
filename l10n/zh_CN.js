@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "重复查找器",
     "Duplicate Finder Settings" : "重复查找器设置",
+    "Filters" : "过滤器",
     "Origin Folders" : "原始文件夹",
     "Excluded Folders" : "排除文件夹",
     "Getting Started" : "开始",
@@ -101,8 +102,6 @@ OC.L10N.register(
     "Features & Usage" : "功能 & 用法",
     "How can I protect important files from deletion?" : "如何保护重要文件不被删除？",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "使用设置中的“原始文件夹”功能。这些文件夹中的文件永远不会被标记为重复项以供删除，从而确保你的原始文件始终受到保护。",
-    "Can I exclude certain folders from scanning?" : "我可以从扫描中排除某些文件夹吗？",
-    "Yes, you can exclude folders in two ways:<br>1. Add them to Excluded Folders in settings<br>2. Place a .nodupefinder file in any folder you want to exclude" : "是的，你可以通过两种方式排除文件夹：<br>1. 将它们添加到设置中的“排除文件夹”中<br>2.将 .nodupfinder 文件放在要排除的任何文件夹中",
     "Can I recover deleted files?" : "我可以恢复已删除的文件吗？",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "是的，通过 Duplicate Finder 删除的所有文件都可以在管理员设置的保留期内从Nextcloud 回收站中恢复。",
     "Technical & Performance" : "技术 & 性能",

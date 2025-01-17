@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Buscador de duplicaos",
     "Duplicate Finder Settings" : "Configuración del buscador de duplicaos",
+    "Filters" : "Filtros",
     "Help" : "Ayuda",
     "All general settings to modify Duplicate Finder behaviors." : "Toles opciones xenerales pa modificar el comportamientu del buscador de duplicaos",
     "Ignore Mounted Files" : "Inorar los ficheros montaos",

@@ -3,7 +3,8 @@ OC.L10N.register(
     {
     "Duplicate Finder" : "Duplikatfinder",
     "Duplicate Finder Settings" : "Duplikatfinder Einstellungen",
-    "FAQ" : "Benötigt keine Übersetzung. Hier wird nur die formelle Übersetzung verwendet (de_DE).",
+    "Filters" : "Filter",
+    "FAQ" : "FAQ",
     "Help" : "Hilfe",
     "All general settings to modify Duplicate Finder behaviors." : "Allgemeine Einstellungen rund um das Verhalten von Duplikatfinder.",
     "Ignore Mounted Files" : "Ignoriere eingebundene Dateien",
