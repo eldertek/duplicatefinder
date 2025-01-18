@@ -1,6 +1,7 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "Filters" : "Filtrai",
     "FAQ" : "DUK",
     "Help" : "Pagalba",
     "Could not fetch settings" : "Nepavyko gauti nustatymų",
