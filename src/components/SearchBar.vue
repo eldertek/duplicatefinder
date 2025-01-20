@@ -61,7 +61,7 @@ export default {
         case 'regex':
           return t('duplicatefinder', 'Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)')
         default:
-          return t('duplicatefinder', 'Search duplicates...')
+          return t('duplicatefinder', 'Search duplicates…')
       }
     }
   },
