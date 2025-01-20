@@ -3,7 +3,7 @@
     <div v-if="!previewResults" class="bulk-deletion__content">
       <div class="summary-section">
         <NcEmptyContent
-          :title="t('duplicatefinder', 'Bulk Delete Duplicates')"
+          :title="t('duplicatefinder', 'Bulk delete duplicates')"
           :description="t('duplicatefinder', 'Preview and delete multiple duplicates at once while preserving files in protected folders.')"
           :icon="'icon-delete'">
           <template #action>
@@ -12,7 +12,7 @@
                 <template #icon>
                   <NcLoadingIcon v-if="isLoading" />
                 </template>
-                {{ t('duplicatefinder', 'Start Preview') }}
+                {{ t('duplicatefinder', 'Start preview') }}
               </NcButton>
             </div>
           </template>
@@ -27,25 +27,25 @@
             'Total files to delete: {count}, Space that will be freed: {size}',
             { count: totalFilesToDelete, size: formatBytes(totalSpaceFreed) }) }}</p>
           <div v-if="isLoading" class="loading-info">
-            {{ t('duplicatefinder', 'Loading page {current} of {total}...', 
+            {{ t('duplicatefinder', 'Loading page {current} of {total}…', 
               { current: currentPage, total: previewResults.pagination.totalPages }) }}
           </div>
           <div class="summary-actions">
             <NcButton type="tertiary" @click="toggleSelectAll">
-              {{ isAllSelected ? t('duplicatefinder', 'Unselect All') : t('duplicatefinder', 'Select All') }}
+              {{ isAllSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
             </NcButton>
             <NcButton type="error" @click="confirmBulkDelete" 
               :disabled="isLoading || !hasSelectedFiles">
               <template #icon>
                 <NcLoadingIcon v-if="isLoading" />
               </template>
-              {{ t('duplicatefinder', 'Delete Selected Files') }}
+              {{ t('duplicatefinder', 'Delete selected files') }}
             </NcButton>
           </div>
         </template>
         <template v-else>
           <NcEmptyContent
-            :title="t('duplicatefinder', 'No Duplicates Found')"
+            :title="t('duplicatefinder', 'No duplicates found')"
             :description="t('duplicatefinder', 'No duplicate files were found that can be deleted. This could be because there are no duplicates, or all duplicates are in protected folders.')"
             :icon="'icon-info'">
             <template #action>
@@ -69,7 +69,7 @@
                   type="checkbox"
                   name="group-select">
                   <span class="group-title">
-                    {{ t('duplicatefinder', 'Duplicate Group') }}
+                    {{ t('duplicatefinder', 'Duplicate group') }}
                     <span class="group-stats">
                       ({{ t('duplicatefinder', '{selected} of {total} files selected', 
                         { 
