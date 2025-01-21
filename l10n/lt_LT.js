@@ -6,6 +6,8 @@ OC.L10N.register(
     "Help" : "Pagalba",
     "Could not fetch settings" : "Nepavyko gauti nustatymų",
     "Settings saved" : "Nustatymai įrašyti",
+    "Select all" : "Pažymėti viską",
+    "Delete selected files" : "Ištrinti pažymėtus failus",
     "Back" : "Atgal",
     "Show Preview" : "Rodyti peržiūrą",
     "File hash copied to clipboard" : "Failo maiša nukopijuota į iškarpinę",
