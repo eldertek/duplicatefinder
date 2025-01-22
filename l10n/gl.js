@@ -33,6 +33,7 @@ OC.L10N.register(
     "All duplicates found" : "Atopáronse todos os duplicados:",
     "Could not initiate duplicate search" : "Non foi posíbel iniciar a busca de duplicados",
     "Unselect all" : "Deseleccionar todo",
+    "Select all" : "Seleccionar todo",
     "Delete selected files" : "Eliminar os ficheiros seleccionados",
     "Back" : "Atrás",
     "Duplicate group" : "Grupo duplicado",

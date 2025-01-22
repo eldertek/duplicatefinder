@@ -35,6 +35,7 @@
     "Preview and delete multiple duplicates at once while preserving files in protected folders." : "Preview and delete multiple duplicates at once while preserving files in protected folders.",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Total files to delete: {count}, Space that will be freed: {size}",
     "Unselect all" : "Unselect all",
+    "Select all" : "Select all",
     "Delete selected files" : "Delete selected files",
     "No duplicate files were found that can be deleted. This could be because there are no duplicates, or all duplicates are in protected folders." : "No duplicate files were found that can be deleted. This could be because there are no duplicates, or all duplicates are in protected folders.",
     "Back" : "Back",

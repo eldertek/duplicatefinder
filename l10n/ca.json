@@ -26,6 +26,8 @@
     "Duplicates search initiated (this may take a while)" : "S'ha iniciat la cerca de duplicats (això pot trigar una estona)",
     "All duplicates found" : "S'han trobat tots els duplicats",
     "Could not initiate duplicate search" : "No s'ha pogut iniciar la cerca de duplicats",
+    "Unselect all" : "Anul·la tota la selecció",
+    "Select all" : "Selecciona-ho tot",
     "Back" : "Torna",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Benvingut, el duplicat actual té {numberOfFiles} fitxers, mida total: {formattedSize}",
     "Show Preview" : "Mostra la previsualització",

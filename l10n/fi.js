@@ -37,6 +37,7 @@ OC.L10N.register(
     "Preview and delete multiple duplicates at once while preserving files in protected folders." : "Esikatsele ja poista useita kaksoiskappaleita kerralla, säästäen tiedostot suojatuissa kansioissa.",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Poistettavien tiedostojen kokonaismäärä: {count}, vapautuva tallennustila: {size}",
     "Unselect all" : "Poista valinnat",
+    "Select all" : "Valitse kaikki",
     "Delete selected files" : "Poista valitut tiedostot",
     "No duplicate files were found that can be deleted. This could be because there are no duplicates, or all duplicates are in protected folders." : "Poistettavia tiedostojen kaksoiskappaleita ei löytynyt. Tämä voi johtua siitä, että kaksoiskappaleita ei ole tai kaikki kaksoiskappaleet sijaitsecat suojatuissa kansioissa.",
     "Back" : "Takaisin",

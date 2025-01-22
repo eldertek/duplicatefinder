@@ -7,6 +7,7 @@ OC.L10N.register(
     "Help" : "Laguntza",
     "Settings saved" : "Ezarpenak gordeta",
     "Unselect all" : "Desautatu dena",
+    "Select all" : "Hautatu dena",
     "Delete selected files" : "Ezabatu hautatutako fitxategiak",
     "Back" : "Itzuli",
     "Duplicate group" : "Bikoiztu taldea",

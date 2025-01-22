@@ -35,6 +35,7 @@
     "Preview and delete multiple duplicates at once while preserving files in protected folders." : "Previsualizar y eliminar múltiples duplicados al mismo tiempo, mientras que se preservan los archivos en las carpetas protegidas.",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Total de archivos a eliminar: {count}, Espacio que se liberará: {size}",
     "Unselect all" : "Deseleccionar todos",
+    "Select all" : "Seleccionar todo",
     "Delete selected files" : "Eliminar archivos seleccionados",
     "No duplicate files were found that can be deleted. This could be because there are no duplicates, or all duplicates are in protected folders." : "No se han encontrado archivos duplicados que puedan ser eliminados. Esto puede deberse a que no hay duplicados, o, todos los duplicados se encuentran en carpetas protegidas.",
     "Back" : "Atrás",
