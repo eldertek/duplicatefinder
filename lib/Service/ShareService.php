@@ -63,25 +63,40 @@ class ShareService
 
     public function hasAccessRight(Node $sharedNode, string $user) : ?string
     {
-        $accessList = $this->shareManager->getAccessList($sharedNode, true, true);
-        if (isset($accessList['users']) && isset($accessList['users'][$user])) {
-            $node = $sharedNode;
-            $stripedFolders = 0;
-            while ($node) {
-                $shares = $this->getShares($user, $node, 1);
-                if (!empty($shares)) {
-                    $this->logger->debug('Target Path: @'.$shares[0]->getTarget().'@ '.$shares[0]->getNodeType());
-                    return PathConversionUtils::convertSharedPath(
-                        $this->rootFolder->getUserFolder($user),
-                        $this->rootFolder->getUserFolder($shares[0]->getSharedWith()),
-                        $sharedNode,
-                        $shares[0],
-                        $stripedFolders
-                    );
+        $this->logger->debug('ShareService::hasAccessRight - Checking access rights', [
+            'user' => $user,
+            'node_path' => $sharedNode->getPath(),
+            'node_owner' => $sharedNode->getOwner() ? $sharedNode->getOwner()->getUID() : 'null'
+        ]);
+
+        try {
+            $accessList = $this->shareManager->getAccessList($sharedNode, true, true);
+            $this->logger->debug('ShareService::hasAccessRight - Access list retrieved', [
+                'has_user_access' => isset($accessList['users']) && isset($accessList['users'][$user]),
+                'access_list_users' => isset($accessList['users']) ? array_keys($accessList['users']) : []
+            ]);
+
+            if (isset($accessList['users']) && isset($accessList['users'][$user])) {
+                $node = $sharedNode;
+                $stripedFolders = 0;
+                while ($node) {
+                    $shares = $this->getShares($user, $node, 1);
+                    if (!empty($shares)) {
+                        $this->logger->debug('Target Path: @'.$shares[0]->getTarget().'@ '.$shares[0]->getNodeType());
+                        return PathConversionUtils::convertSharedPath(
+                            $this->rootFolder->getUserFolder($user),
+                            $this->rootFolder->getUserFolder($shares[0]->getSharedWith()),
+                            $sharedNode,
+                            $shares[0],
+                            $stripedFolders
+                        );
+                    }
+                    $node = $node->getParent();
+                    $stripedFolders++;
                 }
-                $node = $node->getParent();
-                $stripedFolders++;
             }
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to check access rights', ['exception'=> $e]);
         }
         return null;
     }

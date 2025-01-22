@@ -688,17 +688,40 @@ class FileInfoService
 
     public function hasAccessRight(FileInfo $fileInfo, string $user): bool
     {
+        $this->logger->debug('FileInfoService::hasAccessRight - Starting access check', [
+            'user' => $user,
+            'file_owner' => $fileInfo->getOwner(),
+            'file_path' => $fileInfo->getPath()
+        ]);
+
         if ($fileInfo->getOwner() === $user) {
+            $this->logger->debug('FileInfoService::hasAccessRight - User is owner, granting access');
             return true;
         }
 
         try {
-            $path = $this->shareService->hasAccessRight(
-                $this->folderService->getNodeByFileInfo($fileInfo, $user),
-                $user
-            );
+            $node = $this->folderService->getNodeByFileInfo($fileInfo, $user);
+            $this->logger->debug('FileInfoService::hasAccessRight - Got node for file', [
+                'node_path' => $node->getPath(),
+                'node_type' => get_class($node)
+            ]);
+
+            $path = $this->shareService->hasAccessRight($node, $user);
+            $this->logger->debug('FileInfoService::hasAccessRight - Share service response', [
+                'has_access' => !is_null($path),
+                'resolved_path' => $path
+            ]);
             return !is_null($path);
         } catch (NotFoundException $e) {
+            $this->logger->debug('FileInfoService::hasAccessRight - Node not found', [
+                'exception' => $e->getMessage()
+            ]);
+            return false;
+        } catch (\Throwable $e) {
+            $this->logger->error('FileInfoService::hasAccessRight - Unexpected error', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return false;
         }
     }

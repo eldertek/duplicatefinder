@@ -210,20 +210,32 @@ class FileDuplicateService
         FileDuplicate $duplicate,
         string $user
     ): FileDuplicate {
-        $this->logger->debug('Stripping files without access rights for user: {user}', ['user' => $user]);
+        $this->logger->debug('FileDuplicateService::stripFilesWithoutAccessRights - Starting', [
+            'user' => $user,
+            'hash' => $duplicate->getHash(),
+            'type' => $duplicate->getType()
+        ]);
         
         $files = $this->fileInfoService->findByHash($duplicate->getHash(), $duplicate->getType());
-        $accessibleFiles = [];
+        $this->logger->debug('FileDuplicateService::stripFilesWithoutAccessRights - Found files', [
+            'total_files' => count($files)
+        ]);
 
+        $accessibleFiles = [];
         foreach ($files as $fileInfo) {
+            $this->logger->debug('FileDuplicateService::stripFilesWithoutAccessRights - Checking file', [
+                'path' => $fileInfo->getPath(),
+                'owner' => $fileInfo->getOwner()
+            ]);
+
             if ($this->fileInfoService->hasAccessRight($fileInfo, $user)) {
                 $accessibleFiles[] = $fileInfo;
             }
         }
 
-        $this->logger->debug('Found {count} accessible files out of {total}', [
-            'count' => count($accessibleFiles),
-            'total' => count($files)
+        $this->logger->debug('FileDuplicateService::stripFilesWithoutAccessRights - Results', [
+            'accessible_count' => count($accessibleFiles),
+            'total_count' => count($files)
         ]);
 
         $duplicate->setFiles($accessibleFiles);
