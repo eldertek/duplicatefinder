@@ -43,12 +43,25 @@ class ShareService
         }
         foreach ($shareTypes as $shareType) {
             try {
-                $shares = array_merge($shares, $this->shareManager->getSharedWith(
+                $newShares = $this->shareManager->getSharedWith(
                     $user,
                     $shareType,
                     $node,
                     $limit
-                ));
+                );
+
+                // For room shares, log at debug level and skip
+                if ($shareType === IShare::TYPE_ROOM) {
+                    foreach ($newShares as $share) {
+                        $this->logger->debug('Skipping Talk room share', [
+                            'share_with' => $share->getSharedWith(),
+                            'node_path' => $share->getNode()->getPath()
+                        ]);
+                    }
+                    continue;
+                }
+
+                $shares = array_merge($shares, $newShares);
             } catch (\Throwable $e) {
                 $this->logger->error('Failed to get shares', ['exception'=> $e]);
             }
