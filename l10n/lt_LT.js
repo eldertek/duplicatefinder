@@ -10,6 +10,7 @@ OC.L10N.register(
     "Delete selected files" : "Ištrinti pažymėtus failus",
     "Back" : "Atgal",
     "Show Preview" : "Rodyti peržiūrą",
+    "Copy File Hash" : "Kopijuoti failo maišą",
     "File hash copied to clipboard" : "Failo maiša nukopijuota į iškarpinę",
     "File" : "Failas",
     "Path:" : "Kelias:",
