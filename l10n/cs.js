@@ -104,7 +104,7 @@ OC.L10N.register(
     "Search duplicates…" : "Hledat duplicity…",
     "Search FAQ" : "Časté dotazy ohledně hledání",
     "Type to search..." : "Hledejte psaním…",
-    "No results found" : "Nenalezeny žádné výsledky",
+    "No results found" : "Nic nenalezeno",
     "Try adjusting your search terms" : "Zkuste upravit vámi vyhledávané pojmy",
     "General Questions" : "Obecné otázky",
     "What is Duplicate Finder?" : "Co je Hledání duplicit",
