@@ -1,7 +1,13 @@
 OC.L10N.register(
     "duplicatefinder",
     {
+    "Duplicate Finder" : "Hľadanie duplicít",
+    "Duplicate Finder Settings" : "Nastavenia Hľadania duplicíť",
     "Filters" : "Filtre",
+    "Origin Folders" : "Pôvodné adresáre",
+    "Excluded Folders" : "Vynechané Adresáre",
+    "Getting Started" : "Začíname",
+    "Usage Examples" : "Príklady použitia",
     "FAQ" : "FAQ",
     "Help" : "Pomoc",
     "Settings saved" : "Nastavenia uložené",
