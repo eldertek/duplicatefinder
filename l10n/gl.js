@@ -248,7 +248,7 @@ OC.L10N.register(
     "Automatic Detection" : "Detección automática",
     "Files are automatically scanned when uploaded or modified" : "Os ficheiros son escaneados automaticamente cando se envían ou modifican",
     "Background jobs regularly scan for new duplicates" : "Os tarefas en segundo plano escanean regularmente na busca de novos duplicados",
-    "Manual scans can be triggered from settings" : "Pódense iniciar buscas manuais desde os axustes",
+    "Manual scans can be triggered from settings" : "Pódense activar buscas manuais desde os axustes",
     "View all duplicates in the \"Unacknowledged\" and \"Acknowledged\" sections" : "Ver todos os duplicados nas seccións Non recoñecidos e Recoñecidos",
     "Select which copies to delete while keeping the originals" : "Seleccionar que copias eliminar conservando os orixinais",
     "Mark duplicates as acknowledged to organize them better" : "Marcar os duplicados como recoñecidos para organizalos mellor",
