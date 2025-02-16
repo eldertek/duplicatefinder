@@ -43,6 +43,7 @@ OC.L10N.register(
     "No results found" : "No s'han trobat resultats",
     "Previous" : "Anterior",
     "Next" : "Següent",
+    "Note:" : "Nota:",
     "Advanced Settings" : "Paràmetres avançats",
     "Duplicate acknowledged successfully" : "El duplicat s'ha reconegut correctament",
     "File not found" : "No s'ha trobat el fitxer"
