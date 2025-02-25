@@ -252,7 +252,7 @@ OC.L10N.register(
     "View all duplicates in the \"Unacknowledged\" and \"Acknowledged\" sections" : "Vis alle dubletter i sektionerne \"Ikke anerkendt\" og \"Anerkendt\"",
     "Select which copies to delete while keeping the originals" : "Vælg hvilke kopier der skal slettes mens originalerne bevares",
     "Mark duplicates as acknowledged to organize them better" : "Marker dubletter som anerkendt for at organisere dem bedre",
-    "Use \"Bulk Delete\" feature to handle multiple duplicates at once" : "Brug \"Masseslet\" funktionen til at håndtere flere dubletter på én gang",
+    "Use \"Bulk Delete\" feature to handle multiple duplicates at once" : "Brug \"Masseslet\" funktionen til at håndtere flere dubletter på en gang",
     "Select multiple files for deletion in a single operation" : "Vælg flere filer til sletning i en enkelt handling",
     "Review your selection before confirming deletion" : "Gennemgå dit valg før bekræftelse af sletning",
     "Filter Management" : "Filterhåndtering",
