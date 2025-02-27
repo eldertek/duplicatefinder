@@ -2,10 +2,9 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Duplicate Finder" : "Bikoiztuen bilatzailea",
-    "Filters" : "Iragazkiak",
     "FAQ" : "FAQ",
     "Help" : "Laguntza",
-    "Settings saved" : "Ezarpenak gordeta",
+    "Filters" : "Iragazkiak",
     "Unselect all" : "Desautatu dena",
     "Select all" : "Hautatu dena",
     "Delete selected files" : "Ezabatu hautatutako fitxategiak",
@@ -24,8 +23,8 @@ OC.L10N.register(
     "No results found" : "Ez da emaitzarik aurkitu",
     "Previous" : "Aurrekoa",
     "Next" : "Hurrengoa",
-    "Note:" : "Oharra:",
     "Advanced Settings" : "Ezarpen aurreratuak",
+    "Note:" : "Oharra:",
     "File not found" : "Ez da fitxategia aurkitu"
 },
 "nplurals=2; plural=(n != 1);");

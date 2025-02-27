@@ -1,9 +1,8 @@
 OC.L10N.register(
     "duplicatefinder",
     {
-    "Filters" : "Filters",
     "Help" : "Help",
-    "Settings saved" : "Instellingen opgeslagen",
+    "Filters" : "Filters",
     "Unselect all" : "Alle deselecteren",
     "Select all" : "Alles selecteren",
     "Back" : "Terug",
@@ -14,8 +13,8 @@ OC.L10N.register(
     "No results found" : "Geen resultaten gevonden",
     "Previous" : "Vorige",
     "Next" : "Volgende",
-    "Note:" : "Notitie:",
     "Advanced Settings" : "Geavanceerde instellingen",
+    "Note:" : "Notitie:",
     "File not found" : "Bestand niet gevonden"
 },
 "nplurals=2; plural=(n != 1);");

@@ -1,15 +1,13 @@
 OC.L10N.register(
     "duplicatefinder",
     {
-    "Filters" : "Filter",
     "FAQ" : "FAQ",
     "Help" : "Hjälp",
+    "Filters" : "Filter",
+    "Could not fetch settings" : "Det gick inte att hämta inställningarna",
     "Ignore Mounted Files" : "Ignorera monterade filer",
     "When true, files mounted on external storage will be ignored." : "När sant, kommer filer monterade på extern lagring att ignoreras.",
     "Ignore mounted file" : "Ignorera monterad fil",
-    "Could not fetch settings" : "Det gick inte att hämta inställningarna",
-    "Settings saved" : "Inställningar sparade",
-    "Could not save settings" : "Det gick inte att spara inställningarna",
     "Unselect all" : "Avmarkera alla",
     "Select all" : "Välj alla",
     "Back" : "Tillbaka",
@@ -24,8 +22,8 @@ OC.L10N.register(
     "No results found" : "Inga resultat funna",
     "Previous" : "Föregående",
     "Next" : "Nästa",
-    "Note:" : "Notering:",
     "Advanced Settings" : "Avancerade inställningar",
+    "Note:" : "Notering:",
     "File not found" : "Filen kunde inte hittas"
 },
 "nplurals=2; plural=(n != 1);");

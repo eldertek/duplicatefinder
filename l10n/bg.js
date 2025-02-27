@@ -1,10 +1,9 @@
 OC.L10N.register(
     "duplicatefinder",
     {
-    "Filters" : "Филтри",
     "FAQ" : "ЧЗВ",
     "Help" : "Помощ",
-    "Settings saved" : "Настройките са запазени",
+    "Filters" : "Филтри",
     "Unselect all" : "Отмяна на избора на всички",
     "Select all" : "Избери всички",
     "Delete selected files" : "Изтриване на избраните файлове",

@@ -1,7 +1,8 @@
 { "translations": {
-    "Filters" : "Szűrők",
     "FAQ" : "GYIK",
     "Help" : "Súgó",
+    "Filters" : "Szűrők",
+    "Could not fetch settings" : "Nem sikerült lekérni a beállításokat",
     "Ignore Mounted Files" : "Felcsatolt fájlok figyelmen kívül hagyása",
     "When true, files mounted on external storage will be ignored." : "Ha igaz, a külső tárolókon lévő fájlok kihagyásra kerülnek.",
     "Ignore mounted file" : "Felcsatolt fájl figyelmen kívül hagyása",
@@ -11,9 +12,6 @@
     "Background Job Cleanup Interval (seconds)" : "Háttérfeladatok takarítási intervallum (másodpercben)",
     "Background Job Find Duplicates Interval (seconds)" : "Duplikációkeresés háttérfeladat intervallum (másodpercben)",
     "The interval in seconds for the find duplicates background job." : "A duplikációkeresés háttérfeladat intervalluma másodpercben.",
-    "Could not fetch settings" : "Nem sikerült lekérni a beállításokat",
-    "Settings saved" : "Beállítások mentve",
-    "Could not save settings" : "Nem sikerült elmenteni a beállításokat",
     "Unselect all" : "Kijelölés megszüntetése",
     "Delete selected files" : "Kijelölt fájlok törlése",
     "Back" : "Vissza",
@@ -28,8 +26,8 @@
     "No results found" : "Nincs találat",
     "Previous" : "Előző",
     "Next" : "Következő",
-    "Note:" : "Megjegyzés:",
     "Advanced Settings" : "Speciális beállítások",
+    "Note:" : "Megjegyzés:",
     "File not found" : "A fájl nem található"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }
