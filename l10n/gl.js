@@ -109,6 +109,7 @@ OC.L10N.register(
     "How can I protect important files from deletion?" : "Como podo protexer os ficheiros importantes da eliminación?",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "Use a función Cartafoles de orixe nos axustes. Os ficheiros destes cartafoles nunca se marcarán como duplicados para a eliminación, asegurando que os seus ficheiros orixinais estean sempre protexidos.",
     "How can I exclude folders from scanning?" : "Como podo excluír os cartafoles do escaneo?",
+    "You can exclude folders in two ways:\n\n1. Add them to Excluded Folders in settings\n2. Place a .nodupefinder file in any folder you want to exclude" : "Pode excluír cartafoles de dous xeitos:\n\n1. Engadilos aos cartafoles excluídos nos axustes\n2. Colocar un ficheiro .nodupefinder en calquera cartafol que queira excluír",
     "Can I recover deleted files?" : "Podo recuperar ficheiros eliminados?",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "Si, todos os ficheiros eliminados a través do Buscador de duplicados pódense recuperar do seu cesto do lixo de NextCloud durante o período de retención definido pola administración da súa instancia.",
     "How can I prevent specific files from being scanned?" : "Como podo evitar que ficheiros específicos sexan escaneados?",

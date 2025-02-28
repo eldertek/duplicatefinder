@@ -109,6 +109,7 @@ OC.L10N.register(
     "How can I protect important files from deletion?" : "Önemli dosyaların silinmesini nasıl önleyebilirim?",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "Ayarlardaki kaynak klasörler özelliğini kullanın. Bu klasörlerdeki dosyalar asla çift olarak işaretlenmez ve silinmez. Böylece özgün dosyalarınızın korunduğundan emin olursunuz.",
     "How can I exclude folders from scanning?" : "Klasörlerin taramaya katılmasını nasıl engelleyebilirim?",
+    "You can exclude folders in two ways:\n\n1. Add them to Excluded Folders in settings\n2. Place a .nodupefinder file in any folder you want to exclude" : "Katılmayacak klasörleri iki şekilde belirleyebilirsiniz:\n\n1. Bunları ayarlar bölümünden katılmayacak klasörler olarak ekleyin\n2. Katılmasını istemediğiniz bir klasöre bir .nodupefinder dosyası yerleştirin",
     "Can I recover deleted files?" : "Silinmiş dosyaları geri yükleyebilir miyim?",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "Evet, Çift bulucu ile silinen tüm dosyalar, yöneticiniz tarafından belirlenen saklama süresi boyunca Nextcloud çöp kutunuzdan geri yüklenebilir.",
     "How can I prevent specific files from being scanned?" : "Belirli dosyaların taramaya katılmasını nasıl engelleyebilirim?",
