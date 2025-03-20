@@ -109,6 +109,7 @@ OC.L10N.register(
     "How can I protect important files from deletion?" : "Ako môžem chrániť dôležité súbory pred odstránením?",
     "Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected." : "Použite funkciu Originálne adresáre v nastaveniach. Súbory v týchto adresároch nebudú nikdy označené ako duplikáty na odstránenie, čím sa zabezpečí, že vaše originálne súbory budú vždy chránené.",
     "How can I exclude folders from scanning?" : "Ako môžem vyňať adresáre zo skenovania?",
+    "You can exclude folders in two ways:\n\n1. Add them to Excluded Folders in settings\n2. Place a .nodupefinder file in any folder you want to exclude" : "Adresáre môžete vylúčiť dvoma spôsobmi:\n\n1. Pridajte ich do Vylúčených adresárov v nastaveniach\n2. Umiestnite súbor .nodupefinder do ľubovoľného adresára, ktorý chcete vylúčiť",
     "Can I recover deleted files?" : "Môžem obnoviť zmazané súbory?",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "Áno, všetky súbory odstránené pomocou nástroja Duplicate Finder je možné obnoviť z koša Nextcloud počas doby uchovávania nastavenej administrátorom.",
     "How can I prevent specific files from being scanned?" : "Ako môžem chrániť konkrétne súbory pred skenovaním?",
