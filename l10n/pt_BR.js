@@ -197,7 +197,7 @@ OC.L10N.register(
     "Using File Hash Filters" : "Uso de Filtros de Hash de Arquivo",
     "1. Open the duplicate details of a file you want to exclude" : "1. Abra os detalhes da duplicata de um arquivo que você deseja excluir",
     "2. Copy the file hash from the details view" : "2. Copie o hash do arquivo da exibição de detalhes",
-    "3. Switch to the File Hash tab in Filters" : "3. Alterne para a guia Hash de arquivo em Filtros",
+    "3. Switch to the File Hash tab in Filters" : "3. Alterne para a aba Hash de arquivo em Filtros",
     "4. Paste the hash and click \"Add Filter\"" : "4. Cole o hash e clique em \"Adicionar Filtro\"",
     "Using File Name Patterns" : "Uso de Padrões de Nome de Arquivo",
     "1. Switch to the File Name Pattern tab in Filters" : "1. Vá para a guia Padrão de Nome de Arquivo em Filtros",
