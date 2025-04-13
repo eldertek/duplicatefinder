@@ -4,8 +4,18 @@
             <!-- Search Bar -->
             <SearchBar @search="handleSearch" />
 
+            <!-- Sort Dropdown -->
+            <div class="sort-container">
+                <label for="sort-select">{{ t('duplicatefinder', 'Sort by:') }}</label>
+                <select id="sort-select" v-model="sortOption" @change="handleSortChange">
+                    <option value="none">{{ t('duplicatefinder', 'Default') }}</option>
+                    <option value="size-desc">{{ t('duplicatefinder', 'Size (largest first)') }}</option>
+                    <option value="size-asc">{{ t('duplicatefinder', 'Size (smallest first)') }}</option>
+                </select>
+            </div>
+
             <!-- Bulk Delete Button -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Bulk Delete')" 
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Bulk Delete')"
                 :active="activeView === 'bulk-delete'"
                 @click="$emit('open-bulk-delete')">
                 <template #icon>
@@ -21,8 +31,8 @@
             </NcAppNavigationItem>
 
             <!-- Help Section -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Help')" 
-                :allowCollapse="true" 
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Help')"
+                :allowCollapse="true"
                 :open="false">
                 <template #icon>
                     <HelpCircle :size="20" />
@@ -52,8 +62,8 @@
             </NcAppNavigationItem>
 
             <!-- Navigation for Acknowledged Duplicates -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Acknowledged')" 
-                :allowCollapse="true" 
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Acknowledged')"
+                :allowCollapse="true"
                 :open="true">
                 <template #icon>
                     <CheckCircle :size="20" />
@@ -61,8 +71,8 @@
                 <template>
                     <div v-show="filteredAcknowledgedDuplicates.length > 0">
                         <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
-                            <DuplicateListItem 
-                                :duplicate="duplicate" 
+                            <DuplicateListItem
+                                :duplicate="duplicate"
                                 :isActive="currentDuplicateId === duplicate.id"
                                 @duplicate-selected="openDuplicate"
                                 @duplicate-resolved="handleDuplicateResolved" />
@@ -78,8 +88,8 @@
             </NcAppNavigationItem>
 
             <!-- Navigation for Unacknowledged Duplicates -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Unacknowledged')" 
-                :allowCollapse="true" 
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Unacknowledged')"
+                :allowCollapse="true"
                 :open="true"
                 :active="activeView === 'details'">
                 <template #icon>
@@ -88,8 +98,8 @@
                 <template>
                     <div v-show="filteredUnacknowledgedDuplicates.length > 0">
                         <div v-for="duplicate in filteredUnacknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
-                            <DuplicateListItem 
-                                :duplicate="duplicate" 
+                            <DuplicateListItem
+                                :duplicate="duplicate"
                                 :isActive="currentDuplicateId === duplicate.id"
                                 @duplicate-selected="openDuplicate"
                                 @duplicate-resolved="handleDuplicateResolved" />
@@ -120,16 +130,17 @@ import School from 'vue-material-design-icons/School';
 import PlayCircle from 'vue-material-design-icons/PlayCircle';
 import FrequentlyAskedQuestions from 'vue-material-design-icons/FrequentlyAskedQuestions';
 import { fetchDuplicates } from '@/tools/api';
+import { getTotalSizeOfDuplicate } from '@/tools/utils';
 
 export default {
-    components: { 
-        DuplicateListItem, 
+    components: {
+        DuplicateListItem,
         SearchBar,
-        NcAppNavigation, 
-        NcAppNavigationItem, 
+        NcAppNavigation,
+        NcAppNavigationItem,
         NcButton,
-        CheckCircle, 
-        CloseCircle, 
+        CheckCircle,
+        CloseCircle,
         Cog,
         Delete,
         HelpCircle,
@@ -167,6 +178,7 @@ export default {
             acknowledgedPage: 1,
             unacknowledgedPage: 1,
             limit: 50,
+            sortOption: 'none',
         };
     },
     computed: {
@@ -177,20 +189,59 @@ export default {
             return this.unacknowledgedPagination.currentPage < this.unacknowledgedPagination.totalPages;
         },
         filteredUnacknowledgedDuplicates() {
-            return this.unacknowledgedDuplicates.filter(duplicate => {
+            // First filter by search pattern
+            const filtered = this.unacknowledgedDuplicates.filter(duplicate => {
                 return this.filterDuplicate(duplicate);
             });
+
+            // Then apply sorting if needed
+            return this.sortDuplicates(filtered);
         },
         filteredAcknowledgedDuplicates() {
-            return this.acknowledgedDuplicates.filter(duplicate => {
+            // First filter by search pattern
+            const filtered = this.acknowledgedDuplicates.filter(duplicate => {
                 return this.filterDuplicate(duplicate);
             });
+
+            // Then apply sorting if needed
+            return this.sortDuplicates(filtered);
         }
     },
     methods: {
         handleSearch({ query, type }) {
             this.searchPattern = query;
             this.searchType = type;
+        },
+        handleSortChange() {
+            // This method is called when the sort option changes
+            // The actual sorting is done in the computed properties
+            console.log('Sort option changed to:', this.sortOption);
+        },
+        sortDuplicates(duplicates) {
+            if (this.sortOption === 'none') {
+                return duplicates; // No sorting, return as is
+            }
+
+            // Create a copy to avoid mutating the original array
+            const sortedDuplicates = [...duplicates];
+
+            if (this.sortOption === 'size-desc') {
+                // Sort by size, largest first
+                return sortedDuplicates.sort((a, b) => {
+                    const sizeA = getTotalSizeOfDuplicate(a);
+                    const sizeB = getTotalSizeOfDuplicate(b);
+                    return sizeB - sizeA; // Descending order
+                });
+            } else if (this.sortOption === 'size-asc') {
+                // Sort by size, smallest first
+                return sortedDuplicates.sort((a, b) => {
+                    const sizeA = getTotalSizeOfDuplicate(a);
+                    const sizeB = getTotalSizeOfDuplicate(b);
+                    return sizeA - sizeB; // Ascending order
+                });
+            }
+
+            return sortedDuplicates;
         },
         filterDuplicate(duplicate) {
             if (!this.searchPattern) {
@@ -283,6 +334,28 @@ export default {
     justify-content: left;
     padding: 10px;
     font-weight: normal;
+}
+
+/* Sort dropdown styling */
+.sort-container {
+    padding: 8px 12px;
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.sort-container label {
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+.sort-container select {
+    flex-grow: 1;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-main-background);
 }
 
 /* Ajustement de la marge de la barre de recherche */

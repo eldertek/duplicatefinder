@@ -4,11 +4,15 @@
             <div class="nav-thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }">
             </div>
         </template>
+        <template #extra>
+            <div class="file-size">{{ getFormattedSize }}</div>
+        </template>
     </NcAppNavigationItem>
 </template>
-  
+
 <script>
 import { NcAppNavigationItem } from '@nextcloud/vue';
+import { getFormattedSizeOfCurrentDuplicate } from '@/tools/utils';
 
 export default {
     components: { NcAppNavigationItem },
@@ -23,13 +27,16 @@ export default {
                 const pathParts = file.path.split('/');
                 return pathParts[pathParts.length - 1];
             });
-            
+
             // Check if all filenames are the same
             const allSameFilename = filenames.every(name => name === filenames[0]);
-            
+
             // If all files have the same name, return that name
             // Otherwise return a shortened version of the hash
             return allSameFilename ? filenames[0] : this.duplicate.hash.substring(0, 8);
+        },
+        getFormattedSize() {
+            return getFormattedSizeOfCurrentDuplicate(this.duplicate);
         }
     },
     methods: {
@@ -49,11 +56,11 @@ export default {
             if (isImageOrVideo && normalizedPath) {
                 // Construct query parameters for generating the preview
                 const query = new URLSearchParams({
-                    file: normalizedPath, 
-                    fileId: item.nodeId, 
-                    x: 500, 
-                    y: 500, 
-                    forceIcon: 0 
+                    file: normalizedPath,
+                    fileId: item.nodeId,
+                    x: 500,
+                    y: 500,
+                    forceIcon: 0
                 });
                 // Return the full URL to the preview image
                 return OC.generateUrl('/core/preview.png?') + query.toString();
@@ -65,7 +72,7 @@ export default {
     }
 }
 </script>
-  
+
 <style scoped>
 .is-active {
     background-color: #f0f0f0;
@@ -79,5 +86,12 @@ export default {
     border-radius: 4px;
     display: inline-block;
     margin-right: 8px;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    color: var(--color-text-maxcontrast);
+    white-space: nowrap;
+    margin-left: 4px;
 }
 </style>

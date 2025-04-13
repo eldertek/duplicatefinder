@@ -2,7 +2,7 @@ import { showErrorNotification } from "./notifications";
 
 /**
  * Normalize the item path to extract the relative path within the user's files.
- * 
+ *
  * @param {string} path - The full path of the item.
  * @returns {string} The normalized path or an empty string if no match.
  */
@@ -14,9 +14,9 @@ export function normalizeItemPath(path) {
 /**
  * Generate a URL for a preview image if the item is an image or video,
  * otherwise return the URL for the item's mimetype icon.
- * 
+ *
  * This function internally uses `normalizeItemPath` to ensure paths are correctly formatted.
- * 
+ *
  * @param {Object} item - The item for which to generate a preview image URL.
  * @returns {string} The URL to the preview image or mimetype icon.
  */
@@ -44,7 +44,7 @@ export function getPreviewImage(item) {
 
 /**
  * Remove a file from a list of files.
- * 
+ *
  * @param {Object} file - The file to remove from the list.
  * @param {Array} list - The list from which to remove the file.
  */
@@ -57,7 +57,7 @@ export function removeFileFromList(file, list) {
 
 /**
  * Remove multiple files from a list of files.
- * 
+ *
  * @param {Array} files - The files to remove from the list.
  * @param {Array} list - The list from which to remove the files.
  */
@@ -70,9 +70,9 @@ export function removeFilesFromList(files, list) {
     });
 }
 
-/** 
+/**
  * Remove a duplicate from a list of duplicates
- * 
+ *
  * @param {Object} duplicate - The duplicate to remove from the list.
  * @param {Array} acknowledgedDuplicates - The list of acknowledged duplicates.
  * @param {Array} unacknowledgedDuplicates - The list of unacknowledged duplicates.
@@ -119,8 +119,21 @@ export function removeDuplicateFromList(duplicate, acknowledgedDuplicates, unack
 }
 
 /**
+ * Get the total size of a duplicate in bytes.
+ *
+ * @param {Object} duplicate - The duplicate object.
+ * @returns {number} The total size in bytes.
+ */
+export function getTotalSizeOfDuplicate(duplicate) {
+    if (!duplicate || !duplicate.files) {
+        return 0;
+    }
+    return duplicate.files.reduce((acc, file) => acc + file.size, 0);
+}
+
+/**
  * Get the formatted size of the current duplicate.
- * 
+ *
  * @param {Object} currentDuplicate - The current duplicate.
  * @returns {string} The formatted size of the current duplicate.
  */
@@ -128,13 +141,13 @@ export function getFormattedSizeOfCurrentDuplicate(currentDuplicate) {
     if (!currentDuplicate) {
         return OC.Util.humanFileSize(0);
     }
-    const totalSize = currentDuplicate.files.reduce((acc, file) => acc + file.size, 0);
+    const totalSize = getTotalSizeOfDuplicate(currentDuplicate);
     return OC.Util.humanFileSize(totalSize);
 }
 
 /**
  * Open a file in the viewer.
- * 
+ *
  * @param {Object} file - The file to open in the viewer.
  */
 export function openFileInViewer(file) {
