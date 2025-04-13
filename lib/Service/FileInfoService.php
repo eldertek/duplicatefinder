@@ -8,7 +8,7 @@ use OCP\Files\Node;
 use OCP\Files\NotFoundException;
 use Symfony\Component\Console\Output\OutputInterface;
 use OCP\Lock\ILockingProvider;
-use OCP\Files\Storage\IStorage;
+
 use OCP\Files\IRootFolder;
 use OCP\IDBConnection;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -20,6 +20,7 @@ use OCA\DuplicateFinder\Event\CalculatedHashEvent;
 use OCA\DuplicateFinder\Event\UpdatedFileInfoEvent;
 use OCA\DuplicateFinder\Event\NewFileInfoEvent;
 use OCA\DuplicateFinder\Exception\UnableToCalculateHash;
+use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Utils\CMDUtils;
 use OCA\DuplicateFinder\Utils\ScannerUtil;
 
@@ -40,8 +41,13 @@ class FileInfoService
     private $scannerUtil;
     /** @var FilterService */
     private $filterService;
+    /** @var ExcludedFolderService */
+    private $excludedFolderService;
+    /** @var ILockingProvider */
     private $lockingProvider;
+    /** @var IRootFolder Used for file operations */
     private $rootFolder;
+    /** @var IDBConnection */
     private $connection;
 
     public function __construct(
@@ -54,7 +60,8 @@ class FileInfoService
         ScannerUtil $scannerUtil,
         ILockingProvider $lockingProvider,
         IRootFolder $rootFolder,
-        IDBConnection $connection
+        IDBConnection $connection,
+        ExcludedFolderService $excludedFolderService
     ) {
         $this->mapper = $mapper;
         $this->eventDispatcher = $eventDispatcher;
@@ -66,6 +73,7 @@ class FileInfoService
         $this->lockingProvider = $lockingProvider;
         $this->rootFolder = $rootFolder;
         $this->connection = $connection;
+        $this->excludedFolderService = $excludedFolderService;
     }
 
     /**
@@ -200,7 +208,7 @@ class FileInfoService
             try {
                 // Enrich and verify file existence
                 $enrichedFile = $this->enrich($fileInfo);
-                
+
                 // If the file still exists after enrichment (wasn't deleted during enrich)
                 if ($enrichedFile->getNodeId() !== null) {
                     $existingFiles[] = $enrichedFile;
@@ -268,7 +276,7 @@ class FileInfoService
 
             $fileInfo = $this->update($fileInfo, $fallbackUID);
             $this->eventDispatcher->dispatchTyped(new UpdatedFileInfoEvent($fileInfo, $fallbackUID));
-            
+
             $this->logger->debug('Updated existing FileInfo: {path}', [
                 'path' => $path,
                 'fileInfoId' => $fileInfo->getId(),
@@ -285,7 +293,7 @@ class FileInfoService
             $fileInfo->setKeepAsPrimary(true);
             $fileInfo = $this->mapper->insert($fileInfo);
             $fileInfo->setKeepAsPrimary(false);
-            
+
             $this->logger->debug('Created new FileInfo: {path}', [
                 'path' => $path,
                 'fileInfoId' => $fileInfo->getId(),
@@ -326,10 +334,10 @@ class FileInfoService
                     'id' => $fileInfo->getId(),
                     'path' => $fileInfo->getPath()
                 ]);
-                
+
                 try {
                     $existingFileInfo = $this->mapper->findById($fileInfo->getId());
-                    
+
                     $this->logger->debug('Found existing file info', [
                         'id' => $existingFileInfo->getId(),
                         'path' => $existingFileInfo->getPath(),
@@ -346,6 +354,18 @@ class FileInfoService
 
             // Try to delete the actual file first if it exists
             try {
+                // Set user context for any services that might need it
+                if ($fileInfo->getOwner()) {
+                    $this->logger->debug('Setting user context for file deletion', [
+                        'path' => $fileInfo->getPath(),
+                        'owner' => $fileInfo->getOwner()
+                    ]);
+                    // If we have services that need user context, set it here
+                    if (property_exists($this, 'excludedFolderService') && $this->excludedFolderService !== null) {
+                        $this->excludedFolderService->setUserId($fileInfo->getOwner());
+                    }
+                }
+
                 $node = $this->folderService->getNodeByFileInfo($fileInfo);
                 if ($node) {
                     $this->logger->debug('Attempting to delete physical file', [
@@ -370,7 +390,7 @@ class FileInfoService
 
             // Now delete the database entry
             $result = $this->mapper->delete($fileInfo);
-            
+
             $this->logger->debug('Successfully deleted file info from database', [
                 'path' => $fileInfo->getPath(),
                 'id' => $fileInfo->getId()
@@ -410,7 +430,7 @@ class FileInfoService
         ]);
 
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
-        
+
         $this->logger->debug('Retrieved node info for file: {path}', [
             'path' => $fileInfo->getPath(),
             'size' => $file->getSize(),
@@ -420,7 +440,7 @@ class FileInfoService
 
         $fileInfo->setSize($file->getSize());
         $fileInfo->setMimetype($file->getMimetype());
-        
+
         try {
             $owner = $file->getOwner()->getUID();
             $fileInfo->setOwner($owner);
@@ -428,6 +448,9 @@ class FileInfoService
                 'path' => $fileInfo->getPath(),
                 'owner' => $owner
             ]);
+
+            // Set the user context for the excluded folder service
+            $this->excludedFolderService->setUserId($owner);
         } catch (\Throwable $e) {
             $this->logger->debug('Error setting owner for file: {path}', [
                 'path' => $fileInfo->getPath(),
@@ -437,6 +460,8 @@ class FileInfoService
 
             if (!is_null($fallbackUID)) {
                 $fileInfo->setOwner($fallbackUID);
+                // Set the user context for the excluded folder service using fallback
+                $this->excludedFolderService->setUserId($fallbackUID);
             } elseif (!$fileInfo->getOwner()) {
                 throw $e;
             }
@@ -444,7 +469,7 @@ class FileInfoService
 
         $isIgnored = $this->filterService->isIgnored($fileInfo, $file);
         $fileInfo->setIgnored($isIgnored);
-        
+
         $this->logger->debug('Completed metadata update for file: {path}', [
             'path' => $fileInfo->getPath(),
             'size' => $fileInfo->getSize(),
@@ -496,8 +521,8 @@ class FileInfoService
         ) {
             $this->logger->debug('Recalculation required for file: {path}', [
                 'path' => $fileInfo->getPath(),
-                'reason' => empty($fileInfo->getFileHash()) ? 'no hash' : 
-                           ($file->getMtime() > $fileInfo->getUpdatedAt()->getTimestamp() ? 'modified' : 
+                'reason' => empty($fileInfo->getFileHash()) ? 'no hash' :
+                           ($file->getMtime() > $fileInfo->getUpdatedAt()->getTimestamp() ? 'modified' :
                            ($file->getUploadTime() > $fileInfo->getUpdatedAt()->getTimestamp() ? 'uploaded' : 'mounted'))
             ]);
             return $file->getInternalPath();
@@ -520,7 +545,7 @@ class FileInfoService
 
         $oldHash = $fileInfo->getFileHash();
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
-        
+
         $this->logger->debug('Retrieved node for file: {path}', [
             'path' => $fileInfo->getPath(),
             'nodeType' => $file ? get_class($file) : 'null',
@@ -528,7 +553,7 @@ class FileInfoService
         ]);
 
         $path = $this->isRecalculationRequired($fileInfo, $fallbackUID, $file);
-        
+
         $this->logger->debug('Recalculation check result for file: {path}', [
             'path' => $fileInfo->getPath(),
             'requiresRecalculation' => $path !== false ? 'true' : 'false',
@@ -544,7 +569,7 @@ class FileInfoService
                     ]);
 
                     $hash = $file->getStorage()->hash('sha256', $path);
-                    
+
                     $this->logger->debug('Hash calculation result for file: {path}', [
                         'path' => $fileInfo->getPath(),
                         'hashResult' => is_bool($hash) ? 'failed (boolean)' : 'success',
@@ -576,7 +601,7 @@ class FileInfoService
 
             $this->update($fileInfo, $fallbackUID);
             $this->eventDispatcher->dispatchTyped(new CalculatedHashEvent($fileInfo, $oldHash));
-            
+
             $this->logger->debug('Completed hash calculation for file: {path}', [
                 'path' => $fileInfo->getPath(),
                 'oldHash' => $oldHash,

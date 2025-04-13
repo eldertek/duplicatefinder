@@ -54,10 +54,30 @@ class FilterService
             ]);
             throw new ForcedToIgnoreFileException($fileInfo, 'app:ignore_mounted_files');
         }
-    
+
         // Check if path is in user-excluded folder
         $this->logger->debug('Checking if path is in excluded folder');
-        $isExcluded = $this->excludedFolderService->isPathExcluded($fileInfo->getPath());
+
+        // Only check excluded folders if we have a valid owner
+        $isExcluded = false;
+        if ($fileInfo->getOwner()) {
+            try {
+                // Set the user context for the excluded folder service
+                $this->excludedFolderService->setUserId($fileInfo->getOwner());
+                $isExcluded = $this->excludedFolderService->isPathExcluded($fileInfo->getPath());
+            } catch (\Exception $e) {
+                $this->logger->debug('Error checking excluded folders: {error}', [
+                    'path' => $fileInfo->getPath(),
+                    'error' => $e->getMessage()
+                ]);
+                // Continue with other checks even if this one fails
+            }
+        } else {
+            $this->logger->debug('Skipping excluded folder check - no owner for file: {path}', [
+                'path' => $fileInfo->getPath()
+            ]);
+        }
+
         $this->logger->debug('Exclusion check result: {result}', [
             'path' => $fileInfo->getPath(),
             'isExcluded' => $isExcluded ? 'true' : 'false'
@@ -165,7 +185,7 @@ class FilterService
                 // Remplacer \* par .* pour le wildcard
                 $pattern = str_replace('\*', '.*', $pattern);
                 $filename = basename($fileInfo->getPath());
-                
+
                 $this->logger->debug('Checking name pattern filter: {pattern} against filename: {filename}', [
                     'pattern' => $filter->getValue(),
                     'regex' => '/^' . $pattern . '$/',
