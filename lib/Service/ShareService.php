@@ -7,6 +7,7 @@ use Psr\Log\LoggerInterface;
 use OCP\Files\Node;
 use OCP\Files\IRootFolder;
 use OCP\Share\IManager;
+use OCP\IUserManager;
 
 class ShareService
 {
@@ -16,15 +17,19 @@ class ShareService
     private $logger;
     /** @var IManager */
     private $shareManager;
+    /** @var IUserManager */
+    private $userManager;
 
     public function __construct(
         IRootFolder $rootFolder,
         IManager $shareManager,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        IUserManager $userManager
     ) {
         $this->rootFolder = $rootFolder;
         $this->shareManager = $shareManager;
         $this->logger = $logger;
+        $this->userManager = $userManager;
     }
 
     /**
@@ -65,7 +70,7 @@ class ShareService
             } catch (\Throwable $e) {
                 $this->logger->error('Failed to get shares', ['exception'=> $e]);
             }
-            
+
             if ($limit > 0 && count($shares) >= $limit) {
                 break;
             }
@@ -95,17 +100,56 @@ class ShareService
                 while ($node) {
                     $shares = $this->getShares($user, $node, 1);
                     if (!empty($shares)) {
-                        $this->logger->debug('Target Path: @'.$shares[0]->getTarget().'@ '.$shares[0]->getNodeType());
-                        return PathConversionUtils::convertSharedPath(
-                            $this->rootFolder->getUserFolder($user),
-                            $this->rootFolder->getUserFolder($shares[0]->getSharedWith()),
-                            $sharedNode,
-                            $shares[0],
-                            $stripedFolders
-                        );
+                        $sharedWith = $shares[0]->getSharedWith();
+                        $this->logger->debug('ShareService::hasAccessRight - Found share', [
+                            'target' => $shares[0]->getTarget(),
+                            'node_type' => $shares[0]->getNodeType(),
+                            'shared_with' => $sharedWith,
+                            'share_type' => $shares[0]->getShareType()
+                        ]);
+
+                        // Skip Talk room shares (TYPE_ROOM) or if the user doesn't exist
+                        if ($shares[0]->getShareType() === IShare::TYPE_ROOM || !$this->userManager->userExists($sharedWith)) {
+                            $this->logger->debug('ShareService::hasAccessRight - Skipping non-user share', [
+                                'shared_with' => $sharedWith,
+                                'share_type' => $shares[0]->getShareType(),
+                                'user_exists' => $this->userManager->userExists($sharedWith) ? 'true' : 'false'
+                            ]);
+                            // Move to parent node and continue
+                            $node = $node->getParent();
+                            $stripedFolders++;
+                            continue;
+                        }
+
+                        try {
+                            return PathConversionUtils::convertSharedPath(
+                                $this->rootFolder->getUserFolder($user),
+                                $this->rootFolder->getUserFolder($sharedWith),
+                                $sharedNode,
+                                $shares[0],
+                                $stripedFolders
+                            );
+                        } catch (\Throwable $e) {
+                            $this->logger->warning('ShareService::hasAccessRight - Failed to convert shared path', [
+                                'exception' => $e->getMessage(),
+                                'shared_with' => $sharedWith
+                            ]);
+                            // Move to parent node and continue
+                            $node = $node->getParent();
+                            $stripedFolders++;
+                            continue;
+                        }
                     }
-                    $node = $node->getParent();
-                    $stripedFolders++;
+
+                    try {
+                        $node = $node->getParent();
+                        $stripedFolders++;
+                    } catch (\Throwable $e) {
+                        $this->logger->debug('ShareService::hasAccessRight - No more parent nodes', [
+                            'exception' => $e->getMessage()
+                        ]);
+                        break;
+                    }
                 }
             }
         } catch (\Throwable $e) {

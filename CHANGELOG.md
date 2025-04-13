@@ -1,6 +1,8 @@
 ## 1.7.0 - 2025-04-13
 ### Added
 - New sorting feature to sort duplicates by size (largest first or smallest first) to help regain disk space
+### Fixed
+- Fix [#120](https://github.com/eldertek/duplicatefinder/issues/120): Properly handle Talk room shares to prevent "Backends provided no user object" errors
 
 ## 1.6.1 - 2025-04-13
 ### Added
