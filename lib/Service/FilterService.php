@@ -149,6 +149,14 @@ class FilterService
                 'owner' => $fileInfo->getOwner()
             ]);
 
+            // Skip custom filter checks if no owner
+            if (!$fileInfo->getOwner()) {
+                $this->logger->debug('Skipping custom filter check - no owner for file: {path}', [
+                    'path' => $fileInfo->getPath()
+                ]);
+                return false;
+            }
+
             // Check hash filters
             $hashFilters = $this->filterMapper->findByType('hash', $fileInfo->getOwner());
             $this->logger->debug('Found {count} hash filters for user', [

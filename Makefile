@@ -27,6 +27,18 @@ EXCLUDES := --exclude="/.git" \
 
 all: build
 
+.PHONY: test
+test:
+	composer test
+
+.PHONY: test-unit
+test-unit:
+	composer test:unit
+
+.PHONY: test-integration
+test-integration:
+	composer test:integration
+
 .PHONY: build
 build:
 ifeq ($(detected_OS),Windows)

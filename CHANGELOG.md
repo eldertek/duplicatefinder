@@ -1,6 +1,7 @@
 ## 1.7.0 - 2025-04-13
 ### Added
 - New sorting feature to sort duplicates by size (largest first or smallest first) to help regain disk space
+- Comprehensive test suite for unit testing and integration testing
 ### Fixed
 - Fix [#120](https://github.com/eldertek/duplicatefinder/issues/120): Properly handle Talk room shares to prevent "Backends provided no user object" errors
 - Fix [#129](https://github.com/eldertek/duplicatefinder/issues/129): Properly handle user context in background jobs to prevent "User context required for this operation" errors

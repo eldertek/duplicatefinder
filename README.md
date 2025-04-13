@@ -34,7 +34,7 @@ You can configure "Origin Folders" to protect specific files from accidental del
 You can configure Origin Folders in the app settings. Files in these folders will be marked as "Protected" in the interface instead of showing a delete button.
 
 ## Search and Filter Duplicates
-You can search and filter duplicates by file path or name using the search input at the top of the "Unacknowledged" and "Acknowledged" sections. 
+You can search and filter duplicates by file path or name using the search input at the top of the "Unacknowledged" and "Acknowledged" sections.
 
 - To include files containing a specific term, simply type the term (e.g., `.png` to show all PNG files).
 - To exclude files containing a specific term, prefix the term with an exclamation mark (e.g., `!.ptx` to exclude all PTX files).
@@ -74,6 +74,28 @@ All settings should be modified only through UI. If this doesn't work for you, y
 ## Preview
 
 ![Preview of the GUI](https://raw.githubusercontent.com/eldertek/duplicatefinder/master/img/preview.png)
+
+## Development
+
+### Testing
+
+The app includes a comprehensive test suite to ensure proper functionality. To run the tests:
+
+```bash
+# Install development dependencies
+composer install
+
+# Run all tests
+make test
+
+# Run only unit tests
+make test-unit
+
+# Run only integration tests
+make test-integration
+```
+
+For more information about the tests, see the [tests/README.md](tests/README.md) file.
 
 ## Special thanks
 
