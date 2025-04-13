@@ -3,8 +3,11 @@
 - New sorting feature to sort duplicates by size (largest first or smallest first) to help regain disk space
 - Improved duplicate management with "Merge" functionality that ensures at least one copy is preserved
 - Added preview buttons to show file previews before merging duplicates
+- Always show settings and navigation even when no duplicates are found (Fix [#125](https://github.com/eldertek/duplicatefinder/issues/125))
 - Comprehensive test suite for unit testing and integration testing
 ### Fixed
+- Fix [#140](https://github.com/eldertek/duplicatefinder/issues/140): Ensure duplicate finder only scans files from the current user and not files from other users that don't exist for the current user
+- Fix [#133](https://github.com/eldertek/duplicatefinder/issues/133): Fix database error "null value in column 'type' violates not-null constraint" that prevented duplicate detection
 - Fix [#130](https://github.com/eldertek/duplicatefinder/issues/130): Properly skip directories with .nodupefinder files before scanning them
 - Fix [#120](https://github.com/eldertek/duplicatefinder/issues/120): Properly handle Talk room shares to prevent "Backends provided no user object" errors
 - Fix [#129](https://github.com/eldertek/duplicatefinder/issues/129): Properly handle user context in background jobs to prevent "User context required for this operation" errors

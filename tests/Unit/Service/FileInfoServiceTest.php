@@ -11,12 +11,14 @@ use OCA\DuplicateFinder\Service\FolderService;
 use OCA\DuplicateFinder\Service\ShareService;
 use OCA\DuplicateFinder\Utils\ScannerUtil;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\IDBConnection;
 use OCP\Lock\ILockingProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class FileInfoServiceTest extends TestCase {
     private $mapper;
@@ -227,5 +229,65 @@ class FileInfoServiceTest extends TestCase {
 
         // Vérifier que le résultat est le FileInfo
         $this->assertSame($fileInfo, $result);
+    }
+
+    /**
+     * Test that hasAccessRight correctly identifies files that belong to other users
+     * and prevents them from being included in the current user's duplicates
+     */
+    public function testHasAccessRightFiltersByOwner() {
+        // Create a FileInfo mock for a file owned by another user
+        $fileInfo = $this->getMockBuilder(FileInfo::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['getPath', 'getOwner'])
+            ->getMock();
+        $fileInfo->method('getPath')->willReturn('/otheruser/files/document.txt');
+        $fileInfo->method('getOwner')->willReturn('otheruser');
+
+        // Test that a file owned by another user is not accessible to the current user
+        $hasAccess = $this->service->hasAccessRight($fileInfo, 'currentuser');
+        $this->assertFalse($hasAccess, 'Files owned by other users should not be accessible');
+
+        // Create a FileInfo mock for a file owned by the current user
+        $ownFileInfo = $this->getMockBuilder(FileInfo::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['getPath', 'getOwner'])
+            ->getMock();
+        $ownFileInfo->method('getPath')->willReturn('/currentuser/files/document.txt');
+        $ownFileInfo->method('getOwner')->willReturn('currentuser');
+
+        // Test that a file owned by the current user is accessible
+        $hasAccess = $this->service->hasAccessRight($ownFileInfo, 'currentuser');
+        $this->assertTrue($hasAccess, 'Files owned by the current user should be accessible');
+    }
+
+    /**
+     * Test that scanFiles only includes files that the current user has access to
+     */
+    public function testScanFilesOnlyIncludesFilesForCurrentUser() {
+        // Create a mock for the user folder
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->method('getPath')->willReturn('/currentuser/files');
+
+        // Configure FolderService to return the user folder
+        $this->folderService->expects($this->once())
+            ->method('getUserFolder')
+            ->with('currentuser')
+            ->willReturn($userFolder);
+
+        // Configure ScannerUtil to be called with the correct parameters
+        $this->scannerUtil->expects($this->once())
+            ->method('setHandles')
+            ->with($this->service, null, null);
+
+        $this->scannerUtil->expects($this->once())
+            ->method('scan')
+            ->with('currentuser', '/currentuser/files');
+
+        // Call scanFiles method
+        $this->service->scanFiles('currentuser');
+
+        // We can't directly test that files from other users are excluded,
+        // but we can verify that the scan is performed with the correct user context
     }
 }

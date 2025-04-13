@@ -59,6 +59,7 @@
     <repair-steps>
         <post-migration>
             <step>OCA\DuplicateFinder\Migration\RepairFileInfos</step>
+            <step>OCA\DuplicateFinder\Migration\RepairNullTypes</step>
         </post-migration>
     </repair-steps>
 

@@ -3,12 +3,14 @@
 		<NcLoadingIcon v-if="isLoading" />
 		<template v-else>
 			<div class="app-navigation-header">
-				<DuplicateNavigation v-if="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
-					:acknowledged-duplicates="acknowledgedDuplicates" :unacknowledged-duplicates="unacknowledgedDuplicates"
+				<DuplicateNavigation
+					:acknowledged-duplicates="acknowledgedDuplicates"
+					:unacknowledged-duplicates="unacknowledgedDuplicates"
 					:currentDuplicateId="currentDuplicate?.id"
 					:acknowledgedPagination="acknowledgedPagination"
 					:unacknowledgedPagination="unacknowledgedPagination"
 					:activeView="activeView"
+					:has-duplicates="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
 					@open-duplicate="openDuplicate"
 					@open-settings="settingsOpen = true"
 					@show-help="showHelp"
@@ -23,16 +25,16 @@
 				</template>
 				<template v-else>
 					<DuplicateDetails ref="duplicateDetails" :duplicate="currentDuplicate" @duplicate-resolved="handleDuplicateResolved"
-						@duplicateUpdated="updateDuplicate" />
+						@duplicateUpdated="updateDuplicate" @openSettings="settingsOpen = true" @duplicatesSearchCompleted="refreshDuplicates" />
 				</template>
 			</NcAppContent>
 
-			<NcAppSettingsDialog 
-				:open.sync="settingsOpen" 
-				:show-navigation="true" 
+			<NcAppSettingsDialog
+				:open.sync="settingsOpen"
+				:show-navigation="true"
 				:name="t('duplicatefinder', 'Duplicate Finder Settings')">
-				<NcAppSettingsSection 
-					id="filters" 
+				<NcAppSettingsSection
+					id="filters"
 					:name="t('duplicatefinder', 'Filters')">
 					<template #icon>
 						<FilterOutline :size="20" />
@@ -40,8 +42,8 @@
 					<FilterSettings />
 				</NcAppSettingsSection>
 
-				<NcAppSettingsSection 
-					id="origin-folders" 
+				<NcAppSettingsSection
+					id="origin-folders"
 					:name="t('duplicatefinder', 'Origin Folders')">
 					<template #icon>
 						<Folder :size="20" />
@@ -49,8 +51,8 @@
 					<OriginFoldersSettings />
 				</NcAppSettingsSection>
 
-				<NcAppSettingsSection 
-					id="excluded-folders" 
+				<NcAppSettingsSection
+					id="excluded-folders"
 					:name="t('duplicatefinder', 'Excluded Folders')">
 					<template #icon>
 						<FolderRemove :size="20" />
@@ -72,8 +74,8 @@
 		</template>
 	</NcContent>
 </template>
-  
-  
+
+
 <script>
 import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSettingsSection, NcButton, NcModal } from '@nextcloud/vue';
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
@@ -164,7 +166,7 @@ export default {
 	methods: {
 		handleDuplicateResolved({ duplicate, type }) {
 			console.log('App: Handling duplicate-resolved event:', { duplicate, type });
-			
+
 			// Remove from the appropriate list
 			if (type === 'acknowledged') {
 				console.log('App: Removing from acknowledged list');
@@ -192,7 +194,7 @@ export default {
 		async removeDuplicate(duplicate) {
 			console.log('App: removeDuplicate called with:', duplicate);
 			// Get the updated lists after removing the duplicate
-			const { acknowledgedDuplicates: newAcknowledged, unacknowledgedDuplicates: newUnacknowledged } = 
+			const { acknowledgedDuplicates: newAcknowledged, unacknowledgedDuplicates: newUnacknowledged } =
 				removeDuplicateFromList(duplicate, this.acknowledgedDuplicates, this.unacknowledgedDuplicates);
 
 			console.log('App: Got updated lists:', {
@@ -239,14 +241,14 @@ export default {
 				const sourceList = !updatedDuplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates;
 				const targetList = !updatedDuplicate.acknowledged ? this.unacknowledgedDuplicates : this.acknowledgedDuplicates;
 				const index = sourceList.findIndex(d => d.id === updatedDuplicate.id);
-				
+
 				if (index !== -1) {
 					sourceList.splice(index, 1);
 					targetList.push(updatedDuplicate);
 				}
 
 				this.currentDuplicate = updatedDuplicate;
-				
+
 				if (sourceList.length > 0) {
 					const nextIndex = index < sourceList.length ? index : 0;
 					this.currentDuplicate = sourceList[nextIndex];
@@ -272,13 +274,13 @@ export default {
 			this.isLoading = true;
 			try {
 				const allData = await fetchDuplicates('all', this.limit, this.page);
-				
+
 				// Mettre à jour les doublons reconnus
 				this.acknowledgedDuplicates = allData.entities.filter(duplicate => duplicate.acknowledged);
-				
+
 				// Mettre à jour les doublons non reconnus
 				this.unacknowledgedDuplicates = allData.entities.filter(duplicate => !duplicate.acknowledged);
-				
+
 				// Maintenir le duplicata courant si possible
 				if (this.currentDuplicate) {
 					const existsAcknowledged = this.acknowledgedDuplicates.find(d => d.id === this.currentDuplicate.id);
@@ -301,7 +303,7 @@ export default {
 					fetchDuplicates('acknowledged', 50, 1),
 					fetchDuplicates('unacknowledged', 50, 1)
 				])
-				
+
 				this.acknowledgedDuplicates = acknowledgedResponse.entities
 				this.unacknowledgedDuplicates = unacknowledgedResponse.entities
 				this.acknowledgedPagination = acknowledgedResponse.pagination
@@ -353,7 +355,7 @@ export default {
 	}
 }
 </script>
-  
+
 <style>
 .app-content {
 	overflow-y: auto;

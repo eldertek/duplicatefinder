@@ -53,6 +53,11 @@
           <div class="icon-file" />
           <div>
             <h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+            <p>{{ t('duplicatefinder', 'You can adjust settings or run a new scan to find duplicates.') }}</p>
+            <div class="action-buttons">
+              <button @click="openSettings" class="primary">{{ t('duplicatefinder', 'Open Settings') }}</button>
+              <button @click="findDuplicates">{{ t('duplicatefinder', 'Find Duplicates') }}</button>
+            </div>
           </div>
         </div>
       </div>
@@ -66,9 +71,9 @@
 </template>
 
 <script>
-import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles } from '@/tools/api';
+import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates } from '@/tools/api';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, normalizeItemPath } from '@/tools/utils';
-import { showSuccess } from '@nextcloud/dialogs';
+import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
 export default {
@@ -210,6 +215,21 @@ export default {
           showSuccess(t('duplicatefinder', 'File hash copied to clipboard'));
           this.showDropdown = false;
         });
+      }
+    },
+    openSettings() {
+      this.$emit('openSettings');
+    },
+    async findDuplicates() {
+      try {
+        showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while)'));
+        await apiFindDuplicates();
+        showSuccess(t('duplicatefinder', 'All duplicates found'));
+        // Emit an event to refresh the duplicates list
+        this.$emit('duplicatesSearchCompleted');
+      } catch (error) {
+        console.error('Error finding duplicates:', error);
+        showError(t('duplicatefinder', 'Could not initiate duplicate search'));
       }
     }
   }
@@ -374,5 +394,45 @@ button:disabled {
 
 .dropdown-menu button:hover {
   background: var(--color-background-hover);
+}
+
+.emptycontent {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.emptycontent p {
+  margin: 15px 0;
+  color: var(--color-text-maxcontrast);
+}
+
+.action-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.action-buttons button {
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-dark);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.action-buttons button:hover {
+  background: var(--color-background-hover);
+}
+
+.action-buttons button.primary {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary-element);
+}
+
+.action-buttons button.primary:hover {
+  background: var(--color-primary-element-hover);
 }
 </style>

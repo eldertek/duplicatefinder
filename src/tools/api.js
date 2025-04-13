@@ -81,7 +81,7 @@ export const deleteFile = async (file) => {
     } catch (error) {
         console.error(`Error deleting file with path ${file.path}:`, error);
         const errorData = error.response?.data;
-        
+
         switch(errorData?.error) {
             case 'ORIGIN_FOLDER_PROTECTED':
                 showErrorNotification(t('duplicatefinder', 'Cannot delete file as it is in an origin folder'));
@@ -121,14 +121,14 @@ export const deleteFiles = async (files) => {
 
     if (results.length > 0) {
         showSuccessNotification(
-            t('duplicatefinder', '{count} files deleted successfully.', 
+            t('duplicatefinder', '{count} files deleted successfully.',
             { count: results.length })
         );
     }
-    
+
     if (errors.length > 0) {
         showErrorNotification(
-            t('duplicatefinder', 'Failed to delete {count} files.', 
+            t('duplicatefinder', 'Failed to delete {count} files.',
             { count: errors.length })
         );
     }
@@ -164,12 +164,12 @@ export const saveOriginFolders = async (folders) => {
     try {
         const url = generateApiBaseUrl('/origin-folders');
         const response = await axios.post(url, { folders });
-        
+
         if (response.data.errors && response.data.errors.length > 0) {
             const errorMessages = response.data.errors
                 .map(error => `${error.path}: ${error.error}`)
                 .join('\n');
-            showErrorNotification(t('duplicatefinder', 'Some folders could not be saved:\n{errors}', 
+            showErrorNotification(t('duplicatefinder', 'Some folders could not be saved:\n{errors}',
                 { errors: errorMessages }));
         } else {
             showSuccessNotification(t('duplicatefinder', 'Origin folders saved successfully'));
@@ -297,6 +297,22 @@ export async function saveFilter(filter) {
     }
 }
 
+/**
+ * Initiates a search for duplicates across the filesystem.
+ * @returns {Promise<Object>} The response from the server.
+ */
+export async function findDuplicates() {
+    try {
+        const url = generateApiBaseUrl('/duplicates/find');
+        const response = await axios.post(url);
+        return response.data;
+    } catch (error) {
+        console.error('Error initiating duplicate search:', error);
+        showErrorNotification(t('duplicatefinder', 'Failed to initiate duplicate search'));
+        throw error;
+    }
+}
+
 export async function deleteFilter(id) {
     try {
         const url = generateApiBaseUrl(`/filters/${id}`)
@@ -306,6 +322,135 @@ export async function deleteFilter(id) {
     } catch (error) {
         console.error('Error deleting filter:', error)
         showErrorNotification(t('duplicatefinder', 'Failed to remove filter'))
+        throw error
+    }
+}
+
+/**
+ * Fetches all projects for the current user
+ * @returns {Promise<Array>} Array of projects
+ */
+export async function fetchProjects() {
+    try {
+        const url = generateApiBaseUrl('/projects')
+        const response = await axios.get(url)
+        return response.data
+    } catch (error) {
+        console.error('Error fetching projects:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to load projects'))
+        throw error
+    }
+}
+
+/**
+ * Fetches a specific project by ID
+ * @param {number} id The project ID
+ * @returns {Promise<Object>} The project
+ */
+export async function fetchProject(id) {
+    try {
+        const url = generateApiBaseUrl(`/projects/${id}`)
+        const response = await axios.get(url)
+        return response.data
+    } catch (error) {
+        console.error(`Error fetching project ${id}:`, error)
+        showErrorNotification(t('duplicatefinder', 'Failed to load project'))
+        throw error
+    }
+}
+
+/**
+ * Creates a new project
+ * @param {string} name The project name
+ * @param {Array} folders Array of folder paths
+ * @returns {Promise<Object>} The created project
+ */
+export async function createProject(name, folders) {
+    try {
+        const url = generateApiBaseUrl('/projects')
+        const response = await axios.post(url, { name, folders })
+        showSuccessNotification(t('duplicatefinder', 'Project created successfully'))
+        return response.data
+    } catch (error) {
+        console.error('Error creating project:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to create project'))
+        throw error
+    }
+}
+
+/**
+ * Updates an existing project
+ * @param {number} id The project ID
+ * @param {string} name The new project name
+ * @param {Array} folders Array of new folder paths
+ * @returns {Promise<Object>} The updated project
+ */
+export async function updateProject(id, name, folders) {
+    try {
+        const url = generateApiBaseUrl(`/projects/${id}`)
+        const response = await axios.put(url, { name, folders })
+        showSuccessNotification(t('duplicatefinder', 'Project updated successfully'))
+        return response.data
+    } catch (error) {
+        console.error(`Error updating project ${id}:`, error)
+        showErrorNotification(t('duplicatefinder', 'Failed to update project'))
+        throw error
+    }
+}
+
+/**
+ * Deletes a project
+ * @param {number} id The project ID
+ * @returns {Promise<void>}
+ */
+export async function deleteProject(id) {
+    try {
+        const url = generateApiBaseUrl(`/projects/${id}`)
+        await axios.delete(url)
+        showSuccessNotification(t('duplicatefinder', 'Project deleted successfully'))
+    } catch (error) {
+        console.error(`Error deleting project ${id}:`, error)
+        showErrorNotification(t('duplicatefinder', 'Failed to delete project'))
+        throw error
+    }
+}
+
+/**
+ * Initiates a scan for a specific project
+ * @param {number} id The project ID
+ * @returns {Promise<Object>} The response from the server
+ */
+export async function scanProject(id) {
+    try {
+        const url = generateApiBaseUrl(`/projects/${id}/scan`)
+        const response = await axios.post(url)
+        showSuccessNotification(t('duplicatefinder', 'Project scan initiated'))
+        return response.data
+    } catch (error) {
+        console.error(`Error scanning project ${id}:`, error)
+        showErrorNotification(t('duplicatefinder', 'Failed to initiate project scan'))
+        throw error
+    }
+}
+
+/**
+ * Fetches duplicates for a specific project
+ * @param {number} id The project ID
+ * @param {string} type The type of duplicates to fetch ('all', 'acknowledged', 'unacknowledged')
+ * @param {number} page The page number
+ * @param {number} limit The number of duplicates per page
+ * @returns {Promise<Object>} The duplicates and pagination info
+ */
+export async function fetchProjectDuplicates(id, type = 'all', page = 1, limit = 50) {
+    try {
+        const url = generateApiBaseUrl(`/projects/${id}/duplicates/${type}`)
+        const response = await axios.get(url, {
+            params: { page, limit }
+        })
+        return response.data
+    } catch (error) {
+        console.error(`Error fetching duplicates for project ${id}:`, error)
+        showErrorNotification(t('duplicatefinder', 'Failed to load project duplicates'))
         throw error
     }
 }

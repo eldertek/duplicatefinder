@@ -29,7 +29,18 @@ class FileDuplicate extends EEntity
         if (!is_null($hash)) {
             $this->setHash($hash);
         }
-        $this->setType($type);
+        // Ensure type is always set and never null
+        $this->setType($type ?: 'file_hash');
+    }
+
+    /**
+     * Override setType to ensure it's never set to null
+     *
+     * @param string|null $type
+     */
+    public function setType(?string $type): void
+    {
+        parent::setType($type ?: 'file_hash');
     }
 
     /**
@@ -78,7 +89,7 @@ class FileDuplicate extends EEntity
 
     /**
      * Get the value of the acknowledged property.
-     * 
+     *
      * @return bool
      */
     public function isAcknowledged(): bool
@@ -88,7 +99,7 @@ class FileDuplicate extends EEntity
 
     /**
      * Set the value of the acknowledged property.
-     * 
+     *
      * @param bool $acknowledged
      */
     public function setAcknowledged(bool $acknowledged): void
@@ -98,7 +109,7 @@ class FileDuplicate extends EEntity
 
     /**
      * Get the value of the userId property.
-     * 
+     *
      * @return int|null
      */
     public function getUserId(): ?int
@@ -108,7 +119,7 @@ class FileDuplicate extends EEntity
 
     /**
      * Set the value of the userId property.
-     * 
+     *
      * @param int|null $userId
      */
     public function setUserId(?int $userId): void

@@ -169,6 +169,10 @@ export default {
                 currentPage: 1,
                 totalPages: 1
             })
+        },
+        'has-duplicates': {
+            type: Boolean,
+            default: false
         }
     },
     data() {

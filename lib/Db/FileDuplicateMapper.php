@@ -35,7 +35,7 @@ class FileDuplicateMapper extends EQBMapper
                 $qb->expr()->eq('hash', $qb->createNamedParameter($hash)),
                 $qb->expr()->eq('type', $qb->createNamedParameter($type))
             );
-        
+
         try {
             $duplicate = $this->findEntity($qb);
             $this->logger->debug('Found duplicate', [
@@ -92,7 +92,7 @@ class FileDuplicateMapper extends EQBMapper
         }
 
         $duplicates = $this->findEntities($qb);
-        
+
         $this->logger->debug('Found duplicates in database', [
             'totalCount' => count($duplicates),
             'acknowledgedCount' => count(array_filter($duplicates, function($d) { return $d->getAcknowledged(); })),
@@ -110,7 +110,7 @@ class FileDuplicateMapper extends EQBMapper
     }
     /**
      * Marks the specified duplicate as acknowledged.
-     * 
+     *
      * @param string $hash The hash of the duplicate to acknowledge.
      * @return bool True if successful, false otherwise.
      */
@@ -134,7 +134,7 @@ class FileDuplicateMapper extends EQBMapper
 
     /**
      * Removes the acknowledged status from the specified duplicate.
-     * 
+     *
      * @param string $hash The hash of the duplicate to unacknowledge.
      * @return bool True if successful, false otherwise.
      */
@@ -187,6 +187,14 @@ class FileDuplicateMapper extends EQBMapper
 
     public function insert(Entity $entity): Entity
     {
+        // Ensure type is set before inserting
+        if ($entity instanceof FileDuplicate && ($entity->getType() === null || $entity->getType() === '')) {
+            $entity->setType('file_hash');
+            $this->logger->warning('Setting default type for duplicate before insert', [
+                'hash' => $entity->getHash()
+            ]);
+        }
+
         $this->logger->debug('Inserting new duplicate', [
             'hash' => $entity->getHash(),
             'type' => $entity->getType(),
@@ -197,12 +205,14 @@ class FileDuplicateMapper extends EQBMapper
             $result = parent::insert($entity);
             $this->logger->debug('Successfully inserted duplicate', [
                 'id' => $result->getId(),
-                'hash' => $result->getHash()
+                'hash' => $result->getHash(),
+                'type' => $result->getType()
             ]);
             return $result;
         } catch (\Exception $e) {
             $this->logger->error('Failed to insert duplicate', [
                 'hash' => $entity->getHash(),
+                'type' => $entity->getType(),
                 'error' => $e->getMessage()
             ]);
             throw $e;
@@ -211,6 +221,15 @@ class FileDuplicateMapper extends EQBMapper
 
     public function update(Entity $entity): Entity
     {
+        // Ensure type is set before updating
+        if ($entity instanceof FileDuplicate && ($entity->getType() === null || $entity->getType() === '')) {
+            $entity->setType('file_hash');
+            $this->logger->warning('Setting default type for duplicate before update', [
+                'id' => $entity->getId(),
+                'hash' => $entity->getHash()
+            ]);
+        }
+
         $this->logger->debug('Updating duplicate', [
             'id' => $entity->getId(),
             'hash' => $entity->getHash(),
@@ -222,13 +241,15 @@ class FileDuplicateMapper extends EQBMapper
             $result = parent::update($entity);
             $this->logger->debug('Successfully updated duplicate', [
                 'id' => $result->getId(),
-                'hash' => $result->getHash()
+                'hash' => $result->getHash(),
+                'type' => $result->getType()
             ]);
             return $result;
         } catch (\Exception $e) {
             $this->logger->error('Failed to update duplicate', [
                 'id' => $entity->getId(),
                 'hash' => $entity->getHash(),
+                'type' => $entity->getType(),
                 'error' => $e->getMessage()
             ]);
             throw $e;
