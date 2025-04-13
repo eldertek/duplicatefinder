@@ -18,9 +18,12 @@
               {{ t('duplicatefinder', 'Acknowledge it') }}
             </a>
             <button @click="deleteSelectedDuplicates" :disabled="selectedFiles.length === 0">
-              {{ t('duplicatefinder', 'Delete Selected') }}
+              {{ t('duplicatefinder', 'Merge Selected') }}
             </button>
             <button @click="selectAllFiles">{{ t('duplicatefinder', 'Select All') }}</button>
+            <button @click="previewMerge" :disabled="selectedFiles.length === 0" class="preview-button">
+              {{ t('duplicatefinder', 'Preview') }}
+            </button>
             <div class="dropdown">
               <button class="dropdown-toggle" @click="toggleDropdown">
                 <span class="arrow-down"></span>
@@ -31,16 +34,16 @@
             </div>
           </div>
           <div v-for="(file, index) in duplicate.files" :key="file.id" class="file-display">
-            <input 
-              type="checkbox" 
-              v-model="selectedFiles" 
-              :value="file" 
+            <input
+              type="checkbox"
+              v-model="selectedFiles"
+              :value="file"
               :disabled="file.isInOriginFolder"
               @change="handleFileSelection(file)"
             />
-            <DuplicateFileDisplay 
-              :file="file" 
-              :index="index" 
+            <DuplicateFileDisplay
+              :file="file"
+              :index="index"
               :duplicate-acknowledged="duplicate.acknowledged"
               @fileDeleted="removeFileFromListAndUpdate(file)">
             </DuplicateFileDisplay>
@@ -64,7 +67,7 @@
 
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles } from '@/tools/api';
-import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList } from '@/tools/utils';
+import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, normalizeItemPath } from '@/tools/utils';
 import { showSuccess } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -87,7 +90,7 @@ export default {
       try {
         // Créer une copie du doublon pour viter les mutations directes
         const updatedDuplicate = { ...duplicate };
-        
+
         if (updatedDuplicate.acknowledged) {
           await unacknowledgeDuplicate(updatedDuplicate.hash);
           updatedDuplicate.acknowledged = false;
@@ -95,7 +98,7 @@ export default {
           await acknowledgeDuplicate(updatedDuplicate.hash);
           updatedDuplicate.acknowledged = true;
         }
-        
+
         // Émettre l'événement avec le doublon mis à jour
         this.$emit('duplicateUpdated', updatedDuplicate);
       } catch (error) {
@@ -110,7 +113,7 @@ export default {
       console.log('DuplicateDetails: Removing file from list:', file);
       removeFileFromList(file, this.duplicate.files);
       console.log('DuplicateDetails: Files remaining:', this.duplicate.files.length);
-      
+
       if (this.duplicate.files.length <= 1) {
         console.log('DuplicateDetails: Emitting duplicate-resolved event');
         // Émettre un événement pour indiquer que ce doublon doit être retiré
@@ -123,11 +126,18 @@ export default {
         });
       }
     },
+    previewMerge() {
+      // Open the first file in the viewer
+      if (this.duplicate && this.duplicate.files.length > 0) {
+        openFileInViewer(this.duplicate.files[0]);
+      }
+    },
+
     async deleteSelectedDuplicates() {
       try {
         const fileHashes = this.selectedFiles.map(file => file.hash);
         const allInstances = this.duplicate.files.filter(file => fileHashes.includes(file.hash));
-        
+
         // Vérifier si des fichiers protégés sont sélectionnés
         const hasProtectedFiles = this.selectedFiles.some(file => file.isInOriginFolder);
         if (hasProtectedFiles) {
@@ -135,16 +145,18 @@ export default {
           return;
         }
 
-        if (allInstances.length === this.duplicate.files.length) {
-          const confirmDelete = confirm(this.t('duplicatefinder', 'This action will delete all instances of the selected files. Are you sure you want to proceed?'));
+        // Check if at least one file will remain after deletion
+        const remainingFiles = this.duplicate.files.filter(file => !this.selectedFiles.includes(file));
+        if (remainingFiles.length === 0) {
+          const confirmDelete = confirm(this.t('duplicatefinder', 'This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?'));
           if (!confirmDelete) return;
         }
-        
+
         const { success, errors } = await deleteFiles(this.selectedFiles);
         if (success.length > 0) {
           removeFilesFromList(success, this.duplicate.files);
           this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
-          
+
           if (this.duplicate.files.length <= 1) {
             this.$emit('duplicate-resolved', {
               duplicate: this.duplicate,
@@ -158,7 +170,16 @@ export default {
     },
     selectAllFiles() {
       // Ne sélectionner que les fichiers non protégés
-      this.selectedFiles = this.duplicate.files.filter(file => !file.isInOriginFolder);
+      // Ensure we keep at least one file (preferably from origin folder)
+      const filesToSelect = this.duplicate.files.filter(file => !file.isInOriginFolder);
+
+      // If all files would be selected (meaning none are in origin folder),
+      // exclude the first file to ensure at least one copy is preserved
+      if (filesToSelect.length === this.duplicate.files.length && filesToSelect.length > 0) {
+        this.selectedFiles = filesToSelect.slice(1);
+      } else {
+        this.selectedFiles = filesToSelect;
+      }
     },
     // Ajouter une méthode pour vérifier si un fichier peut être sélectionné
     canSelectFile(file) {
@@ -246,6 +267,25 @@ export default {
 .preview-link:hover {
   color: #1e7e34;
   /* Darker green on hover */
+}
+
+.preview-button {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.preview-button:hover {
+  background-color: #138496;
+}
+
+.preview-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
 }
 
 @media (max-width: 800px) {

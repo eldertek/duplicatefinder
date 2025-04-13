@@ -3,8 +3,8 @@
     <div v-if="!previewResults" class="bulk-deletion__content">
       <div class="summary-section">
         <NcEmptyContent
-          :title="t('duplicatefinder', 'Bulk delete duplicates')"
-          :description="t('duplicatefinder', 'Preview and delete multiple duplicates at once while preserving files in protected folders.')"
+          :title="t('duplicatefinder', 'Bulk merge duplicates')"
+          :description="t('duplicatefinder', 'Preview and merge multiple duplicates at once while preserving files in protected folders.')"
           :icon="'icon-delete'">
           <template #action>
             <div class="summary-actions">
@@ -27,19 +27,19 @@
             'Total files to delete: {count}, Space that will be freed: {size}',
             { count: totalFilesToDelete, size: formatBytes(totalSpaceFreed) }) }}</p>
           <div v-if="isLoading" class="loading-info">
-            {{ t('duplicatefinder', 'Loading page {current} of {total}…', 
+            {{ t('duplicatefinder', 'Loading page {current} of {total}…',
               { current: currentPage, total: previewResults.pagination.totalPages }) }}
           </div>
           <div class="summary-actions">
             <NcButton type="tertiary" @click="toggleSelectAll">
               {{ isAllSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
             </NcButton>
-            <NcButton type="error" @click="confirmBulkDelete" 
+            <NcButton type="error" @click="confirmBulkDelete"
               :disabled="isLoading || !hasSelectedFiles">
               <template #icon>
                 <NcLoadingIcon v-if="isLoading" />
               </template>
-              {{ t('duplicatefinder', 'Delete selected files') }}
+              {{ t('duplicatefinder', 'Merge selected files') }}
             </NcButton>
           </div>
         </template>
@@ -60,6 +60,7 @@
       <div v-if="hasDuplicatesToDelete" class="preview-section">
         <div class="preview-details">
           <h3>{{ t('duplicatefinder', 'Files to be deleted') }}</h3>
+          <p class="merge-explanation">{{ t('duplicatefinder', 'For each duplicate group, at least one file will be preserved.') }}</p>
           <div class="preview-list">
             <div v-for="(group, hash) in previewResults.duplicateGroups" :key="hash" class="duplicate-group">
               <div class="group-header">
@@ -71,10 +72,10 @@
                   <span class="group-title">
                     {{ t('duplicatefinder', 'Duplicate group') }}
                     <span class="group-stats">
-                      ({{ t('duplicatefinder', '{selected} of {total} files selected', 
-                        { 
+                      ({{ t('duplicatefinder', '{selected} of {total} files selected',
+                        {
                           selected: selectedFiles[hash]?.length || 0,
-                          total: group.filesToDelete.length 
+                          total: group.filesToDelete.length
                         }) }})
                     </span>
                   </span>
@@ -95,6 +96,11 @@
                     </NcCheckboxRadioSwitch>
                   </div>
                 </div>
+                <div class="group-actions">
+                  <NcButton type="tertiary" @click="previewGroupMerge(hash)" class="preview-button">
+                    {{ t('duplicatefinder', 'Preview') }}
+                  </NcButton>
+                </div>
               </div>
             </div>
           </div>
@@ -107,6 +113,7 @@
 <script>
 import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { fetchDuplicatesForBulk, deleteFiles } from '@/tools/api'
+import { openFileInViewer } from '@/tools/utils'
 
 export default {
   name: 'BulkDeletionSettings',
@@ -128,7 +135,7 @@ export default {
   },
   computed: {
     hasDuplicatesToDelete() {
-      return this.previewResults && 
+      return this.previewResults &&
              Object.keys(this.previewResults.duplicateGroups).length > 0
     },
     hasSelectedFiles() {
@@ -143,13 +150,13 @@ export default {
       if (!this.previewResults) return 0
       return Object.entries(this.selectedFiles).reduce((total, [hash, selectedIndexes]) => {
         const group = this.previewResults.duplicateGroups[hash]
-        return total + selectedIndexes.reduce((sum, index) => 
+        return total + selectedIndexes.reduce((sum, index) =>
           sum + group.filesToDelete[index].size, 0)
       }, 0)
     },
     isAllSelected() {
       if (!this.previewResults) return false
-      return Object.values(this.previewResults.duplicateGroups).every(group => 
+      return Object.values(this.previewResults.duplicateGroups).every(group =>
         this.selectedFiles[group.hash]?.length === group.filesToDelete.length
       )
     }
@@ -165,40 +172,42 @@ export default {
     humanizePath(path) {
       // Remove /admin/files/ prefix
       let humanized = path.replace(/^\/[^/]+\/files\//, '/')
-      
+
       // Split path into directory and filename
       const parts = humanized.split('/')
       const fileName = parts.pop()
       const directory = parts.join('/')
-      
+
       // If there's a directory path, show it in a lighter color
       if (directory) {
         return `<span class="path-directory">${directory}/</span><span class="path-filename">${fileName}</span>`
       }
-      
+
       return `<span class="path-filename">${fileName}</span>`
     },
     async loadPage(page) {
       try {
         const response = await fetchDuplicatesForBulk(this.limit, page)
-        
+
         // Transform entities into expected interface format
         const duplicateGroups = { ...(this.previewResults?.duplicateGroups || {}) }
-        
+
         // Initialize arrays for each group
         response.entities.forEach(entity => {
           if (!this.selectedFiles[entity.hash]) {
             this.$set(this.selectedFiles, entity.hash, [])
           }
         })
-        
+
         response.entities.forEach(entity => {
           duplicateGroups[entity.hash] = {
             hash: entity.hash,
             filesToDelete: entity.files.map(file => ({
               path: file.path,
               humanizedPath: this.humanizePath(file.path),
-              size: file.size
+              size: file.size,
+              nodeId: file.nodeId,
+              mimetype: file.mimetype || 'application/octet-stream'
             }))
           }
         })
@@ -251,9 +260,9 @@ export default {
     toggleGroup(hash) {
       const group = this.previewResults.duplicateGroups[hash]
       const isSelected = !this.isGroupSelected(hash)
-      
+
       if (isSelected) {
-        this.$set(this.selectedFiles, hash, 
+        this.$set(this.selectedFiles, hash,
           Array.from({ length: group.filesToDelete.length }, (_, i) => i)
         )
       } else {
@@ -272,9 +281,41 @@ export default {
         this.selectedFiles[hash].splice(selectedIndex, 1)
       }
     },
+    previewGroupMerge(hash) {
+      // Get the first file from the group to preview
+      const group = this.previewResults.duplicateGroups[hash];
+
+      if (group && group.filesToDelete && group.filesToDelete.length > 0) {
+        // We need to create a file object that has the necessary properties for the viewer
+        const file = {
+          path: group.filesToDelete[0].path,
+          nodeId: group.filesToDelete[0].nodeId || '',
+          mimetype: group.filesToDelete[0].mimetype || 'application/octet-stream'
+        };
+
+        // Open the file in the viewer
+        openFileInViewer(file);
+      }
+    },
+
     async confirmBulkDelete() {
-      if (!confirm(t('duplicatefinder', 'Are you sure you want to delete all selected duplicates? This action cannot be undone.'))) {
+      if (!confirm(t('duplicatefinder', 'Are you sure you want to merge all selected duplicates? This action cannot be undone.'))) {
         return
+      }
+
+      // Ensure at least one file per group is preserved
+      let allGroupsValid = true;
+      Object.entries(this.selectedFiles).forEach(([hash, selectedIndexes]) => {
+        const group = this.previewResults.duplicateGroups[hash];
+        if (selectedIndexes.length === group.filesToDelete.length) {
+          // If all files in a group are selected, deselect one to preserve it
+          this.selectedFiles[hash] = selectedIndexes.slice(0, -1);
+          allGroupsValid = false;
+        }
+      });
+
+      if (!allGroupsValid) {
+        alert(t('duplicatefinder', 'Some groups had all files selected. One file from each group has been automatically preserved.'));
       }
 
       const filesToDelete = Object.entries(this.selectedFiles).flatMap(([hash, selectedIndexes]) => {
@@ -288,13 +329,13 @@ export default {
       this.isLoading = true
       try {
         const { success, errors } = await deleteFiles(filesToDelete)
-        
+
         if (success.length > 0) {
           this.$emit('duplicates-deleted')
           this.previewResults = null
           this.selectedFiles = {}
         }
-        
+
         if (errors.length > 0) {
           console.error('Some files could not be deleted:', errors)
         }
@@ -314,7 +355,7 @@ export default {
         // Select all
         Object.keys(this.previewResults.duplicateGroups).forEach(hash => {
           const group = this.previewResults.duplicateGroups[hash]
-          this.$set(this.selectedFiles, hash, 
+          this.$set(this.selectedFiles, hash,
             Array.from({ length: group.filesToDelete.length }, (_, i) => i)
           )
         })
@@ -451,4 +492,31 @@ export default {
   font-size: 0.9em;
   margin: 10px 0;
 }
-</style> 
+
+.merge-explanation {
+  font-size: 0.9em;
+  color: var(--color-text-maxcontrast);
+  margin-bottom: 15px;
+}
+
+.group-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  margin-right: 10px;
+}
+
+.preview-button {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.preview-button:hover {
+  background-color: #138496;
+}
+</style>

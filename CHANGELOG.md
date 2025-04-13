@@ -1,6 +1,8 @@
 ## 1.7.0 - 2025-04-13
 ### Added
 - New sorting feature to sort duplicates by size (largest first or smallest first) to help regain disk space
+- Improved duplicate management with "Merge" functionality that ensures at least one copy is preserved
+- Added preview buttons to show file previews before merging duplicates
 - Comprehensive test suite for unit testing and integration testing
 ### Fixed
 - Fix [#130](https://github.com/eldertek/duplicatefinder/issues/130): Properly skip directories with .nodupefinder files before scanning them
