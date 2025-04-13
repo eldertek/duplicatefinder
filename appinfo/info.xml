@@ -33,7 +33,7 @@
 * 📊 **Aperçu & Simulation** - Visualisez ce qui serait supprimé avant d'agir
 * 💼 **Traitement en Arrière-plan** - Tâches automatisées de recherche de doublons
 ]]></description>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
     <author>André Théo LAURET</author>
 
     <namespace>DuplicateFinder</namespace>
@@ -44,35 +44,35 @@
     <discussion>https://github.com/eldertek/duplicatefinder/issues</discussion>
     <bugs>https://github.com/eldertek/duplicatefinder/issues</bugs>
     <repository>https://github.com/eldertek/duplicatefinder.git</repository>
-    
+
     <screenshot>https://raw.githubusercontent.com/eldertek/duplicatefinder/master/img/preview.png</screenshot>
-    
+
     <dependencies>
-        <nextcloud min-version="28" max-version="30"/>
+        <nextcloud min-version="28" max-version="31"/>
     </dependencies>
-    
+
     <background-jobs>
         <job>OCA\DuplicateFinder\BackgroundJob\CleanUpDB</job>
         <job>OCA\DuplicateFinder\BackgroundJob\FindDuplicates</job>
     </background-jobs>
-    
+
     <repair-steps>
         <post-migration>
             <step>OCA\DuplicateFinder\Migration\RepairFileInfos</step>
         </post-migration>
     </repair-steps>
-    
+
     <commands>
         <command>OCA\DuplicateFinder\Command\FindDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ListDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ClearDuplicates</command>
     </commands>
-    
+
     <settings>
         <admin>OCA\DuplicateFinder\Settings\Admin</admin>
         <admin-section>OCA\DuplicateFinder\Settings\Section</admin-section>
     </settings>
-    
+
     <navigations>
         <navigation>
         <name>Duplicate Finder</name>

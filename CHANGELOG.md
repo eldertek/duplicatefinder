@@ -1,5 +1,9 @@
+## 1.6.1 - 2025-04-13
+### Added
+- Support for Nextcloud 31
+
 ## 1.6.0 - 2025-01-03
-### Added 
+### Added
 - New filtering system to ignore files during scan:
   - Filter by file hash to ignore specific files
   - Filter by file name pattern with wildcard support (e.g., *.tmp, backup_*)
@@ -200,14 +204,14 @@
 - Fix [#18](https://github.com/eldertek/duplicatefinder/issues/18)
 
 ## 1.0.8 - 2023-10-30
-### Added 
+### Added
 - In settings, you can now directly clear all and find all duplicates.
 ### Changed
 - Updated translations
 - Make the code more readable
 
 ## 1.0.7 - 2023-10-28
-### Added 
+### Added
 - Add a new acknowledge feature to avoid to display the same duplicate again and again.
 
 ## 1.0.6 - 2023-10-24
