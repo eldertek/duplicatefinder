@@ -14,6 +14,37 @@
                 </select>
             </div>
 
+            <!-- Projects Section -->
+            <NcAppNavigationItem :name="t('duplicatefinder', 'Projects')"
+                :allowCollapse="true"
+                :open="false">
+                <template #icon>
+                    <FolderMultiple :size="20" />
+                </template>
+                <template>
+                    <NcAppNavigationItem :name="t('duplicatefinder', 'Manage Projects')"
+                        @click="$emit('open-projects')">
+                        <template #icon>
+                            <FolderCog :size="20" />
+                        </template>
+                    </NcAppNavigationItem>
+                    <div v-if="projects.length > 0">
+                        <div v-for="project in projects" :key="project.id" class="project-item">
+                            <NcAppNavigationItem :name="project.name"
+                                @click="$emit('view-project', project.id)"
+                                :active="activeView === 'project' && activeProject === project.id">
+                                <template #icon>
+                                    <Folder :size="20" />
+                                </template>
+                            </NcAppNavigationItem>
+                        </div>
+                    </div>
+                    <div v-else>
+                        <p class="empty-projects">{{ t('duplicatefinder', 'No projects yet') }}</p>
+                    </div>
+                </template>
+            </NcAppNavigationItem>
+
             <!-- Bulk Delete Button -->
             <NcAppNavigationItem :name="t('duplicatefinder', 'Bulk Delete')"
                 :active="activeView === 'bulk-delete'"
@@ -129,6 +160,9 @@ import HelpCircle from 'vue-material-design-icons/HelpCircle';
 import School from 'vue-material-design-icons/School';
 import PlayCircle from 'vue-material-design-icons/PlayCircle';
 import FrequentlyAskedQuestions from 'vue-material-design-icons/FrequentlyAskedQuestions';
+import FolderMultiple from 'vue-material-design-icons/FolderMultiple';
+import FolderCog from 'vue-material-design-icons/FolderCog';
+import Folder from 'vue-material-design-icons/Folder';
 import { fetchDuplicates } from '@/tools/api';
 import { getTotalSizeOfDuplicate } from '@/tools/utils';
 
@@ -146,7 +180,10 @@ export default {
         HelpCircle,
         School,
         PlayCircle,
-        FrequentlyAskedQuestions
+        FrequentlyAskedQuestions,
+        FolderMultiple,
+        FolderCog,
+        Folder
     },
     props: {
         acknowledgedDuplicates: Array,
@@ -155,6 +192,14 @@ export default {
         activeView: {
             type: String,
             default: 'details'
+        },
+        activeProject: {
+            type: Number,
+            default: null
+        },
+        projects: {
+            type: Array,
+            default: () => []
         },
         acknowledgedPagination: {
             type: Object,
@@ -370,5 +415,16 @@ export default {
 /* Ajustement de l'espacement des éléments de navigation */
 :deep(.app-navigation-entry) {
     padding: 3px 0;
+}
+
+.empty-projects {
+    padding: 8px 12px;
+    color: var(--color-text-maxcontrast);
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+.project-item {
+    width: 100%;
 }
 </style>

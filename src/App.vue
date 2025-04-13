@@ -10,9 +10,13 @@
 					:acknowledgedPagination="acknowledgedPagination"
 					:unacknowledgedPagination="unacknowledgedPagination"
 					:activeView="activeView"
+					:activeProject="activeProject"
+					:projects="projects"
 					:has-duplicates="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
 					@open-duplicate="openDuplicate"
 					@open-settings="settingsOpen = true"
+					@open-projects="settingsOpen = true"
+					@view-project="viewProject"
 					@show-help="showHelp"
 					@open-bulk-delete="openBulkDelete"
 					@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
@@ -23,9 +27,29 @@
 				<template v-if="activeView === 'bulk-delete'">
 					<BulkDeletionSettings @duplicates-deleted="refreshDuplicates" />
 				</template>
+				<template v-else-if="activeView === 'project'">
+					<ProjectDuplicates
+						:projectId="activeProject"
+						@back-to-projects="backToProjects"
+						@view-duplicate="viewProjectDuplicate" />
+				</template>
+				<template v-else-if="activeView === 'project-duplicate'">
+					<DuplicateDetails
+						ref="projectDuplicateDetails"
+						:duplicate="projectDuplicate"
+						@duplicate-resolved="backToProject"
+						@duplicateUpdated="updateDuplicate"
+						@openSettings="settingsOpen = true"
+						@duplicatesSearchCompleted="backToProject" />
+				</template>
 				<template v-else>
-					<DuplicateDetails ref="duplicateDetails" :duplicate="currentDuplicate" @duplicate-resolved="handleDuplicateResolved"
-						@duplicateUpdated="updateDuplicate" @openSettings="settingsOpen = true" @duplicatesSearchCompleted="refreshDuplicates" />
+					<DuplicateDetails
+						ref="duplicateDetails"
+						:duplicate="currentDuplicate"
+						@duplicate-resolved="handleDuplicateResolved"
+						@duplicateUpdated="updateDuplicate"
+						@openSettings="settingsOpen = true"
+						@duplicatesSearchCompleted="refreshDuplicates" />
 				</template>
 			</NcAppContent>
 
@@ -59,6 +83,15 @@
 					</template>
 					<ExcludedFoldersSettings />
 				</NcAppSettingsSection>
+
+				<NcAppSettingsSection
+					id="projects"
+					:name="t('duplicatefinder', 'Projects')">
+					<template #icon>
+						<FolderMultiple :size="20" />
+					</template>
+					<ProjectsSettings @view-project="viewProject" />
+				</NcAppSettingsSection>
 			</NcAppSettingsDialog>
 
 			<NcModal
@@ -83,13 +116,16 @@ import DuplicateDetails from './components/DuplicateDetails.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
+import ProjectsSettings from './components/ProjectsSettings.vue';
+import ProjectDuplicates from './components/ProjectDuplicates.vue';
 import OnboardingGuide from './components/help/OnboardingGuide.vue';
 import UsageExamples from './components/help/UsageExamples.vue';
 import FAQ from './components/help/FAQ.vue';
-import { fetchDuplicates } from '@/tools/api';
+import { fetchDuplicates, fetchProjects } from '@/tools/api';
 import { removeDuplicateFromList } from '@/tools/utils';
 import Folder from 'vue-material-design-icons/Folder';
 import FolderRemove from 'vue-material-design-icons/FolderRemove';
+import FolderMultiple from 'vue-material-design-icons/FolderMultiple';
 import Delete from 'vue-material-design-icons/Delete';
 import FilterOutline from 'vue-material-design-icons/FilterOutline';
 import SearchBar from './components/SearchBar.vue'
@@ -108,10 +144,13 @@ export default {
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
+		ProjectsSettings,
+		ProjectDuplicates,
 		NcAppSettingsDialog,
 		NcAppSettingsSection,
 		Folder,
 		FolderRemove,
+		FolderMultiple,
 		Delete,
 		FilterOutline,
 		OnboardingGuide,
@@ -140,6 +179,9 @@ export default {
 			},
 			helpModalOpen: false,
 			currentHelpSection: 'guide',
+			activeProject: null,
+			projectDuplicate: null,
+			projects: [],
 		};
 	},
 	computed: {
@@ -299,15 +341,17 @@ export default {
 		},
 		async loadInitialData() {
 			try {
-				const [acknowledgedResponse, unacknowledgedResponse] = await Promise.all([
+				const [acknowledgedResponse, unacknowledgedResponse, projectsResponse] = await Promise.all([
 					fetchDuplicates('acknowledged', 50, 1),
-					fetchDuplicates('unacknowledged', 50, 1)
+					fetchDuplicates('unacknowledged', 50, 1),
+					fetchProjects()
 				])
 
 				this.acknowledgedDuplicates = acknowledgedResponse.entities
 				this.unacknowledgedDuplicates = unacknowledgedResponse.entities
 				this.acknowledgedPagination = acknowledgedResponse.pagination
 				this.unacknowledgedPagination = unacknowledgedResponse.pagination
+				this.projects = projectsResponse
 			} catch (error) {
 				console.error('Error loading initial data:', error)
 				showError(t('duplicatefinder', 'Could not load duplicates'))
@@ -326,6 +370,28 @@ export default {
 		showHelp(section) {
 			this.currentHelpSection = section || 'guide'
 			this.helpModalOpen = true
+		},
+
+		viewProject(projectId) {
+			this.activeProject = projectId
+			this.activeView = 'project'
+			this.settingsOpen = false
+		},
+
+		backToProjects() {
+			this.activeProject = null
+			this.activeView = 'details'
+			this.settingsOpen = true
+		},
+
+		viewProjectDuplicate(duplicate) {
+			this.projectDuplicate = duplicate
+			this.activeView = 'project-duplicate'
+		},
+
+		backToProject() {
+			this.projectDuplicate = null
+			this.activeView = 'project'
 		},
 		handleSearch({ query, type }) {
 			// Convert the search pattern to a RegExp object

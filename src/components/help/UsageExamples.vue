@@ -6,10 +6,10 @@
         <div v-if="section.description" class="section-description">
           {{ section.description }}
         </div>
-        
+
         <div v-for="(example, exIndex) in section.examples" :key="exIndex" class="example-block">
           <h3 class="example-title">{{ example.title }}</h3>
-          
+
           <!-- Code Block -->
           <div v-if="example.code" class="code-block">
             <div v-for="(line, lineIndex) in example.code" :key="lineIndex" class="code-line">
@@ -149,6 +149,39 @@ export default {
                   command: '^(IMG|DSC)_.*'
                 }
               ],
+            }
+          ]
+        },
+        {
+          title: t('duplicatefinder', 'Working with Projects'),
+          description: t('duplicatefinder', 'Projects allow you to scan specific folders for duplicates instead of your entire storage:'),
+          examples: [
+            {
+              title: t('duplicatefinder', 'Creating and Managing Projects'),
+              list: [
+                t('duplicatefinder', 'Go to Settings → Projects to create and manage your projects'),
+                t('duplicatefinder', 'Give your project a descriptive name (e.g., "Photos 2023", "Documents Cleanup")'),
+                t('duplicatefinder', 'Select one or more folders to include in the project scan'),
+                t('duplicatefinder', 'Edit or delete projects as needed from the Projects settings')
+              ]
+            },
+            {
+              title: t('duplicatefinder', 'Running Project Scans'),
+              list: [
+                t('duplicatefinder', 'Start a scan from the Projects section in Settings'),
+                t('duplicatefinder', 'Access your project from the navigation sidebar'),
+                t('duplicatefinder', 'View scan results showing duplicates only within your selected folders'),
+                t('duplicatefinder', 'Manage duplicates using the same tools as with regular scans')
+              ]
+            },
+            {
+              title: t('duplicatefinder', 'Project Use Cases'),
+              list: [
+                t('duplicatefinder', 'Clean up a specific photo collection without scanning your entire library'),
+                t('duplicatefinder', 'Deduplicate a shared folder that contains many duplicate files'),
+                t('duplicatefinder', 'Focus on large files in specific folders to quickly free up space'),
+                t('duplicatefinder', 'Organize cleanup tasks by creating separate projects for different areas')
+              ]
             }
           ]
         },
@@ -454,4 +487,4 @@ export default {
   margin-left: 16px;
   line-height: 1.4;
 }
-</style> 
+</style>

@@ -53,6 +53,7 @@ import Check from 'vue-material-design-icons/Check'
 import WelcomeStep from './steps/WelcomeStep.vue'
 import FindingDuplicatesStep from './steps/FindingDuplicatesStep.vue'
 import ScanningStep from './steps/ScanningStep.vue'
+import ProjectsStep from './steps/ProjectsStep.vue'
 import ManagingDuplicatesStep from './steps/ManagingDuplicatesStep.vue'
 import OriginFoldersStep from './steps/OriginFoldersStep.vue'
 import ExcludedFoldersStep from './steps/ExcludedFoldersStep.vue'
@@ -69,6 +70,7 @@ export default {
     WelcomeStep,
     FindingDuplicatesStep,
     ScanningStep,
+    ProjectsStep,
     ManagingDuplicatesStep,
     OriginFoldersStep,
     ExcludedFoldersStep,
@@ -87,6 +89,7 @@ export default {
         'WelcomeStep',
         'FindingDuplicatesStep',
         'ScanningStep',
+        'ProjectsStep',
         'ManagingDuplicatesStep',
         'OriginFoldersStep',
         'ExcludedFoldersStep',
@@ -181,4 +184,4 @@ export default {
   border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
   overflow: hidden;
 }
-</style> 
+</style>

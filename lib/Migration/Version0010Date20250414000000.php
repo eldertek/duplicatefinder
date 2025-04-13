@@ -20,8 +20,8 @@ class Version0010Date20250414000000 extends SimpleMigrationStep {
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
 
-        if (!$schema->hasTable('duplicatefinder_projects')) {
-            $table = $schema->createTable('duplicatefinder_projects');
+        if (!$schema->hasTable('df_projects')) {
+            $table = $schema->createTable('df_projects');
             $table->addColumn('id', 'integer', [
                 'autoincrement' => true,
                 'notnull' => true,
@@ -41,11 +41,11 @@ class Version0010Date20250414000000 extends SimpleMigrationStep {
                 'notnull' => false,
             ]);
             $table->setPrimaryKey(['id']);
-            $table->addIndex(['user_id'], 'df_projects_user_id_idx');
+            $table->addIndex(['user_id'], 'df_p_uid_idx');
         }
 
-        if (!$schema->hasTable('duplicatefinder_project_folders')) {
-            $table = $schema->createTable('duplicatefinder_project_folders');
+        if (!$schema->hasTable('df_folders')) {
+            $table = $schema->createTable('df_folders');
             $table->addColumn('id', 'integer', [
                 'autoincrement' => true,
                 'notnull' => true,
@@ -58,18 +58,18 @@ class Version0010Date20250414000000 extends SimpleMigrationStep {
                 'length' => 700,
             ]);
             $table->setPrimaryKey(['id']);
-            $table->addIndex(['project_id'], 'df_project_folders_idx');
+            $table->addIndex(['project_id'], 'df_f_pid_idx');
             $table->addForeignKeyConstraint(
-                $schema->getTable('duplicatefinder_projects'),
+                $schema->getTable('df_projects'),
                 ['project_id'],
                 ['id'],
                 ['onDelete' => 'CASCADE'],
-                'df_project_folders_fk'
+                'df_f_pid_fk'
             );
         }
 
-        if (!$schema->hasTable('duplicatefinder_project_duplicates')) {
-            $table = $schema->createTable('duplicatefinder_project_duplicates');
+        if (!$schema->hasTable('df_duplicates')) {
+            $table = $schema->createTable('df_duplicates');
             $table->addColumn('id', 'integer', [
                 'autoincrement' => true,
                 'notnull' => true,
@@ -81,20 +81,20 @@ class Version0010Date20250414000000 extends SimpleMigrationStep {
                 'notnull' => true,
             ]);
             $table->setPrimaryKey(['id']);
-            $table->addUniqueIndex(['project_id', 'duplicate_id'], 'df_project_duplicates_unique_idx');
+            $table->addUniqueIndex(['project_id', 'duplicate_id'], 'df_d_unq_idx');
             $table->addForeignKeyConstraint(
-                $schema->getTable('duplicatefinder_projects'),
+                $schema->getTable('df_projects'),
                 ['project_id'],
                 ['id'],
                 ['onDelete' => 'CASCADE'],
-                'df_project_duplicates_fk'
+                'df_d_pid_fk'
             );
             $table->addForeignKeyConstraint(
                 $schema->getTable('duplicatefinder_dups'),
                 ['duplicate_id'],
                 ['id'],
                 ['onDelete' => 'CASCADE'],
-                'df_project_duplicates_dups_fk'
+                'df_d_did_fk'
             );
         }
 

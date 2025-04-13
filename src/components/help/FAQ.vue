@@ -22,26 +22,26 @@
 
     <!-- FAQ Sections -->
     <div v-else class="faq-sections">
-      <div v-for="(section, index) in filteredSections" 
-           :key="index" 
+      <div v-for="(section, index) in filteredSections"
+           :key="index"
            class="faq-section">
         <h2 class="section-title">{{ section.title }}</h2>
-        
+
         <div class="questions-list">
-          <div v-for="(qa, qaIndex) in section.items" 
-               :key="qaIndex" 
+          <div v-for="(qa, qaIndex) in section.items"
+               :key="qaIndex"
                class="qa-item"
                :class="{ 'expanded': expandedItems.includes(qa.id) }"
                @click="toggleItem(qa.id)">
-            
+
             <div class="question">
               <span class="question-text">{{ qa.question }}</span>
-              <ChevronDown :size="20" 
+              <ChevronDown :size="20"
                           class="expand-icon"
                           :class="{ 'rotated': expandedItems.includes(qa.id) }" />
             </div>
-            
-            <div v-show="expandedItems.includes(qa.id)" 
+
+            <div v-show="expandedItems.includes(qa.id)"
                  class="answer"
                  v-html="qa.answer">
             </div>
@@ -98,6 +98,16 @@ export default {
               answer: t('duplicatefinder', 'You can exclude folders in two ways:\n\n' +
                 '1. Add them to Excluded Folders in settings\n' +
                 '2. Place a .nodupefinder file in any folder you want to exclude')
+            },
+            {
+              id: 'projects',
+              question: t('duplicatefinder', 'What are Projects and how do I use them?'),
+              answer: t('duplicatefinder', 'Projects allow you to scan specific folders for duplicates instead of your entire storage. To use projects:\n\n' +
+                '1. Go to Settings → Projects\n' +
+                '2. Create a new project with a name\n' +
+                '3. Select the folders you want to include in the scan\n' +
+                '4. Start the scan and view results\n\n' +
+                'Projects are perfect for focusing on cleaning up specific areas of your storage without scanning everything.')
             },
             {
               id: 'recover-files',
@@ -200,7 +210,7 @@ export default {
   computed: {
     filteredSections() {
       const query = this.searchQuery.trim().toLowerCase()
-      
+
       if (!query) {
         return this.sections
       }
@@ -218,7 +228,7 @@ export default {
       return this.sections
         .map(section => {
           const matchedItems = section.items.filter(item => {
-            return searchInText(item.question) || 
+            return searchInText(item.question) ||
                    searchInText(stripHtml(item.answer))
           })
 
@@ -370,4 +380,4 @@ export default {
 .empty-state p {
   font-size: 16px;
 }
-</style> 
+</style>

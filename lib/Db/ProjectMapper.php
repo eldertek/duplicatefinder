@@ -14,7 +14,7 @@ class ProjectMapper extends QBMapper {
     private LoggerInterface $logger;
     
     public function __construct(IDBConnection $db, LoggerInterface $logger) {
-        parent::__construct($db, 'duplicatefinder_projects', Project::class);
+        parent::__construct($db, 'df_projects', Project::class);
         $this->logger = $logger;
     }
 
@@ -69,7 +69,7 @@ class ProjectMapper extends QBMapper {
     public function addFolders(int $projectId, array $folderPaths): void {
         foreach ($folderPaths as $folderPath) {
             $qb = $this->db->getQueryBuilder();
-            $qb->insert('duplicatefinder_project_folders')
+            $qb->insert('df_folders')
                ->values([
                    'project_id' => $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT),
                    'folder_path' => $qb->createNamedParameter($folderPath, IQueryBuilder::PARAM_STR),
@@ -87,7 +87,7 @@ class ProjectMapper extends QBMapper {
     public function getFolders(int $projectId): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('folder_path')
-           ->from('duplicatefinder_project_folders')
+           ->from('df_folders')
            ->where(
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            );
@@ -109,7 +109,7 @@ class ProjectMapper extends QBMapper {
      */
     public function removeFolders(int $projectId): void {
         $qb = $this->db->getQueryBuilder();
-        $qb->delete('duplicatefinder_project_folders')
+        $qb->delete('df_folders')
            ->where(
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            )
@@ -126,7 +126,7 @@ class ProjectMapper extends QBMapper {
         // Check if the duplicate is already associated with the project
         $qb = $this->db->getQueryBuilder();
         $qb->select('id')
-           ->from('duplicatefinder_project_duplicates')
+           ->from('df_duplicates')
            ->where(
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            )
@@ -140,7 +140,7 @@ class ProjectMapper extends QBMapper {
         
         if (!$exists) {
             $qb = $this->db->getQueryBuilder();
-            $qb->insert('duplicatefinder_project_duplicates')
+            $qb->insert('df_duplicates')
                ->values([
                    'project_id' => $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT),
                    'duplicate_id' => $qb->createNamedParameter($duplicateId, IQueryBuilder::PARAM_INT),
@@ -158,7 +158,7 @@ class ProjectMapper extends QBMapper {
     public function getDuplicateIds(int $projectId): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('duplicate_id')
-           ->from('duplicatefinder_project_duplicates')
+           ->from('df_duplicates')
            ->where(
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            );
@@ -180,7 +180,7 @@ class ProjectMapper extends QBMapper {
      */
     public function removeDuplicates(int $projectId): void {
         $qb = $this->db->getQueryBuilder();
-        $qb->delete('duplicatefinder_project_duplicates')
+        $qb->delete('df_duplicates')
            ->where(
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            )
