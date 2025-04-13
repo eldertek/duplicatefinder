@@ -241,4 +241,39 @@ class FilterService
     public function getFilters(string $userId): array {
         return $this->filterMapper->findAll($userId);
     }
+
+    /**
+     * Check if a directory should be skipped due to a .nodupefinder file
+     *
+     * @param Node $node The directory node to check
+     * @return bool True if the directory should be skipped, false otherwise
+     */
+    public function shouldSkipDirectory(Node $node): bool {
+        try {
+            $this->logger->debug('Checking if directory should be skipped: {path}', [
+                'path' => $node->getPath()
+            ]);
+
+            // Check if the current directory contains a .nodupefinder file
+            if ($node->nodeExists('.nodupefinder')) {
+                $this->logger->debug('Found .nodupefinder in directory, skipping: {path}', [
+                    'path' => $node->getPath()
+                ]);
+                return true;
+            }
+
+            $this->logger->debug('Directory does not contain .nodupefinder, will be scanned: {path}', [
+                'path' => $node->getPath()
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            $this->logger->error('Error checking if directory should be skipped: {error}', [
+                'path' => $node->getPath(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            // If there's an error, don't skip the directory
+            return false;
+        }
+    }
 }

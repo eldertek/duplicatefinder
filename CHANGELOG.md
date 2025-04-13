@@ -3,6 +3,7 @@
 - New sorting feature to sort duplicates by size (largest first or smallest first) to help regain disk space
 - Comprehensive test suite for unit testing and integration testing
 ### Fixed
+- Fix [#130](https://github.com/eldertek/duplicatefinder/issues/130): Properly skip directories with .nodupefinder files before scanning them
 - Fix [#120](https://github.com/eldertek/duplicatefinder/issues/120): Properly handle Talk room shares to prevent "Backends provided no user object" errors
 - Fix [#129](https://github.com/eldertek/duplicatefinder/issues/129): Properly handle user context in background jobs to prevent "User context required for this operation" errors
 
