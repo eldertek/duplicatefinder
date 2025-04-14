@@ -1,3 +1,12 @@
+## 1.7.1 - 2025-04-20
+### Added
+- Comprehensive test suite for unit testing and integration testing
+  - Added tests for command-line interfaces (FindDuplicates, ListDuplicates)
+  - Added integration tests for duplicate detection
+  - Added tests to verify user isolation (user A can't see user B's duplicates)
+  - Added tests for API controllers
+  - Improved integration tests to automatically create test users
+
 ## 1.7.0 - 2025-04-13
 ### Added
 - New Projects feature to scan specific folders for duplicates (Fix [#123](https://github.com/eldertek/duplicatefinder/issues/123))
@@ -5,7 +14,6 @@
 - Improved duplicate management with "Merge" functionality that ensures at least one copy is preserved
 - Added preview buttons to show file previews before merging duplicates
 - Always show settings and navigation even when no duplicates are found (Fix [#125](https://github.com/eldertek/duplicatefinder/issues/125))
-- Comprehensive test suite for unit testing and integration testing
 ### Fixed
 - Fix [#140](https://github.com/eldertek/duplicatefinder/issues/140): Ensure duplicate finder only scans files from the current user and not files from other users that don't exist for the current user
 - Fix [#133](https://github.com/eldertek/duplicatefinder/issues/133): Fix database error "null value in column 'type' violates not-null constraint" that prevented duplicate detection
