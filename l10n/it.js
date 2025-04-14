@@ -11,6 +11,7 @@ OC.L10N.register(
     "File" : "File",
     "Open File" : "Apri file",
     "Delete" : "Elimina",
+    "Default" : "Predefinito",
     "Settings" : "Impostazioni",
     "Load More" : "Carica altro",
     "No results found" : "Nessun risultato trovato",
