@@ -6,6 +6,9 @@
   - Added tests to verify user isolation (user A can't see user B's duplicates)
   - Added tests for API controllers
   - Improved integration tests to automatically create test users
+  - Added tests for sorting duplicates by size (largest first or smallest first)
+  - Added tests for merge functionality with origin folder protection
+  - Added tests for custom filters (hash filters and name pattern filters)
 
 ## 1.7.0 - 2025-04-13
 ### Added
