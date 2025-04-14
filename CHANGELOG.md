@@ -1,13 +1,6 @@
-## 1.8.0 - 2025-04-14
-### Added
-- New Projects feature to scan specific folders for duplicates (Fix [#123](https://github.com/eldertek/duplicatefinder/issues/123))
-  - Create projects with custom names and select specific folders to scan
-  - Run targeted scans on selected folders only
-  - View project-specific duplicate results
-  - Manage projects (create, edit, delete) from the settings panel
-
 ## 1.7.0 - 2025-04-13
 ### Added
+- New Projects feature to scan specific folders for duplicates (Fix [#123](https://github.com/eldertek/duplicatefinder/issues/123))
 - New sorting feature to sort duplicates by size (largest first or smallest first) to help regain disk space
 - Improved duplicate management with "Merge" functionality that ensures at least one copy is preserved
 - Added preview buttons to show file previews before merging duplicates

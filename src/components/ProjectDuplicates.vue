@@ -16,12 +16,7 @@
                 </div>
             </div>
             <div class="project-actions">
-                <NcButton type="tertiary" @click="backToProjects">
-                    <template #icon>
-                        <ArrowLeft :size="20" />
-                    </template>
-                    {{ t('duplicatefinder', 'Back to Projects') }}
-                </NcButton>
+
                 <NcButton type="primary" @click="refreshScan">
                     <template #icon>
                         <Refresh :size="20" />
@@ -36,13 +31,6 @@
         <div v-else-if="duplicates.length > 0" class="duplicates-list">
             <div class="duplicates-header">
                 <h3>{{ t('duplicatefinder', 'Duplicates Found') }}</h3>
-                <div class="duplicates-filters">
-                    <NcSelect
-                        :options="typeOptions"
-                        v-model="selectedType"
-                        :label="t('duplicatefinder', 'Filter')"
-                    />
-                </div>
             </div>
 
             <div v-for="duplicate in duplicates" :key="duplicate.id" class="duplicate-item">
@@ -81,21 +69,12 @@
                 />
             </div>
         </div>
-
-        <div v-else class="empty-state">
-            <div class="icon-search"></div>
-            <h3>{{ t('duplicatefinder', 'No duplicates found') }}</h3>
-            <p>{{ t('duplicatefinder', 'No duplicate files were found in the selected folders.') }}</p>
-            <NcButton @click="refreshScan">
-                {{ t('duplicatefinder', 'Run Scan Again') }}
-            </NcButton>
-        </div>
     </div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcPagination, NcSelect } from '@nextcloud/vue'
-import ArrowLeft from 'vue-material-design-icons/ArrowLeft'
+import { NcButton, NcLoadingIcon, NcPagination } from '@nextcloud/vue'
+
 import Refresh from 'vue-material-design-icons/Refresh'
 import { fetchProject, fetchProjectDuplicates, scanProject } from '@/tools/api'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -106,8 +85,7 @@ export default {
         NcButton,
         NcLoadingIcon,
         NcPagination,
-        NcSelect,
-        ArrowLeft,
+
         Refresh
     },
     props: {
@@ -121,25 +99,15 @@ export default {
             project: null,
             duplicates: [],
             isLoading: true,
-            selectedType: 'all',
             pagination: {
                 currentPage: 1,
                 totalPages: 1,
                 totalItems: 0
             },
-            limit: 10,
-            typeOptions: [
-                { value: 'all', label: t('duplicatefinder', 'All Duplicates') },
-                { value: 'acknowledged', label: t('duplicatefinder', 'Acknowledged') },
-                { value: 'unacknowledged', label: t('duplicatefinder', 'Unacknowledged') }
-            ]
+            limit: 10
         }
     },
     watch: {
-        selectedType() {
-            this.pagination.currentPage = 1
-            this.loadDuplicates()
-        },
         projectId() {
             this.loadProject()
         }
@@ -157,17 +125,17 @@ export default {
                 this.isLoading = false
             }
         },
-        
+
         async loadDuplicates() {
             this.isLoading = true
             try {
                 const result = await fetchProjectDuplicates(
                     this.projectId,
-                    this.selectedType,
+                    'all',
                     this.pagination.currentPage,
                     this.limit
                 )
-                
+
                 this.duplicates = result.entities
                 this.pagination = result.pagination
             } catch (error) {
@@ -177,13 +145,13 @@ export default {
                 this.isLoading = false
             }
         },
-        
+
         async refreshScan() {
             try {
                 this.isLoading = true
                 await scanProject(this.projectId)
                 showSuccess(t('duplicatefinder', 'Project scan initiated. This may take a while.'))
-                
+
                 // Wait a bit before reloading to give the scan time to start
                 setTimeout(() => {
                     this.loadDuplicates()
@@ -193,33 +161,31 @@ export default {
                 this.isLoading = false
             }
         },
-        
+
         changePage(page) {
             this.pagination.currentPage = page
             this.loadDuplicates()
         },
-        
-        backToProjects() {
-            this.$emit('back-to-projects')
-        },
-        
+
+
+
         viewDuplicate(duplicate) {
             this.$emit('view-duplicate', duplicate)
         },
-        
+
         getFileName(path) {
             if (!path) return ''
             const parts = path.split('/')
             return parts[parts.length - 1]
         },
-        
+
         getFilePath(path) {
             if (!path) return ''
             const parts = path.split('/')
             parts.pop() // Remove filename
             return parts.join('/')
         },
-        
+
         getFileIconStyle(file) {
             const mimeType = file.mimetype || 'application/octet-stream'
             const iconUrl = OC.MimeType.getIconUrl(mimeType)
@@ -227,22 +193,22 @@ export default {
                 backgroundImage: `url(${iconUrl})`
             }
         },
-        
+
         formatBytes(bytes, decimals = 2) {
             if (bytes === 0) return '0 Bytes'
-            
+
             const k = 1024
             const dm = decimals < 0 ? 0 : decimals
             const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-            
+
             const i = Math.floor(Math.log(bytes) / Math.log(k))
-            
+
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
         },
-        
+
         formatDate(dateString) {
             if (!dateString) return ''
-            
+
             const date = new Date(dateString)
             return date.toLocaleString()
         }
@@ -285,7 +251,6 @@ export default {
 
 .duplicates-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
 }
