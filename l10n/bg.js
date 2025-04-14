@@ -6,7 +6,6 @@ OC.L10N.register(
     "Filters" : "Филтри",
     "Unselect all" : "Отмяна на избора на всички",
     "Select all" : "Избери всички",
-    "Delete selected files" : "Изтриване на избраните файлове",
     "Duplicate group" : "Дублиране на група",
     "Select All" : "Избор на всички",
     "File" : "Файл",
