@@ -10,6 +10,14 @@
   - Added tests for merge functionality with origin folder protection
   - Added tests for custom filters (hash filters and name pattern filters)
 
+### Changed
+- Consolidated CLI commands for better usability:
+  - Improved `duplicates:find-all` to include project scanning functionality
+  - Enhanced `duplicates:list` with better formatting and readability
+  - Updated `duplicates:clear` with clearer user feedback
+  - Removed redundant commands by integrating their functionality into the main commands
+- Improved CLI output format with better organization and readability
+
 ## 1.7.0 - 2025-04-13
 ### Added
 - New Projects feature to scan specific folders for duplicates (Fix [#123](https://github.com/eldertek/duplicatefinder/issues/123))
