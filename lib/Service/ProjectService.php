@@ -10,6 +10,7 @@ use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\Project;
 use OCA\DuplicateFinder\Db\ProjectMapper;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
+use OCA\DuplicateFinder\Db\FileInfo;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
@@ -295,13 +296,37 @@ class ProjectService {
             $filesInProjectCount = 0;
             $matchedFiles = [];
 
-            foreach ($filePaths as $filePath) {
+            foreach ($filePaths as $fileData) {
+                // Get the file path from the data array
+                $filePath = $fileData['path'];
+
                 // Check if this file is in one of the project folders
                 foreach ($folderPaths as $folderPath) {
-                    if (strpos($filePath, $folderPath) === 0) {
+                    // Construct the full path pattern to match
+                    // The file paths are in the format '/admin/files/Photos/file.jpg'
+                    // The folder paths are in the format '/Photos'
+                    // So we need to check if the file path contains '/files' + folderPath
+                    $fullFolderPath = '/files' . $folderPath;
+
+                    $this->logger->debug('Checking if file is in folder', [
+                        'app' => 'duplicatefinder',
+                        'filePath' => $filePath,
+                        'folderPath' => $folderPath,
+                        'fullFolderPath' => $fullFolderPath
+                    ]);
+
+                    if (strpos($filePath, $fullFolderPath) !== false) {
                         $filesInProject = true;
                         $filesInProjectCount++;
                         $matchedFiles[] = $filePath;
+
+                        $this->logger->debug('File matched folder', [
+                            'app' => 'duplicatefinder',
+                            'filePath' => $filePath,
+                            'folderPath' => $folderPath,
+                            'fullFolderPath' => $fullFolderPath
+                        ]);
+
                         break;
                     }
                 }
@@ -407,6 +432,71 @@ class ProjectService {
 
         // Get the duplicates for the current page
         $duplicates = $this->duplicateMapper->findByIds($duplicateIds, $type, $limit, ($page - 1) * $limit);
+
+        // Load files for each duplicate
+        foreach ($duplicates as $duplicate) {
+            // Get files for this duplicate
+            $fileData = $this->duplicateMapper->findFilesByHash($duplicate->getHash(), $this->userId);
+
+            // Log file data for debugging
+            $this->logger->debug('File data for duplicate', [
+                'app' => 'duplicatefinder',
+                'hash' => $duplicate->getHash(),
+                'fileData' => $fileData
+            ]);
+
+            // Create FileInfo objects for each file path
+            $files = [];
+            foreach ($fileData as $data) {
+                $fileInfo = new FileInfo();
+                $fileInfo->setPath($data['path']);
+                $fileInfo->setFileHash($duplicate->getHash());
+                $fileInfo->setOwner($this->userId);
+
+                // Set additional properties from the database
+                if (method_exists($fileInfo, 'setSize')) {
+                    // Get file size from Nextcloud storage if available
+                    $size = (int)$data['size'];
+                    if ($size <= 0) {
+                        // Try to get the real file size from the filesystem
+                        try {
+                            $userFolder = $this->rootFolder->getUserFolder($this->userId);
+                            $relativePath = str_replace('/admin/files', '', $data['path']);
+                            if ($userFolder->nodeExists($relativePath)) {
+                                $node = $userFolder->get($relativePath);
+                                $size = $node->getSize();
+                                $this->logger->debug('Got file size from filesystem', [
+                                    'app' => 'duplicatefinder',
+                                    'path' => $data['path'],
+                                    'relativePath' => $relativePath,
+                                    'size' => $size
+                                ]);
+                            }
+                        } catch (\Exception $e) {
+                            $this->logger->debug('Error getting file size from filesystem', [
+                                'app' => 'duplicatefinder',
+                                'path' => $data['path'],
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                    $fileInfo->setSize($size);
+                }
+                if (method_exists($fileInfo, 'setUpdatedAt')) {
+                    $fileInfo->setUpdatedAt((int)$data['updated_at']); // Use actual timestamp from database
+                }
+                $files[] = $fileInfo;
+            }
+
+            // Set the files to the duplicate
+            $duplicate->setFiles($files);
+
+            $this->logger->debug('Loaded files for duplicate', [
+                'app' => 'duplicatefinder',
+                'hash' => $duplicate->getHash(),
+                'fileCount' => count($files)
+            ]);
+        }
 
         $this->logger->debug('Found duplicates for page', [
             'app' => 'duplicatefinder',

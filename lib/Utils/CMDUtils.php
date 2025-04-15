@@ -34,38 +34,35 @@ class CMDUtils
 
     private static function processDuplicates(OutputInterface $output, array $duplicates): void
     {
-        foreach ($duplicates["entities"] as $duplicate) {
+        $output->writeln('<info>Found ' . count($duplicates["entities"]) . ' duplicates</info>');
+
+        foreach ($duplicates["entities"] as $index => $duplicate) {
             if (!$duplicate->getFiles()) {
                 continue;
             }
-            $output->writeln($duplicate->getHash() . '(' . $duplicate->getType() . ')');
-            self::showFiles($output, $duplicate->getFiles());
-        }
-    }
 
-    /**
-     * @param array<\OCA\DuplicateFinder\Db\FileInfo> $files
-     */
-    private static function showFiles(OutputInterface $output, array $files): void
-    {
-        $shownPaths = [];
-        $hiddenPaths = 0;
-        $indent = '     ';
-        foreach ($files as $file) {
-            if ($file instanceof \OCA\DuplicateFinder\Db\FileInfo) {
-                if (!isset($shownPaths[$file->getPath()])) {
-                    $output->writeln($indent . $file->getPath());
-                    $shownPaths[$file->getPath()] = 1;
-                } else {
-                    $hiddenPaths += 1;
+            $output->writeln('');
+            $output->writeln('<info>Duplicate #' . ($index + 1) . '</info>');
+            $output->writeln('<comment>Hash:</comment> ' . $duplicate->getHash());
+            $output->writeln('<comment>Status:</comment> ' . ($duplicate->isAcknowledged() ? 'Acknowledged' : 'Unacknowledged'));
+
+            $files = $duplicate->getFiles();
+            $output->writeln('<comment>Files (' . count($files) . '):</comment>');
+
+            foreach ($files as $fileIndex => $file) {
+                if ($file instanceof \OCA\DuplicateFinder\Db\FileInfo) {
+                    $path = $file->getPath();
+                    $filename = basename($path);
+                    $directory = dirname($path);
+
+                    $output->writeln('  ' . ($fileIndex + 1) . '. <info>' . $filename . '</info>');
+                    $output->writeln('     Path: ' . $directory);
                 }
             }
         }
-        if ($hiddenPaths > 0) {
-            $message = $hiddenPaths . ' path' . ($hiddenPaths > 1 ? 's are' : ' is') . ' hidden because ' . ($hiddenPaths > 1 ? 'they reference' : 'it references') . ' to a similiar file.';
-            $output->writeln($indent . '<info>' . $message . '</info>');
-        }
     }
+
+
 
     public static function showIfOutputIsPresent(
         string $message,

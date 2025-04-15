@@ -82,6 +82,7 @@ class FindDuplicates extends Command
      * @param FileDuplicateService $fileDuplicateService The file duplicate service instance.
      * @param ExcludedFolderService $excludedFolderService The excluded folder service instance.
      * @param OriginFolderService $originFolderService The origin folder service instance.
+     * @param ProjectService $projectService The project service instance.
      * @param LoggerInterface $logger The logger instance.
      */
     public function __construct(
@@ -92,6 +93,7 @@ class FindDuplicates extends Command
         FileDuplicateService $fileDuplicateService,
         ExcludedFolderService $excludedFolderService,
         OriginFolderService $originFolderService,
+        ProjectService $projectService,
         LoggerInterface $logger
     ) {
         parent::__construct('duplicates:find-all');
@@ -102,6 +104,7 @@ class FindDuplicates extends Command
         $this->fileDuplicateService = $fileDuplicateService;
         $this->excludedFolderService = $excludedFolderService;
         $this->originFolderService = $originFolderService;
+        $this->projectService = $projectService;
         $this->logger = $logger;
     }
 
@@ -213,49 +216,64 @@ class FindDuplicates extends Command
         }
 
         try {
-            // We can't create a ProjectService directly here because it requires more dependencies
-            // than we have access to. Instead, we'll use the ScanProject command directly.
-            $scanProjectCommand = new ScanProject(
-                $this->userManager,
-                $this->encryptionManager,
-                $this->projectService,
-                $this->logger
-            );
+            // Set the user context for the project service
+            $this->projectService->setUserId($user);
 
-            $this->output->writeln('<info>Scanning project ID ' . $projectId . ' for user ' . $user . '...</info>');
+            // Get the project to verify it exists and belongs to the user
+            try {
+                $project = $this->projectService->find($projectId);
+                $this->output->writeln('<info>Found project: ' . $project->getName() . '</info>');
 
-            // Execute the scan project command
-            $result = $scanProjectCommand->run(
-                new \Symfony\Component\Console\Input\ArrayInput([
-                    'project-id' => $projectId,
-                    '--user' => $user
-                ]),
-                $this->output
-            );
-
-            if ($result === 0) {
-                $this->output->writeln('<info>Project scan completed successfully.</info>');
-
-                // Now list the duplicates found in the project
-                $listProjectCommand = new ListProjectDuplicates(
-                    $this->userManager,
-                    $this->encryptionManager,
-                    $this->projectService,
-                    $this->logger
-                );
-
-                $this->output->writeln('<info>Listing duplicates found in the project:</info>');
-
-                $listProjectCommand->run(
-                    new \Symfony\Component\Console\Input\ArrayInput([
-                        'project-id' => $projectId,
-                        '--user' => $user
-                    ]),
-                    $this->output
-                );
+                // Afficher les dossiers du projet
+                $folders = $project->getFolders();
+                $this->output->writeln('<info>Project folders:</info>');
+                foreach ($folders as $folder) {
+                    $this->output->writeln('  - ' . $folder);
+                }
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                $this->output->writeln('<e>Project with ID ' . $projectId . ' not found for user ' . $user . '.</e>');
+                return 1;
             }
 
-            return $result;
+            // Scan the project
+            $this->output->writeln('<info>Scanning project folders...</info>');
+            $this->projectService->scan($projectId);
+
+            $this->output->writeln('<info>Scan completed successfully for project: ' . $project->getName() . '</info>');
+
+            // Get duplicates for the project
+            $this->output->writeln('<info>Listing duplicates found in the project:</info>');
+            $result = $this->projectService->getDuplicates($projectId, 'all', 1, 1000);
+            $duplicates = $result['entities'];
+            $pagination = $result['pagination'];
+
+            if (empty($duplicates)) {
+                $this->output->writeln('<info>No duplicates found for this project.</info>');
+            } else {
+                $this->output->writeln('<info>Found ' . $pagination['totalItems'] . ' duplicates</info>');
+
+                // Display duplicates
+                foreach ($duplicates as $index => $duplicate) {
+                    $this->output->writeln('');
+                    $this->output->writeln('<info>Duplicate #' . ($index + 1) . '</info>');
+                    $this->output->writeln('<comment>Hash:</comment> ' . $duplicate->getHash());
+                    $this->output->writeln('<comment>Status:</comment> ' . ($duplicate->isAcknowledged() ? 'Acknowledged' : 'Unacknowledged'));
+
+                    $files = $duplicate->getFiles();
+                    $this->output->writeln('<comment>Files (' . count($files) . '):</comment>');
+
+                    foreach ($files as $fileIndex => $file) {
+                        $path = $file->getPath();
+                        $filename = basename($path);
+                        $directory = dirname($path);
+
+                        $this->output->writeln('  ' . ($fileIndex + 1) . '. <info>' . $filename . '</info>');
+                        $this->output->writeln('     Path: ' . $directory);
+                    }
+                }
+            }
+
+            return 0;
         } catch (\Exception $e) {
             $this->logger->error('Error scanning project: ' . $e->getMessage(), [
                 'app' => Application::ID,

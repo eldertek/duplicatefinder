@@ -10,19 +10,19 @@ namespace OCA\DuplicateFinder\Command;
  use Symfony\Component\Console\Question\ConfirmationQuestion;
  use OCA\DuplicateFinder\Service\FileInfoService;
  use OCA\DuplicateFinder\Service\FileDuplicateService;
- 
+
  class ClearDuplicates extends Command
  {
      /**
       * @var FileInfoService The file info service instance.
       */
      protected $fileInfoService;
- 
+
      /**
       * @var FileDuplicateService The file duplicate service instance.
       */
      protected $fileDuplicateService;
- 
+
      /**
       * ClearDuplicates constructor.
       *
@@ -32,11 +32,11 @@ namespace OCA\DuplicateFinder\Command;
      public function __construct(FileInfoService $fileInfoService, FileDuplicateService $fileDuplicateService)
      {
          parent::__construct();
- 
+
          $this->fileInfoService = $fileInfoService;
          $this->fileDuplicateService = $fileDuplicateService;
      }
- 
+
      /**
       * Configure the command.
       */
@@ -49,7 +49,7 @@ namespace OCA\DuplicateFinder\Command;
                  . PHP_EOL . 'This action doesn\'t remove the files from your file system.')
              ->addOption('force', 'f', InputOption::VALUE_NONE, 'Don\'t ask any questions');
      }
- 
+
      /**
       * Execute the command.
       *
@@ -60,14 +60,18 @@ namespace OCA\DuplicateFinder\Command;
      protected function execute(InputInterface $input, OutputInterface $output): int
      {
          if ($input->getOption('force') || $this->confirmClearing($input, $output)) {
+             $output->writeln('<info>Clearing all duplicates and file information...</info>');
              $this->fileDuplicateService->clear();
              $this->fileInfoService->clear();
+             $output->writeln('<info>All duplicates and file information have been cleared successfully.</info>');
+             $output->writeln('<info>You can now run the duplicates:find-all command to scan for duplicates again.</info>');
              return Command::SUCCESS;
          }
- 
+
+         $output->writeln('<comment>Operation cancelled.</comment>');
          return Command::FAILURE;
      }
- 
+
      /**
       * Confirm the clearing of duplicates.
       *
@@ -79,8 +83,9 @@ namespace OCA\DuplicateFinder\Command;
      {
          /** @var QuestionHelper $helper */
          $helper = $this->getHelper('question');
-         $question = new ConfirmationQuestion('Do you really want to clear all duplicates and information for discovery?', false);
+         $output->writeln('<comment>Warning: This will remove all duplicate information from the database.</comment>');
+         $output->writeln('<comment>You will need to run the duplicates:find-all command again to find duplicates.</comment>');
+         $question = new ConfirmationQuestion('Do you really want to clear all duplicates and information for discovery? (y/N) ', false);
          return $helper->ask($input, $output, $question);
      }
  }
- 

@@ -67,8 +67,6 @@
         <command>OCA\DuplicateFinder\Command\FindDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ListDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ClearDuplicates</command>
-        <command>OCA\DuplicateFinder\Command\ScanProject</command>
-        <command>OCA\DuplicateFinder\Command\ListProjectDuplicates</command>
     </commands>
 
     <settings>
