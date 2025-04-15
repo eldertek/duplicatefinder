@@ -36,7 +36,7 @@ RUN service mariadb start \
     && sudo mysql -e "FLUSH PRIVILEGES;"
 
 # Télécharger et installer Nextcloud
-RUN wget https://download.nextcloud.com/server/releases/nextcloud-29.0.0.zip -O /tmp/nextcloud.zip \
+RUN wget https://download.nextcloud.com/server/releases/nextcloud-31.0.3.zip -O /tmp/nextcloud.zip \
     && unzip /tmp/nextcloud.zip -d /var/www/ \
     && sudo chown -R www-data:www-data /var/www/nextcloud
 
