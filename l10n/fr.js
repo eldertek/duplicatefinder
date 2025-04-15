@@ -43,6 +43,7 @@ OC.L10N.register(
     "Files to be deleted" : "Fichiers à supprimer",
     "Duplicate group" : "Groupe de doublons",
     "{selected} of {total} files selected" : "{selected} sur {total} fichiers sélectionnés",
+    "Preview" : "Prévisualiser",
     "Cannot delete protected files" : "Impossible de supprimer les fichiers protégés",
     "File hash copied to clipboard" : "Hachage de fichier copié dans le presse-papiers",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Bienvenue, le doublon actuel contient {numberOfFiles} fichiers, taille totale : {formattedSize}",

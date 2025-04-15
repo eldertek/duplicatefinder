@@ -1,0 +1,25 @@
+OC.L10N.register(
+    "duplicatefinder",
+    {
+    "FAQ" : "KKK",
+    "Help" : "Abiinfo",
+    "Filters" : "Filtrid",
+    "Origin Folders" : "Lähtekaustad",
+    "Excluded Folders" : "Välistatud kaustad",
+    "Could not fetch settings" : "Seadistuste laadimine ei õnnestunud",
+    "All duplicates cleared" : "Kõik topeltobjektid on eemaldatud",
+    "Could not clear duplicates" : "Topeltobjektide eemaldamine ei õnnestunud",
+    "Unselect all" : "Eemalda kogu valik",
+    "Select all" : "Vali kõik",
+    "Back" : "Tagasi",
+    "Preview" : "Eelvaade",
+    "File" : "Fail",
+    "Delete" : "Kustuta",
+    "Settings" : "Seaded",
+    "No results found" : "Otsingutulemusi ei leidu",
+    "Previous" : "Eelmine",
+    "Advanced Settings" : "Täpsemad seaded",
+    "Note:" : "Märkus:",
+    "File not found" : "Faili ei leitud"
+},
+"nplurals=2; plural=(n != 1);");

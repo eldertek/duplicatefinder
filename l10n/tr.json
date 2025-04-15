@@ -88,6 +88,8 @@
     "Failed to load origin folders" : "Kaynak klasörler yüklenemedi",
     "Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted." : "Kaynak klasörler olarak kabul edilecek klasörleri yapılandırın. Bu klasörlerdeki dosyalar asla silinecek çift olarak işaretlenmez.",
     "Add Origin Folder" : "Kaynak klasör ekle",
+    "Edit" : "Düzenle",
+    "Remove folder" : "Klasörü sil",
     "Search with wildcards (e.g., IMG*.jpg)" : "Genel karakterler ile arama (IMG*.jpg gibi)",
     "Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)" : "Kurallı ifade ile arama (^IMG_\\d{4}\\.jpg$ gibi)",
     "Search duplicates…" : "Çiftleri ara…",

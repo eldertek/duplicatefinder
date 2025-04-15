@@ -43,6 +43,7 @@ OC.L10N.register(
     "Files to be deleted" : "Comhaid le scriosadh",
     "Duplicate group" : "Grúpa dúblach",
     "{selected} of {total} files selected" : "{selected} de {total} comhaid roghnaithe",
+    "Preview" : "Réamhamharc",
     "Cannot delete protected files" : "Ní féidir comhaid chosanta a scriosadh",
     "File hash copied to clipboard" : "Cóipeáladh hash an chomhaid chuig an ngearrthaisce",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Fáilte, tá comhaid {numberOfFiles} ag an dúblach reatha, méid iomlán: {formattedSize}",

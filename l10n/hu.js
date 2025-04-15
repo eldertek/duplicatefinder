@@ -17,6 +17,7 @@ OC.L10N.register(
     "Unselect all" : "Kijelölés megszüntetése",
     "Back" : "Vissza",
     "Duplicate group" : "Duplikált csoport",
+    "Preview" : "Előnézet",
     "Select All" : "Összes kiválasztása",
     "No duplicates found or no duplicate selected." : "Nem található duplikáció vagy nincs duplikáció kijelölve.",
     "File" : "Fájl",

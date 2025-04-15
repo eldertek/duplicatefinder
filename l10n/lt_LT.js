@@ -7,6 +7,7 @@ OC.L10N.register(
     "Could not fetch settings" : "Nepavyko gauti nustatymų",
     "Select all" : "Pažymėti viską",
     "Back" : "Atgal",
+    "Preview" : "Peržiūra",
     "File hash copied to clipboard" : "Failo maiša nukopijuota į iškarpinę",
     "Show Preview" : "Rodyti peržiūrą",
     "Copy File Hash" : "Kopijuoti failo maišą",

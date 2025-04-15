@@ -47,6 +47,8 @@ OC.L10N.register(
     "Load More" : "تېخىمۇ كۆپ يۈكلەڭ",
     "Unacknowledged" : "نامەلۇم",
     "No unacknowledged duplicates found." : "نامەلۇم كۆپەيتىلگەن نۇسخىسى تېپىلمىدى.",
+    "Edit" : "تەھرىر",
+    "Remove folder" : "ھۆججەت قىسقۇچنى ئۆچۈرۈڭ",
     "No results found" : "ھېچقانداق نەتىجە تېپىلمىدى",
     "Previous" : "ئالدىنقى",
     "Advanced Settings" : "ئىلغار تەڭشەكلەر",

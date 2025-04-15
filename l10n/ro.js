@@ -27,6 +27,7 @@ OC.L10N.register(
     "Delete" : "Șterge",
     "Default" : "Implicită",
     "Settings" : "Setări",
+    "Remove folder" : "Șterge dosarul",
     "No results found" : "Nu s-a găsit nimic",
     "Previous" : "Precedentul",
     "Next" : "Următorul",

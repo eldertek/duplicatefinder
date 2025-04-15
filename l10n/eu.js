@@ -9,6 +9,7 @@ OC.L10N.register(
     "Select all" : "Hautatu dena",
     "Back" : "Itzuli",
     "Duplicate group" : "Bikoiztu taldea",
+    "Preview" : "Aurrebista",
     "Show Preview" : "Erakutsi aurreikuspena",
     "Unacknowledge it" : "Aitormena kendu",
     "Acknowledge it" : "Aitortu",
