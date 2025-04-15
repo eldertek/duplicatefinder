@@ -12,7 +12,7 @@ use Psr\Log\LoggerInterface;
 
 class ProjectMapper extends QBMapper {
     private LoggerInterface $logger;
-    
+
     public function __construct(IDBConnection $db, LoggerInterface $logger) {
         parent::__construct($db, 'df_projects', Project::class);
         $this->logger = $logger;
@@ -20,7 +20,7 @@ class ProjectMapper extends QBMapper {
 
     /**
      * Find a project by ID
-     * 
+     *
      * @param int $id The project ID
      * @param string $userId The user ID
      * @return Project
@@ -43,7 +43,7 @@ class ProjectMapper extends QBMapper {
 
     /**
      * Find all projects for a user
-     * 
+     *
      * @param string $userId The user ID
      * @return array Array of Project objects
      */
@@ -62,7 +62,7 @@ class ProjectMapper extends QBMapper {
 
     /**
      * Add folders to a project
-     * 
+     *
      * @param int $projectId The project ID
      * @param array $folderPaths Array of folder paths
      */
@@ -80,7 +80,7 @@ class ProjectMapper extends QBMapper {
 
     /**
      * Get folders for a project
-     * 
+     *
      * @param int $projectId The project ID
      * @return array Array of folder paths
      */
@@ -104,7 +104,7 @@ class ProjectMapper extends QBMapper {
 
     /**
      * Remove all folders for a project
-     * 
+     *
      * @param int $projectId The project ID
      */
     public function removeFolders(int $projectId): void {
@@ -118,11 +118,17 @@ class ProjectMapper extends QBMapper {
 
     /**
      * Add a duplicate to a project
-     * 
+     *
      * @param int $projectId The project ID
      * @param int $duplicateId The duplicate ID
      */
     public function addDuplicate(int $projectId, int $duplicateId): void {
+        $this->logger->debug('Adding duplicate to project', [
+            'app' => 'duplicatefinder',
+            'projectId' => $projectId,
+            'duplicateId' => $duplicateId
+        ]);
+
         // Check if the duplicate is already associated with the project
         $qb = $this->db->getQueryBuilder();
         $qb->select('id')
@@ -133,12 +139,18 @@ class ProjectMapper extends QBMapper {
            ->andWhere(
                $qb->expr()->eq('duplicate_id', $qb->createNamedParameter($duplicateId, IQueryBuilder::PARAM_INT))
            );
-        
+
         $result = $qb->execute();
         $exists = $result->fetch();
         $result->closeCursor();
-        
+
         if (!$exists) {
+            $this->logger->debug('Duplicate not yet associated with project, adding it', [
+                'app' => 'duplicatefinder',
+                'projectId' => $projectId,
+                'duplicateId' => $duplicateId
+            ]);
+
             $qb = $this->db->getQueryBuilder();
             $qb->insert('df_duplicates')
                ->values([
@@ -146,16 +158,27 @@ class ProjectMapper extends QBMapper {
                    'duplicate_id' => $qb->createNamedParameter($duplicateId, IQueryBuilder::PARAM_INT),
                ])
                ->execute();
+        } else {
+            $this->logger->debug('Duplicate already associated with project, skipping', [
+                'app' => 'duplicatefinder',
+                'projectId' => $projectId,
+                'duplicateId' => $duplicateId
+            ]);
         }
     }
 
     /**
      * Get duplicate IDs for a project
-     * 
+     *
      * @param int $projectId The project ID
      * @return array Array of duplicate IDs
      */
     public function getDuplicateIds(int $projectId): array {
+        $this->logger->debug('Getting duplicate IDs for project', [
+            'app' => 'duplicatefinder',
+            'projectId' => $projectId
+        ]);
+
         $qb = $this->db->getQueryBuilder();
         $qb->select('duplicate_id')
            ->from('df_duplicates')
@@ -170,26 +193,45 @@ class ProjectMapper extends QBMapper {
         }
         $result->closeCursor();
 
+        $this->logger->debug('Found duplicate IDs for project', [
+            'app' => 'duplicatefinder',
+            'projectId' => $projectId,
+            'count' => count($duplicateIds),
+            'duplicateIds' => $duplicateIds
+        ]);
+
         return $duplicateIds;
     }
 
     /**
      * Remove all duplicates for a project
-     * 
+     *
      * @param int $projectId The project ID
      */
     public function removeDuplicates(int $projectId): void {
+        $this->logger->debug('Removing all duplicates for project', [
+            'app' => 'duplicatefinder',
+            'projectId' => $projectId
+        ]);
+
         $qb = $this->db->getQueryBuilder();
         $qb->delete('df_duplicates')
            ->where(
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
-           )
-           ->execute();
+           );
+
+        $count = $qb->execute();
+
+        $this->logger->debug('Removed duplicates for project', [
+            'app' => 'duplicatefinder',
+            'projectId' => $projectId,
+            'count' => $count
+        ]);
     }
 
     /**
      * Update the last scan time for a project
-     * 
+     *
      * @param int $projectId The project ID
      * @param string $lastScan The last scan time in ISO format
      */

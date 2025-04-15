@@ -41,7 +41,7 @@ class ProjectService {
 
     /**
      * Set the user ID for the service
-     * 
+     *
      * @param string $userId The user ID
      */
     public function setUserId(string $userId): void {
@@ -50,7 +50,7 @@ class ProjectService {
 
     /**
      * Validate that a user context is available
-     * 
+     *
      * @throws \RuntimeException if no user context is available
      */
     private function validateUserContext(): void {
@@ -61,25 +61,25 @@ class ProjectService {
 
     /**
      * Find all projects for the current user
-     * 
+     *
      * @return array Array of Project objects with folders loaded
      */
     public function findAll(): array {
         $this->validateUserContext();
         $projects = $this->mapper->findAll($this->userId);
-        
+
         // Load folders for each project
         foreach ($projects as $project) {
             $folders = $this->mapper->getFolders($project->getId());
             $project->setFolders($folders);
         }
-        
+
         return $projects;
     }
 
     /**
      * Find a project by ID
-     * 
+     *
      * @param int $id The project ID
      * @return Project The project with folders loaded
      * @throws DoesNotExistException if not found
@@ -87,17 +87,17 @@ class ProjectService {
     public function find(int $id): Project {
         $this->validateUserContext();
         $project = $this->mapper->find($id, $this->userId);
-        
+
         // Load folders
         $folders = $this->mapper->getFolders($project->getId());
         $project->setFolders($folders);
-        
+
         return $project;
     }
 
     /**
      * Create a new project
-     * 
+     *
      * @param string $name The project name
      * @param array $folderPaths Array of folder paths
      * @return Project The created project
@@ -109,7 +109,7 @@ class ProjectService {
             'name' => $name,
             'folders' => implode(', ', $folderPaths)
         ]);
-        
+
         // Verify that all folders exist
         $userFolder = $this->rootFolder->getUserFolder($this->userId);
         foreach ($folderPaths as $folderPath) {
@@ -118,31 +118,31 @@ class ProjectService {
                 throw new NotFoundException('Folder does not exist: ' . $folderPath);
             }
         }
-        
+
         // Create the project
         $project = new Project();
         $project->setUserId($this->userId);
         $project->setName($name);
         $project->setCreatedAt((new DateTime())->format('Y-m-d H:i:s'));
-        
+
         // Insert the project
         $project = $this->mapper->insert($project);
-        
+
         // Add folders
         $this->mapper->addFolders($project->getId(), $folderPaths);
         $project->setFolders($folderPaths);
-        
+
         $this->logger->info('Successfully created project: {name} with ID {id}', [
             'name' => $name,
             'id' => $project->getId()
         ]);
-        
+
         return $project;
     }
 
     /**
      * Update a project
-     * 
+     *
      * @param int $id The project ID
      * @param string $name The new project name
      * @param array $folderPaths Array of new folder paths
@@ -152,14 +152,14 @@ class ProjectService {
      */
     public function update(int $id, string $name, array $folderPaths): Project {
         $this->validateUserContext();
-        
+
         // Get the project
         $project = $this->mapper->find($id, $this->userId);
-        
+
         // Update the name
         $project->setName($name);
         $project = $this->mapper->update($project);
-        
+
         // Verify that all folders exist
         $userFolder = $this->rootFolder->getUserFolder($this->userId);
         foreach ($folderPaths as $folderPath) {
@@ -168,59 +168,59 @@ class ProjectService {
                 throw new NotFoundException('Folder does not exist: ' . $folderPath);
             }
         }
-        
+
         // Update folders
         $this->mapper->removeFolders($id);
         $this->mapper->addFolders($id, $folderPaths);
         $project->setFolders($folderPaths);
-        
+
         return $project;
     }
 
     /**
      * Delete a project
-     * 
+     *
      * @param int $id The project ID
      * @throws DoesNotExistException if the project doesn't exist
      */
     public function delete(int $id): void {
         $this->validateUserContext();
-        
+
         // Get the project to verify it exists and belongs to the user
         $project = $this->mapper->find($id, $this->userId);
-        
+
         // Delete the project (folders and duplicates will be deleted by foreign key constraints)
         $this->mapper->delete($project);
     }
 
     /**
      * Run a scan for a project
-     * 
+     *
      * @param int $id The project ID
      * @throws DoesNotExistException if the project doesn't exist
      */
     public function scan(int $id): void {
         $this->validateUserContext();
-        
+
         // Get the project
         $project = $this->find($id);
         $folders = $project->getFolders();
-        
+
         $this->logger->info('Starting scan for project: {name} (ID: {id})', [
             'name' => $project->getName(),
             'id' => $id
         ]);
-        
+
         // Clear existing duplicates for this project
         $this->mapper->removeDuplicates($id);
-        
+
         // Scan each folder
         foreach ($folders as $folderPath) {
             $this->logger->debug('Scanning folder: {path} for project {id}', [
                 'path' => $folderPath,
                 'id' => $id
             ]);
-            
+
             try {
                 // Scan the folder
                 $this->fileInfoService->scanFiles($this->userId, $folderPath);
@@ -232,13 +232,13 @@ class ProjectService {
                 ]);
             }
         }
-        
+
         // Find duplicates that are in the scanned folders
         $this->findProjectDuplicates($id, $folders);
-        
+
         // Update the last scan time
         $this->mapper->updateLastScan($id, (new DateTime())->format('Y-m-d H:i:s'));
-        
+
         $this->logger->info('Completed scan for project: {name} (ID: {id})', [
             'name' => $project->getName(),
             'id' => $id
@@ -247,7 +247,7 @@ class ProjectService {
 
     /**
      * Find duplicates for a project based on the scanned folders
-     * 
+     *
      * @param int $projectId The project ID
      * @param array $folderPaths The folder paths to check
      */
@@ -256,68 +256,89 @@ class ProjectService {
             'id' => $projectId,
             'folders' => implode(', ', $folderPaths)
         ]);
-        
+
         // Get all duplicates
-        $qb = $this->duplicateMapper->getQueryBuilder();
-        $qb->select('d.id', 'd.hash', 'd.type')
-           ->from('duplicatefinder_dups', 'd')
-           ->innerJoin('d', 'duplicatefinder_files', 'f', 
-                $qb->expr()->andX(
-                    $qb->expr()->eq('f.file_hash', 'd.hash'),
-                    $qb->expr()->eq('f.user_id', $qb->createNamedParameter($this->userId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
-                )
-           );
-        
-        $result = $qb->execute();
+        $this->logger->debug('Finding duplicates with files for user', [
+            'app' => 'duplicatefinder',
+            'userId' => $this->userId
+        ]);
+
+        $duplicates = $this->duplicateMapper->findDuplicatesWithFiles($this->userId);
+        $this->logger->debug('Found duplicates with files', [
+            'app' => 'duplicatefinder',
+            'count' => count($duplicates)
+        ]);
+
         $duplicateIds = [];
-        
-        while ($row = $result->fetch()) {
-            $duplicateId = (int)$row['id'];
-            $hash = $row['hash'];
-            
+
+        foreach ($duplicates as $duplicate) {
+            $duplicateId = (int)$duplicate['id'];
+            $hash = $duplicate['hash'];
+
+            $this->logger->debug('Processing duplicate', [
+                'app' => 'duplicatefinder',
+                'duplicateId' => $duplicateId,
+                'hash' => $hash,
+                'type' => $duplicate['type']
+            ]);
+
             // Get all files with this hash
-            $filesQb = $this->duplicateMapper->getQueryBuilder();
-            $filesQb->select('f.path')
-                   ->from('duplicatefinder_files', 'f')
-                   ->where(
-                       $filesQb->expr()->eq('f.file_hash', $filesQb->createNamedParameter($hash, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
-                   )
-                   ->andWhere(
-                       $filesQb->expr()->eq('f.user_id', $filesQb->createNamedParameter($this->userId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
-                   );
-            
-            $filesResult = $filesQb->execute();
+            $filePaths = $this->duplicateMapper->findFilesByHash($hash, $this->userId);
+            $this->logger->debug('Found files with hash', [
+                'app' => 'duplicatefinder',
+                'hash' => $hash,
+                'fileCount' => count($filePaths),
+                'files' => $filePaths
+            ]);
+
             $filesInProject = false;
-            $filesCount = 0;
             $filesInProjectCount = 0;
-            
-            while ($fileRow = $filesResult->fetch()) {
-                $filesCount++;
-                $filePath = $fileRow['path'];
-                
+            $matchedFiles = [];
+
+            foreach ($filePaths as $filePath) {
                 // Check if this file is in one of the project folders
                 foreach ($folderPaths as $folderPath) {
                     if (strpos($filePath, $folderPath) === 0) {
                         $filesInProject = true;
                         $filesInProjectCount++;
+                        $matchedFiles[] = $filePath;
                         break;
                     }
                 }
             }
-            $filesResult->closeCursor();
-            
+
+            $this->logger->debug('Files in project folders', [
+                'app' => 'duplicatefinder',
+                'hash' => $hash,
+                'filesInProject' => $filesInProject ? 'true' : 'false',
+                'filesInProjectCount' => $filesInProjectCount,
+                'matchedFiles' => $matchedFiles
+            ]);
+
             // Only add duplicates that have at least 2 files in the project folders
             if ($filesInProject && $filesInProjectCount >= 2) {
                 $duplicateIds[] = $duplicateId;
+                $this->logger->debug('Added duplicate to results', [
+                    'app' => 'duplicatefinder',
+                    'duplicateId' => $duplicateId,
+                    'hash' => $hash,
+                    'filesInProjectCount' => $filesInProjectCount
+                ]);
+            } else {
+                $this->logger->debug('Skipped duplicate (not enough files in project)', [
+                    'app' => 'duplicatefinder',
+                    'duplicateId' => $duplicateId,
+                    'hash' => $hash,
+                    'filesInProjectCount' => $filesInProjectCount
+                ]);
             }
         }
-        $result->closeCursor();
-        
+
         // Add the duplicates to the project
         foreach ($duplicateIds as $duplicateId) {
             $this->mapper->addDuplicate($projectId, $duplicateId);
         }
-        
+
         $this->logger->debug('Found {count} duplicates for project {id}', [
             'count' => count($duplicateIds),
             'id' => $projectId
@@ -326,7 +347,7 @@ class ProjectService {
 
     /**
      * Get duplicates for a project
-     * 
+     *
      * @param int $projectId The project ID
      * @param string $type The type of duplicates to get ('all', 'acknowledged', 'unacknowledged')
      * @param int $page The page number
@@ -335,10 +356,26 @@ class ProjectService {
      */
     public function getDuplicates(int $projectId, string $type = 'all', int $page = 1, int $limit = 50): array {
         $this->validateUserContext();
-        
+
+        $this->logger->debug('Getting duplicates for project', [
+            'app' => 'duplicatefinder',
+            'projectId' => $projectId,
+            'type' => $type,
+            'page' => $page,
+            'limit' => $limit,
+            'userId' => $this->userId
+        ]);
+
         // Get the duplicate IDs for this project
         $duplicateIds = $this->mapper->getDuplicateIds($projectId);
-        
+
+        $this->logger->debug('Got duplicate IDs for project', [
+            'app' => 'duplicatefinder',
+            'projectId' => $projectId,
+            'duplicateCount' => count($duplicateIds),
+            'duplicateIds' => $duplicateIds
+        ]);
+
         if (empty($duplicateIds)) {
             return [
                 'entities' => [],
@@ -349,41 +386,47 @@ class ProjectService {
                 ]
             ];
         }
-        
-        // Get the duplicates
-        $qb = $this->duplicateMapper->getQueryBuilder();
-        $qb->select('*')
-           ->from('duplicatefinder_dups')
-           ->where(
-               $qb->expr()->in('id', $qb->createNamedParameter($duplicateIds, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT_ARRAY))
-           );
-        
-        // Filter by acknowledgement status
-        if ($type === 'acknowledged') {
-            $qb->andWhere($qb->expr()->eq('acknowledged', $qb->createNamedParameter(1, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
-        } elseif ($type === 'unacknowledged') {
-            $qb->andWhere($qb->expr()->eq('acknowledged', $qb->createNamedParameter(0, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
-        }
-        
-        // Count total items for pagination
-        $countQb = clone $qb;
-        $countQb->select($countQb->createFunction('COUNT(*)'));
-        $totalItems = (int)$countQb->execute()->fetchColumn();
+
+        // Get the duplicates with pagination
+        $this->logger->debug('Counting duplicates by IDs', [
+            'app' => 'duplicatefinder',
+            'duplicateIdsCount' => count($duplicateIds),
+            'type' => $type
+        ]);
+
+        $totalItems = $this->duplicateMapper->countByIds($duplicateIds, $type);
         $totalPages = ceil($totalItems / $limit);
-        
-        // Add pagination
-        $qb->setFirstResult(($page - 1) * $limit)
-           ->setMaxResults($limit);
-        
-        // Execute the query
-        $result = $qb->execute();
-        $duplicates = [];
-        
-        while ($row = $result->fetch()) {
-            $duplicates[] = $this->duplicateMapper->mapRowToEntity($row);
+
+        $this->logger->debug('Pagination info', [
+            'app' => 'duplicatefinder',
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+            'currentPage' => $page,
+            'limit' => $limit
+        ]);
+
+        // Get the duplicates for the current page
+        $duplicates = $this->duplicateMapper->findByIds($duplicateIds, $type, $limit, ($page - 1) * $limit);
+
+        $this->logger->debug('Found duplicates for page', [
+            'app' => 'duplicatefinder',
+            'count' => count($duplicates),
+            'page' => $page,
+            'limit' => $limit
+        ]);
+
+        // Log details about each duplicate
+        foreach ($duplicates as $index => $duplicate) {
+            $this->logger->debug('Duplicate details', [
+                'app' => 'duplicatefinder',
+                'index' => $index,
+                'id' => $duplicate->getId(),
+                'hash' => $duplicate->getHash(),
+                'type' => $duplicate->getType(),
+                'acknowledged' => $duplicate->getAcknowledged() ? 'true' : 'false'
+            ]);
         }
-        $result->closeCursor();
-        
+
         return [
             'entities' => $duplicates,
             'pagination' => [

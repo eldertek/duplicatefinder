@@ -21,7 +21,7 @@
                     <template #icon>
                         <Refresh :size="20" />
                     </template>
-                    {{ t('duplicatefinder', 'Refresh Scan') }}
+                    {{ t('duplicatefinder', 'Scan for Duplicates') }}
                 </NcButton>
             </div>
         </div>
@@ -68,6 +68,15 @@
                     @update:page="changePage"
                 />
             </div>
+        </div>
+
+        <div v-else class="empty-state">
+            <div class="icon-search"></div>
+            <h3>{{ t('duplicatefinder', 'No duplicates found') }}</h3>
+            <p>{{ t('duplicatefinder', 'No duplicate files were found in the selected folders.') }}</p>
+            <p v-if="project && project.lastScan">
+                {{ t('duplicatefinder', 'Last scan: {date}', { date: formatDate(project.lastScan) }) }}
+            </p>
         </div>
     </div>
 </template>
@@ -116,10 +125,12 @@ export default {
         async loadProject() {
             this.isLoading = true
             try {
+                console.log('[DEBUG] Loading project with ID:', this.projectId)
                 this.project = await fetchProject(this.projectId)
+                console.log('[DEBUG] Project loaded successfully:', this.project)
                 await this.loadDuplicates()
             } catch (error) {
-                console.error('Error loading project:', error)
+                console.error('[DEBUG] Error loading project:', error)
                 showError(t('duplicatefinder', 'Failed to load project'))
             } finally {
                 this.isLoading = false
@@ -129,6 +140,7 @@ export default {
         async loadDuplicates() {
             this.isLoading = true
             try {
+                console.log('[DEBUG] Loading duplicates for project:', this.projectId, 'page:', this.pagination.currentPage, 'limit:', this.limit)
                 const result = await fetchProjectDuplicates(
                     this.projectId,
                     'all',
@@ -136,10 +148,37 @@ export default {
                     this.limit
                 )
 
+                console.log('[DEBUG] Duplicates API response:', result)
+                console.log('[DEBUG] Number of duplicates returned:', result.entities ? result.entities.length : 0)
+
+                if (result.entities && result.entities.length === 0) {
+                    console.log('[DEBUG] No duplicates found. Pagination info:', result.pagination)
+                }
+
                 this.duplicates = result.entities
                 this.pagination = result.pagination
+
+                // Log details about each duplicate
+                if (this.duplicates && this.duplicates.length > 0) {
+                    this.duplicates.forEach((duplicate, index) => {
+                        console.log(`[DEBUG] Duplicate #${index + 1}:`, {
+                            id: duplicate.id,
+                            hash: duplicate.hash,
+                            filesCount: duplicate.files ? duplicate.files.length : 0
+                        })
+
+                        // Log the first file of each duplicate if available
+                        if (duplicate.files && duplicate.files.length > 0) {
+                            console.log(`[DEBUG] First file of duplicate #${index + 1}:`, duplicate.files[0])
+                        }
+                    })
+                }
             } catch (error) {
-                console.error('Error loading duplicates:', error)
+                console.error('[DEBUG] Error loading duplicates:', error)
+                if (error.response) {
+                    console.error('[DEBUG] Error response:', error.response.data)
+                    console.error('[DEBUG] Error status:', error.response.status)
+                }
                 showError(t('duplicatefinder', 'Failed to load duplicates'))
             } finally {
                 this.isLoading = false
@@ -149,15 +188,23 @@ export default {
         async refreshScan() {
             try {
                 this.isLoading = true
-                await scanProject(this.projectId)
+                console.log('[DEBUG] Initiating scan for project:', this.projectId)
+                const response = await scanProject(this.projectId)
+                console.log('[DEBUG] Scan initiated response:', response)
                 showSuccess(t('duplicatefinder', 'Project scan initiated. This may take a while.'))
 
                 // Wait a bit before reloading to give the scan time to start
+                console.log('[DEBUG] Waiting 2 seconds before reloading duplicates...')
                 setTimeout(() => {
+                    console.log('[DEBUG] Reloading duplicates after scan...')
                     this.loadDuplicates()
                 }, 2000)
             } catch (error) {
-                console.error('Error refreshing scan:', error)
+                console.error('[DEBUG] Error refreshing scan:', error)
+                if (error.response) {
+                    console.error('[DEBUG] Error response:', error.response.data)
+                    console.error('[DEBUG] Error status:', error.response.status)
+                }
                 this.isLoading = false
             }
         },

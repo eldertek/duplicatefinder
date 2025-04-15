@@ -279,4 +279,129 @@ class FileDuplicateMapper extends EQBMapper
             throw $e;
         }
     }
+
+    /**
+     * Execute a custom query to find duplicates with files in specific folders
+     *
+     * @param string $userId The user ID
+     * @return array Array of duplicate data (id, hash, type)
+     */
+    public function findDuplicatesWithFiles(string $userId): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('d.id', 'd.hash', 'd.type')
+           ->from($this->getTableName(), 'd')
+           ->innerJoin('d', 'duplicatefinder_finfo', 'f',
+                $qb->expr()->andX(
+                    $qb->expr()->eq('f.file_hash', 'd.hash'),
+                    $qb->expr()->eq('f.owner', $qb->createNamedParameter($userId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
+                )
+           );
+
+        $result = $qb->executeQuery();
+        $duplicates = [];
+
+        while ($row = $result->fetch()) {
+            $duplicates[] = $row;
+        }
+        $result->closeCursor();
+
+        return $duplicates;
+    }
+
+    /**
+     * Find files with a specific hash
+     *
+     * @param string $hash The file hash
+     * @param string $userId The user ID
+     * @return array Array of file paths
+     */
+    public function findFilesByHash(string $hash, string $userId): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('f.path')
+           ->from('duplicatefinder_finfo', 'f')
+           ->where(
+               $qb->expr()->eq('f.file_hash', $qb->createNamedParameter($hash, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
+           )
+           ->andWhere(
+               $qb->expr()->eq('f.owner', $qb->createNamedParameter($userId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
+           );
+
+        $result = $qb->executeQuery();
+        $files = [];
+
+        while ($row = $result->fetch()) {
+            $files[] = $row['path'];
+        }
+        $result->closeCursor();
+
+        return $files;
+    }
+
+    /**
+     * Find duplicates by IDs
+     *
+     * @param array $ids Array of duplicate IDs
+     * @param string $type The type of duplicates to get ('all', 'acknowledged', 'unacknowledged')
+     * @param int $limit The maximum number of duplicates to return
+     * @param int $offset The offset for pagination
+     * @return array Array of FileDuplicate objects
+     */
+    public function findByIds(array $ids, string $type = 'all', int $limit = 50, int $offset = 0): array {
+        if (empty($ids)) {
+            return [];
+        }
+
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')
+           ->from($this->getTableName())
+           ->where(
+               $qb->expr()->in('id', $qb->createNamedParameter($ids, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT_ARRAY))
+           );
+
+        // Filter by acknowledgement status
+        if ($type === 'acknowledged') {
+            $qb->andWhere($qb->expr()->eq('acknowledged', $qb->createNamedParameter(1, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
+        } elseif ($type === 'unacknowledged') {
+            $qb->andWhere($qb->expr()->eq('acknowledged', $qb->createNamedParameter(0, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
+        }
+
+        // Add pagination
+        $qb->setFirstResult($offset)
+           ->setMaxResults($limit);
+
+        return $this->findEntities($qb);
+    }
+
+    /**
+     * Count duplicates by IDs
+     *
+     * @param array $ids Array of duplicate IDs
+     * @param string $type The type of duplicates to count ('all', 'acknowledged', 'unacknowledged')
+     * @return int The count of duplicates
+     */
+    public function countByIds(array $ids, string $type = 'all'): int {
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $qb = $this->db->getQueryBuilder();
+        $qb->select($qb->createFunction('COUNT(*)'))
+           ->from($this->getTableName())
+           ->where(
+               $qb->expr()->in('id', $qb->createNamedParameter($ids, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT_ARRAY))
+           );
+
+        // Filter by acknowledgement status
+        if ($type === 'acknowledged') {
+            $qb->andWhere($qb->expr()->eq('acknowledged', $qb->createNamedParameter(1, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
+        } elseif ($type === 'unacknowledged') {
+            $qb->andWhere($qb->expr()->eq('acknowledged', $qb->createNamedParameter(0, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
+        }
+
+        $result = $qb->executeQuery();
+        $count = (int)$result->fetchOne();
+        $result->closeCursor();
+
+        return $count;
+    }
 }
