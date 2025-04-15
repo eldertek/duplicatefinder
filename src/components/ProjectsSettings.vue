@@ -172,7 +172,7 @@ export default {
     components: {
         NcButton,
         NcModal,
-        NcTextField,
+        NcInputField,
         Delete,
         Plus,
         Pencil,
