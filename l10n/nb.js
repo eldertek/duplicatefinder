@@ -30,6 +30,7 @@ OC.L10N.register(
     "Select all" : "Velg alle",
     "Back" : "Tilbake",
     "Duplicate group" : "Duplikatgruppe",
+    "Preview" : "Forhåndsvis",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Velkommen, den nåværende duplikaten har {numberOfFiles} filer, total størrelse: {formattedSize}",
     "Show Preview" : "Vis forhåndsvisning",
     "Unacknowledge it" : "Ikke erkjenn det",

@@ -40,6 +40,7 @@ OC.L10N.register(
     "Files to be deleted" : "Archivos a eliminar",
     "Duplicate group" : "Grupo de duplicados",
     "{selected} of {total} files selected" : "{selected} de {total} archivos seleccionados",
+    "Preview" : "Vista previa",
     "Cannot delete protected files" : "No pueden eliminarse los archivos protegidos",
     "File hash copied to clipboard" : "El Hash de archivo ha sido copiado al portapapeles",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Bienvenido, el duplicado actual tiene {numberOfFiles} archivos, tamaño total: {formattedSize}",

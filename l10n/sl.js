@@ -12,6 +12,8 @@ OC.L10N.register(
     "Delete" : "Izbriši",
     "Default" : "privzeto",
     "Settings" : "Nastavitve",
+    "Edit" : "Uredi",
+    "Remove folder" : "Odstrani mapo",
     "No results found" : "Ni najdenih zadetkov",
     "Previous" : "Predhodna",
     "Next" : "Naslednji",

@@ -74,6 +74,8 @@
     "Failed to load origin folders" : "載入原始資料夾失敗",
     "Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted." : "設定應視為原始資料夾的資料夾。這些資料夾中的檔案永遠不會被標記為要刪除的重複檔案。",
     "Add Origin Folder" : "新增原始資料夾",
+    "Edit" : "編輯",
+    "Remove folder" : "移除資料夾",
     "Simple search" : "簡易搜尋",
     "Wildcard search (*, ?)" : "萬用字元搜尋 (*, ?)",
     "General Questions" : "一般問題",

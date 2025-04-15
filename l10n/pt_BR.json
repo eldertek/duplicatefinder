@@ -88,6 +88,7 @@
     "Failed to load origin folders" : "Falha ao carregar as pastas de origem",
     "Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted." : "Configure as pastas que devem ser consideradas como pastas de origem. Os arquivos nessas pastas nunca serão marcados como duplicatas a serem excluídas.",
     "Add Origin Folder" : "Adicionar Pasta de Origem",
+    "Remove folder" : "Remover pasta",
     "Search with wildcards (e.g., IMG*.jpg)" : "Pesquisar com caracteres curinga (por exemplo, IMG*.jpg)",
     "Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)" : "Pesquisar com expressão regular (por exemplo, ^IMG_\\d{4}\\.jpg$)",
     "Search duplicates…" : "Pesquisar duplicatas…",

@@ -39,6 +39,7 @@ OC.L10N.register(
     "Back" : "Takaisin",
     "Files to be deleted" : "Poistettavat tiedostot",
     "{selected} of {total} files selected" : "Valittu {selected} / {total}tiedostoa",
+    "Preview" : "Esikatselu",
     "Cannot delete protected files" : "Suojattuja tiedostoja ei voida poistaa",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Hei! Valittuun kaksoiskappaleeseen kuuluu {numberOfFiles} tiedostoa, koko yhteensä: {formattedSize}",
     "Show Preview" : "Näytä esikatselu",

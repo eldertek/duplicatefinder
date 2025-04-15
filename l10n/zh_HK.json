@@ -88,6 +88,8 @@
     "Failed to load origin folders" : "載入原始資料夾失敗",
     "Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted." : "配置應被視為源資料夾的資料夾。這些資料夾中的文件將永遠不會被標記為重複檔案以供刪除。",
     "Add Origin Folder" : "新增原始資料夾",
+    "Edit" : "編輯",
+    "Remove folder" : "移除資料夾",
     "Search with wildcards (e.g., IMG*.jpg)" : "使用通配符進行搜索（例如：IMG*.jpg）",
     "Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)" : "使用正則表達式進行搜索（例如：`^IMG_\\d{4}\\.jpg$`）",
     "Search duplicates…" : "搜尋重複項 ...",

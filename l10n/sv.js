@@ -21,6 +21,8 @@ OC.L10N.register(
     "Default" : "Förvald",
     "Settings" : "Inställningar",
     "Load More" : "Ladda mer",
+    "Edit" : "Redigera",
+    "Remove folder" : "Ta bort mapp",
     "No results found" : "Inga resultat funna",
     "Previous" : "Föregående",
     "Next" : "Nästa",

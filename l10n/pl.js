@@ -15,6 +15,7 @@ OC.L10N.register(
     "Default" : "Domyślny",
     "Settings" : "Ustawienia",
     "Load More" : "Wczytaj więcej",
+    "Remove folder" : "Usuń katalog",
     "No results found" : "Nie znaleziono wyników",
     "Previous" : "Poprzednie",
     "Next" : "Następna",

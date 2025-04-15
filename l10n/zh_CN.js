@@ -89,6 +89,8 @@ OC.L10N.register(
     "Failed to load origin folders" : "加载原始文件夹失败",
     "Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted." : "配置应被视为原始文件夹的文件夹。这些文件夹中的文件永远不会被标记为要删除的重复项。",
     "Add Origin Folder" : "添加原始文件夹",
+    "Edit" : "编辑",
+    "Remove folder" : "移除文件夹",
     "Search with wildcards (e.g., IMG*.jpg)" : "使用通配符搜索 (e.g., IMG*.jpg)",
     "Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)" : "使用正则表达式搜索 (e.g., ^IMG_\\d{4}\\.jpg$)",
     "Search duplicates…" : "搜索重复项…",

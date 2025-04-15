@@ -57,6 +57,7 @@
     "Please enter a value" : "Пожалуйста, введите значение",
     "Configure filtering rules to ignore files during scan based on file hash or file name pattern." : "Настройте правила фильтрации таким образом, чтобы они игнорировали файлы во время проверки на основе хэша файла или шаблона имен файлов.",
     "Add Filter" : "Добавить фильтр",
+    "Remove folder" : "Удалить каталог",
     "General Questions" : "Общие вопросы",
     "What is Duplicate Finder?" : "Что такое Поисковик Дубликатов?",
     "How does it detect duplicates?" : "Как определяются дубликаты?",

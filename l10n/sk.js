@@ -90,6 +90,8 @@ OC.L10N.register(
     "Failed to load origin folders" : "Nepodarilo sa načítať originálne adresáre",
     "Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted." : "Nakonfigurujte adresáre, ktoré by sa mali považovať za originálne adresáre. Súbory v týchto adresároch nebudú nikdy označené ako duplikáty na odstránenie.",
     "Add Origin Folder" : "Pridať originálny adresár",
+    "Edit" : "Upraviť",
+    "Remove folder" : "Odobrať Priečinok",
     "Search with wildcards (e.g., IMG*.jpg)" : "Vyhľadať pomocou zástupných znakov (napr., IMG*.jpg)",
     "Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)" : "Vyhľadať pomocou regulárneho výrazu (napr., ^IMG_\\d{4}\\.jpg$)",
     "Search duplicates…" : "Vyhľadať duplikáty...",
