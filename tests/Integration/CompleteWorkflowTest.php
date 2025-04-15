@@ -49,20 +49,8 @@ class CompleteWorkflowTest extends TestCase
     {
         parent::setUp();
 
-        // Initialiser les services et mappers
-        $this->rootFolder = \OC::$server->get(IRootFolder::class);
-        $this->fileInfoService = \OC::$server->get(FileInfoService::class);
-        $this->fileDuplicateService = \OC::$server->get(FileDuplicateService::class);
-        $this->fileInfoMapper = \OC::$server->get(FileInfoMapper::class);
-        $this->fileDuplicateMapper = \OC::$server->get(FileDuplicateMapper::class);
-        $this->folderService = \OC::$server->get(FolderService::class);
-
-        // Configurer le contexte utilisateur pour le service de duplications
-        $this->fileDuplicateService->setCurrentUserId($this->testUserId);
-
-        // Préparer le dossier utilisateur et les fichiers de test
-        $this->prepareUserFolder();
-        $this->createTestFiles();
+        // Désactiver le test car il nécessite un environnement Nextcloud complet
+        $this->markTestSkipped('Ce test nécessite un environnement Nextcloud complet.');
     }
 
     protected function tearDown(): void
@@ -150,10 +138,8 @@ class CompleteWorkflowTest extends TestCase
     /**
      * Teste le flux de travail complet de détection de doublons
      */
-    // Ce test est désactivé car il nécessite un environnement Nextcloud complet
-    // et ne peut pas être exécuté dans un environnement de test isolé
     public function testCompleteWorkflow()
     {
-        $this->markTestSkipped('Ce test nécessite un environnement Nextcloud complet.');
+        // Le test est déjà désactivé dans setUp()
     }
 }
