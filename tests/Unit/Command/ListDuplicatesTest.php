@@ -112,7 +112,7 @@ class ListDuplicatesTest extends TestCase
 
         $this->output->expects($this->once())
             ->method('writeln')
-            ->with('User nonexistentuser is unknown.');
+            ->with('<e>User nonexistentuser is unknown.</e>');
 
         $result = $this->invokeMethod($this->command, 'execute', [$this->input, $this->output]);
         $this->assertEquals(1, $result);

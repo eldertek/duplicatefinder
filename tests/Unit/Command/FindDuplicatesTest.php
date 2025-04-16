@@ -7,6 +7,7 @@ use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
+use OCA\DuplicateFinder\Service\ProjectService;
 use OCP\Encryption\IManager;
 use OCP\IDBConnection;
 use OCP\IUser;
@@ -26,6 +27,7 @@ class FindDuplicatesTest extends TestCase
     private $excludedFolderService;
     private $originFolderService;
     private $logger;
+    private $projectService;
     private $command;
     private $input;
     private $output;
@@ -44,6 +46,7 @@ class FindDuplicatesTest extends TestCase
         $this->excludedFolderService = $this->createMock(ExcludedFolderService::class);
         $this->originFolderService = $this->createMock(OriginFolderService::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->projectService = $this->createMock(ProjectService::class);
         $this->input = $this->createMock(InputInterface::class);
         $this->output = $this->createMock(OutputInterface::class);
         $this->user = $this->createMock(IUser::class);
@@ -57,6 +60,7 @@ class FindDuplicatesTest extends TestCase
             $this->fileDuplicateService,
             $this->excludedFolderService,
             $this->originFolderService,
+            $this->projectService,
             $this->logger
         );
     }
@@ -83,10 +87,10 @@ class FindDuplicatesTest extends TestCase
             ->method('isEnabled')
             ->willReturn(false);
 
-        $this->input->expects($this->exactly(2))
+        $this->input->expects($this->exactly(3))
             ->method('getOption')
-            ->withConsecutive(['user'], ['path'])
-            ->willReturnOnConsecutiveCalls(['testuser'], []);
+            ->withConsecutive(['user'], ['path'], ['project'])
+            ->willReturnOnConsecutiveCalls(['testuser'], [], null);
 
         $this->userManager->expects($this->once())
             ->method('userExists')
@@ -130,10 +134,10 @@ class FindDuplicatesTest extends TestCase
             ->method('isEnabled')
             ->willReturn(false);
 
-        $this->input->expects($this->exactly(2))
+        $this->input->expects($this->exactly(3))
             ->method('getOption')
-            ->withConsecutive(['user'], ['path'])
-            ->willReturnOnConsecutiveCalls(['nonexistentuser'], []);
+            ->withConsecutive(['user'], ['path'], ['project'])
+            ->willReturnOnConsecutiveCalls(['nonexistentuser'], [], null);
 
         $this->userManager->expects($this->once())
             ->method('userExists')
@@ -155,10 +159,10 @@ class FindDuplicatesTest extends TestCase
             ->method('isEnabled')
             ->willReturn(false);
 
-        $this->input->expects($this->exactly(2))
+        $this->input->expects($this->exactly(3))
             ->method('getOption')
-            ->withConsecutive(['user'], ['path'])
-            ->willReturnOnConsecutiveCalls(['testuser'], ['./Photos']);
+            ->withConsecutive(['user'], ['path'], ['project'])
+            ->willReturnOnConsecutiveCalls(['testuser'], ['./Photos'], null);
 
         $this->userManager->expects($this->once())
             ->method('userExists')
@@ -202,10 +206,10 @@ class FindDuplicatesTest extends TestCase
             ->method('isEnabled')
             ->willReturn(false);
 
-        $this->input->expects($this->exactly(2))
+        $this->input->expects($this->exactly(3))
             ->method('getOption')
-            ->withConsecutive(['user'], ['path'])
-            ->willReturnOnConsecutiveCalls([], []);
+            ->withConsecutive(['user'], ['path'], ['project'])
+            ->willReturnOnConsecutiveCalls([], [], null);
 
         // Mock the callForAllUsers method to call the callback with a test user
         $this->userManager->expects($this->once())
