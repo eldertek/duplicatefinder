@@ -3,8 +3,9 @@ namespace OCA\DuplicateFinder\Utils;
 
 class JSONDateTime extends \DateTime implements \JsonSerializable
 {
-    public function jsonSerialize()
+    #[\ReturnTypeWillChange]
+    public function jsonSerialize(): string
     {
-        return $this->format(static::ISO8601);
+        return $this->format(\DateTimeInterface::ATOM);
     }
 }

@@ -1,3 +1,17 @@
+## 1.7.2 - 2025-04-27
+### Fixed
+- Fixed integration tests to work properly in the devcontainer environment
+- Fixed deprecated method usage in `jsonSerialize()` methods by adding proper return types
+- Fixed deprecated constant usage by replacing `ISO8601` with `DateTimeInterface::ATOM`
+- Removed obsolete test files for commands that have been integrated into main commands
+
+### Added
+- Added comprehensive documentation for running tests in the devcontainer environment
+- Added script to automate test setup and execution (`run-tests.sh`)
+- Added `TestHelper` class to simplify writing new tests
+- Updated README with detailed information about project features and command usage
+- Added examples for CLI commands in the documentation
+
 ## 1.7.1 - 2025-04-20
 ### Added
 - Comprehensive test suite for unit testing and integration testing

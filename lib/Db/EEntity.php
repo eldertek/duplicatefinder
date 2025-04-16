@@ -98,7 +98,7 @@ class EEntity extends Entity implements JsonSerializable
     /**
      * @return void;
      */
-    protected function markFieldUpdated(string $attribute): void 
+    protected function markFieldUpdated(string $attribute): void
     {
         if (!isset($this->getRelationalFields()[$attribute])
           && !(isset($this->getInternalProperties()[$attribute])
@@ -131,7 +131,7 @@ class EEntity extends Entity implements JsonSerializable
      * @param string $name
      * @return mixed
    */
-    protected function getter(string $name): mixed 
+    protected function getter(string $name): mixed
     {
         $result = parent::getter($name);
         if ($this->keepAsPrimary()) {
@@ -170,7 +170,8 @@ class EEntity extends Entity implements JsonSerializable
      * @return array<mixed> serialized data
      * @throws \ReflectionException
      */
-    public function jsonSerialize()
+    #[\ReturnTypeWillChange]
+    public function jsonSerialize(): array
     {
         $properties = get_object_vars($this);
         $json = [];

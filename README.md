@@ -39,11 +39,28 @@ You can search and filter duplicates by file path or name using the search input
 - To include files containing a specific term, simply type the term (e.g., `.png` to show all PNG files).
 - To exclude files containing a specific term, prefix the term with an exclamation mark (e.g., `!.ptx` to exclude all PTX files).
 
+## Projects
+
+Projects allow you to organize and scan for duplicates within specific folders. You can create projects through the web interface or using the command line.
+
+### Creating Projects
+
+To create a project:
+1. Go to the Duplicate Finder app in Nextcloud
+2. Click on the "Projects" tab
+3. Click "Create New Project"
+4. Enter a name for your project and select the folders you want to include
+5. Click "Create"
+
+### Scanning Projects
+
+You can scan projects for duplicates either through the web interface or using the command line (see Command Usage below).
+
 ## Command usage
 
   `occ [-v] duplicates:ACTION [options]`
 
-Depending on your Nextcloud setup, the `occ` command may need to be called differently, such as `sudo php occ duplicates:find-all [options]` or `nextcloud.occ duplicates:find-all [options]`. Please refer to the [occ documentation](https://docs.nextcloud.com/server/15/admin_manual/configuration_server/occ_command.html) for more details
+Depending on your Nextcloud setup, the `occ` command may need to be called differently, such as `sudo php occ duplicates:find-all [options]` or `nextcloud.occ duplicates:find-all [options]`. Please refer to the [occ documentation](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/occ_command.html) for more details
 
 If you increase the verbosity of the occ command, the output shows a little bit more (e.g. what file is currently scanned).
 
@@ -52,12 +69,35 @@ If you increase the verbosity of the occ command, the output shows a little bit 
       options
         -u, --user scan files of the specified user (-u admin)
         -p, --path limit scan to this path (--path="./Photos"). The path is relative to the root of each user or the specified user.
+        --project scan files for a specific project ID (requires --user option)
     list        The command lists all duplicates that have been found yet. If no option is given duplicates across users are shown.
       options
         -u, --user list only duplicates of the specified user (-u admin)
     clear       The command will clear all information that has been stored in the database
       options
         -f, --force the flag forces to do the cleanup. _attention_ you will not be asked any questions
+
+### Examples
+
+```bash
+# Scan all files for all users
+occ duplicates:find-all
+
+# Scan files for a specific user
+occ duplicates:find-all --user="admin"
+
+# Scan files in a specific path for a user
+occ duplicates:find-all --user="admin" --path="./Documents"
+
+# Scan files for a specific project
+occ duplicates:find-all --user="admin" --project=1
+
+# List all duplicates
+occ duplicates:list
+
+# List duplicates for a specific user
+occ duplicates:list --user="admin"
+```
 
 ## Config
 
@@ -86,14 +126,33 @@ The app includes a comprehensive test suite to ensure proper functionality. To r
 composer install
 
 # Run all tests
-make test
+vendor/bin/phpunit
 
 # Run only unit tests
-make test-unit
+vendor/bin/phpunit --testsuite unit
 
 # Run only integration tests
-make test-integration
+vendor/bin/phpunit --testsuite integration
+
+# Run a specific test file
+vendor/bin/phpunit tests/Integration/CompleteWorkflowTest.php
+
+# Run tests with verbose output
+vendor/bin/phpunit -v
 ```
+
+#### Testing in the Devcontainer
+
+When running tests in the devcontainer environment:
+
+1. The devcontainer includes a complete Nextcloud installation at `/var/www/nextcloud`
+2. MariaDB is available and configured for Nextcloud
+3. Integration tests can access the Nextcloud environment and database
+4. Make sure services are running before testing:
+   ```bash
+   service mariadb start
+   service apache2 start
+   ```
 
 For more information about the tests, see the [tests/README.md](tests/README.md) file.
 
