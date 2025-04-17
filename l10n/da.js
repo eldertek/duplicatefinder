@@ -62,6 +62,7 @@ OC.L10N.register(
     "Protected" : "Beskyttet",
     "Default" : "Standard",
     "Settings" : "Indstillinger",
+    "Close" : "Luk",
     "Acknowledged" : "Bekræftet",
     "No acknowledged duplicates found." : "Ingen anerkendte dubletter fundet.",
     "Load More" : "Hent flere",

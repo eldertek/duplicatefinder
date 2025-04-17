@@ -62,6 +62,7 @@ OC.L10N.register(
     "Protected" : "Protegit",
     "Default" : "Per defecte",
     "Settings" : "Paràmetres",
+    "Close" : "Tanca",
     "Acknowledged" : "Reconegut",
     "No acknowledged duplicates found." : "No s'han trobat duplicats reconeguts.",
     "Load More" : "Carrega'n més",

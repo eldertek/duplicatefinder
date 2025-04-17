@@ -31,6 +31,7 @@ OC.L10N.register(
     "Delete" : "Desaniciar",
     "Default" : "Por defeutu",
     "Settings" : "Configuración",
+    "Close" : "Zarrar",
     "Edit" : "Editar",
     "Remove folder" : "Quitar la carpeta",
     "Cancel" : "Encaboxar",

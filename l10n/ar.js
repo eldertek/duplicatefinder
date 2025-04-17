@@ -62,6 +62,7 @@ OC.L10N.register(
     "Protected" : "محمية",
     "Default" : "التلقائي",
     "Settings" : "الإعدادات",
+    "Close" : "إغلاق",
     "Acknowledged" : "مُعتَرَفٌ به",
     "No acknowledged duplicates found." : "لم لا توجد أي تكرارات معترف بها.",
     "Load More" : "تحميل المزيد",

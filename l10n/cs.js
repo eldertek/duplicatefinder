@@ -78,6 +78,7 @@ OC.L10N.register(
     "Manage Projects" : "Spravovat projekty",
     "Your Projects" : "Vaše projekty",
     "No projects yet" : "Zatím žádné projekty",
+    "Close" : "Zavřít",
     "Acknowledged" : "Potvrzeno",
     "No acknowledged duplicates found." : "Nenalezeny žádné potvrzené duplicity.",
     "Load More" : "Načíst více",
