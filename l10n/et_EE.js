@@ -23,6 +23,7 @@ OC.L10N.register(
     "Find Duplicates" : "Otsi topeltobjekte",
     "File" : "Fail",
     "Delete" : "Kustuta",
+    "Default" : "Vaikimisi",
     "Settings" : "Seaded",
     "Manage Projects" : "Halda prrojekte",
     "Your Projects" : "Sinu projektid",
@@ -50,6 +51,7 @@ OC.L10N.register(
     "Cancel" : "Tühista",
     "No results found" : "Otsingutulemusi ei leidu",
     "Previous" : "Eelmine",
+    "Next" : "Järgmine",
     "Advanced Settings" : "Täpsemad seaded",
     "Note:" : "Märkus:",
     "File not found" : "Faili ei leitud"
