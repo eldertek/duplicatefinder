@@ -155,7 +155,7 @@ OC.L10N.register(
     "Update Project" : "Projekt aktualisieren",
     "Create Project" : "Projekt erstellen",
     "Delete Project" : "Projekt löschen",
-    "Are you sure you want to delete the project \"{name}\"?" : "Soll das Projekt \"{name}\" wirklich gelöscht werden?",
+    "Are you sure you want to delete the project \"{name}\"?" : "Soll das Projekt \"{name}\" gelöscht werden?",
     "This action cannot be undone." : "Dies kann nicht rückgängig gemacht werden.",
     "Cancel project deletion" : "Löschen des Projekts abbrechen",
     "Confirm project deletion" : "Löschen des Projekts bestätigen",
