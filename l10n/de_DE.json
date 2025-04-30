@@ -50,7 +50,7 @@
     "{selected} of {total} files selected" : "{selected} von {total} Dateien ausgewählt",
     "Preview" : "Vorschau",
     "Cannot delete protected files" : "Geschützte Dateien können nicht gelöscht werden",
-    "This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?" : "Diese Aktion löscht alle Instanzen des Duplikats. Mindestens eine Kopie sollte aufbewahrt werden. Wirklich fortfahren?",
+    "This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?" : "Diese Aktion löscht alle Vorkommen des Duplikats. Mindestens eine Kopie sollte aufbewahrt werden. Wirklich fortfahren?",
     "File hash copied to clipboard" : "Datei-Hash in die Zwischenablage kopiert",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Hallo, das aktuelle Duplikat enthält {numberOfFiles} Dateien, Gesamtgröße: {formattedSize}",
     "Show Preview" : "Vorschau anzeigen",
