@@ -47,6 +47,7 @@ OC.L10N.register(
     "Delete project" : "Kustuta projekt",
     "Start project scan" : "Alusta projekti skaneerimist",
     "Start Scan" : "Alusta skaneerimist",
+    "Remove folder" : "Eemalda kaust",
     "Add Folder" : "Lisa kaust",
     "Cancel" : "Tühista",
     "No results found" : "Otsingutulemusi ei leidu",
