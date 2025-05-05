@@ -6,6 +6,7 @@ OC.L10N.register(
     "Projects" : "Projekti",
     "Unselect all" : "Odstrani izbor",
     "Select all" : "Izberi vse",
+    "Back" : "Nazaj",
     "Preview" : "Predogled",
     "Select All" : "Izberi vse",
     "File" : "Datoteka",
