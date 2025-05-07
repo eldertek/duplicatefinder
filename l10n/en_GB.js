@@ -62,6 +62,7 @@ OC.L10N.register(
     "Protected" : "Protected",
     "Default" : "Default",
     "Settings" : "Settings",
+    "Close" : "Close",
     "Acknowledged" : "Acknowledged",
     "No acknowledged duplicates found." : "No acknowledged duplicates found.",
     "Load More" : "Load More",

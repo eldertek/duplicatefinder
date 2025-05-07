@@ -62,6 +62,7 @@ OC.L10N.register(
     "Protected" : "Προστατευμένο",
     "Default" : "Προεπιλογή",
     "Settings" : "Ρυθμίσεις",
+    "Close" : "Κλείσιμο",
     "Acknowledged" : "Επιβεβαιωμένα",
     "No acknowledged duplicates found." : "Δεν βρέθηκαν επιβεβαιωμένα διπλότυπα.",
     "Load More" : "Φόρτωση Περισσότερων",

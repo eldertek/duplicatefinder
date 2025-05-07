@@ -78,6 +78,7 @@ OC.L10N.register(
     "Manage Projects" : "Gestionar Proyectos",
     "Your Projects" : "Sus Proyectos",
     "No projects yet" : "Sin proyectos aún",
+    "Close" : "Cerrar",
     "Acknowledged" : "Reconocido",
     "No acknowledged duplicates found." : "No se encontraron duplicados reconocidos.",
     "Load More" : "Cargar más",

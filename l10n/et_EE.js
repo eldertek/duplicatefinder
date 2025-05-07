@@ -19,6 +19,7 @@ OC.L10N.register(
     "Select all" : "Vali kõik",
     "Back" : "Tagasi",
     "Preview" : "Eelvaade",
+    "Select All" : "Vali kõik",
     "Open Settings" : "Ava seadistused",
     "Find Duplicates" : "Otsi topeltobjekte",
     "File" : "Fail",
