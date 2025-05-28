@@ -85,8 +85,9 @@ jobs:
         continue-on-error: true
         id: server-checkout
         run: |
-          wget --quiet https://download.nextcloud.com/server/releases/nextcloud-28.0.0.zip
-          unzip -q nextcloud-28.0.0.zip
+          wget --quiet https://github.com/nextcloud/server/archive/refs/tags/v30.0.0.zip
+          unzip -q v30.0.0.zip
+          mv server-30.0.0 nextcloud
 
       - name: Sign app
         run: |
