@@ -1,3 +1,9 @@
+## 1.7.3 - 2025-01-05
+### Fixed
+- Fixed duplicate selection after deletion not respecting the current sort order
+- When sorting by size (largest or smallest first), the next duplicate is now correctly selected based on the sort order
+- Improved duplicate navigation to properly handle filtered and sorted lists
+
 ## 1.7.2 - 2025-04-27
 ### Fixed
 - Fixed integration tests to work properly in the devcontainer environment

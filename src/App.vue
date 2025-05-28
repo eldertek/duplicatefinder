@@ -4,6 +4,7 @@
 		<template v-else>
 			<div class="app-navigation-header">
 				<DuplicateNavigation
+					ref="duplicateNavigation"
 					:acknowledged-duplicates="acknowledgedDuplicates"
 					:unacknowledged-duplicates="unacknowledgedDuplicates"
 					:currentDuplicateId="currentDuplicate?.id"
@@ -207,31 +208,34 @@ export default {
 	},
 	methods: {
 		handleDuplicateResolved({ duplicate, type }) {
-			console.log('App: Handling duplicate-resolved event:', { duplicate, type });
+			console.log('ISSUE146: App.handleDuplicateResolved called');
+			console.log('ISSUE146: duplicate.id =', duplicate.id);
+			console.log('ISSUE146: duplicate.hash =', duplicate.hash);
+			console.log('ISSUE146: type =', type);
 
 			// Remove from the appropriate list
 			if (type === 'acknowledged') {
-				console.log('App: Removing from acknowledged list');
+				console.log('ISSUE146: Removing from acknowledged list');
+				console.log('ISSUE146: acknowledged list length before =', this.acknowledgedDuplicates.length);
 				this.acknowledgedDuplicates = this.acknowledgedDuplicates.filter(d => d.hash !== duplicate.hash);
+				console.log('ISSUE146: acknowledged list length after =', this.acknowledgedDuplicates.length);
 			} else {
-				console.log('App: Removing from unacknowledged list');
+				console.log('ISSUE146: Removing from unacknowledged list');
+				console.log('ISSUE146: unacknowledged list length before =', this.unacknowledgedDuplicates.length);
 				this.unacknowledgedDuplicates = this.unacknowledgedDuplicates.filter(d => d.hash !== duplicate.hash);
+				console.log('ISSUE146: unacknowledged list length after =', this.unacknowledgedDuplicates.length);
 			}
 
-			// Update current duplicate
-			if (type === 'acknowledged') {
-				console.log('App: Setting next duplicate from acknowledged list');
-				this.currentDuplicate = this.acknowledgedDuplicates[0] || this.unacknowledgedDuplicates[0] || null;
+			// Trigger DuplicateNavigation to find and select the next duplicate
+			// This will respect the current sort order
+			if (this.$refs.duplicateNavigation) {
+				console.log('ISSUE146: Calling selectNextDuplicateAfterResolution on DuplicateNavigation');
+				this.$refs.duplicateNavigation.selectNextDuplicateAfterResolution(duplicate, type);
 			} else {
-				console.log('App: Setting next duplicate from unacknowledged list');
-				this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null;
+				console.log('ISSUE146: ERROR - duplicateNavigation ref not found!');
 			}
 
-			console.log('App: New lists state:', {
-				acknowledgedCount: this.acknowledgedDuplicates.length,
-				unacknowledgedCount: this.unacknowledgedDuplicates.length,
-				currentDuplicate: this.currentDuplicate ? this.currentDuplicate.hash : null
-			});
+			console.log('ISSUE146: currentDuplicate after resolution =', this.currentDuplicate ? this.currentDuplicate.id : 'null');
 		},
 		async removeDuplicate(duplicate) {
 			console.log('App: removeDuplicate called with:', duplicate);

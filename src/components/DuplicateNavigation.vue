@@ -411,26 +411,163 @@ export default {
         },
 
         findNextAvailableDuplicate(currentDuplicate, type) {
-            const acknowledgedList = this.filteredAcknowledgedDuplicates;
-            const unacknowledgedList = this.filteredUnacknowledgedDuplicates;
+            // Filter out the current duplicate from the lists since it's being removed
+            const acknowledgedList = this.filteredAcknowledgedDuplicates.filter(d => d.id !== currentDuplicate.id);
+            const unacknowledgedList = this.filteredUnacknowledgedDuplicates.filter(d => d.id !== currentDuplicate.id);
 
+            console.log('ISSUE146: findNextAvailableDuplicate called');
+            console.log('ISSUE146: currentDuplicate.id =', currentDuplicate.id);
+            console.log('ISSUE146: type =', type);
+            console.log('ISSUE146: sortOption =', this.sortOption);
+            
+            // Log the sorted lists with their IDs and sizes (after filtering out current)
+            console.log('ISSUE146: acknowledgedList IDs and sizes (after filtering):');
+            acknowledgedList.forEach((d, i) => {
+                const size = getTotalSizeOfDuplicate(d);
+                console.log(`ISSUE146:   [${i}] id=${d.id}, size=${size}, hash=${d.hash}`);
+            });
+            
+            console.log('ISSUE146: unacknowledgedList IDs and sizes (after filtering):');
+            unacknowledgedList.forEach((d, i) => {
+                const size = getTotalSizeOfDuplicate(d);
+                console.log(`ISSUE146:   [${i}] id=${d.id}, size=${size}, hash=${d.hash}`);
+            });
+
+            // When sorting is active, always take the first item from the sorted list
+            // This ensures we always get the next item according to the current sort order
+            if (this.sortOption !== 'none') {
+                console.log('ISSUE146: Sorting is active, taking first from sorted list');
+                
+                if (type === 'acknowledged') {
+                    if (acknowledgedList.length > 0) {
+                        const firstDup = acknowledgedList[0];
+                        console.log('ISSUE146: Taking first from sorted acknowledgedList');
+                        console.log('ISSUE146: First duplicate id =', firstDup.id);
+                        console.log('ISSUE146: First duplicate size =', getTotalSizeOfDuplicate(firstDup));
+                        return firstDup;
+                    }
+                    // If no more in acknowledged, try unacknowledged
+                    if (unacknowledgedList.length > 0) {
+                        const firstUnack = unacknowledgedList[0];
+                        console.log('ISSUE146: No more acknowledged, taking first unacknowledged');
+                        console.log('ISSUE146: First unacknowledged id =', firstUnack.id);
+                        console.log('ISSUE146: First unacknowledged size =', getTotalSizeOfDuplicate(firstUnack));
+                        return firstUnack;
+                    }
+                } else {
+                    if (unacknowledgedList.length > 0) {
+                        const firstDup = unacknowledgedList[0];
+                        console.log('ISSUE146: Taking first from sorted unacknowledgedList');
+                        console.log('ISSUE146: First duplicate id =', firstDup.id);
+                        console.log('ISSUE146: First duplicate size =', getTotalSizeOfDuplicate(firstDup));
+                        return firstDup;
+                    }
+                    // If no more in unacknowledged, try acknowledged
+                    if (acknowledgedList.length > 0) {
+                        const firstAck = acknowledgedList[0];
+                        console.log('ISSUE146: No more unacknowledged, taking first acknowledged');
+                        console.log('ISSUE146: First acknowledged id =', firstAck.id);
+                        console.log('ISSUE146: First acknowledged size =', getTotalSizeOfDuplicate(firstAck));
+                        return firstAck;
+                    }
+                }
+                console.log('ISSUE146: No duplicates left at all');
+                return null;
+            }
+
+            // Original behavior when no sorting is active
+            console.log('ISSUE146: No sorting active, using original logic');
+            
+            // Since we already filtered out the current duplicate, we need to use the original lists for finding the index
+            const originalAcknowledgedList = this.filteredAcknowledgedDuplicates;
+            const originalUnacknowledgedList = this.filteredUnacknowledgedDuplicates;
+            
             if (type === 'acknowledged') {
                 // Try to find next in acknowledged list
-                const index = acknowledgedList.findIndex(d => d.id === currentDuplicate.id);
-                if (index < acknowledgedList.length - 1) {
-                    return acknowledgedList[index + 1];
+                const index = originalAcknowledgedList.findIndex(d => d.id === currentDuplicate.id);
+                console.log('ISSUE146: index in originalAcknowledgedList =', index);
+                
+                if (index !== -1 && index < originalAcknowledgedList.length - 1) {
+                    // Found current duplicate and there's a next one
+                    const nextDup = originalAcknowledgedList[index + 1];
+                    console.log('ISSUE146: Found next in same list at index', index + 1);
+                    console.log('ISSUE146: Next duplicate id =', nextDup.id);
+                    console.log('ISSUE146: Next duplicate size =', getTotalSizeOfDuplicate(nextDup));
+                    return nextDup;
+                }
+                // Current duplicate not found (already removed) or was the last one
+                // Take the first from the filtered list (without current duplicate)
+                if (acknowledgedList.length > 0) {
+                    const firstDup = acknowledgedList[0];
+                    console.log('ISSUE146: Taking first from acknowledgedList');
+                    console.log('ISSUE146: First duplicate id =', firstDup.id);
+                    console.log('ISSUE146: First duplicate size =', getTotalSizeOfDuplicate(firstDup));
+                    return firstDup;
                 }
                 // If no more in acknowledged, try unacknowledged
-                return unacknowledgedList[0] || null;
+                if (unacknowledgedList.length > 0) {
+                    const firstUnack = unacknowledgedList[0];
+                    console.log('ISSUE146: No more acknowledged, taking first unacknowledged');
+                    console.log('ISSUE146: First unacknowledged id =', firstUnack.id);
+                    console.log('ISSUE146: First unacknowledged size =', getTotalSizeOfDuplicate(firstUnack));
+                    return firstUnack;
+                }
+                console.log('ISSUE146: No duplicates left at all');
+                return null;
             } else {
                 // Try to find next in unacknowledged list
-                const index = unacknowledgedList.findIndex(d => d.id === currentDuplicate.id);
-                if (index < unacknowledgedList.length - 1) {
-                    return unacknowledgedList[index + 1];
+                const index = originalUnacknowledgedList.findIndex(d => d.id === currentDuplicate.id);
+                console.log('ISSUE146: index in originalUnacknowledgedList =', index);
+                
+                if (index !== -1 && index < originalUnacknowledgedList.length - 1) {
+                    // Found current duplicate and there's a next one
+                    const nextDup = originalUnacknowledgedList[index + 1];
+                    console.log('ISSUE146: Found next in same list at index', index + 1);
+                    console.log('ISSUE146: Next duplicate id =', nextDup.id);
+                    console.log('ISSUE146: Next duplicate size =', getTotalSizeOfDuplicate(nextDup));
+                    return nextDup;
+                }
+                // Current duplicate not found (already removed) or was the last one
+                // Take the first from the filtered list (without current duplicate)
+                if (unacknowledgedList.length > 0) {
+                    const firstDup = unacknowledgedList[0];
+                    console.log('ISSUE146: Taking first from unacknowledgedList');
+                    console.log('ISSUE146: First duplicate id =', firstDup.id);
+                    console.log('ISSUE146: First duplicate size =', getTotalSizeOfDuplicate(firstDup));
+                    return firstDup;
                 }
                 // If no more in unacknowledged, try acknowledged
-                return acknowledgedList[0] || null;
+                if (acknowledgedList.length > 0) {
+                    const firstAck = acknowledgedList[0];
+                    console.log('ISSUE146: No more unacknowledged, taking first acknowledged');
+                    console.log('ISSUE146: First acknowledged id =', firstAck.id);
+                    console.log('ISSUE146: First acknowledged size =', getTotalSizeOfDuplicate(firstAck));
+                    return firstAck;
+                }
+                console.log('ISSUE146: No duplicates left at all');
+                return null;
             }
+        },
+
+        selectNextDuplicateAfterResolution(duplicate, type) {
+            console.log('ISSUE146: selectNextDuplicateAfterResolution called');
+            console.log('ISSUE146: duplicate.id =', duplicate.id);
+            console.log('ISSUE146: duplicate.hash =', duplicate.hash);
+            
+            // Wait for Vue to update the DOM with the new lists
+            this.$nextTick(() => {
+                console.log('ISSUE146: After nextTick, lists should be updated');
+                const nextDuplicate = this.findNextAvailableDuplicate(duplicate, type);
+                if (nextDuplicate) {
+                    console.log('ISSUE146: Opening next duplicate');
+                    console.log('ISSUE146: nextDuplicate.id =', nextDuplicate.id);
+                    console.log('ISSUE146: nextDuplicate.hash =', nextDuplicate.hash);
+                    this.openDuplicate(nextDuplicate);
+                } else {
+                    console.log('ISSUE146: No next duplicate found, emitting null');
+                    this.$emit('open-duplicate', null);
+                }
+            });
         }
     }
 };
