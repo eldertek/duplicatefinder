@@ -81,7 +81,7 @@ OC.L10N.register(
     "e.g., *.tmp or backup_*" : "e.g., *.tmp or backup_*",
     "File Hash" : "File Hash",
     "File Name Pattern" : "File Name Pattern",
-    "Please enter a value" : "Please enter a value",
+    "Please enter a value" : "Veuillez saisir une valeur",
     "Configure filtering rules to ignore files during scan based on file hash or file name pattern." : "Configurer des règles de filtrage pour ignorer les fichiers lors de l'analyse en fonction du hachage ou du motif de nom de fichier.",
     "Add Filter" : "Add Filter",
     "You can use * as wildcard, e.g., *.tmp or backup_*." : "You can use * as wildcard, e.g., *.tmp or backup_*.",
