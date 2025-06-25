@@ -26,6 +26,7 @@ OC.L10N.register(
     "Edit" : "Editar",
     "Remove folder" : "Remover pasta",
     "Cancel" : "Cancelar",
+    "No results found" : "No results found",
     "Previous" : "Anterior",
     "Next" : "Seguinte",
     "Advanced Settings" : "Definições Avançadas ",
