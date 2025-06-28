@@ -11,6 +11,8 @@
     "Excluded Folders" : "Carpetes excloses",
     "Projects" : "Projectes",
     "Could not fetch settings" : "No s'han pogut obtenir els paràmetres",
+    "Settings saved" : "S'han desat els paràmetres",
+    "Could not save settings" : "No s'ha pogut desar el paràmetres",
     "All duplicates cleared" : "S'han eliminat tots els duplicats",
     "Could not clear duplicates" : "No s'han pogut esborrar els duplicats",
     "Duplicates search initiated (this may take a while)" : "S'ha iniciat la cerca de duplicats (això pot trigar una estona)",

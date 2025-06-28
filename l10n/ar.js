@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "مجلدات مستثناة",
     "Projects" : "المشاريع",
     "Could not fetch settings" : "تعذّر جلب الإعدادات",
+    "Settings saved" : "تمّ حفظ الإعدادات",
+    "Could not save settings" : "تعذّر حفظ الإعدادات",
     "All duplicates cleared" : "تمّ تنظيف جميع التكرارات",
     "Could not clear duplicates" : "تعذّر تنظيف التكرارات",
     "Duplicates search initiated (this may take a while)" : "بدء البحث عن المتكررات ( هذا سيستغرق بعض الوقت)",
