@@ -6,6 +6,7 @@ OC.L10N.register(
     "Filters" : "Filtrai",
     "Projects" : "Projektai",
     "Could not fetch settings" : "Nepavyko gauti nustatymų",
+    "Settings saved" : "Nustatymai įrašyti",
     "Select all" : "Pažymėti viską",
     "Back" : "Atgal",
     "Preview" : "Peržiūra",

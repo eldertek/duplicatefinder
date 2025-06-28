@@ -13,6 +13,7 @@ OC.L10N.register(
     "Excluded Folders" : "Ekskluderede mapper",
     "Projects" : "Projekter",
     "Could not fetch settings" : "Kunne ikke hente indstillinger",
+    "Could not save settings" : "Kunne ikke gemme indstillinger",
     "All duplicates cleared" : "Alle dubletter ryddet",
     "Could not clear duplicates" : "Kunne ikke rydde dubletter",
     "Duplicates search initiated (this may take a while)" : "Søgning efter dubletter påbegyndt (dette kan tage et stykke tid)",

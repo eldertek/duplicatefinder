@@ -5,6 +5,7 @@ OC.L10N.register(
     "Help" : "Pomoc",
     "Filters" : "Filtry",
     "Projects" : "Projekty",
+    "Settings saved" : "Ustawienia zapisane",
     "Unselect all" : "Odznacz wszystko",
     "Select all" : "Wybierz wszystko",
     "Back" : "Poprzednia",

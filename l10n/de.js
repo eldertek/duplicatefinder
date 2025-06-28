@@ -13,6 +13,7 @@ OC.L10N.register(
     "Excluded Folders" : "Ausgeschlossene Ordner",
     "Projects" : "Projekte",
     "Could not fetch settings" : "Die Einstellungen konnten nicht abgerufen werden",
+    "Could not save settings" : "Konnte Einstellungen nicht speichern",
     "All duplicates cleared" : "Alle Duplikate gelöscht",
     "Could not clear duplicates" : "Duplikate konnten nicht gelöscht werden",
     "Duplicates search initiated (this may take a while)" : "Suche nach Duplikaten gestartet (dies kann eine Weile dauern)",

@@ -4,6 +4,7 @@ OC.L10N.register(
     "Help" : "Palīdzība",
     "Filters" : "Filtri",
     "Projects" : "Projekti",
+    "Settings saved" : "Iestatījumi saglabāti",
     "Select all" : "Atzīmēt visu",
     "Preview" : "Priekšskatīt",
     "Merge Selected" : "Apvienot atlasītās",

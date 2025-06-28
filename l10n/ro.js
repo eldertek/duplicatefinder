@@ -7,6 +7,8 @@ OC.L10N.register(
     "Filters" : "Filtre",
     "Projects" : "Proiecte",
     "Could not fetch settings" : "Nu s-au putut prelua setările",
+    "Settings saved" : "Setările au fost salvate",
+    "Could not save settings" : "Nu s-au putut salva setările",
     "All general settings to modify Duplicate Finder behaviors." : "Toate setările generale de modificare a comportamentelor găsitorului de duplicat.",
     "Ignore Mounted Files" : "Ignorați fișierele montate",
     "When true, files mounted on external storage will be ignored." : "Când este adevărat, fișierele montate pe stocare externă vor fi ignorate.",

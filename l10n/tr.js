@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "Katılmayacak klasörler",
     "Projects" : "Projeler",
     "Could not fetch settings" : "Ayarlar alınamadı",
+    "Settings saved" : "Ayarlar kaydedildi",
+    "Could not save settings" : "Ayarlar kaydedilemedi",
     "All duplicates cleared" : "Tüm çiftler temizlendi",
     "Could not clear duplicates" : "Çiftler temizlenemedi",
     "Duplicates search initiated (this may take a while)" : "Çift araması başlatıldı (bu işlem uzun sürebilir)",

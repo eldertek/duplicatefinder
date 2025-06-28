@@ -9,6 +9,8 @@ OC.L10N.register(
     "Filters" : "Фильтры",
     "Projects" : "Проекты",
     "Could not fetch settings" : "Не удалось получить настройки",
+    "Settings saved" : "Настройки сохранены",
+    "Could not save settings" : "Не удалось сохранить настройки",
     "All duplicates cleared" : "Все дубликаты очищены",
     "Could not clear duplicates" : "Не удалось очистить дубликаты",
     "Duplicates search initiated (this may take a while)" : "Поиск дубликатов запущен (это может занять некоторое время)",

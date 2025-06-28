@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "Cartafoles excluídos",
     "Projects" : "Proxectos",
     "Could not fetch settings" : "Non foi posíbel recuperar os axustes",
+    "Settings saved" : "Axustes gardados",
+    "Could not save settings" : "Non foi posíbel gardar os axustes",
     "All duplicates cleared" : "Limpáronse todos os duplicados",
     "Could not clear duplicates" : "Non foi posíbel limpar os duplicados",
     "Duplicates search initiated (this may take a while)" : "Iniciouse a busca de duplicados (isto pode levar un tempo)",

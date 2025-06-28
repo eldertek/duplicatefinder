@@ -6,6 +6,8 @@
     "Filters" : "Filtere",
     "Projects" : "Prosjekter",
     "Could not fetch settings" : "Kunne ikke hente innstillinger",
+    "Settings saved" : "Innstillinger lagret",
+    "Could not save settings" : "Kunne ikke lagre innstillinger",
     "All duplicates cleared" : "Alle duplikater fjernet",
     "Could not clear duplicates" : "Kunne ikke fjerne duplikatene",
     "Duplicates search initiated (this may take a while)" : "Søk etter duplikater startet (dette kan ta en stund)",

@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "Ohitetut kansiot",
     "Projects" : "Projektit",
     "Could not fetch settings" : "Asetusten haku epäonnistui",
+    "Settings saved" : "Asetukset tallennettu",
+    "Could not save settings" : "Asetusten tallentaminen epäonnistui",
     "All duplicates cleared" : "Kaikki tiedot kaksoiskappaleista tyhjennetty",
     "Could not clear duplicates" : "Kaksoiskappaleiden tietojen poisto epäonnistui",
     "Duplicates search initiated (this may take a while)" : "Kaksoiskappaleiden haku käynnistetty (tämä voi kestää hetken)",

@@ -13,6 +13,7 @@ OC.L10N.register(
     "Excluded Folders" : "Excluded Folders",
     "Projects" : "Projects",
     "Could not fetch settings" : "Could not fetch settings",
+    "Could not save settings" : "Could not save settings",
     "All duplicates cleared" : "All duplicates cleared",
     "Could not clear duplicates" : "Could not clear duplicates",
     "Duplicates search initiated (this may take a while)" : "Duplicates search initiated (this may take a while)",

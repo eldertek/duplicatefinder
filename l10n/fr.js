@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "Dossiers exclus",
     "Projects" : "Projets",
     "Could not fetch settings" : "Impossible de récupérer les paramètres",
+    "Settings saved" : "Paramètres enregistrés",
+    "Could not save settings" : "Impossible d'enregistrer les paramètres",
     "All duplicates cleared" : "Tous les doublons ont été effacés",
     "Could not clear duplicates" : "Impossible d'effacer les doublons",
     "Duplicates search initiated (this may take a while)" : "Recherche des doublons lancée (ceci peut prendre un moment)",

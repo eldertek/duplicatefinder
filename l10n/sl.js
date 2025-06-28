@@ -9,6 +9,7 @@ OC.L10N.register(
     "Excluded Folders" : "Izločene mape",
     "Projects" : "Projekti",
     "Could not fetch settings" : "Ni mogoče pridobiti nastavitev",
+    "Settings saved" : "Nastavitve so shranjene",
     "Unselect all" : "Odstrani izbor",
     "Select all" : "Izberi vse",
     "Back" : "Nazaj",

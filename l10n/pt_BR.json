@@ -11,6 +11,8 @@
     "Excluded Folders" : "Pastas Ignoradas",
     "Projects" : "Projetos",
     "Could not fetch settings" : "Não foi possível buscar as configurações",
+    "Settings saved" : "Configurações salvas",
+    "Could not save settings" : "Não foi possível salvar as configurações",
     "All duplicates cleared" : "Todas as duplicatas excluídas",
     "Could not clear duplicates" : "Não foi possível limpar duplicatas",
     "Duplicates search initiated (this may take a while)" : "Pesquisa de duplicatas iniciada (isso pode demorar um pouco)",

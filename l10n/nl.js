@@ -13,6 +13,7 @@ OC.L10N.register(
     "Excluded Folders" : "Uitgesloten mappen",
     "Projects" : "Projecten",
     "Could not fetch settings" : "Kon instellingen niet ophalen",
+    "Settings saved" : "Instellingen opgeslagen",
     "All duplicates cleared" : "Alle duplicaten gewist",
     "Could not clear duplicates" : "Kon duplicaten niet wissen",
     "Duplicates search initiated (this may take a while)" : "Zoekopdracht naar duplicaten gestart (dit kan even duren)",

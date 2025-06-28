@@ -11,6 +11,8 @@
     "Excluded Folders" : "Carpetas Excluídas",
     "Projects" : "Proyectos",
     "Could not fetch settings" : "No se pudieron obtener los ajustes",
+    "Settings saved" : "Ajustes guardados",
+    "Could not save settings" : "No se pudieron guardar los ajustes",
     "All duplicates cleared" : "Todos los duplicados fueron limpiados",
     "Could not clear duplicates" : "No se pudieron limpiar los duplicados",
     "Duplicates search initiated (this may take a while)" : "Búsqueda de duplicados iniciada (podría tomar algún tiempo)",

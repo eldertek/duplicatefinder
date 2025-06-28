@@ -6,6 +6,7 @@ OC.L10N.register(
     "Excluded Folders" : "Pastas excluídas",
     "Projects" : "Projectos",
     "Could not fetch settings" : "Não foi possível obter definições",
+    "Settings saved" : "Definições guardadas",
     "All duplicates found" : "Todos os duplicados encontrados",
     "Disable Filesystem Events" : "Desativar eventos do Sistema de Ficheiros",
     "Find all duplicates" : "Localizar todos os duplicados",

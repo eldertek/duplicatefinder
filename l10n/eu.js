@@ -6,6 +6,7 @@ OC.L10N.register(
     "Help" : "Laguntza",
     "Filters" : "Iragazkiak",
     "Projects" : "Proiektuak",
+    "Settings saved" : "Ezarpenak gordeta",
     "Unselect all" : "Desautatu dena",
     "Select all" : "Hautatu dena",
     "Back" : "Itzuli",

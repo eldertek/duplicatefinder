@@ -4,6 +4,8 @@
     "Filters" : "Filter",
     "Projects" : "Projekt",
     "Could not fetch settings" : "Det gick inte att hämta inställningarna",
+    "Settings saved" : "Inställningar sparade",
+    "Could not save settings" : "Det gick inte att spara inställningarna",
     "Ignore Mounted Files" : "Ignorera monterade filer",
     "When true, files mounted on external storage will be ignored." : "När sant, kommer filer monterade på extern lagring att ignoreras.",
     "Ignore mounted file" : "Ignorera monterad fil",

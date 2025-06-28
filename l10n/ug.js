@@ -8,6 +8,8 @@ OC.L10N.register(
     "Filters" : "سۈزگۈچ",
     "Projects" : "Projects",
     "Could not fetch settings" : "تەڭشەكلەرنى ئېلىپ كېتەلمىدى",
+    "Settings saved" : "تەڭشەكلەر ساقلاندى",
+    "Could not save settings" : "تەڭشەكلەرنى ساقلىيالمىدى",
     "All duplicates cleared" : "بارلىق كۆپەيتىلگەن نۇسخىسى تازىلاندى",
     "Could not clear duplicates" : "كۆپەيتىلگەن نۇسخىسىنى تازىلىيالمىدى",
     "Duplicates search initiated (this may take a while)" : "كۆپەيتىلگەن ئىزدەش باشلانغان (بۇنىڭغا بىر ئاز ۋاقىت كېتىشى مۇمكىن)",

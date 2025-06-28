@@ -4,6 +4,7 @@ OC.L10N.register(
     "Help" : "Допомога",
     "Filters" : "Фільтри",
     "Projects" : "Проєкти",
+    "Settings saved" : "Налаштування збережено",
     "Unselect all" : "Зняти вибір",
     "Select all" : "Вибрати все",
     "Back" : "Назад",

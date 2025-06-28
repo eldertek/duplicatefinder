@@ -11,6 +11,8 @@
     "Excluded Folders" : "Fillteáin Eisiata",
     "Projects" : "Tionscadail",
     "Could not fetch settings" : "Níorbh fhéidir socruithe a fháil",
+    "Settings saved" : "Socruithe sábháilte",
+    "Could not save settings" : "Níorbh fhéidir na socruithe a shábháil",
     "All duplicates cleared" : "Glanadh gach dúblach",
     "Could not clear duplicates" : "Níorbh fhéidir dúblaigh a ghlanadh",
     "Duplicates search initiated (this may take a while)" : "Cuireadh tús le cuardach dúblach (seans go dtógfaidh sé seo tamall)",
