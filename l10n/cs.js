@@ -438,6 +438,8 @@ OC.L10N.register(
     "Failed to update project" : "Nepodařilo se zaktualizovat projekt",
     "Project deleted successfully" : "Projekt úspěšně smazán",
     "Failed to delete project" : "Nepodařilo se smazat projekt",
+    "Project scan initiated" : "Skenování projektu zahájeno",
+    "Failed to initiate project scan" : "Nepodařilo se inicializovat sken projektu",
     "Failed to load project duplicates" : "Duplicity projektu se nepodařilo načíst",
     "The viewer is not available" : "Prohlížeč není k dispozici"
 },
