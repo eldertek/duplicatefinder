@@ -441,6 +441,8 @@ OC.L10N.register(
     "Failed to update project" : "無法更新項目",
     "Project deleted successfully" : "項目刪除成功",
     "Failed to delete project" : "無法刪除項目",
+    "Project scan initiated" : "專案掃描已啟動",
+    "Failed to initiate project scan" : "無法啟動專案掃描",
     "Failed to load project duplicates" : "無法加載項目重複項",
     "The viewer is not available" : "檢視程式不可用"
 },
