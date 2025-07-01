@@ -38,6 +38,12 @@
 
     <namespace>DuplicateFinder</namespace>
 
+    <documentation>
+        <user>https://github.com/eldertek/duplicatefinder#usage</user>
+        <admin>https://github.com/eldertek/duplicatefinder#command-usage</admin>
+        <developer>https://github.com/eldertek/duplicatefinder#development</developer>
+    </documentation>
+      
     <category>tools</category>
 
     <website>https://github.com/eldertek/duplicatefinder</website>
@@ -47,6 +53,8 @@
 
     <screenshot>https://raw.githubusercontent.com/eldertek/duplicatefinder/master/img/preview.png</screenshot>
 
+    <donation>https://patreon.com/eldertek</donation>
+      
     <dependencies>
         <nextcloud min-version="28" max-version="31"/>
     </dependencies>
