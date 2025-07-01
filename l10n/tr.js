@@ -441,6 +441,8 @@ OC.L10N.register(
     "Failed to update project" : "Proje güncellenemedi",
     "Project deleted successfully" : "Proje silindi",
     "Failed to delete project" : "Proje silinemedi",
+    "Project scan initiated" : "Proje taraması başlatıldı",
+    "Failed to initiate project scan" : "Proje taraması başlatılamadı",
     "Failed to load project duplicates" : "Proje çift dosyaları yüklenemedi",
     "The viewer is not available" : "Görüntüleyici kullanılamıyor"
 },

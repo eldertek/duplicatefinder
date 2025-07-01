@@ -441,6 +441,8 @@ OC.L10N.register(
     "Failed to update project" : "Falha ao atualizar projeto",
     "Project deleted successfully" : "Projeto excluído com sucesso",
     "Failed to delete project" : "Falha ao excluir projeto",
+    "Project scan initiated" : "Varredura do projeto iniciada.",
+    "Failed to initiate project scan" : "Falha ao iniciar a varredura do projeto.",
     "Failed to load project duplicates" : "Falha ao carregar duplicatas de projeto",
     "The viewer is not available" : "O visualizador não está disponível"
 },
