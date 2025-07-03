@@ -441,6 +441,8 @@ OC.L10N.register(
     "Failed to update project" : "Theip ar nuashonrú an tionscadail",
     "Project deleted successfully" : "D'éirigh leis an tionscadal a scriosadh",
     "Failed to delete project" : "Theip ar an tionscadal a scriosadh",
+    "Project scan initiated" : "Scanadh tionscadail tosaithe",
+    "Failed to initiate project scan" : "Theip ar scanadh tionscadail a thionscnamh",
     "Failed to load project duplicates" : "Theip ar lódáil dúblaigh tionscadail",
     "The viewer is not available" : "Níl an breathnóir ar fáil"
 },
