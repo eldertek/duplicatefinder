@@ -6,6 +6,13 @@
 - Database entries for inaccessible files are now marked as stale instead of being deleted
 - Physical file deletion now requires explicit user action with proper safeguards
 
+### Fixed
+- Fixed bulk delete not working properly with origin folders (Fix [#152](https://github.com/eldertek/duplicatefinder/issues/152))
+- Bulk delete now shows the count of protected files in origin folders
+- Allow deletion of non-protected duplicates even when only one non-protected copy exists (if protected copies exist)
+- Improved UI to clearly indicate which files are protected and why some groups cannot be fully deleted
+- Added visual indicators and explanatory messages for better user understanding
+
 ### Security Improvements
 - Added safety checks to prevent accidental file deletion
 - Improved handling of shared folders and external storage

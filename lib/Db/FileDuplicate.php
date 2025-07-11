@@ -21,10 +21,16 @@ class FileDuplicate extends EEntity
     protected $acknowledged = false;
     /** @var int|null */
     protected $userId;
+    /** @var int */
+    protected $protectedFileCount = 0;
+    /** @var bool */
+    protected $hasOnlyProtectedFiles = false;
 
     public function __construct(?string $hash = null, string $type = 'file_hash')
     {
         $this->addInternalProperty('files');
+        $this->addInternalProperty('protectedFileCount');
+        $this->addInternalProperty('hasOnlyProtectedFiles');
 
         if (!is_null($hash)) {
             $this->setHash($hash);
@@ -125,5 +131,45 @@ class FileDuplicate extends EEntity
     public function setUserId(?int $userId): void
     {
         $this->userId = $userId;
+    }
+
+    /**
+     * Get the count of protected files
+     *
+     * @return int
+     */
+    public function getProtectedFileCount(): int
+    {
+        return $this->protectedFileCount;
+    }
+
+    /**
+     * Set the count of protected files
+     *
+     * @param int $count
+     */
+    public function setProtectedFileCount(int $count): void
+    {
+        $this->protectedFileCount = $count;
+    }
+
+    /**
+     * Check if this duplicate group has only protected files
+     *
+     * @return bool
+     */
+    public function getHasOnlyProtectedFiles(): bool
+    {
+        return $this->hasOnlyProtectedFiles;
+    }
+
+    /**
+     * Set whether this duplicate group has only protected files
+     *
+     * @param bool $hasOnly
+     */
+    public function setHasOnlyProtectedFiles(bool $hasOnly): void
+    {
+        $this->hasOnlyProtectedFiles = $hasOnly;
     }
 }

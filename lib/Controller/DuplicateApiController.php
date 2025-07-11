@@ -62,18 +62,32 @@ class DuplicateApiController extends AbstractAPIController
             if ($onlyNonProtected) {
                 // For each duplicate group, keep only non-protected files
                 foreach ($duplicates['entities'] as $key => $duplicate) {
-                    $nonProtectedFiles = array_filter($duplicate->getFiles(), function($file) {
+                    $allFiles = $duplicate->getFiles();
+                    $nonProtectedFiles = array_filter($allFiles, function($file) {
                         return !$file->getIsInOriginFolder();
                     });
+                    $protectedCount = count($allFiles) - count($nonProtectedFiles);
                     
-                    // If no files remain after filtering, remove the group
-                    if (empty($nonProtectedFiles)) {
+                    // If no non-protected files but has protected files, keep the group
+                    // but mark it as having only protected files
+                    if (empty($nonProtectedFiles) && $protectedCount > 0) {
+                        $duplicate->setFiles([]);
+                        // Add metadata about protected files
+                        $duplicate->setProtectedFileCount($protectedCount);
+                        $duplicate->setHasOnlyProtectedFiles(true);
+                        continue;
+                    }
+                    
+                    // If no files at all, remove the group
+                    if (empty($nonProtectedFiles) && $protectedCount === 0) {
                         unset($duplicates['entities'][$key]);
                         continue;
                     }
                     
                     // Update the duplicate group with only non-protected files
                     $duplicate->setFiles(array_values($nonProtectedFiles));
+                    $duplicate->setProtectedFileCount($protectedCount);
+                    $duplicate->setHasOnlyProtectedFiles(false);
                 }
             }
 

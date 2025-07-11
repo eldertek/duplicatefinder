@@ -60,11 +60,17 @@
       <div v-if="hasDuplicatesToDelete" class="preview-section">
         <div class="preview-details">
           <h3>{{ t('duplicatefinder', 'Files to be deleted') }}</h3>
-          <p class="merge-explanation">{{ t('duplicatefinder', 'For each duplicate group, at least one file will be preserved.') }}</p>
+          <p class="merge-explanation">
+            {{ t('duplicatefinder', 'For each duplicate group, at least one file will be preserved.') }}
+            <span v-if="hasProtectedFiles">
+              {{ t('duplicatefinder', 'Files in origin folders are automatically protected and will not be deleted.') }}
+            </span>
+          </p>
           <div class="preview-list">
             <div v-for="(group, hash) in previewResults.duplicateGroups" :key="hash" class="duplicate-group">
               <div class="group-header">
                 <NcCheckboxRadioSwitch
+                  v-if="group.filesToDelete.length > 0"
                   :checked="isGroupSelected(hash)"
                   @update:checked="toggleGroup(hash)"
                   type="checkbox"
@@ -77,9 +83,20 @@
                           selected: selectedFiles[hash]?.length || 0,
                           total: group.filesToDelete.length
                         }) }})
+                      <span v-if="group.protectedFileCount > 0" class="protected-info">
+                        - {{ t('duplicatefinder', '{count} protected files in origin folders', { count: group.protectedFileCount }) }}
+                      </span>
                     </span>
                   </span>
                 </NcCheckboxRadioSwitch>
+                <div v-else class="protected-only-notice">
+                  <span class="group-title">
+                    {{ t('duplicatefinder', 'Duplicate group (all files protected)') }}
+                    <span class="protected-info">
+                      - {{ t('duplicatefinder', 'All {count} files are in origin folders and cannot be deleted', { count: group.protectedFileCount }) }}
+                    </span>
+                  </span>
+                </div>
               </div>
               <div class="group-content">
                 <div v-for="(file, index) in group.filesToDelete" :key="index" class="file-display">
@@ -153,6 +170,12 @@ export default {
         return total + selectedIndexes.reduce((sum, index) =>
           sum + group.filesToDelete[index].size, 0)
       }, 0)
+    },
+    hasProtectedFiles() {
+      if (!this.previewResults) return false
+      return Object.values(this.previewResults.duplicateGroups).some(group => 
+        group.protectedFileCount > 0
+      )
     },
     isAllSelected() {
       if (!this.previewResults) return false
@@ -307,8 +330,11 @@ export default {
       let allGroupsValid = true;
       Object.entries(this.selectedFiles).forEach(([hash, selectedIndexes]) => {
         const group = this.previewResults.duplicateGroups[hash];
-        if (selectedIndexes.length === group.filesToDelete.length) {
-          // If all files in a group are selected, deselect one to preserve it
+        // Check if protected files exist for this group
+        const hasProtectedFiles = group.protectedFileCount > 0;
+        
+        if (selectedIndexes.length === group.filesToDelete.length && !hasProtectedFiles) {
+          // If all files in a group are selected and no protected copies exist, deselect one to preserve it
           this.selectedFiles[hash] = selectedIndexes.slice(0, -1);
           allGroupsValid = false;
         }
@@ -491,6 +517,24 @@ export default {
   color: var(--color-text-maxcontrast);
   font-size: 0.9em;
   margin: 10px 0;
+}
+
+.protected-info {
+  color: var(--color-warning);
+  font-weight: normal;
+  font-size: 0.9em;
+}
+
+.protected-only-notice {
+  padding: 10px;
+  background-color: var(--color-background-hover);
+  border-radius: var(--border-radius);
+  opacity: 0.7;
+}
+
+.protected-only-notice .group-title {
+  display: block;
+  color: var(--color-text-lighter);
 }
 
 .merge-explanation {
