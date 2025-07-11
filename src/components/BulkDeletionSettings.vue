@@ -31,6 +31,23 @@
               { current: currentPage, total: previewResults.pagination.totalPages }) }}
           </div>
           <div class="summary-actions">
+            <NcActions :menu-title="sortButtonLabel" :disabled="isLoading">
+              <template #icon>
+                <ChevronDown :size="20" />
+              </template>
+              <NcActionButton @click="setSortOption('none')"
+                :model-value="sortOption === 'none'">
+                {{ t('duplicatefinder', 'Default order') }}
+              </NcActionButton>
+              <NcActionButton @click="setSortOption('size-desc')"
+                :model-value="sortOption === 'size-desc'">
+                {{ t('duplicatefinder', 'Size (largest first)') }}
+              </NcActionButton>
+              <NcActionButton @click="setSortOption('size-asc')"
+                :model-value="sortOption === 'size-asc'">
+                {{ t('duplicatefinder', 'Size (smallest first)') }}
+              </NcActionButton>
+            </NcActions>
             <NcButton type="tertiary" @click="toggleSelectAll">
               {{ isAllSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
             </NcButton>
@@ -67,7 +84,7 @@
             </span>
           </p>
           <div class="preview-list">
-            <div v-for="(group, hash) in previewResults.duplicateGroups" :key="hash" class="duplicate-group">
+            <div v-for="(group, hash) in sortedDuplicateGroups" :key="hash" class="duplicate-group">
               <div class="group-header">
                 <NcCheckboxRadioSwitch
                   v-if="group.filesToDelete.length > 0"
@@ -128,9 +145,11 @@
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon, NcActions, NcActionButton } from '@nextcloud/vue'
 import { fetchDuplicatesForBulk, deleteFiles } from '@/tools/api'
-import { openFileInViewer } from '@/tools/utils'
+import { openFileInViewer, getTotalSizeOfDuplicate } from '@/tools/utils'
+import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
   name: 'BulkDeletionSettings',
@@ -138,7 +157,10 @@ export default {
     NcButton,
     NcCheckboxRadioSwitch,
     NcEmptyContent,
-    NcLoadingIcon
+    NcLoadingIcon,
+    NcActions,
+    NcActionButton,
+    ChevronDown
   },
   data() {
     return {
@@ -147,7 +169,8 @@ export default {
       currentPage: 1,
       hasMorePages: false,
       limit: 100,
-      selectedFiles: {}
+      selectedFiles: {},
+      sortOption: 'none'
     }
   },
   computed: {
@@ -182,6 +205,48 @@ export default {
       return Object.values(this.previewResults.duplicateGroups).every(group =>
         this.selectedFiles[group.hash]?.length === group.filesToDelete.length
       )
+    },
+    sortButtonLabel() {
+      switch (this.sortOption) {
+        case 'size-desc':
+          return t('duplicatefinder', 'Sort: Size (largest first)')
+        case 'size-asc':
+          return t('duplicatefinder', 'Sort: Size (smallest first)')
+        default:
+          return t('duplicatefinder', 'Sort: Default')
+      }
+    },
+    sortedDuplicateGroups() {
+      if (!this.previewResults) return {}
+      
+      // Convert object to array for sorting
+      const groupsArray = Object.entries(this.previewResults.duplicateGroups).map(([hash, group]) => ({
+        hash,
+        ...group
+      }))
+      
+      // Sort based on selected option
+      if (this.sortOption === 'size-desc') {
+        groupsArray.sort((a, b) => {
+          const sizeA = getTotalSizeOfDuplicate({ files: a.filesToDelete })
+          const sizeB = getTotalSizeOfDuplicate({ files: b.filesToDelete })
+          return sizeB - sizeA
+        })
+      } else if (this.sortOption === 'size-asc') {
+        groupsArray.sort((a, b) => {
+          const sizeA = getTotalSizeOfDuplicate({ files: a.filesToDelete })
+          const sizeB = getTotalSizeOfDuplicate({ files: b.filesToDelete })
+          return sizeA - sizeB
+        })
+      }
+      
+      // Convert back to object
+      const sortedGroups = {}
+      groupsArray.forEach(group => {
+        sortedGroups[group.hash] = group
+      })
+      
+      return sortedGroups
     }
   },
   methods: {
@@ -386,6 +451,9 @@ export default {
           )
         })
       }
+    },
+    setSortOption(option) {
+      this.sortOption = option
     }
   }
 }

@@ -13,6 +13,11 @@
 - Improved UI to clearly indicate which files are protected and why some groups cannot be fully deleted
 - Added visual indicators and explanatory messages for better user understanding
 
+### Added
+- Added sort by size option in bulk delete (Fix [#151](https://github.com/eldertek/duplicatefinder/issues/151))
+- Sort duplicates by size (largest or smallest first) in bulk delete preview
+- Consistent sorting behavior with the main duplicate view
+
 ### Security Improvements
 - Added safety checks to prevent accidental file deletion
 - Improved handling of shared folders and external storage
