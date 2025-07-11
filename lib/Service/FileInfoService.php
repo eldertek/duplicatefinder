@@ -102,50 +102,36 @@ class FileInfoService
                 $fileInfo->setMimetype($node->getMimetype());
                 $fileInfo->setSize($node->getSize());
             } else {
-                $this->logger->warning('Node not found for file info - file may have been deleted', [
+                $this->logger->warning('Node not found for file info - file may be temporarily inaccessible', [
                     'path' => $fileInfo->getPath(),
                     'id' => $fileInfo->getId(),
                     'hash' => $fileInfo->getFileHash()
                 ]);
 
-                // File no longer exists, we should delete this file info
-                try {
-                    $this->delete($fileInfo);
-                    $this->logger->info('Deleted file info for non-existent file', [
-                        'path' => $fileInfo->getPath(),
-                        'id' => $fileInfo->getId()
-                    ]);
-                } catch (\Exception $deleteError) {
-                    $this->logger->error('Failed to delete file info for non-existent file', [
-                        'path' => $fileInfo->getPath(),
-                        'id' => $fileInfo->getId(),
-                        'error' => $deleteError->getMessage(),
-                        'trace' => $deleteError->getTraceAsString()
-                    ]);
-                }
+                // Mark as stale but DO NOT delete automatically
+                // Files can be temporarily inaccessible due to:
+                // - Network mount issues
+                // - Permission changes
+                // - Shared folder sync delays
+                // - File locks
+                // Only delete with explicit user action
+                $fileInfo->setNodeId(null);
             }
         } catch (NotFoundException $e) {
-            $this->logger->warning('File not found during enrichment - file may have been deleted', [
+            $this->logger->warning('File not found during enrichment - file may be temporarily inaccessible', [
                 'path' => $fileInfo->getPath(),
                 'id' => $fileInfo->getId(),
                 'error' => $e->getMessage()
             ]);
 
-            // File no longer exists, we should delete this file info
-            try {
-                $this->delete($fileInfo);
-                $this->logger->info('Deleted file info for non-existent file', [
-                    'path' => $fileInfo->getPath(),
-                    'id' => $fileInfo->getId()
-                ]);
-            } catch (\Exception $deleteError) {
-                $this->logger->error('Failed to delete file info for non-existent file', [
-                    'path' => $fileInfo->getPath(),
-                    'id' => $fileInfo->getId(),
-                    'error' => $deleteError->getMessage(),
-                    'trace' => $deleteError->getTraceAsString()
-                ]);
-            }
+            // Mark as stale but DO NOT delete automatically
+            // NotFoundException can occur due to:
+            // - Temporary permission issues
+            // - Network timeouts
+            // - Unmounted external drives
+            // - Shared folder access issues
+            // Only delete with explicit user action
+            $fileInfo->setNodeId(null);
         } catch (\Exception $e) {
             $this->logger->error('Error enriching FileInfo', [
                 'path' => $fileInfo->getPath(),
@@ -206,20 +192,18 @@ class FileInfoService
 
         foreach ($files as $fileInfo) {
             try {
-                // Enrich and verify file existence
+                // Enrich to get latest metadata
                 $enrichedFile = $this->enrich($fileInfo);
-
-                // If the file still exists after enrichment (wasn't deleted during enrich)
-                if ($enrichedFile->getNodeId() !== null) {
-                    $existingFiles[] = $enrichedFile;
-                }
+                // Include all files, even if temporarily inaccessible
+                // Let the UI handle display of stale entries
+                $existingFiles[] = $enrichedFile;
             } catch (\Exception $e) {
                 $this->logger->warning('Error processing file during hash search', [
                     'path' => $fileInfo->getPath(),
                     'hash' => $hash,
                     'error' => $e->getMessage()
                 ]);
-                // File will be automatically deleted in enrich() if it doesn't exist
+                // Continue processing other files
             }
         }
 
@@ -352,41 +336,12 @@ class FileInfoService
                 }
             }
 
-            // Try to delete the actual file first if it exists
-            try {
-                // Set user context for any services that might need it
-                if ($fileInfo->getOwner()) {
-                    $this->logger->debug('Setting user context for file deletion', [
-                        'path' => $fileInfo->getPath(),
-                        'owner' => $fileInfo->getOwner()
-                    ]);
-                    // If we have services that need user context, set it here
-                    if (property_exists($this, 'excludedFolderService') && $this->excludedFolderService !== null) {
-                        $this->excludedFolderService->setUserId($fileInfo->getOwner());
-                    }
-                }
-
-                $node = $this->folderService->getNodeByFileInfo($fileInfo);
-                if ($node) {
-                    $this->logger->debug('Attempting to delete physical file', [
-                        'path' => $fileInfo->getPath(),
-                        'nodeId' => $node->getId()
-                    ]);
-                    $node->delete();
-                    $this->logger->debug('Successfully deleted physical file', [
-                        'path' => $fileInfo->getPath()
-                    ]);
-                }
-            } catch (NotFoundException $e) {
-                $this->logger->debug('Physical file already deleted or not found', [
-                    'path' => $fileInfo->getPath()
-                ]);
-            } catch (\Exception $e) {
-                $this->logger->warning('Failed to delete physical file, continuing with database cleanup', [
-                    'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage()
-                ]);
-            }
+            // REMOVED: Automatic physical file deletion
+            // This method should only clean up database entries
+            // Physical file deletion must be done through FileService with proper checks
+            $this->logger->debug('Cleaning up database entry only - physical file deletion must be explicit', [
+                'path' => $fileInfo->getPath()
+            ]);
 
             // Now delete the database entry
             $result = $this->mapper->delete($fileInfo);

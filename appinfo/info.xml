@@ -33,7 +33,7 @@
 * 📊 **Aperçu & Simulation** - Visualisez ce qui serait supprimé avant d'agir
 * 💼 **Traitement en Arrière-plan** - Tâches automatisées de recherche de doublons
 ]]></description>
-    <version>1.7.3</version>
+    <version>1.7.4</version>
     <author>André Théo LAURET</author>
 
     <namespace>DuplicateFinder</namespace>

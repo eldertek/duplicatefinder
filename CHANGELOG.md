@@ -1,3 +1,16 @@
+## 1.7.4 - 2025-01-11
+### Critical Security Fix
+- **CRITICAL**: Fixed automatic file deletion bug that could cause permanent data loss (Fix [#153](https://github.com/eldertek/duplicatefinder/issues/153))
+- Files are no longer automatically deleted when temporarily inaccessible (network issues, permission changes, unmounted drives)
+- Removed dangerous auto-deletion logic from `FileInfoService::enrich()` method
+- Database entries for inaccessible files are now marked as stale instead of being deleted
+- Physical file deletion now requires explicit user action with proper safeguards
+
+### Security Improvements
+- Added safety checks to prevent accidental file deletion
+- Improved handling of shared folders and external storage
+- Better error handling for temporary file access issues
+
 ## 1.7.3 - 2025-01-05
 ### Fixed
 - Fixed duplicate selection after deletion not respecting the current sort order
