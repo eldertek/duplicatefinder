@@ -13,6 +13,7 @@ OC.L10N.register(
     "Excluded Folders" : "Εξαιρούμενοι Φάκελοι",
     "Projects" : "Projects",
     "Could not fetch settings" : "Αδυναμία λήψης ρυθμίσεων",
+    "Settings saved" : "Οι ρυθμίσεις αποθηκεύτηκαν",
     "All duplicates cleared" : "Όλα τα διπλότυπα διαγράφηκαν",
     "Could not clear duplicates" : "Αδυναμία εκκαθάρισης διπλοτύπων",
     "Duplicates search initiated (this may take a while)" : "Η αναζήτηση διπλοτύπων ξεκίνησε (μπορεί να διαρκέσει λίγο)",

@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "排除文件夹",
     "Projects" : "项目",
     "Could not fetch settings" : "无法获取设置",
+    "Settings saved" : "已保存设置",
+    "Could not save settings" : "无法保存设置",
     "All duplicates cleared" : "已清除所有重复项",
     "Could not clear duplicates" : "无法清除重复项",
     "Duplicates search initiated (this may take a while)" : "已启动重复项搜索（这可能需要一段时间）",

@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "Excluded Folders",
     "Projects" : "Projects",
     "Could not fetch settings" : "Could not fetch settings",
+    "Settings saved" : "Settings saved",
+    "Could not save settings" : "Could not save settings",
     "All duplicates cleared" : "All duplicates cleared",
     "Could not clear duplicates" : "Could not clear duplicates",
     "Duplicates search initiated (this may take a while)" : "Duplicates search initiated (this may take a while)",
@@ -439,6 +441,8 @@ OC.L10N.register(
     "Failed to update project" : "Failed to update project",
     "Project deleted successfully" : "Project deleted successfully",
     "Failed to delete project" : "Failed to delete project",
+    "Project scan initiated" : "Project scan initiated",
+    "Failed to initiate project scan" : "Failed to initiate project scan",
     "Failed to load project duplicates" : "Failed to load project duplicates",
     "The viewer is not available" : "The viewer is not available"
 },

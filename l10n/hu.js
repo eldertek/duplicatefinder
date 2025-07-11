@@ -6,6 +6,8 @@ OC.L10N.register(
     "Filters" : "Szűrők",
     "Projects" : "Projektek",
     "Could not fetch settings" : "Nem sikerült lekérni a beállításokat",
+    "Settings saved" : "Beállítások mentve",
+    "Could not save settings" : "Nem sikerült elmenteni a beállításokat",
     "Ignore Mounted Files" : "Felcsatolt fájlok figyelmen kívül hagyása",
     "When true, files mounted on external storage will be ignored." : "Ha igaz, a külső tárolókon lévő fájlok kihagyásra kerülnek.",
     "Ignore mounted file" : "Felcsatolt fájl figyelmen kívül hagyása",

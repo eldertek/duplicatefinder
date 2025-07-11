@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "Vynechané Adresáre",
     "Projects" : "Projekty",
     "Could not fetch settings" : "Nepodarilo sa načítať nastavenia",
+    "Settings saved" : "Nastavenia uložené",
+    "Could not save settings" : "Nastavenia sa nepodarilo uložiť",
     "All duplicates cleared" : "Všetky duplikáty boli vyčistené",
     "Could not clear duplicates" : "Nepodarilo sa vyčistiť duplikáty",
     "Duplicates search initiated (this may take a while)" : "Začalo vyhľadávanie duplikátov (toto chvíľu potrvá)",

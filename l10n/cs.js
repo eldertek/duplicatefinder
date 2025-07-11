@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "Vynechané složky",
     "Projects" : "Projekty",
     "Could not fetch settings" : "Nastavení se nepodařilo získat",
+    "Settings saved" : "Nastavení uložena",
+    "Could not save settings" : "Nastavení se nepodařilo uložit",
     "All duplicates cleared" : "Všechny duplicity vymazány",
     "Could not clear duplicates" : "Některé duplicity se nepodařilo vymazat",
     "Duplicates search initiated (this may take a while)" : "Spuštěno hledání duplicit (toto může chvíli trvat)",
@@ -436,6 +438,8 @@ OC.L10N.register(
     "Failed to update project" : "Nepodařilo se zaktualizovat projekt",
     "Project deleted successfully" : "Projekt úspěšně smazán",
     "Failed to delete project" : "Nepodařilo se smazat projekt",
+    "Project scan initiated" : "Skenování projektu zahájeno",
+    "Failed to initiate project scan" : "Nepodařilo se inicializovat sken projektu",
     "Failed to load project duplicates" : "Duplicity projektu se nepodařilo načíst",
     "The viewer is not available" : "Prohlížeč není k dispozici"
 },

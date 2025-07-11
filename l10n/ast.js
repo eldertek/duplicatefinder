@@ -7,6 +7,8 @@ OC.L10N.register(
     "Filters" : "Filtros",
     "Projects" : "Proyeutos",
     "Could not fetch settings" : "Nun se pudo dir en cata de la configuración",
+    "Settings saved" : "Guardóse la configuración",
+    "Could not save settings" : "Nun se pudo guardar la configuración",
     "All duplicates cleared" : "Borráronse tolos duplicaos",
     "Could not clear duplicates" : "Nun se pudieron borrar los duplicaos",
     "All duplicates found" : "Atopáronse tolos duplicaos",

@@ -13,6 +13,8 @@ OC.L10N.register(
     "Excluded Folders" : "Изузети фолдери",
     "Projects" : "Пројекти",
     "Could not fetch settings" : "Не могу да се добаве подешавања",
+    "Settings saved" : "Поставке сачуване",
+    "Could not save settings" : "Не могу да се сачувају подешавања",
     "All duplicates cleared" : "Обрисани су сви дупликати",
     "Could not clear duplicates" : "Дупликати нису успели да се обришу",
     "Duplicates search initiated (this may take a while)" : "Покренута је претрага дупликата (ово може да потраје)",

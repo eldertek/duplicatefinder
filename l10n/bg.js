@@ -5,6 +5,7 @@ OC.L10N.register(
     "Help" : "Помощ",
     "Filters" : "Филтри",
     "Projects" : "Проекти",
+    "Settings saved" : "Настройките са запазени",
     "Unselect all" : "Отмяна на избора на всички",
     "Select all" : "Избери всички",
     "Duplicate group" : "Дублиране на група",
