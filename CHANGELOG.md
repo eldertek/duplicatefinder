@@ -15,6 +15,8 @@
 - Fixed Team Folders/Group Folders compatibility (Fix [#149](https://github.com/eldertek/duplicatefinder/issues/149))
 - Handle files owned by non-existent system users (e.g., 'admin' in Team Folders)
 - Gracefully handle `NoUserException` when accessing Team/Group folder files
+- Fixed checkbox array error in bulk delete (Fix [#145](https://github.com/eldertek/duplicatefinder/issues/145))
+- Made checkbox names unique to prevent NcCheckboxRadioSwitch from treating them as groups
 
 ### Added
 - Added sort by size option in bulk delete (Fix [#151](https://github.com/eldertek/duplicatefinder/issues/151))

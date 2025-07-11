@@ -91,7 +91,7 @@
                   :checked="isGroupSelected(hash)"
                   @update:checked="toggleGroup(hash)"
                   type="checkbox"
-                  name="group-select">
+                  :name="`group-select-${hash}`">
                   <span class="group-title">
                     {{ t('duplicatefinder', 'Duplicate group') }}
                     <span class="group-stats">
@@ -122,7 +122,7 @@
                       :checked="isFileSelected(hash, index)"
                       @update:checked="toggleFile(hash, index)"
                       type="checkbox"
-                      name="file-select">
+                      :name="`file-select-${hash}-${index}`">
                       <div class="file-info">
                         <span v-html="file.humanizedPath"></span>
                         <span class="file-size">{{ formatBytes(file.size) }}</span>
