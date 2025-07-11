@@ -5,6 +5,7 @@ use OCP\Files\Node;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
+use Psr\Log\LoggerInterface;
 
 use OCA\DuplicateFinder\Utils\PathConversionUtils;
 use OCA\DuplicateFinder\Db\FileInfo;
@@ -13,11 +14,15 @@ class FolderService
 {
     /** @var IRootFolder */
     private $rootFolder;
+    /** @var LoggerInterface */
+    private $logger;
 
     public function __construct(
-        IRootFolder $rootFolder
+        IRootFolder $rootFolder,
+        LoggerInterface $logger
     ) {
         $this->rootFolder = $rootFolder;
+        $this->logger = $logger;
     }
 
     public function getUserFolder(string $user) : Folder
@@ -37,10 +42,32 @@ class FolderService
     {
         $userFolder = null;
         if ($fileInfo->getOwner()) {
-            $userFolder = $this->rootFolder->getUserFolder($fileInfo->getOwner());
+            try {
+                $userFolder = $this->rootFolder->getUserFolder($fileInfo->getOwner());
+            } catch (\OC\User\NoUserException $e) {
+                // Handle Team Folders or system files where owner doesn't exist as regular user
+                $this->logger->debug('Owner user does not exist, likely a Team/Group folder', [
+                    'owner' => $fileInfo->getOwner(),
+                    'path' => $fileInfo->getPath(),
+                    'fallbackUID' => $fallbackUID
+                ]);
+                // Try with fallback UID or use root folder directly
+                if (!is_null($fallbackUID)) {
+                    try {
+                        $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
+                        $fileInfo->setOwner($fallbackUID);
+                    } catch (\OC\User\NoUserException $e2) {
+                        // Fallback UID also doesn't exist, will use root folder
+                    }
+                }
+            }
         } elseif (!is_null($fallbackUID)) {
-            $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
-            $fileInfo->setOwner($fallbackUID);
+            try {
+                $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
+                $fileInfo->setOwner($fallbackUID);
+            } catch (\OC\User\NoUserException $e) {
+                // Fallback UID doesn't exist, will use root folder
+            }
         }
         if (!is_null($userFolder)) {
             try {

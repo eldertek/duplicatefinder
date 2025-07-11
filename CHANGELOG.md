@@ -12,6 +12,9 @@
 - Allow deletion of non-protected duplicates even when only one non-protected copy exists (if protected copies exist)
 - Improved UI to clearly indicate which files are protected and why some groups cannot be fully deleted
 - Added visual indicators and explanatory messages for better user understanding
+- Fixed Team Folders/Group Folders compatibility (Fix [#149](https://github.com/eldertek/duplicatefinder/issues/149))
+- Handle files owned by non-existent system users (e.g., 'admin' in Team Folders)
+- Gracefully handle `NoUserException` when accessing Team/Group folder files
 
 ### Added
 - Added sort by size option in bulk delete (Fix [#151](https://github.com/eldertek/duplicatefinder/issues/151))
