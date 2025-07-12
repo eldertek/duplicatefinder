@@ -29,6 +29,7 @@ OC.L10N.register(
     "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Disse innstillingene er kun for avanserte brukere. Hvis du ikke er sikker på hva du gjør, vennligst ikke endre dem.",
     "Clear all duplicates" : "Tøm alle duplikater",
     "Find all duplicates" : "Finn alle duplikater",
+    "Default order" : "Forvalgt rekkefølge",
     "Unselect all" : "Fravelg alle",
     "Select all" : "Velg alle",
     "Back" : "Tilbake",

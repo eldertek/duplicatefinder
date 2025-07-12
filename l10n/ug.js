@@ -29,6 +29,7 @@ OC.L10N.register(
     "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "بۇ تەڭشەكلەر پەقەت ئىلغار ئىشلەتكۈچىلەر ئۈچۈندۇر. نېمە قىلىۋاتقانلىقىڭىزنى جەزملەشتۈرەلمىسىڭىز ، ئۇلارنى ئۆزگەرتمەڭ.",
     "Clear all duplicates" : "بارلىق كۆپەيتمىلەرنى تازىلاڭ",
     "Find all duplicates" : "بارلىق كۆپەيتىلگەن نۇسخىسىنى تېپىڭ",
+    "Default order" : "كۆڭۈلدىكى تەرتىپ",
     "Unselect all" : "ھەممىنى تاللاڭ",
     "Select all" : "ھەممىنى تاللاڭ",
     "Back" : "قايتىش",

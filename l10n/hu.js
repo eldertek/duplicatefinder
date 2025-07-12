@@ -17,6 +17,7 @@ OC.L10N.register(
     "Background Job Cleanup Interval (seconds)" : "Háttérfeladatok takarítási intervallum (másodpercben)",
     "Background Job Find Duplicates Interval (seconds)" : "Duplikációkeresés háttérfeladat intervallum (másodpercben)",
     "The interval in seconds for the find duplicates background job." : "A duplikációkeresés háttérfeladat intervalluma másodpercben.",
+    "Default order" : "Alapértelmezett sorrend",
     "Unselect all" : "Kijelölés megszüntetése",
     "Back" : "Vissza",
     "Duplicate group" : "Duplikált csoport",

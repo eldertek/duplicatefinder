@@ -6,6 +6,7 @@ OC.L10N.register(
     "Filters" : "Filtry",
     "Projects" : "Projekty",
     "Settings saved" : "Ustawienia zapisane",
+    "Default order" : "Kolejność domyślna",
     "Unselect all" : "Odznacz wszystko",
     "Select all" : "Wybierz wszystko",
     "Back" : "Poprzednia",
