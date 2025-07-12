@@ -8,7 +8,6 @@ use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
-
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -69,12 +68,16 @@ class FileDuplicateServiceTest extends TestCase
             ->willReturnOnConsecutiveCalls(true, false);
 
         // Test that a file owned by the current user is accessible
-        $this->assertTrue($this->fileInfoService->hasAccessRight($fileInfo1, 'user1'),
-            'Files owned by the current user should be accessible');
+        $this->assertTrue(
+            $this->fileInfoService->hasAccessRight($fileInfo1, 'user1'),
+            'Files owned by the current user should be accessible'
+        );
 
         // Test that a file owned by another user is not accessible
-        $this->assertFalse($this->fileInfoService->hasAccessRight($fileInfo2, 'user1'),
-            'Files owned by other users should not be accessible');
+        $this->assertFalse(
+            $this->fileInfoService->hasAccessRight($fileInfo2, 'user1'),
+            'Files owned by other users should not be accessible'
+        );
     }
 
     /**
@@ -107,7 +110,7 @@ class FileDuplicateServiceTest extends TestCase
             ->willReturnMap([
                 ['hash1', 'file_hash', [$smallFileInfo1, $smallFileInfo2]],
                 ['hash2', 'file_hash', [$mediumFileInfo1, $mediumFileInfo2]],
-                ['hash3', 'file_hash', [$largeFileInfo1, $largeFileInfo2]]
+                ['hash3', 'file_hash', [$largeFileInfo1, $largeFileInfo2]],
             ]);
 
         // Configure fileInfoService.hasAccessRight to always return true
@@ -158,7 +161,7 @@ class FileDuplicateServiceTest extends TestCase
             ->willReturnMap([
                 ['hash1', 'file_hash', [$smallFileInfo1, $smallFileInfo2]],
                 ['hash2', 'file_hash', [$mediumFileInfo1, $mediumFileInfo2]],
-                ['hash3', 'file_hash', [$largeFileInfo1, $largeFileInfo2]]
+                ['hash3', 'file_hash', [$largeFileInfo1, $largeFileInfo2]],
             ]);
 
         // Configure fileInfoService.hasAccessRight to always return true
@@ -192,6 +195,7 @@ class FileDuplicateServiceTest extends TestCase
         $fileInfo->method('getPath')->willReturn($path);
         $fileInfo->method('getOwner')->willReturn($owner);
         $fileInfo->method('getFileHash')->willReturn(basename($path));
+
         return $fileInfo;
     }
 
@@ -202,6 +206,7 @@ class FileDuplicateServiceTest extends TestCase
     {
         $duplicate = new FileDuplicate($hash, 'file_hash');
         $duplicate->setFiles($files);
+
         return $duplicate;
     }
 }

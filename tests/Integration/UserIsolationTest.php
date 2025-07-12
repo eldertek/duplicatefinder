@@ -2,10 +2,10 @@
 
 namespace OCA\DuplicateFinder\Tests\Integration;
 
-use OCA\DuplicateFinder\Db\FileInfoMapper;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
-use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Db\FileInfoMapper;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -165,33 +165,33 @@ class UserIsolationTest extends TestCase
             'userA' => [
                 [
                     'path' => $duplicateA1->getPath(),
-                    'node' => $duplicateA1
+                    'node' => $duplicateA1,
                 ],
                 [
                     'path' => $duplicateA2->getPath(),
-                    'node' => $duplicateA2
+                    'node' => $duplicateA2,
                 ],
                 [
                     'path' => $sharedContentA->getPath(),
-                    'node' => $sharedContentA
-                ]
+                    'node' => $sharedContentA,
+                ],
             ],
             'userB' => [
                 [
                     'path' => $duplicateB1->getPath(),
-                    'node' => $duplicateB1
+                    'node' => $duplicateB1,
                 ],
                 [
                     'path' => $duplicateB2->getPath(),
-                    'node' => $duplicateB2
+                    'node' => $duplicateB2,
                 ],
                 [
                     'path' => $sharedContentB->getPath(),
-                    'node' => $sharedContentB
-                ]
+                    'node' => $sharedContentB,
+                ],
             ],
             'foldersA' => [$folderA1, $folderA2],
-            'foldersB' => [$folderB1, $folderB2]
+            'foldersB' => [$folderB1, $folderB2],
         ];
     }
 
@@ -203,6 +203,7 @@ class UserIsolationTest extends TestCase
         if ($parentFolder->nodeExists($name)) {
             return $parentFolder->get($name);
         }
+
         return $parentFolder->newFolder($name);
     }
 
@@ -214,10 +215,12 @@ class UserIsolationTest extends TestCase
         if ($folder->nodeExists($name)) {
             $file = $folder->get($name);
             $file->putContent($content);
+
             return $file;
         }
         $file = $folder->newFile($name);
         $file->putContent($content);
+
         return $file;
     }
 

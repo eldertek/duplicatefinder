@@ -3,7 +3,6 @@
 namespace OCA\DuplicateFinder\Tests\Unit\Listener;
 
 use OCA\DuplicateFinder\Db\FileInfo;
-use OCA\DuplicateFinder\Event\NewFileInfoEvent;
 use OCA\DuplicateFinder\Event\UpdatedFileInfoEvent;
 use OCA\DuplicateFinder\Listener\FileInfoListener;
 use OCA\DuplicateFinder\Service\FileInfoService;

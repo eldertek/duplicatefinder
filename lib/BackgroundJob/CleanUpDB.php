@@ -3,12 +3,12 @@
 namespace OCA\DuplicateFinder\BackgroundJob;
 
 use OCA\DuplicateFinder\Service\ConfigService;
+use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FolderService;
-use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\Files\NotFoundException;
 use OCP\BackgroundJob\TimedJob;
+use OCP\Files\NotFoundException;
 use Psr\Log\LoggerInterface;
 
 class CleanUpDB extends TimedJob
@@ -69,7 +69,7 @@ class CleanUpDB extends TimedJob
         // Clean up any unhandled delete or rename events
         $fileInfos = $this->fileInfoService->findAll();
         $this->logger->debug('CleanUpDB: Starting cleanup job with {count} file infos', [
-            'count' => count($fileInfos)
+            'count' => count($fileInfos),
         ]);
 
         foreach ($fileInfos as $fileInfo) {
@@ -77,12 +77,12 @@ class CleanUpDB extends TimedJob
             if ($fileInfo->getOwner()) {
                 $this->logger->debug('CleanUpDB: Setting user context for file: {path}', [
                     'path' => $fileInfo->getPath(),
-                    'owner' => $fileInfo->getOwner()
+                    'owner' => $fileInfo->getOwner(),
                 ]);
                 $this->excludedFolderService->setUserId($fileInfo->getOwner());
             } else {
                 $this->logger->debug('CleanUpDB: No owner for file: {path}', [
-                    'path' => $fileInfo->getPath()
+                    'path' => $fileInfo->getPath(),
                 ]);
                 // Clear the user context to avoid using a previous user's context
                 $this->excludedFolderService->setUserId(null);
@@ -93,14 +93,14 @@ class CleanUpDB extends TimedJob
             } catch (NotFoundException $e) {
                 $this->logger->info('CleanUpDB: FileInfo {path} will be deleted (not found)', [
                     'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 $this->fileInfoService->delete($fileInfo);
             } catch (\Exception $e) {
                 $this->logger->error('CleanUpDB: Error checking file: {path}', [
                     'path' => $fileInfo->getPath(),
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
                 // Continue with the next file
             }

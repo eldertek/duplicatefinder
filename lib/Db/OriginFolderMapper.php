@@ -9,8 +9,10 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
-class OriginFolderMapper extends QBMapper {
-    public function __construct(IDBConnection $db) {
+class OriginFolderMapper extends QBMapper
+{
+    public function __construct(IDBConnection $db)
+    {
         parent::__construct($db, 'duplicatefinder_of', OriginFolder::class);
     }
 
@@ -19,7 +21,8 @@ class OriginFolderMapper extends QBMapper {
      * @return OriginFolder
      * @throws DoesNotExistException if not found
      */
-    public function find(int $id): OriginFolder {
+    public function find(int $id): OriginFolder
+    {
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('*')
@@ -35,7 +38,8 @@ class OriginFolderMapper extends QBMapper {
      * @param string $userId
      * @return array
      */
-    public function findAll(string $userId): array {
+    public function findAll(string $userId): array
+    {
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('*')
@@ -54,7 +58,8 @@ class OriginFolderMapper extends QBMapper {
      * @return OriginFolder
      * @throws DoesNotExistException
      */
-    public function findByPath(string $userId, string $folderPath): OriginFolder {
+    public function findByPath(string $userId, string $folderPath): OriginFolder
+    {
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('*')
@@ -74,12 +79,14 @@ class OriginFolderMapper extends QBMapper {
      * @param string $folderPath
      * @return bool
      */
-    public function exists(string $userId, string $folderPath): bool {
+    public function exists(string $userId, string $folderPath): bool
+    {
         try {
             $this->findByPath($userId, $folderPath);
+
             return true;
         } catch (DoesNotExistException $e) {
             return false;
         }
     }
-} 
+}

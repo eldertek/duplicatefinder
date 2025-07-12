@@ -44,7 +44,7 @@ class FilterControllerTest extends TestCase
         // Configurer le mock du service pour retourner des filtres de test
         $filters = [
             ['id' => 1, 'name' => 'Filter 1', 'pattern' => '*.jpg'],
-            ['id' => 2, 'name' => 'Filter 2', 'pattern' => '*.png']
+            ['id' => 2, 'name' => 'Filter 2', 'pattern' => '*.png'],
         ];
 
         $this->service->expects($this->once())

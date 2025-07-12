@@ -1,11 +1,11 @@
 <?php
+
 namespace OCA\DuplicateFinder\Settings;
 
+use OCA\DuplicateFinder\AppInfo\Application;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Settings\IIconSection;
-
-use OCA\DuplicateFinder\AppInfo\Application;
 
 class Section implements IIconSection
 {
@@ -24,12 +24,12 @@ class Section implements IIconSection
         $this->l = $l;
     }
 
-    public function getID() : string
+    public function getID(): string
     {
         return Application::ID;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->l->t('Duplicate Finder');
     }
@@ -39,7 +39,7 @@ class Section implements IIconSection
         return 25;
     }
 
-    public function getIcon() : string
+    public function getIcon(): string
     {
         return $this->url->imagePath(Application::ID, 'app-dark.svg');
     }

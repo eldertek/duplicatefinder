@@ -1,14 +1,15 @@
 <?php
+
 namespace OCA\DuplicateFinder\Listener;
 
-use Psr\Log\LoggerInterface;
-use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventListener;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Event\CalculatedHashEvent;
-use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventListener;
+use Psr\Log\LoggerInterface;
 
 /**
  * @template T of Event
@@ -16,7 +17,6 @@ use OCA\DuplicateFinder\Service\FileDuplicateService;
  */
 class NewHashListener implements IEventListener
 {
-
     /** @var FileInfoService */
     private $fileInfoService;
     /** @var FileDuplicateService */
@@ -42,7 +42,7 @@ class NewHashListener implements IEventListener
                 $this->updateDuplicates($fileInfo, $event->getOldHash());
             }
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to handle new hash event .', ['exception'=> $e]);
+            $this->logger->error('Failed to handle new hash event .', ['exception' => $e]);
         }
     }
 

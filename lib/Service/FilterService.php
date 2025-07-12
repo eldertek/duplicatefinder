@@ -2,16 +2,13 @@
 
 namespace OCA\DuplicateFinder\Service;
 
-use Psr\Log\LoggerInterface;
-use OCP\Files\Node;
-use OCP\Files\NotFoundException;
-
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Db\Filter;
 use OCA\DuplicateFinder\Db\FilterMapper;
 use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
-use OCA\DuplicateFinder\Service\ConfigService;
-use OCA\DuplicateFinder\Service\ExcludedFolderService;
+use OCP\Files\Node;
+use OCP\Files\NotFoundException;
+use Psr\Log\LoggerInterface;
 
 class FilterService
 {
@@ -44,14 +41,15 @@ class FilterService
             'node_type' => $node->getType(),
             'is_mounted' => $node->isMounted(),
             'size' => $node->getSize(),
-            'mimetype' => $node->getMimetype()
+            'mimetype' => $node->getMimetype(),
         ]);
 
         // Ignore mounted files
         if ($node->isMounted() && $this->config->areMountedFilesIgnored()) {
             $this->logger->debug('File is mounted and mounted files are ignored: {path}', [
-                'path' => $fileInfo->getPath()
+                'path' => $fileInfo->getPath(),
             ]);
+
             throw new ForcedToIgnoreFileException($fileInfo, 'app:ignore_mounted_files');
         }
 
@@ -68,44 +66,46 @@ class FilterService
             } catch (\Exception $e) {
                 $this->logger->debug('Error checking excluded folders: {error}', [
                     'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 // Continue with other checks even if this one fails
             }
         } else {
             $this->logger->debug('Skipping excluded folder check - no owner for file: {path}', [
-                'path' => $fileInfo->getPath()
+                'path' => $fileInfo->getPath(),
             ]);
         }
 
         $this->logger->debug('Exclusion check result: {result}', [
             'path' => $fileInfo->getPath(),
-            'isExcluded' => $isExcluded ? 'true' : 'false'
+            'isExcluded' => $isExcluded ? 'true' : 'false',
         ]);
 
         if ($isExcluded) {
             $this->logger->debug('File is in an excluded folder: {path}', [
-                'path' => $fileInfo->getPath()
+                'path' => $fileInfo->getPath(),
             ]);
+
             return true;
         }
 
         // Check custom filters
         $this->logger->debug('Starting custom filter check for file: {path}', [
-            'path' => $fileInfo->getPath()
+            'path' => $fileInfo->getPath(),
         ]);
 
         if ($this->matchesCustomFilters($fileInfo)) {
             $this->logger->debug('File matches custom filter rules: {path}', [
-                'path' => $fileInfo->getPath()
+                'path' => $fileInfo->getPath(),
             ]);
+
             return true;
         }
 
         // Ignore files when any ancestor folder contains a .nodupefinder file
         $currentNode = $node;
         $this->logger->debug('Starting .nodupefinder check for: {path}', [
-            'path' => $fileInfo->getPath()
+            'path' => $fileInfo->getPath(),
         ]);
 
         while ($currentNode !== null) {
@@ -113,14 +113,15 @@ class FilterService
                 $parent = $currentNode->getParent();
                 if ($parent !== null) {
                     $this->logger->debug('Checking parent folder for .nodupefinder: {path}', [
-                        'parent_path' => $parent->getPath()
+                        'parent_path' => $parent->getPath(),
                     ]);
 
                     if ($parent->nodeExists('.nodupefinder')) {
                         $this->logger->debug('Found .nodupefinder in parent folder: {path}', [
                             'parent_path' => $parent->getPath(),
-                            'file_path' => $fileInfo->getPath()
+                            'file_path' => $fileInfo->getPath(),
                         ]);
+
                         return true;
                     }
                 }
@@ -128,15 +129,17 @@ class FilterService
             } catch (NotFoundException $e) {
                 $this->logger->debug('Parent folder not found, stopping .nodupefinder check: {path}', [
                     'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
+
                 break;
             }
         }
 
         $this->logger->debug('File is not ignored: {path}', [
-            'path' => $fileInfo->getPath()
+            'path' => $fileInfo->getPath(),
         ]);
+
         return false;
     }
 
@@ -146,14 +149,15 @@ class FilterService
             $this->logger->debug('Starting custom filter check for file: {path}', [
                 'path' => $fileInfo->getPath(),
                 'hash' => $fileInfo->getFileHash(),
-                'owner' => $fileInfo->getOwner()
+                'owner' => $fileInfo->getOwner(),
             ]);
 
             // Skip custom filter checks if no owner
             if (!$fileInfo->getOwner()) {
                 $this->logger->debug('Skipping custom filter check - no owner for file: {path}', [
-                    'path' => $fileInfo->getPath()
+                    'path' => $fileInfo->getPath(),
                 ]);
+
                 return false;
             }
 
@@ -161,21 +165,22 @@ class FilterService
             $hashFilters = $this->filterMapper->findByType('hash', $fileInfo->getOwner());
             $this->logger->debug('Found {count} hash filters for user', [
                 'count' => count($hashFilters),
-                'owner' => $fileInfo->getOwner()
+                'owner' => $fileInfo->getOwner(),
             ]);
 
             foreach ($hashFilters as $filter) {
                 $this->logger->debug('Checking hash filter: {filter_value} against file hash: {file_hash}', [
                     'filter_value' => $filter->getValue(),
                     'file_hash' => $fileInfo->getFileHash(),
-                    'filter_id' => $filter->getId()
+                    'filter_id' => $filter->getId(),
                 ]);
 
                 if ($fileInfo->getFileHash() === $filter->getValue()) {
                     $this->logger->debug('File matches hash filter: {filter_id}', [
                         'filter_id' => $filter->getId(),
-                        'path' => $fileInfo->getPath()
+                        'path' => $fileInfo->getPath(),
                     ]);
+
                     return true;
                 }
             }
@@ -184,7 +189,7 @@ class FilterService
             $nameFilters = $this->filterMapper->findByType('name', $fileInfo->getOwner());
             $this->logger->debug('Found {count} name pattern filters for user', [
                 'count' => count($nameFilters),
-                'owner' => $fileInfo->getOwner()
+                'owner' => $fileInfo->getOwner(),
             ]);
 
             foreach ($nameFilters as $filter) {
@@ -198,47 +203,53 @@ class FilterService
                     'pattern' => $filter->getValue(),
                     'regex' => '/^' . $pattern . '$/',
                     'filename' => $filename,
-                    'filter_id' => $filter->getId()
+                    'filter_id' => $filter->getId(),
                 ]);
 
                 if (preg_match('/^' . $pattern . '$/', $filename)) {
                     $this->logger->debug('File matches name pattern filter: {filter_id}', [
                         'filter_id' => $filter->getId(),
                         'path' => $fileInfo->getPath(),
-                        'pattern' => $filter->getValue()
+                        'pattern' => $filter->getValue(),
                     ]);
+
                     return true;
                 }
             }
 
             $this->logger->debug('File does not match any filters: {path}', [
-                'path' => $fileInfo->getPath()
+                'path' => $fileInfo->getPath(),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Error checking custom filters: {error}', [
                 'error' => $e->getMessage(),
                 'path' => $fileInfo->getPath(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
         }
+
         return false;
     }
 
-    public function createFilter(string $type, string $value, string $userId): Filter {
+    public function createFilter(string $type, string $value, string $userId): Filter
+    {
         $filter = new Filter();
         $filter->setType($type);
         $filter->setValue($value);
         $filter->setUserId($userId);
         $filter->setCreatedAt(time());
+
         return $this->filterMapper->insert($filter);
     }
 
-    public function deleteFilter(int $id, string $userId): void {
+    public function deleteFilter(int $id, string $userId): void
+    {
         $filter = $this->filterMapper->find($id, $userId);
         $this->filterMapper->delete($filter);
     }
 
-    public function getFilters(string $userId): array {
+    public function getFilters(string $userId): array
+    {
         return $this->filterMapper->findAll($userId);
     }
 
@@ -248,30 +259,34 @@ class FilterService
      * @param Node $node The directory node to check
      * @return bool True if the directory should be skipped, false otherwise
      */
-    public function shouldSkipDirectory(Node $node): bool {
+    public function shouldSkipDirectory(Node $node): bool
+    {
         try {
             $this->logger->debug('Checking if directory should be skipped: {path}', [
-                'path' => $node->getPath()
+                'path' => $node->getPath(),
             ]);
 
             // Check if the current directory contains a .nodupefinder file
             if ($node->nodeExists('.nodupefinder')) {
                 $this->logger->debug('Found .nodupefinder in directory, skipping: {path}', [
-                    'path' => $node->getPath()
+                    'path' => $node->getPath(),
                 ]);
+
                 return true;
             }
 
             $this->logger->debug('Directory does not contain .nodupefinder, will be scanned: {path}', [
-                'path' => $node->getPath()
+                'path' => $node->getPath(),
             ]);
+
             return false;
         } catch (\Exception $e) {
             $this->logger->error('Error checking if directory should be skipped: {error}', [
                 'path' => $node->getPath(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             // If there's an error, don't skip the directory
             return false;
         }

@@ -3,9 +3,9 @@
 namespace OCA\DuplicateFinder\Tests\Unit\Command;
 
 use OCA\DuplicateFinder\Command\FindDuplicates;
+use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
-use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
 use OCA\DuplicateFinder\Service\ProjectService;
 use OCP\Encryption\IManager;
@@ -120,7 +120,7 @@ class FindDuplicatesTest extends TestCase
             ->method('findAll')
             ->willReturn([
                 'entities' => [],
-                'isLastFetched' => true
+                'isLastFetched' => true,
             ]);
 
         $result = $this->invokeMethod($this->command, 'execute', [$this->input, $this->output]);
@@ -192,7 +192,7 @@ class FindDuplicatesTest extends TestCase
             ->method('findAll')
             ->willReturn([
                 'entities' => [],
-                'isLastFetched' => true
+                'isLastFetched' => true,
             ]);
 
         $result = $this->invokeMethod($this->command, 'execute', [$this->input, $this->output]);
@@ -244,7 +244,7 @@ class FindDuplicatesTest extends TestCase
             ->method('findAll')
             ->willReturn([
                 'entities' => [],
-                'isLastFetched' => true
+                'isLastFetched' => true,
             ]);
 
         $result = $this->invokeMethod($this->command, 'execute', [$this->input, $this->output]);
@@ -259,6 +259,7 @@ class FindDuplicatesTest extends TestCase
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
         $method->setAccessible(true);
+
         return $method->invokeArgs($object, $parameters);
     }
 }

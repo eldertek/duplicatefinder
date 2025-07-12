@@ -12,14 +12,16 @@ use OCP\Files\Node;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-class CustomFilterTest extends TestCase {
+class CustomFilterTest extends TestCase
+{
     private $logger;
     private $config;
     private $excludedFolderService;
     private $filterMapper;
     private $service;
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         parent::setUp();
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->config = $this->createMock(ConfigService::class);
@@ -37,7 +39,8 @@ class CustomFilterTest extends TestCase {
     /**
      * Test that files matching a hash filter are ignored
      */
-    public function testHashFilterIgnoresMatchingFiles() {
+    public function testHashFilterIgnoresMatchingFiles()
+    {
         // Create a test file
         $fileInfo = $this->createMockFileInfo('/user1/files/document.txt', 'user1', 'abc123hash');
         $node = $this->createMockNode();
@@ -65,7 +68,8 @@ class CustomFilterTest extends TestCase {
     /**
      * Test that files matching a name pattern filter are ignored
      */
-    public function testNamePatternFilterIgnoresMatchingFiles() {
+    public function testNamePatternFilterIgnoresMatchingFiles()
+    {
         // Create test files
         $tempFile = $this->createMockFileInfo('/user1/files/document.tmp', 'user1', 'temp123hash');
         $backupFile = $this->createMockFileInfo('/user1/files/backup_document.txt', 'user1', 'backup123hash');
@@ -89,10 +93,11 @@ class CustomFilterTest extends TestCase {
 
         // Configure the filter mapper to return appropriate filters based on type
         $this->filterMapper->method('findByType')
-            ->willReturnCallback(function($type, $userId) use ($tmpFilter, $backupFilter) {
+            ->willReturnCallback(function ($type, $userId) use ($tmpFilter, $backupFilter) {
                 if ($type === 'name' && $userId === 'user1') {
                     return [$tmpFilter, $backupFilter];
                 }
+
                 return [];
             });
 
@@ -113,7 +118,8 @@ class CustomFilterTest extends TestCase {
     /**
      * Helper method to create a mock FileInfo
      */
-    private function createMockFileInfo(string $path, string $owner, string $fileHash): FileInfo {
+    private function createMockFileInfo(string $path, string $owner, string $fileHash): FileInfo
+    {
         $fileInfo = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
             ->addMethods(['getPath', 'getOwner', 'getFileHash'])
@@ -121,18 +127,21 @@ class CustomFilterTest extends TestCase {
         $fileInfo->method('getPath')->willReturn($path);
         $fileInfo->method('getOwner')->willReturn($owner);
         $fileInfo->method('getFileHash')->willReturn($fileHash);
+
         return $fileInfo;
     }
 
     /**
      * Helper method to create a mock Node
      */
-    private function createMockNode(): Node {
+    private function createMockNode(): Node
+    {
         $node = $this->createMock(Node::class);
         $node->method('getType')->willReturn('file');
         $node->method('isMounted')->willReturn(false);
         $node->method('getSize')->willReturn(1024);
         $node->method('getMimetype')->willReturn('text/plain');
+
         return $node;
     }
 

@@ -1,23 +1,23 @@
 <?php
+
 namespace OCA\DuplicateFinder\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
-use OCP\Migration\SimpleMigrationStep;
 use OCP\Migration\IOutput;
+use OCP\Migration\SimpleMigrationStep;
 
 class Version0000Date20210325183200 extends SimpleMigrationStep
 {
-
-  /**
-  * @param IOutput $output
-  * @param Closure $schemaClosure The `\Closure` returns a `ISchemaWrapper`
-  * @param array<mixed> $options
-  * @return null|ISchemaWrapper
-  */
+    /**
+    * @param IOutput $output
+    * @param Closure $schemaClosure The `\Closure` returns a `ISchemaWrapper`
+    * @param array<mixed> $options
+    * @return null|ISchemaWrapper
+    */
     public function changeSchema(IOutput $output, Closure $schemaClosure, array $options)
     {
-      /** @var ISchemaWrapper $schema */
+        /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
 
         if (!$schema->hasTable('duplicatefinder_finfo')) {
@@ -33,33 +33,33 @@ class Version0000Date20210325183200 extends SimpleMigrationStep
             $table->addColumn('path', 'text', [
             'notnull' => true,
             ]);
-          /**
-           * Column to store the hash of file
-           * This erases the need to calculate the hash on every time the app is opend
-           */
+            /**
+             * Column to store the hash of file
+             * This erases the need to calculate the hash on every time the app is opend
+             */
             $table->addColumn('file_hash', 'string', [
             'notnull' => false,
-            'length' => 200
+            'length' => 200,
             ]);
             $table->addColumn('size', 'integer', [
               'notnull' => false,
             ]);
             $table->addColumn('mimetype', 'string', [
               'notnull' => false,
-              'length' => 200
+              'length' => 200,
             ]);
 
-          /**
-           * Column to store the hash of an image (without exif data)
-           */
+            /**
+             * Column to store the hash of an image (without exif data)
+             */
             $table->addColumn('image_hash', 'string', [
             'notnull' => false,
-            'length' => 200
+            'length' => 200,
             ]);
 
-          /** Stores the time where the hash is calculated */
+            /** Stores the time where the hash is calculated */
             $table->addColumn('updated_at', 'integer', [
-            'notnull' => false
+            'notnull' => false,
             ]);
 
             $table->setPrimaryKey(['id']);
@@ -70,10 +70,11 @@ class Version0000Date20210325183200 extends SimpleMigrationStep
         }
         $schema = $this->createDuplicatesTable($schema);
         $schema = $this->createDuplicatesRelationTable($schema);
+
         return $schema;
     }
 
-    private function createDuplicatesTable(ISchemaWrapper $schema):ISchemaWrapper
+    private function createDuplicatesTable(ISchemaWrapper $schema): ISchemaWrapper
     {
         if (!$schema->hasTable('duplicatefinder_dups')) {
             $table = $schema->createTable('duplicatefinder_dups');
@@ -87,15 +88,16 @@ class Version0000Date20210325183200 extends SimpleMigrationStep
             ]);
             $table->addColumn('hash', 'string', [
             'notnull' => true,
-            'length' => 200
+            'length' => 200,
             ]);
             $table->setPrimaryKey(['id']);
             $table->addIndex(['type','hash'], 'duplicatefinder_dh_idx');
         }
+
         return $schema;
     }
 
-    private function createDuplicatesRelationTable(ISchemaWrapper $schema):ISchemaWrapper
+    private function createDuplicatesRelationTable(ISchemaWrapper $schema): ISchemaWrapper
     {
         if (!$schema->hasTable('duplicatefinder_dups_f')) {
             $table = $schema->createTable('duplicatefinder_dups_f');
@@ -103,14 +105,15 @@ class Version0000Date20210325183200 extends SimpleMigrationStep
             'notnull' => true,
             ]);
             $table->addColumn('rid', 'integer', [
-            'notnull' => true
+            'notnull' => true,
             ]);
             $table->addColumn('value', 'string', [
             'notnull' => false,
-            'length' => 200
+            'length' => 200,
             ]);
             $table->setPrimaryKey(['id', 'rid']);
         }
+
         return $schema;
     }
 }

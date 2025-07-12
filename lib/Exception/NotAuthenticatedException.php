@@ -1,9 +1,6 @@
 <?php
 
-
 namespace OCA\DuplicateFinder\Exception;
-
-use Throwable;
 
 class NotAuthenticatedException extends \Exception
 {

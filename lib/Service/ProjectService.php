@@ -6,17 +6,17 @@ namespace OCA\DuplicateFinder\Service;
 
 use DateTime;
 use Exception;
-use OCA\DuplicateFinder\AppInfo\Application;
-use OCA\DuplicateFinder\Db\Project;
-use OCA\DuplicateFinder\Db\ProjectMapper;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCA\DuplicateFinder\Db\FileInfo;
+use OCA\DuplicateFinder\Db\Project;
+use OCA\DuplicateFinder\Db\ProjectMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use Psr\Log\LoggerInterface;
 
-class ProjectService {
+class ProjectService
+{
     private ProjectMapper $mapper;
     private FileDuplicateMapper $duplicateMapper;
     private IRootFolder $rootFolder;
@@ -45,7 +45,8 @@ class ProjectService {
      *
      * @param string $userId The user ID
      */
-    public function setUserId(string $userId): void {
+    public function setUserId(string $userId): void
+    {
         $this->userId = $userId;
     }
 
@@ -54,7 +55,8 @@ class ProjectService {
      *
      * @throws \RuntimeException if no user context is available
      */
-    private function validateUserContext(): void {
+    private function validateUserContext(): void
+    {
         if (empty($this->userId)) {
             throw new \RuntimeException('User context required for this operation');
         }
@@ -65,7 +67,8 @@ class ProjectService {
      *
      * @return array Array of Project objects with folders loaded
      */
-    public function findAll(): array {
+    public function findAll(): array
+    {
         $this->validateUserContext();
         $projects = $this->mapper->findAll($this->userId);
 
@@ -85,7 +88,8 @@ class ProjectService {
      * @return Project The project with folders loaded
      * @throws DoesNotExistException if not found
      */
-    public function find(int $id): Project {
+    public function find(int $id): Project
+    {
         $this->validateUserContext();
         $project = $this->mapper->find($id, $this->userId);
 
@@ -104,11 +108,12 @@ class ProjectService {
      * @return Project The created project
      * @throws NotFoundException if a folder doesn't exist
      */
-    public function create(string $name, array $folderPaths): Project {
+    public function create(string $name, array $folderPaths): Project
+    {
         $this->validateUserContext();
         $this->logger->debug('Creating project: {name} with folders: {folders}', [
             'name' => $name,
-            'folders' => implode(', ', $folderPaths)
+            'folders' => implode(', ', $folderPaths),
         ]);
 
         // Verify that all folders exist
@@ -116,6 +121,7 @@ class ProjectService {
         foreach ($folderPaths as $folderPath) {
             if (!$userFolder->nodeExists($folderPath)) {
                 $this->logger->warning('Folder not found: {path}', ['path' => $folderPath]);
+
                 throw new NotFoundException('Folder does not exist: ' . $folderPath);
             }
         }
@@ -135,7 +141,7 @@ class ProjectService {
 
         $this->logger->info('Successfully created project: {name} with ID {id}', [
             'name' => $name,
-            'id' => $project->getId()
+            'id' => $project->getId(),
         ]);
 
         return $project;
@@ -151,7 +157,8 @@ class ProjectService {
      * @throws DoesNotExistException if the project doesn't exist
      * @throws NotFoundException if a folder doesn't exist
      */
-    public function update(int $id, string $name, array $folderPaths): Project {
+    public function update(int $id, string $name, array $folderPaths): Project
+    {
         $this->validateUserContext();
 
         // Get the project
@@ -166,6 +173,7 @@ class ProjectService {
         foreach ($folderPaths as $folderPath) {
             if (!$userFolder->nodeExists($folderPath)) {
                 $this->logger->warning('Folder not found: {path}', ['path' => $folderPath]);
+
                 throw new NotFoundException('Folder does not exist: ' . $folderPath);
             }
         }
@@ -184,7 +192,8 @@ class ProjectService {
      * @param int $id The project ID
      * @throws DoesNotExistException if the project doesn't exist
      */
-    public function delete(int $id): void {
+    public function delete(int $id): void
+    {
         $this->validateUserContext();
 
         // Get the project to verify it exists and belongs to the user
@@ -200,7 +209,8 @@ class ProjectService {
      * @param int $id The project ID
      * @throws DoesNotExistException if the project doesn't exist
      */
-    public function scan(int $id): void {
+    public function scan(int $id): void
+    {
         $this->validateUserContext();
 
         // Get the project
@@ -209,7 +219,7 @@ class ProjectService {
 
         $this->logger->info('Starting scan for project: {name} (ID: {id})', [
             'name' => $project->getName(),
-            'id' => $id
+            'id' => $id,
         ]);
 
         // Clear existing duplicates for this project
@@ -219,7 +229,7 @@ class ProjectService {
         foreach ($folders as $folderPath) {
             $this->logger->debug('Scanning folder: {path} for project {id}', [
                 'path' => $folderPath,
-                'id' => $id
+                'id' => $id,
             ]);
 
             try {
@@ -229,7 +239,7 @@ class ProjectService {
                 $this->logger->error('Error scanning folder {path}: {error}', [
                     'path' => $folderPath,
                     'error' => $e->getMessage(),
-                    'exception' => $e
+                    'exception' => $e,
                 ]);
             }
         }
@@ -242,7 +252,7 @@ class ProjectService {
 
         $this->logger->info('Completed scan for project: {name} (ID: {id})', [
             'name' => $project->getName(),
-            'id' => $id
+            'id' => $id,
         ]);
     }
 
@@ -252,22 +262,23 @@ class ProjectService {
      * @param int $projectId The project ID
      * @param array $folderPaths The folder paths to check
      */
-    private function findProjectDuplicates(int $projectId, array $folderPaths): void {
+    private function findProjectDuplicates(int $projectId, array $folderPaths): void
+    {
         $this->logger->debug('Finding duplicates for project {id} in folders: {folders}', [
             'id' => $projectId,
-            'folders' => implode(', ', $folderPaths)
+            'folders' => implode(', ', $folderPaths),
         ]);
 
         // Get all duplicates
         $this->logger->debug('Finding duplicates with files for user', [
             'app' => 'duplicatefinder',
-            'userId' => $this->userId
+            'userId' => $this->userId,
         ]);
 
         $duplicates = $this->duplicateMapper->findDuplicatesWithFiles($this->userId);
         $this->logger->debug('Found duplicates with files', [
             'app' => 'duplicatefinder',
-            'count' => count($duplicates)
+            'count' => count($duplicates),
         ]);
 
         $duplicateIds = [];
@@ -280,7 +291,7 @@ class ProjectService {
                 'app' => 'duplicatefinder',
                 'duplicateId' => $duplicateId,
                 'hash' => $hash,
-                'type' => $duplicate['type']
+                'type' => $duplicate['type'],
             ]);
 
             // Get all files with this hash
@@ -289,7 +300,7 @@ class ProjectService {
                 'app' => 'duplicatefinder',
                 'hash' => $hash,
                 'fileCount' => count($filePaths),
-                'files' => $filePaths
+                'files' => $filePaths,
             ]);
 
             $filesInProject = false;
@@ -312,7 +323,7 @@ class ProjectService {
                         'app' => 'duplicatefinder',
                         'filePath' => $filePath,
                         'folderPath' => $folderPath,
-                        'fullFolderPath' => $fullFolderPath
+                        'fullFolderPath' => $fullFolderPath,
                     ]);
 
                     if (strpos($filePath, $fullFolderPath) !== false) {
@@ -324,7 +335,7 @@ class ProjectService {
                             'app' => 'duplicatefinder',
                             'filePath' => $filePath,
                             'folderPath' => $folderPath,
-                            'fullFolderPath' => $fullFolderPath
+                            'fullFolderPath' => $fullFolderPath,
                         ]);
 
                         break;
@@ -337,7 +348,7 @@ class ProjectService {
                 'hash' => $hash,
                 'filesInProject' => $filesInProject ? 'true' : 'false',
                 'filesInProjectCount' => $filesInProjectCount,
-                'matchedFiles' => $matchedFiles
+                'matchedFiles' => $matchedFiles,
             ]);
 
             // Only add duplicates that have at least 2 files in the project folders
@@ -347,14 +358,14 @@ class ProjectService {
                     'app' => 'duplicatefinder',
                     'duplicateId' => $duplicateId,
                     'hash' => $hash,
-                    'filesInProjectCount' => $filesInProjectCount
+                    'filesInProjectCount' => $filesInProjectCount,
                 ]);
             } else {
                 $this->logger->debug('Skipped duplicate (not enough files in project)', [
                     'app' => 'duplicatefinder',
                     'duplicateId' => $duplicateId,
                     'hash' => $hash,
-                    'filesInProjectCount' => $filesInProjectCount
+                    'filesInProjectCount' => $filesInProjectCount,
                 ]);
             }
         }
@@ -366,7 +377,7 @@ class ProjectService {
 
         $this->logger->debug('Found {count} duplicates for project {id}', [
             'count' => count($duplicateIds),
-            'id' => $projectId
+            'id' => $projectId,
         ]);
     }
 
@@ -379,7 +390,8 @@ class ProjectService {
      * @param int $limit The number of duplicates per page
      * @return array The duplicates and pagination info
      */
-    public function getDuplicates(int $projectId, string $type = 'all', int $page = 1, int $limit = 50): array {
+    public function getDuplicates(int $projectId, string $type = 'all', int $page = 1, int $limit = 50): array
+    {
         $this->validateUserContext();
 
         $this->logger->debug('Getting duplicates for project', [
@@ -388,7 +400,7 @@ class ProjectService {
             'type' => $type,
             'page' => $page,
             'limit' => $limit,
-            'userId' => $this->userId
+            'userId' => $this->userId,
         ]);
 
         // Get the duplicate IDs for this project
@@ -398,7 +410,7 @@ class ProjectService {
             'app' => 'duplicatefinder',
             'projectId' => $projectId,
             'duplicateCount' => count($duplicateIds),
-            'duplicateIds' => $duplicateIds
+            'duplicateIds' => $duplicateIds,
         ]);
 
         if (empty($duplicateIds)) {
@@ -407,8 +419,8 @@ class ProjectService {
                 'pagination' => [
                     'currentPage' => $page,
                     'totalPages' => 0,
-                    'totalItems' => 0
-                ]
+                    'totalItems' => 0,
+                ],
             ];
         }
 
@@ -416,7 +428,7 @@ class ProjectService {
         $this->logger->debug('Counting duplicates by IDs', [
             'app' => 'duplicatefinder',
             'duplicateIdsCount' => count($duplicateIds),
-            'type' => $type
+            'type' => $type,
         ]);
 
         $totalItems = $this->duplicateMapper->countByIds($duplicateIds, $type);
@@ -427,7 +439,7 @@ class ProjectService {
             'totalItems' => $totalItems,
             'totalPages' => $totalPages,
             'currentPage' => $page,
-            'limit' => $limit
+            'limit' => $limit,
         ]);
 
         // Get the duplicates for the current page
@@ -442,7 +454,7 @@ class ProjectService {
             $this->logger->debug('File data for duplicate', [
                 'app' => 'duplicatefinder',
                 'hash' => $duplicate->getHash(),
-                'fileData' => $fileData
+                'fileData' => $fileData,
             ]);
 
             // Create FileInfo objects for each file path
@@ -469,14 +481,14 @@ class ProjectService {
                                     'app' => 'duplicatefinder',
                                     'path' => $data['path'],
                                     'relativePath' => $relativePath,
-                                    'size' => $size
+                                    'size' => $size,
                                 ]);
                             }
                         } catch (\Exception $e) {
                             $this->logger->debug('Error getting file size from filesystem', [
                                 'app' => 'duplicatefinder',
                                 'path' => $data['path'],
-                                'error' => $e->getMessage()
+                                'error' => $e->getMessage(),
                             ]);
                         }
                     }
@@ -494,7 +506,7 @@ class ProjectService {
             $this->logger->debug('Loaded files for duplicate', [
                 'app' => 'duplicatefinder',
                 'hash' => $duplicate->getHash(),
-                'fileCount' => count($files)
+                'fileCount' => count($files),
             ]);
         }
 
@@ -502,7 +514,7 @@ class ProjectService {
             'app' => 'duplicatefinder',
             'count' => count($duplicates),
             'page' => $page,
-            'limit' => $limit
+            'limit' => $limit,
         ]);
 
         // Log details about each duplicate
@@ -513,7 +525,7 @@ class ProjectService {
                 'id' => $duplicate->getId(),
                 'hash' => $duplicate->getHash(),
                 'type' => $duplicate->getType(),
-                'acknowledged' => $duplicate->getAcknowledged() ? 'true' : 'false'
+                'acknowledged' => $duplicate->getAcknowledged() ? 'true' : 'false',
             ]);
         }
 
@@ -522,8 +534,8 @@ class ProjectService {
             'pagination' => [
                 'currentPage' => $page,
                 'totalPages' => $totalPages,
-                'totalItems' => $totalItems
-            ]
+                'totalItems' => $totalItems,
+            ],
         ];
     }
 }

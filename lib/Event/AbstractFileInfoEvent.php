@@ -1,13 +1,13 @@
 <?php
+
 namespace OCA\DuplicateFinder\Event;
 
-use OCP\EventDispatcher\Event;
 use OCA\DuplicateFinder\Db\FileInfo;
+use OCP\EventDispatcher\Event;
 
 abstract class AbstractFileInfoEvent extends Event
 {
-
-  /** @var FileInfo */
+    /** @var FileInfo */
     private $fileInfo;
     /** @var null|string */
     private $userId;

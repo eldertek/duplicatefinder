@@ -2,11 +2,9 @@
 
 namespace OCA\DuplicateFinder\Tests\Unit\Migration;
 
-use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Migration\RepairFileInfos;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\FileInfoService;
-use OCP\Files\NotFoundException;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;

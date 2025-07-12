@@ -5,7 +5,6 @@ namespace OCA\DuplicateFinder\Tests\Unit\Controller;
 use OCA\DuplicateFinder\Controller\DuplicateApiController;
 use OCA\DuplicateFinder\Db\FileDuplicate;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
-use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
@@ -109,7 +108,7 @@ class DuplicateApiControllerTest extends TestCase
             ->with('unacknowledged', 'testuser', 1, 30, true)
             ->willReturn([
                 'entities' => [$duplicate],
-                'isLastFetched' => true
+                'isLastFetched' => true,
             ]);
 
         $this->fileDuplicateService->expects($this->once())

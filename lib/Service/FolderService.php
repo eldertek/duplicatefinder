@@ -1,14 +1,14 @@
 <?php
+
 namespace OCA\DuplicateFinder\Service;
 
-use OCP\Files\Node;
+use OCA\DuplicateFinder\Db\FileInfo;
+use OCA\DuplicateFinder\Utils\PathConversionUtils;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\Files\Node;
 use OCP\Files\NotFoundException;
 use Psr\Log\LoggerInterface;
-
-use OCA\DuplicateFinder\Utils\PathConversionUtils;
-use OCA\DuplicateFinder\Db\FileInfo;
 
 class FolderService
 {
@@ -25,7 +25,7 @@ class FolderService
         $this->logger = $logger;
     }
 
-    public function getUserFolder(string $user) : Folder
+    public function getUserFolder(string $user): Folder
     {
         return $this->rootFolder->getUserFolder($user);
     }
@@ -38,7 +38,7 @@ class FolderService
      *  the user folder supports lazy loading, it works even if the file isn't in the cache
      *  If the owner is unknown, it is at least tried to get the Node from the root folder
      */
-    public function getNodeByFileInfo(FileInfo $fileInfo, ?string $fallbackUID = null): Node
+    public function getNodeByFileInfo(FileInfo $fileInfo, ?string $fallbackUID = null): ?Node
     {
         $userFolder = null;
         if ($fileInfo->getOwner()) {
@@ -49,7 +49,7 @@ class FolderService
                 $this->logger->debug('Owner user does not exist, likely a Team/Group folder', [
                     'owner' => $fileInfo->getOwner(),
                     'path' => $fileInfo->getPath(),
-                    'fallbackUID' => $fallbackUID
+                    'fallbackUID' => $fallbackUID,
                 ]);
                 // Try with fallback UID or use root folder directly
                 if (!is_null($fallbackUID)) {
@@ -72,11 +72,23 @@ class FolderService
         if (!is_null($userFolder)) {
             try {
                 $relativePath = PathConversionUtils::convertRelativePathToUserFolder($fileInfo, $userFolder);
+
                 return $userFolder->get($relativePath);
             } catch (NotFoundException $e) {
                 //If the file is not known in the user root (cached) it's fine to use the root
             }
         }
-        return $this->rootFolder->get($fileInfo->getPath());
+
+        // Last resort: try with root folder
+        try {
+            return $this->rootFolder->get($fileInfo->getPath());
+        } catch (NotFoundException $e) {
+            $this->logger->warning('File not found even with root folder access', [
+                'path' => $fileInfo->getPath(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 }

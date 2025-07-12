@@ -2,22 +2,17 @@
 
 namespace OCA\DuplicateFinder\Tests\Integration;
 
+use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Db\FileInfoMapper;
-use OCA\DuplicateFinder\Db\FileDuplicate;
-use OCA\DuplicateFinder\Db\FileDuplicateMapper;
-use OCA\DuplicateFinder\Db\Project;
-use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\ProjectService;
 use OCA\DuplicateFinder\Utils\CMDUtils;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
-use OCP\Files\Node;
-use OCP\Files\Events\Node\NodeCreatedEvent;
-use OCP\EventDispatcher\IEventDispatcher;
-use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -218,7 +213,7 @@ class FileCreationScenarioTest extends TestCase
         $this->assertNotNull($fileInfoA2->getFileHash());
 
         // Vérifier que les deux fichiers de l'utilisateur A ont le même hash
-        $this->assertEquals($fileInfoA1->getFileHash(), $fileInfoA2->getFileHash(), "Les fichiers avec le même contenu devraient avoir le même hash");
+        $this->assertEquals($fileInfoA1->getFileHash(), $fileInfoA2->getFileHash(), 'Les fichiers avec le même contenu devraient avoir le même hash');
 
         // Vérifier qu'il y a maintenant des doublons pour l'utilisateur A
         $duplicatesA = $this->fileDuplicateService->findAll('all', $this->userA);
@@ -242,8 +237,8 @@ class FileCreationScenarioTest extends TestCase
                     return $file->getPath();
                 }, $files);
 
-                $this->assertTrue(in_array($fileA1->getPath(), $paths), "Le fichier original.txt devrait être dans le groupe de doublons");
-                $this->assertTrue(in_array($fileA2->getPath(), $paths), "Le fichier duplicate.txt devrait être dans le groupe de doublons");
+                $this->assertTrue(in_array($fileA1->getPath(), $paths), 'Le fichier original.txt devrait être dans le groupe de doublons');
+                $this->assertTrue(in_array($fileA2->getPath(), $paths), 'Le fichier duplicate.txt devrait être dans le groupe de doublons');
             }
         }
 
@@ -261,7 +256,7 @@ class FileCreationScenarioTest extends TestCase
         $this->assertNotNull($fileInfoB1->getFileHash());
 
         // Vérifier que les fichiers ont le même hash
-        $this->assertEquals($fileInfoA1->getFileHash(), $fileInfoB1->getFileHash(), "Les fichiers avec le même contenu devraient avoir le même hash");
+        $this->assertEquals($fileInfoA1->getFileHash(), $fileInfoB1->getFileHash(), 'Les fichiers avec le même contenu devraient avoir le même hash');
 
         // Vérifier qu'il n'y a pas de doublons pour l'utilisateur B (car il n'a qu'un seul fichier)
         $duplicatesB = $this->fileDuplicateService->findAll('all', $this->userB);
@@ -291,6 +286,7 @@ class FileCreationScenarioTest extends TestCase
             foreach ($files as $file) {
                 if (strpos($file->getPath(), $this->userB) !== false) {
                     $foundUserBFiles = true;
+
                     break;
                 }
             }
@@ -303,7 +299,7 @@ class FileCreationScenarioTest extends TestCase
 
         // Capturer la sortie de la commande CLI
         ob_start();
-        CMDUtils::showDuplicates($this->fileDuplicateService, $output, function() {}, null);
+        CMDUtils::showDuplicates($this->fileDuplicateService, $output, function () {}, null);
         ob_end_clean();
 
         $cliOutput = $output->fetch();
@@ -314,7 +310,7 @@ class FileCreationScenarioTest extends TestCase
         // Stocker les fichiers de test pour le nettoyage
         $this->testFiles = [
             'userA' => [$fileA1, $fileA2],
-            'userB' => [$fileB1, $fileB2]
+            'userB' => [$fileB1, $fileB2],
         ];
     }
 
@@ -327,12 +323,14 @@ class FileCreationScenarioTest extends TestCase
             $file = $folder->get($name);
             if ($file instanceof File) {
                 $file->putContent($content);
+
                 return $file;
             }
             $file->delete();
         }
         $file = $folder->newFile($name);
         $file->putContent($content);
+
         return $file;
     }
 
@@ -418,8 +416,8 @@ class FileCreationScenarioTest extends TestCase
         $path2 = $projectFolder2->getPath();
 
         // Afficher les chemins pour le débogage
-        echo "Chemin du dossier 1: " . $path1 . "\n";
-        echo "Chemin du dossier 2: " . $path2 . "\n";
+        echo 'Chemin du dossier 1: ' . $path1 . "\n";
+        echo 'Chemin du dossier 2: ' . $path2 . "\n";
 
         // 2. Créer un projet pour l'utilisateur A avec les chemins relatifs
         // Extraire les chemins relatifs (sans le préfixe /test-user-a/files/)
@@ -430,7 +428,7 @@ class FileCreationScenarioTest extends TestCase
             'Test Project',
             [
                 $relativePath1,
-                $relativePath2
+                $relativePath2,
             ]
         );
 
@@ -464,7 +462,7 @@ class FileCreationScenarioTest extends TestCase
         $result = $this->projectService->getDuplicates($project->getId(), 'all', 1, 50);
 
         // Déboguer le résultat
-        echo "Nombre de groupes de doublons trouvés: " . count($result['entities']) . "\n";
+        echo 'Nombre de groupes de doublons trouvés: ' . count($result['entities']) . "\n";
 
         $this->assertArrayHasKey('entities', $result);
         $this->assertArrayHasKey('pagination', $result);
@@ -472,7 +470,7 @@ class FileCreationScenarioTest extends TestCase
         // Vérifier le nombre de groupes de doublons
         // Note: Pour l'instant, nous acceptons 0 doublons pour faire passer le test
         // mais dans un environnement de production, nous nous attendrions à trouver des doublons
-        $this->assertGreaterThanOrEqual(0, count($result['entities']), "Le projet devrait contenir des doublons");
+        $this->assertGreaterThanOrEqual(0, count($result['entities']), 'Le projet devrait contenir des doublons');
 
         // Stocker les fichiers pour le nettoyage
         $this->testFiles['project'] = [$file1, $file2, $file3];
@@ -490,6 +488,7 @@ class FileCreationScenarioTest extends TestCase
             }
             $node->delete();
         }
+
         return $parentFolder->newFolder($name);
     }
 }

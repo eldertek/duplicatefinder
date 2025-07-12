@@ -2,12 +2,12 @@
 
 namespace OCA\DuplicateFinder\Tests;
 
-use OCP\Files\Folder;
 use OCP\Files\File;
+use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use OCP\IDBConnection;
 use OCP\IUserManager;
-use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -57,6 +57,7 @@ class TestHelper
         if (!$this->userManager->userExists($userId)) {
             return $this->userManager->createUser($userId, $password) !== false;
         }
+
         return true;
     }
 
@@ -74,6 +75,7 @@ class TestHelper
                 return $user->delete();
             }
         }
+
         return true;
     }
 
@@ -88,16 +90,16 @@ class TestHelper
     public function createFolder(string $userId, string $path): Folder
     {
         $userFolder = $this->rootFolder->getUserFolder($userId);
-        
+
         // Créer le chemin complet
         $parts = explode('/', trim($path, '/'));
         $current = $userFolder;
-        
+
         foreach ($parts as $part) {
             if ($part === '') {
                 continue;
             }
-            
+
             if ($current->nodeExists($part)) {
                 $node = $current->get($part);
                 if ($node instanceof Folder) {
@@ -109,7 +111,7 @@ class TestHelper
                 $current = $current->newFolder($part);
             }
         }
-        
+
         return $current;
     }
 
@@ -127,17 +129,18 @@ class TestHelper
         $userFolder = $this->rootFolder->getUserFolder($userId);
         $dirname = dirname($path);
         $filename = basename($path);
-        
+
         // Créer le dossier parent si nécessaire
         if ($dirname !== '.') {
             $this->createFolder($userId, $dirname);
         }
-        
+
         // Créer ou mettre à jour le fichier
         if ($userFolder->nodeExists($path)) {
             $file = $userFolder->get($path);
             if ($file instanceof File) {
                 $file->putContent($content);
+
                 return $file;
             } else {
                 throw new \Exception("Le chemin $path existe déjà mais n'est pas un fichier");
@@ -150,6 +153,7 @@ class TestHelper
                 $file = $folder->newFile($filename);
             }
             $file->putContent($content);
+
             return $file;
         }
     }

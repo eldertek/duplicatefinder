@@ -1,15 +1,15 @@
 <?php
+
 namespace OCA\DuplicateFinder\Event;
 
-use OCP\EventDispatcher\Event;
 use OCA\DuplicateFinder\Db\FileInfo;
+use OCP\EventDispatcher\Event;
 
 class CalculatedHashEvent extends Event
 {
-
-  /** @var FileInfo */
+    /** @var FileInfo */
     private $fileInfo;
-  /** @var ?string */
+    /** @var ?string */
     private $oldHash;
 
     public function __construct(FileInfo $fileInfo, ?string $oldHash)

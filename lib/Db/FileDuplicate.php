@@ -1,4 +1,5 @@
 <?php
+
 namespace OCA\DuplicateFinder\Db;
 
 /**
@@ -90,6 +91,7 @@ class FileDuplicate extends EEntity
             }
         }
         unset($u);
+
         return $result;
     }
 

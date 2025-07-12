@@ -1,12 +1,12 @@
 <?php
+
 namespace OCA\DuplicateFinder\Utils;
 
-use Symfony\Component\Console\Output\OutputInterface;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class CMDUtils
 {
-
     public static function showDuplicates(
         FileDuplicateService $fileDuplicateService,
         OutputInterface $output,
@@ -26,7 +26,7 @@ class CMDUtils
             self::processDuplicates($output, $duplicates);
             $abortIfInterrupted();
 
-            $isLastFetched = $duplicates["isLastFetched"];
+            $isLastFetched = $duplicates['isLastFetched'];
             $currentPage++; // Increment to fetch the next page in the next iteration
         } while (!$isLastFetched); // Continue until the last page is fetched
     }
@@ -34,9 +34,9 @@ class CMDUtils
 
     private static function processDuplicates(OutputInterface $output, array $duplicates): void
     {
-        $output->writeln('<info>Found ' . count($duplicates["entities"]) . ' duplicates</info>');
+        $output->writeln('<info>Found ' . count($duplicates['entities']) . ' duplicates</info>');
 
-        foreach ($duplicates["entities"] as $index => $duplicate) {
+        foreach ($duplicates['entities'] as $index => $duplicate) {
             if (!$duplicate->getFiles()) {
                 continue;
             }

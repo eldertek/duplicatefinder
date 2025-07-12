@@ -6,7 +6,6 @@ namespace OCA\DuplicateFinder\Db;
 
 use JsonSerializable;
 use OCP\AppFramework\Db\Entity;
-use DateTime;
 
 /**
  * @method string getUserId()
@@ -18,14 +17,16 @@ use DateTime;
  * @method string|null getLastScan()
  * @method void setLastScan(string $lastScan)
  */
-class Project extends Entity implements JsonSerializable {
+class Project extends Entity implements JsonSerializable
+{
     protected string $userId = '';
     protected string $name = '';
     protected string $createdAt = '';
     protected ?string $lastScan = null;
     protected array $folders = [];
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->addType('userId', 'string');
         $this->addType('name', 'string');
         $this->addType('createdAt', 'string');
@@ -34,23 +35,26 @@ class Project extends Entity implements JsonSerializable {
 
     /**
      * Set the folders associated with this project
-     * 
+     *
      * @param array $folders Array of folder paths
      */
-    public function setFolders(array $folders): void {
+    public function setFolders(array $folders): void
+    {
         $this->folders = $folders;
     }
 
     /**
      * Get the folders associated with this project
-     * 
+     *
      * @return array Array of folder paths
      */
-    public function getFolders(): array {
+    public function getFolders(): array
+    {
         return $this->folders;
     }
 
-    public function jsonSerialize(): array {
+    public function jsonSerialize(): array
+    {
         return [
             'id' => $this->id,
             'userId' => $this->userId,

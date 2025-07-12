@@ -5,11 +5,11 @@ namespace OCA\DuplicateFinder\BackgroundJob;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\BackgroundJob\TimedJob;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IDBConnection;
-use OCP\IUserManager;
 use OCP\IUser;
-use OCP\BackgroundJob\TimedJob;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
 class FindDuplicates extends TimedJob
@@ -57,7 +57,7 @@ class FindDuplicates extends TimedJob
         parent::__construct($timeFactory);
 
         $this->setInterval($config->getFindJobInterval());
-        
+
         $this->userManager = $userManager;
         $this->dispatcher = $dispatcher;
         $this->logger = $logger;

@@ -11,7 +11,8 @@ use OCP\Files\Node;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-class FilterServiceTest extends TestCase {
+class FilterServiceTest extends TestCase
+{
     private $logger;
     private $config;
     private $excludedFolderService;
@@ -20,7 +21,8 @@ class FilterServiceTest extends TestCase {
     private $fileInfo;
     private $node;
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         parent::setUp();
 
         $this->logger = $this->createMock(LoggerInterface::class);
@@ -50,7 +52,8 @@ class FilterServiceTest extends TestCase {
         $this->node->method('getMimetype')->willReturn('text/plain');
     }
 
-    public function testIsIgnoredWithNoOwner() {
+    public function testIsIgnoredWithNoOwner()
+    {
         // Configurer le FileInfo pour qu'il n'ait pas de propriétaire
         $this->fileInfo->method('getOwner')->willReturn(null);
 
@@ -74,7 +77,8 @@ class FilterServiceTest extends TestCase {
         $this->assertFalse($result);
     }
 
-    public function testIsIgnoredWithOwnerSetsUserContext() {
+    public function testIsIgnoredWithOwnerSetsUserContext()
+    {
         // Configurer le FileInfo pour qu'il ait un propriétaire
         $this->fileInfo->method('getOwner')->willReturn('testuser');
 
@@ -99,7 +103,8 @@ class FilterServiceTest extends TestCase {
         $this->assertFalse($result);
     }
 
-    public function testIsIgnoredHandlesExcludedFolderServiceException() {
+    public function testIsIgnoredHandlesExcludedFolderServiceException()
+    {
         // Configurer le FileInfo pour qu'il ait un propriétaire
         $this->fileInfo->method('getOwner')->willReturn('testuser');
 

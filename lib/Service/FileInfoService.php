@@ -2,31 +2,27 @@
 
 namespace OCA\DuplicateFinder\Service;
 
-use Psr\Log\LoggerInterface;
-use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Files\Node;
-use OCP\Files\NotFoundException;
-use Symfony\Component\Console\Output\OutputInterface;
-use OCP\Lock\ILockingProvider;
-
-use OCP\Files\IRootFolder;
-use OCP\IDBConnection;
-use OCP\AppFramework\Db\DoesNotExistException;
-
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Db\FileInfoMapper;
 use OCA\DuplicateFinder\Event\CalculatedHashEvent;
-use OCA\DuplicateFinder\Event\UpdatedFileInfoEvent;
 use OCA\DuplicateFinder\Event\NewFileInfoEvent;
+use OCA\DuplicateFinder\Event\UpdatedFileInfoEvent;
 use OCA\DuplicateFinder\Exception\UnableToCalculateHash;
-use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Utils\CMDUtils;
 use OCA\DuplicateFinder\Utils\ScannerUtil;
+use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\IRootFolder;
+use OCP\Files\Node;
+use OCP\Files\NotFoundException;
+use OCP\IDBConnection;
+use OCP\Lock\ILockingProvider;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class FileInfoService
 {
-
     /** @var IEventDispatcher */
     private $eventDispatcher;
     /** @var FileInfoMapper */
@@ -84,7 +80,7 @@ class FileInfoService
         $this->logger->debug('Starting file info enrichment', [
             'path' => $fileInfo->getPath(),
             'id' => $fileInfo->getId(),
-            'currentHash' => $fileInfo->getFileHash()
+            'currentHash' => $fileInfo->getFileHash(),
         ]);
 
         try {
@@ -95,7 +91,7 @@ class FileInfoService
                     'nodeId' => $node->getId(),
                     'nodeType' => get_class($node),
                     'size' => $node->getSize(),
-                    'mimetype' => $node->getMimetype()
+                    'mimetype' => $node->getMimetype(),
                 ]);
 
                 $fileInfo->setNodeId($node->getId());
@@ -105,7 +101,7 @@ class FileInfoService
                 $this->logger->warning('Node not found for file info - file may be temporarily inaccessible', [
                     'path' => $fileInfo->getPath(),
                     'id' => $fileInfo->getId(),
-                    'hash' => $fileInfo->getFileHash()
+                    'hash' => $fileInfo->getFileHash(),
                 ]);
 
                 // Mark as stale but DO NOT delete automatically
@@ -121,7 +117,7 @@ class FileInfoService
             $this->logger->warning('File not found during enrichment - file may be temporarily inaccessible', [
                 'path' => $fileInfo->getPath(),
                 'id' => $fileInfo->getId(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             // Mark as stale but DO NOT delete automatically
@@ -138,9 +134,10 @@ class FileInfoService
                 'id' => $fileInfo->getId(),
                 'error' => $e->getMessage(),
                 'errorClass' => get_class($e),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
         }
+
         return $fileInfo;
     }
 
@@ -156,6 +153,7 @@ class FileInfoService
             }
             unset($entity);
         }
+
         return $entities;
     }
 
@@ -165,6 +163,7 @@ class FileInfoService
         if ($enrich) {
             $entity = $this->enrich($entity);
         }
+
         return $entity;
     }
 
@@ -174,6 +173,7 @@ class FileInfoService
         if ($enrich) {
             $entity = $this->enrich($entity);
         }
+
         return $entity;
     }
 
@@ -184,7 +184,7 @@ class FileInfoService
     {
         $this->logger->debug('Finding files by hash', [
             'hash' => $hash,
-            'type' => $type
+            'type' => $type,
         ]);
 
         $files = $this->mapper->findByHash($hash, $type);
@@ -201,7 +201,7 @@ class FileInfoService
                 $this->logger->warning('Error processing file during hash search', [
                     'path' => $fileInfo->getPath(),
                     'hash' => $hash,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 // Continue processing other files
             }
@@ -210,7 +210,7 @@ class FileInfoService
         $this->logger->debug('Found files by hash', [
             'hash' => $hash,
             'count' => count($existingFiles),
-            'ignored' => 'false'
+            'ignored' => 'false',
         ]);
 
         return $existingFiles;
@@ -240,6 +240,7 @@ class FileInfoService
         $fileInfo->setKeepAsPrimary(true);
         $fileInfo = $this->mapper->update($fileInfo);
         $fileInfo->setKeepAsPrimary(false);
+
         return $fileInfo;
     }
 
@@ -247,7 +248,7 @@ class FileInfoService
     {
         $this->logger->debug('Starting save operation for path: {path}', [
             'path' => $path,
-            'fallbackUID' => $fallbackUID
+            'fallbackUID' => $fallbackUID,
         ]);
 
         try {
@@ -255,7 +256,7 @@ class FileInfoService
             $this->logger->debug('Found existing FileInfo for path: {path}', [
                 'path' => $path,
                 'fileInfoId' => $fileInfo->getId(),
-                'currentHash' => $fileInfo->getFileHash()
+                'currentHash' => $fileInfo->getFileHash(),
             ]);
 
             $fileInfo = $this->update($fileInfo, $fallbackUID);
@@ -264,12 +265,12 @@ class FileInfoService
             $this->logger->debug('Updated existing FileInfo: {path}', [
                 'path' => $path,
                 'fileInfoId' => $fileInfo->getId(),
-                'newHash' => $fileInfo->getFileHash()
+                'newHash' => $fileInfo->getFileHash(),
             ]);
         } catch (\Exception $e) {
             $this->logger->debug('Creating new FileInfo for path: {path}', [
                 'path' => $path,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             $fileInfo = new FileInfo($path);
@@ -281,7 +282,7 @@ class FileInfoService
             $this->logger->debug('Created new FileInfo: {path}', [
                 'path' => $path,
                 'fileInfoId' => $fileInfo->getId(),
-                'hash' => $fileInfo->getFileHash()
+                'hash' => $fileInfo->getFileHash(),
             ]);
 
             $this->eventDispatcher->dispatchTyped(new NewFileInfoEvent($fileInfo, $fallbackUID));
@@ -295,7 +296,7 @@ class FileInfoService
         $this->logger->debug('Starting deletion of file info', [
             'path' => $fileInfo->getPath(),
             'hash' => $fileInfo->getFileHash(),
-            'id' => $fileInfo->getId()
+            'id' => $fileInfo->getId(),
         ]);
 
         try {
@@ -303,12 +304,12 @@ class FileInfoService
             try {
                 $this->lockingProvider->releaseAll($fileInfo->getPath(), ILockingProvider::LOCK_SHARED);
                 $this->logger->debug('Released locks for file', [
-                    'path' => $fileInfo->getPath()
+                    'path' => $fileInfo->getPath(),
                 ]);
             } catch (\Exception $e) {
                 $this->logger->warning('Failed to release locks, continuing anyway', [
                     'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
 
@@ -316,7 +317,7 @@ class FileInfoService
             if ($fileInfo->getId()) {
                 $this->logger->debug('Verifying file info exists', [
                     'id' => $fileInfo->getId(),
-                    'path' => $fileInfo->getPath()
+                    'path' => $fileInfo->getPath(),
                 ]);
 
                 try {
@@ -325,13 +326,14 @@ class FileInfoService
                     $this->logger->debug('Found existing file info', [
                         'id' => $existingFileInfo->getId(),
                         'path' => $existingFileInfo->getPath(),
-                        'hash' => $existingFileInfo->getFileHash()
+                        'hash' => $existingFileInfo->getFileHash(),
                     ]);
                 } catch (DoesNotExistException $e) {
                     $this->logger->debug('File info already deleted', [
                         'path' => $fileInfo->getPath(),
-                        'id' => $fileInfo->getId()
+                        'id' => $fileInfo->getId(),
                     ]);
+
                     return $fileInfo;
                 }
             }
@@ -340,7 +342,7 @@ class FileInfoService
             // This method should only clean up database entries
             // Physical file deletion must be done through FileService with proper checks
             $this->logger->debug('Cleaning up database entry only - physical file deletion must be explicit', [
-                'path' => $fileInfo->getPath()
+                'path' => $fileInfo->getPath(),
             ]);
 
             // Now delete the database entry
@@ -348,7 +350,7 @@ class FileInfoService
 
             $this->logger->debug('Successfully deleted file info from database', [
                 'path' => $fileInfo->getPath(),
-                'id' => $fileInfo->getId()
+                'id' => $fileInfo->getId(),
             ]);
 
             return $result;
@@ -357,8 +359,9 @@ class FileInfoService
             $this->logger->debug('File info not found for deletion', [
                 'path' => $fileInfo->getPath(),
                 'id' => $fileInfo->getId(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             // Return the original file info since it's already "deleted"
             return $fileInfo;
         } catch (\Exception $e) {
@@ -366,8 +369,9 @@ class FileInfoService
                 'path' => $fileInfo->getPath(),
                 'id' => $fileInfo->getId(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             throw new \RuntimeException('Failed to delete file info: ' . $e->getMessage(), 0, $e);
         }
     }
@@ -381,7 +385,7 @@ class FileInfoService
     {
         $this->logger->debug('Starting metadata update for file: {path}', [
             'path' => $fileInfo->getPath(),
-            'fallbackUID' => $fallbackUID
+            'fallbackUID' => $fallbackUID,
         ]);
 
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
@@ -390,7 +394,7 @@ class FileInfoService
             'path' => $fileInfo->getPath(),
             'size' => $file->getSize(),
             'mimetype' => $file->getMimetype(),
-            'mtime' => $file->getMtime()
+            'mtime' => $file->getMtime(),
         ]);
 
         $fileInfo->setSize($file->getSize());
@@ -401,7 +405,7 @@ class FileInfoService
             $fileInfo->setOwner($owner);
             $this->logger->debug('Set owner for file: {path}', [
                 'path' => $fileInfo->getPath(),
-                'owner' => $owner
+                'owner' => $owner,
             ]);
 
             // Set the user context for the excluded folder service
@@ -410,7 +414,7 @@ class FileInfoService
             $this->logger->debug('Error setting owner for file: {path}', [
                 'path' => $fileInfo->getPath(),
                 'error' => $e->getMessage(),
-                'fallbackUID' => $fallbackUID
+                'fallbackUID' => $fallbackUID,
             ]);
 
             if (!is_null($fallbackUID)) {
@@ -430,7 +434,7 @@ class FileInfoService
             'size' => $fileInfo->getSize(),
             'mimetype' => $fileInfo->getMimetype(),
             'owner' => $fileInfo->getOwner(),
-            'isIgnored' => $isIgnored ? 'true' : 'false'
+            'isIgnored' => $isIgnored ? 'true' : 'false',
         ]);
 
         return $fileInfo;
@@ -444,13 +448,14 @@ class FileInfoService
         $this->logger->debug('Checking if recalculation is required for file: {path}', [
             'path' => $fileInfo->getPath(),
             'currentHash' => $fileInfo->getFileHash(),
-            'isIgnored' => $fileInfo->isIgnored() ? 'true' : 'false'
+            'isIgnored' => $fileInfo->isIgnored() ? 'true' : 'false',
         ]);
 
         if ($fileInfo->isIgnored()) {
             $this->logger->debug('File is ignored, skipping recalculation: {path}', [
-                'path' => $fileInfo->getPath()
+                'path' => $fileInfo->getPath(),
             ]);
+
             return false;
         }
 
@@ -464,7 +469,7 @@ class FileInfoService
             'mtime' => $file->getMtime(),
             'uploadTime' => $file->getUploadTime(),
             'isMounted' => $file->isMounted() ? 'true' : 'false',
-            'lastUpdate' => $fileInfo->getUpdatedAt() ? $fileInfo->getUpdatedAt()->getTimestamp() : 'never'
+            'lastUpdate' => $fileInfo->getUpdatedAt() ? $fileInfo->getUpdatedAt()->getTimestamp() : 'never',
         ]);
 
         if (
@@ -478,14 +483,16 @@ class FileInfoService
                 'path' => $fileInfo->getPath(),
                 'reason' => empty($fileInfo->getFileHash()) ? 'no hash' :
                            ($file->getMtime() > $fileInfo->getUpdatedAt()->getTimestamp() ? 'modified' :
-                           ($file->getUploadTime() > $fileInfo->getUpdatedAt()->getTimestamp() ? 'uploaded' : 'mounted'))
+                           ($file->getUploadTime() > $fileInfo->getUpdatedAt()->getTimestamp() ? 'uploaded' : 'mounted')),
             ]);
+
             return $file->getInternalPath();
         }
 
         $this->logger->debug('No recalculation needed for file: {path}', [
-            'path' => $fileInfo->getPath()
+            'path' => $fileInfo->getPath(),
         ]);
+
         return false;
     }
 
@@ -495,7 +502,7 @@ class FileInfoService
             'path' => $fileInfo->getPath(),
             'fallbackUID' => $fallbackUID,
             'requiresHash' => $requiresHash ? 'true' : 'false',
-            'currentHash' => $fileInfo->getFileHash()
+            'currentHash' => $fileInfo->getFileHash(),
         ]);
 
         $oldHash = $fileInfo->getFileHash();
@@ -504,7 +511,7 @@ class FileInfoService
         $this->logger->debug('Retrieved node for file: {path}', [
             'path' => $fileInfo->getPath(),
             'nodeType' => $file ? get_class($file) : 'null',
-            'fileSize' => $file ? $file->getSize() : 'unknown'
+            'fileSize' => $file ? $file->getSize() : 'unknown',
         ]);
 
         $path = $this->isRecalculationRequired($fileInfo, $fallbackUID, $file);
@@ -512,7 +519,7 @@ class FileInfoService
         $this->logger->debug('Recalculation check result for file: {path}', [
             'path' => $fileInfo->getPath(),
             'requiresRecalculation' => $path !== false ? 'true' : 'false',
-            'internalPath' => $path !== false ? $path : 'N/A'
+            'internalPath' => $path !== false ? $path : 'N/A',
         ]);
 
         if ($path !== false) {
@@ -520,7 +527,7 @@ class FileInfoService
                 if ($file instanceof \OCP\Files\File) {
                     $this->logger->debug('Calculating hash for file: {path}', [
                         'path' => $fileInfo->getPath(),
-                        'internalPath' => $path
+                        'internalPath' => $path,
                     ]);
 
                     $hash = $file->getStorage()->hash('sha256', $path);
@@ -528,7 +535,7 @@ class FileInfoService
                     $this->logger->debug('Hash calculation result for file: {path}', [
                         'path' => $fileInfo->getPath(),
                         'hashResult' => is_bool($hash) ? 'failed (boolean)' : 'success',
-                        'newHash' => !is_bool($hash) ? $hash : 'N/A'
+                        'newHash' => !is_bool($hash) ? $hash : 'N/A',
                     ]);
 
                     if (!is_bool($hash)) {
@@ -537,19 +544,20 @@ class FileInfoService
                     } else {
                         $this->logger->error('Unable to calculate hash for file: {path}', [
                             'path' => $fileInfo->getPath(),
-                            'internalPath' => $file->getInternalPath()
+                            'internalPath' => $file->getInternalPath(),
                         ]);
+
                         throw new UnableToCalculateHash($file->getInternalPath());
                     }
                 } else {
                     $this->logger->debug('Node is not a file, setting hash to null: {path}', [
-                        'path' => $fileInfo->getPath()
+                        'path' => $fileInfo->getPath(),
                     ]);
                     $fileInfo->setFileHash(null);
                 }
             } else {
                 $this->logger->debug('Hash calculation not required, setting hash to null: {path}', [
-                    'path' => $fileInfo->getPath()
+                    'path' => $fileInfo->getPath(),
                 ]);
                 $fileInfo->setFileHash(null);
             }
@@ -560,7 +568,7 @@ class FileInfoService
             $this->logger->debug('Completed hash calculation for file: {path}', [
                 'path' => $fileInfo->getPath(),
                 'oldHash' => $oldHash,
-                'newHash' => $fileInfo->getFileHash()
+                'newHash' => $fileInfo->getFileHash(),
             ]);
         }
 
@@ -584,6 +592,7 @@ class FileInfoService
                     $output,
                     OutputInterface::VERBOSITY_VERBOSE
                 );
+
                 return;
             }
         } elseif ($isShared) {
@@ -639,7 +648,7 @@ class FileInfoService
             }
         } catch (\Exception $e) {
             CMDUtils::showIfOutputIsPresent(
-                "<error>Failed to release lock for file: $path - " . $e->getMessage() . "</error>",
+                "<error>Failed to release lock for file: $path - " . $e->getMessage() . '</error>',
                 $output
             );
             $this->logger->error("Failed to release lock for file: $path", ['exception' => $e]);
@@ -654,15 +663,15 @@ class FileInfoService
             $query = $this->connection->prepare('DELETE FROM oc_file_locks WHERE true');
             $query->execute();
             CMDUtils::showIfOutputIsPresent(
-                "<info>All locks have been disabled by emptying the oc_file_locks table.</info>",
+                '<info>All locks have been disabled by emptying the oc_file_locks table.</info>',
                 $output
             );
         } catch (\Exception $e) {
             CMDUtils::showIfOutputIsPresent(
-                "<error>Failed to disable all locks: " . $e->getMessage() . "</error>",
+                '<error>Failed to disable all locks: ' . $e->getMessage() . '</error>',
                 $output
             );
-            $this->logger->error("Failed to disable all locks", ['exception' => $e]);
+            $this->logger->error('Failed to disable all locks', ['exception' => $e]);
         }
     }
 
@@ -671,11 +680,12 @@ class FileInfoService
         $this->logger->debug('FileInfoService::hasAccessRight - Starting access check', [
             'user' => $user,
             'file_owner' => $fileInfo->getOwner(),
-            'file_path' => $fileInfo->getPath()
+            'file_path' => $fileInfo->getPath(),
         ]);
 
         if ($fileInfo->getOwner() === $user) {
             $this->logger->debug('FileInfoService::hasAccessRight - User is owner, granting access');
+
             return true;
         }
 
@@ -683,25 +693,28 @@ class FileInfoService
             $node = $this->folderService->getNodeByFileInfo($fileInfo, $user);
             $this->logger->debug('FileInfoService::hasAccessRight - Got node for file', [
                 'node_path' => $node->getPath(),
-                'node_type' => get_class($node)
+                'node_type' => get_class($node),
             ]);
 
             $path = $this->shareService->hasAccessRight($node, $user);
             $this->logger->debug('FileInfoService::hasAccessRight - Share service response', [
                 'has_access' => !is_null($path),
-                'resolved_path' => $path
+                'resolved_path' => $path,
             ]);
+
             return !is_null($path);
         } catch (NotFoundException $e) {
             $this->logger->debug('FileInfoService::hasAccessRight - Node not found', [
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
             ]);
+
             return false;
         } catch (\Throwable $e) {
             $this->logger->error('FileInfoService::hasAccessRight - Unexpected error', [
                 'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }

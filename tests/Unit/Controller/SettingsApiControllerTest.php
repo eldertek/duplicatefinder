@@ -71,8 +71,8 @@ class SettingsApiControllerTest extends TestCase
                 'backgroundjob_interval_cleanup' => 432000,
                 'disable_filesystem_events' => false,
                 'ignore_mounted_files' => true,
-                'installed_version' => '1.0.0'
-            ]
+                'installed_version' => '1.0.0',
+            ],
         ];
         $this->assertEquals($expectedData, $response->getData());
     }
@@ -117,8 +117,8 @@ class SettingsApiControllerTest extends TestCase
                 'backgroundjob_interval_cleanup' => 432000,
                 'disable_filesystem_events' => false,
                 'ignore_mounted_files' => true,
-                'installed_version' => '1.0.0'
-            ]
+                'installed_version' => '1.0.0',
+            ],
         ];
         $this->assertEquals($expectedData, $response->getData());
     }
@@ -132,7 +132,7 @@ class SettingsApiControllerTest extends TestCase
         $this->assertInstanceOf(DataResponse::class, $response);
         $expectedData = [
             'status' => 'error',
-            'message' => 'Unknown config key'
+            'message' => 'Unknown config key',
         ];
         $this->assertEquals($expectedData, $response->getData());
     }

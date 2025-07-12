@@ -2,14 +2,14 @@
 
 namespace OCA\DuplicateFinder\Controller;
 
+use OCA\DuplicateFinder\Service\FilterService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
 
-use OCA\DuplicateFinder\Service\FilterService;
-
-class FilterController extends Controller {
+class FilterController extends Controller
+{
     /** @var FilterService */
     private $service;
 
@@ -31,8 +31,10 @@ class FilterController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function index(): JSONResponse {
+    public function index(): JSONResponse
+    {
         $userId = $this->userSession->getUser()->getUID();
+
         return new JSONResponse($this->service->getFilters($userId));
     }
 
@@ -40,8 +42,10 @@ class FilterController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function create(string $type, string $value): JSONResponse {
+    public function create(string $type, string $value): JSONResponse
+    {
         $userId = $this->userSession->getUser()->getUID();
+
         return new JSONResponse($this->service->createFilter($type, $value, $userId));
     }
 
@@ -49,9 +53,11 @@ class FilterController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function destroy(int $id): JSONResponse {
+    public function destroy(int $id): JSONResponse
+    {
         $userId = $this->userSession->getUser()->getUID();
         $this->service->deleteFilter($id, $userId);
+
         return new JSONResponse(['status' => 'success']);
     }
-} 
+}

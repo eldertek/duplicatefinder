@@ -2,8 +2,6 @@
 
 namespace OCA\DuplicateFinder\Exception;
 
-use Throwable;
-
 class UnableToParseException extends \Exception
 {
     public function __construct(?string $subject = null, ?\Throwable $previous = null)

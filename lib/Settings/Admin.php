@@ -1,14 +1,15 @@
 <?php
+
 namespace OCA\DuplicateFinder\Settings;
 
-use OCP\AppFramework\Http\TemplateResponse;
-use OCP\Settings\ISubAdminSettings;
-use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Controller\SettingsApiController;
 use OCA\DuplicateFinder\Service\ConfigService;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IRequest;
+use OCP\IUserSession;
+use OCP\Settings\ISubAdminSettings;
+use Psr\Log\LoggerInterface;
 
 class Admin implements ISubAdminSettings
 {

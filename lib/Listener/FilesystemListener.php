@@ -1,26 +1,26 @@
 <?php
+
 namespace OCA\DuplicateFinder\Listener;
 
-use Psr\Log\LoggerInterface;
+use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
+use OCA\DuplicateFinder\Service\ConfigService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
-use OCP\Files\Node;
+use OCP\Files\Events\Node\AbstractNodeEvent;
 use OCP\Files\Events\Node\NodeDeletedEvent;
 use OCP\Files\Events\Node\NodeRenamedEvent;
-use OCP\Files\Events\Node\AbstractNodeEvent;
-use OCA\DuplicateFinder\Service\ConfigService;
-use OCA\DuplicateFinder\Service\FileInfoService;
-use OCA\DuplicateFinder\Service\FileDuplicateService;
-use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
+use OCP\Files\Node;
+use Psr\Log\LoggerInterface;
 
 /**
  * @template T of Event
  * @implements IEventListener<T>
  */
-    class FilesystemListener implements IEventListener
+class FilesystemListener implements IEventListener
 {
-
     /** @var FileInfoService */
     private $fileInfoService;
     /** @var FileDuplicateService */
@@ -52,6 +52,7 @@ use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
             $this->handleDeleteEvent($node);
         } elseif ($event instanceof NodeRenamedEvent) {
             $source = $event->getSource();
+
             try {
                 $fileInfo = $this->fileInfoService->find($source->getPath(), $source->getOwner()->getUID());
             } catch (\Throwable $e) {

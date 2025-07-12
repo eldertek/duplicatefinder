@@ -5,13 +5,15 @@ namespace OCA\DuplicateFinder\Db;
 use JsonSerializable;
 use OCP\AppFramework\Db\Entity;
 
-class Filter extends Entity implements JsonSerializable {
+class Filter extends Entity implements JsonSerializable
+{
     protected $type;
     protected $value;
     protected $userId;
     protected $createdAt;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->addType('id', 'integer');
         $this->addType('type', 'string');
         $this->addType('value', 'string');
@@ -19,7 +21,8 @@ class Filter extends Entity implements JsonSerializable {
         $this->addType('createdAt', 'integer');
     }
 
-    public function jsonSerialize(): array {
+    public function jsonSerialize(): array
+    {
         return [
             'id' => $this->id,
             'type' => $this->type,
@@ -28,4 +31,4 @@ class Filter extends Entity implements JsonSerializable {
             'createdAt' => $this->createdAt,
         ];
     }
-} 
+}

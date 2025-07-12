@@ -1,4 +1,5 @@
 <?php
+
 namespace OCA\DuplicateFinder\Controller;
 
 use OCA\Viewer\Event\LoadViewer;
@@ -36,6 +37,7 @@ class PageController extends Controller
     {
         $this->eventDispatcher->dispatch(LoadViewer::class, new LoadViewer());
         $response = new TemplateResponse($this->appName, 'App');
+
         return $response;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace OCA\DuplicateFinder\Db;
 
 /**
@@ -27,7 +28,6 @@ namespace OCA\DuplicateFinder\Db;
  */
 class FileInfo extends EEntity
 {
-
     /** @var string */
     protected $owner;
     /** @var string */
@@ -38,17 +38,17 @@ class FileInfo extends EEntity
     protected $fileHash;
     /** @var string */
     protected $imageHash;
-    /** @var integer */
+    /** @var int */
     protected $updatedAt;
-    /** @var integer */
+    /** @var int */
     protected $nodeId;
     /** @var string */
     protected $mimetype;
-    /** @var integer */
+    /** @var int */
     protected $size;
-    /** @var boolean */
+    /** @var bool */
     protected $ignored;
-    /** @var boolean */
+    /** @var bool */
     protected $isInOriginFolder;
 
     public function __construct(?string $path = null, ?string $owner = null)
@@ -68,7 +68,7 @@ class FileInfo extends EEntity
         }
     }
 
-    public function setPath(string $path):void
+    public function setPath(string $path): void
     {
         // SHA1 because we need a function to short the path and not be cryptographically secure
         $this->setPathHash(sha1($path));

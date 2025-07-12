@@ -1,13 +1,11 @@
 <?php
+
 namespace OCA\DuplicateFinder\Db;
 
-use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Doctrine\DBAL\Platforms\PostgreSQL94Platform;
-use Doctrine\DBAL\Platforms\PostgreSQL100Platform;
-
-
-use OCP\AppFramework\Db\QBMapper;
+use Doctrine\DBAL\Platforms\SqlitePlatform;
 use OCP\AppFramework\Db\Entity;
+use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 
 /**
@@ -16,11 +14,11 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
  */
 abstract class EQBMapper extends QBMapper
 {
-
     public function delete(Entity $entity): Entity
     {
         $entity = parent::delete($entity);
         $this->clearRelationalFields($entity);
+
         return $entity;
     }
 
@@ -28,6 +26,7 @@ abstract class EQBMapper extends QBMapper
     {
         $entity = parent::insert($entity);
         $this->saveRelationalFields($entity);
+
         return $entity;
     }
 
@@ -35,6 +34,7 @@ abstract class EQBMapper extends QBMapper
     {
         $entity = parent::update($entity);
         $this->saveRelationalFields($entity);
+
         return $entity;
     }
 
@@ -42,9 +42,10 @@ abstract class EQBMapper extends QBMapper
      * @param array<mixed> $row
      * @return T
      */
-    protected function mapRowToEntity(array $row) : Entity
+    protected function mapRowToEntity(array $row): Entity
     {
         $entity = parent::mapRowToEntity($row);
+
         return $this->loadRelationalFields($entity);
     }
 
@@ -64,7 +65,7 @@ abstract class EQBMapper extends QBMapper
             );
             $qb = $qb->execute();
 
-              $values = [];
+            $values = [];
             if (!is_int($qb)) {
                 foreach ($qb->fetchAll() as $row) {
                     $values[$row['rid']] = $row['value'];
@@ -79,6 +80,7 @@ abstract class EQBMapper extends QBMapper
         }
         unset($v);
         $entity->resetUpdatedRelationalFields();
+
         return $entity;
     }
 
@@ -87,7 +89,7 @@ abstract class EQBMapper extends QBMapper
      * @param T $entity
      * @return void
      */
-    protected function clearRelationalFields($entity):void
+    protected function clearRelationalFields($entity): void
     {
         if (!($entity instanceof EEntity)) {
             return;
@@ -111,7 +113,7 @@ abstract class EQBMapper extends QBMapper
      * @param T $entity
      * @return void
      */
-    protected function saveRelationalFields(Entity $entity):void
+    protected function saveRelationalFields(Entity $entity): void
     {
         if (!($entity instanceof EEntity)) {
             return;
@@ -149,7 +151,7 @@ abstract class EQBMapper extends QBMapper
      * @param int $type
      * @return int
      */
-    protected function countBy(string $field, $value, int $type = IQueryBuilder::PARAM_STR):int
+    protected function countBy(string $field, $value, int $type = IQueryBuilder::PARAM_STR): int
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select('id')
@@ -167,12 +169,14 @@ abstract class EQBMapper extends QBMapper
                 $count = count($qb->fetchAll());
             }
             $qb->closeCursor();
+
             return $count;
         }
+
         return 0;
     }
 
-    public function clear(?string $table = null):void
+    public function clear(?string $table = null): void
     {
         $qb = $this->db->getQueryBuilder();
         if (is_null($table)) {

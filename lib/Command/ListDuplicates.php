@@ -2,140 +2,143 @@
 
 namespace OCA\DuplicateFinder\Command;
 
- use OCA\DuplicateFinder\Service\FileDuplicateService;
- use OCA\DuplicateFinder\Service\FileInfoService;
- use OCA\DuplicateFinder\Utils\CMDUtils;
- use OCP\Encryption\IManager;
- use OCP\IDBConnection;
- use OCP\IUserManager;
- use Symfony\Component\Console\Command\Command;
- use Symfony\Component\Console\Input\InputInterface;
- use Symfony\Component\Console\Input\InputOption;
- use Symfony\Component\Console\Output\OutputInterface;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Utils\CMDUtils;
+use OCP\Encryption\IManager;
+use OCP\IDBConnection;
+use OCP\IUserManager;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
- class ListDuplicates extends Command
- {
-     /**
-      * @var IUserManager The user manager instance.
-      */
-     private $userManager;
+class ListDuplicates extends Command
+{
+    /**
+     * @var IUserManager The user manager instance.
+     */
+    private $userManager;
 
-     /**
-      * @var IManager The encryption manager instance.
-      */
-     private $encryptionManager;
+    /**
+     * @var IManager The encryption manager instance.
+     */
+    private $encryptionManager;
 
-     /**
-      * @var IDBConnection The database connection instance.
-      */
-     private $connection;
+    /**
+     * @var IDBConnection The database connection instance.
+     */
+    private $connection;
 
-     /**
-      * @var FileInfoService The file info service instance.
-      */
-     private $fileInfoService;
+    /**
+     * @var FileInfoService The file info service instance.
+     */
+    private $fileInfoService;
 
-     /**
-      * @var FileDuplicateService The file duplicate service instance.
-      */
-     private $fileDuplicateService;
+    /**
+     * @var FileDuplicateService The file duplicate service instance.
+     */
+    private $fileDuplicateService;
 
-     /**
-      * @var OutputInterface The output interface.
-      */
-     private $output;
+    /**
+     * @var OutputInterface The output interface.
+     */
+    private $output;
 
-     /**
-      * ListDuplicates constructor.
-      *
-      * @param IUserManager $userManager The user manager instance.
-      * @param IManager $encryptionManager The encryption manager instance.
-      * @param IDBConnection $connection The database connection instance.
-      * @param FileInfoService $fileInfoService The file info service instance.
-      * @param FileDuplicateService $fileDuplicateService The file duplicate service instance.
-      */
-     public function __construct(
-         IUserManager $userManager,
-         IManager $encryptionManager,
-         IDBConnection $connection,
-         FileInfoService $fileInfoService,
-         FileDuplicateService $fileDuplicateService
-     ) {
-         parent::__construct('duplicates:list');
+    /**
+     * ListDuplicates constructor.
+     *
+     * @param IUserManager $userManager The user manager instance.
+     * @param IManager $encryptionManager The encryption manager instance.
+     * @param IDBConnection $connection The database connection instance.
+     * @param FileInfoService $fileInfoService The file info service instance.
+     * @param FileDuplicateService $fileDuplicateService The file duplicate service instance.
+     */
+    public function __construct(
+        IUserManager $userManager,
+        IManager $encryptionManager,
+        IDBConnection $connection,
+        FileInfoService $fileInfoService,
+        FileDuplicateService $fileDuplicateService
+    ) {
+        parent::__construct('duplicates:list');
 
-         $this->userManager = $userManager;
-         $this->encryptionManager = $encryptionManager;
-         $this->connection = $connection;
-         $this->fileInfoService = $fileInfoService;
-         $this->fileDuplicateService = $fileDuplicateService;
-     }
+        $this->userManager = $userManager;
+        $this->encryptionManager = $encryptionManager;
+        $this->connection = $connection;
+        $this->fileInfoService = $fileInfoService;
+        $this->fileDuplicateService = $fileDuplicateService;
+    }
 
-     /**
-      * Configure the command.
-      */
-     protected function configure(): void
-     {
-         $this
-             ->setDescription('List all duplicate files')
-             ->addOption('user', 'u', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'List files of the specified user');
-     }
+    /**
+     * Configure the command.
+     */
+    protected function configure(): void
+    {
+        $this
+            ->setDescription('List all duplicate files')
+            ->addOption('user', 'u', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'List files of the specified user');
+    }
 
-     /**
-      * Execute the command.
-      *
-      * @param InputInterface $input The input interface.
-      * @param OutputInterface $output The output interface.
-      * @return int The command exit code.
-      */
-     protected function execute(InputInterface $input, OutputInterface $output): int
-     {
-         $this->output = $output;
+    /**
+     * Execute the command.
+     *
+     * @param InputInterface $input The input interface.
+     * @param OutputInterface $output The output interface.
+     * @return int The command exit code.
+     */
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $this->output = $output;
 
-         if ($this->encryptionManager->isEnabled()) {
-             $output->writeln('Encryption is enabled. Aborted.');
-             return 1;
-         }
+        if ($this->encryptionManager->isEnabled()) {
+            $output->writeln('Encryption is enabled. Aborted.');
 
-         $users = (array)$input->getOption('user');
+            return 1;
+        }
 
-         return (!empty($users)) ? $this->listDuplicatesForUsers($users) : $this->listAllDuplicates();
-     }
+        $users = (array)$input->getOption('user');
 
-     /**
-      * List duplicates for the specified users.
-      *
-      * @param array $users The array of user names.
-      * @return int The command exit code.
-      */
-     private function listDuplicatesForUsers(array $users): int
-     {
-         foreach ($users as $user) {
-             if (!$this->userManager->userExists($user)) {
-                 $this->output->writeln('<e>User ' . $user . ' is unknown.</e>');
-                 return 1;
-             }
+        return (!empty($users)) ? $this->listDuplicatesForUsers($users) : $this->listAllDuplicates();
+    }
 
-             $this->output->writeln('<info>Listing duplicates for user: ' . $user . '</info>');
-             CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function() {}, $user);
-         }
+    /**
+     * List duplicates for the specified users.
+     *
+     * @param array $users The array of user names.
+     * @return int The command exit code.
+     */
+    private function listDuplicatesForUsers(array $users): int
+    {
+        foreach ($users as $user) {
+            if (!$this->userManager->userExists($user)) {
+                $this->output->writeln('<e>User ' . $user . ' is unknown.</e>');
 
-         return 0;
-     }
+                return 1;
+            }
 
-     /**
-      * List all duplicates for all users.
-      *
-      * @return int The command exit code.
-      */
-     private function listAllDuplicates(): int
-     {
-         // List duplicates for all users
-         $users = $this->userManager->search('');
-         foreach ($users as $user) {
-             $userId = $user->getUID();
-             $this->output->writeln('<info>Listing duplicates for user: ' . $userId . '</info>');
-             CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function() {}, $userId);
-         }
-         return 0;
-     }
- }
+            $this->output->writeln('<info>Listing duplicates for user: ' . $user . '</info>');
+            CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function () {}, $user);
+        }
+
+        return 0;
+    }
+
+    /**
+     * List all duplicates for all users.
+     *
+     * @return int The command exit code.
+     */
+    private function listAllDuplicates(): int
+    {
+        // List duplicates for all users
+        $users = $this->userManager->search('');
+        foreach ($users as $user) {
+            $userId = $user->getUID();
+            $this->output->writeln('<info>Listing duplicates for user: ' . $userId . '</info>');
+            CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function () {}, $userId);
+        }
+
+        return 0;
+    }
+}

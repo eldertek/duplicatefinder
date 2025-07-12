@@ -9,12 +9,14 @@ use OCA\DuplicateFinder\Service\OriginFolderService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-class MergeServiceTest extends TestCase {
+class MergeServiceTest extends TestCase
+{
     private $fileService;
     private $originFolderService;
     private $logger;
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         parent::setUp();
         $this->fileService = $this->createMock(FileService::class);
         $this->originFolderService = $this->createMock(OriginFolderService::class);
@@ -24,7 +26,8 @@ class MergeServiceTest extends TestCase {
     /**
      * Test that merging duplicates preserves files in origin folders
      */
-    public function testMergeDuplicatesPreservesOriginFolders() {
+    public function testMergeDuplicatesPreservesOriginFolders()
+    {
         // Create test files
         $regularFile = $this->createMockFileInfo(1000, '/user1/files/regular.txt', 'user1', false);
         $protectedFile = $this->createMockFileInfo(1000, '/user1/files/protected/important.txt', 'user1', true);
@@ -35,7 +38,7 @@ class MergeServiceTest extends TestCase {
             ->willReturnCallback(function ($path) {
                 return [
                     'isProtected' => str_contains($path, 'protected'),
-                    'protectingFolder' => str_contains($path, 'protected') ? '/protected' : null
+                    'protectingFolder' => str_contains($path, 'protected') ? '/protected' : null,
                 ];
             });
 
@@ -47,6 +50,7 @@ class MergeServiceTest extends TestCase {
                         sprintf('Cannot delete file "%s" as it is protected by origin folder "%s"', $path, '/protected')
                     );
                 }
+
                 return true;
             });
 
@@ -74,7 +78,8 @@ class MergeServiceTest extends TestCase {
     /**
      * Test that merging duplicates fails when trying to delete all files
      */
-    public function testMergeDuplicatesFailsWhenDeletingAllFiles() {
+    public function testMergeDuplicatesFailsWhenDeletingAllFiles()
+    {
         // Create test files
         $file1 = $this->createMockFileInfo(1000, '/user1/files/file1.txt', 'user1', false);
         $file2 = $this->createMockFileInfo(1000, '/user1/files/file2.txt', 'user1', false);
@@ -101,7 +106,8 @@ class MergeServiceTest extends TestCase {
     /**
      * Helper method to create a mock FileInfo with a specific size and protection status
      */
-    private function createMockFileInfo(int $size, string $path, string $owner, bool $isProtected): FileInfo {
+    private function createMockFileInfo(int $size, string $path, string $owner, bool $isProtected): FileInfo
+    {
         $fileInfo = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
             ->addMethods(['getSize', 'getPath', 'getOwner', 'isInOriginFolder'])
@@ -110,25 +116,28 @@ class MergeServiceTest extends TestCase {
         $fileInfo->method('getPath')->willReturn($path);
         $fileInfo->method('getOwner')->willReturn($owner);
         $fileInfo->method('isInOriginFolder')->willReturn($isProtected);
+
         return $fileInfo;
     }
 
     /**
      * Helper method to simulate the merge operation
      */
-    private function performMerge(array $allFiles, array $filesToDelete): array {
+    private function performMerge(array $allFiles, array $filesToDelete): array
+    {
         // This simulates the merge operation logic
         $results = [
             'deleted' => 0,
             'failed' => 0,
             'preserved' => 0,
-            'error' => null
+            'error' => null,
         ];
 
         // Check if we're trying to delete all files
         if (count($filesToDelete) === count($allFiles)) {
             $results['error'] = 'Cannot delete all files in a duplicate group';
             $results['preserved'] = count($allFiles);
+
             return $results;
         }
 

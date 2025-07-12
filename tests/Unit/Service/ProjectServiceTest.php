@@ -3,9 +3,9 @@
 namespace OCA\DuplicateFinder\Tests\Unit\Service;
 
 use DateTime;
+use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCA\DuplicateFinder\Db\Project;
 use OCA\DuplicateFinder\Db\ProjectMapper;
-use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\ProjectService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -18,7 +18,8 @@ use Psr\Log\LoggerInterface;
 /**
  * Test version of ProjectService that overrides methods that use database queries
  */
-class TestProjectService extends ProjectService {
+class TestProjectService extends ProjectService
+{
     protected $scanCalled = false;
     protected $getDuplicatesResult = [];
     protected $userIdValue;
@@ -26,7 +27,8 @@ class TestProjectService extends ProjectService {
     /**
      * Override scan method to avoid database queries
      */
-    public function scan(int $id): void {
+    public function scan(int $id): void
+    {
         // Just mark that scan was called
         $this->scanCalled = true;
     }
@@ -34,21 +36,24 @@ class TestProjectService extends ProjectService {
     /**
      * Check if scan was called
      */
-    public function wasFindProjectDuplicatesCalled(): bool {
+    public function wasFindProjectDuplicatesCalled(): bool
+    {
         return $this->scanCalled;
     }
 
     /**
      * Set the result to be returned by getDuplicates
      */
-    public function setGetDuplicatesResult(array $result): void {
+    public function setGetDuplicatesResult(array $result): void
+    {
         $this->getDuplicatesResult = $result;
     }
 
     /**
      * Override getDuplicates to return a predefined result
      */
-    public function getDuplicates(int $projectId, string $type = 'all', int $page = 1, int $limit = 50): array {
+    public function getDuplicates(int $projectId, string $type = 'all', int $page = 1, int $limit = 50): array
+    {
         if (!empty($this->getDuplicatesResult)) {
             return $this->getDuplicatesResult;
         }
@@ -58,15 +63,16 @@ class TestProjectService extends ProjectService {
             'pagination' => [
                 'currentPage' => $page,
                 'totalPages' => 0,
-                'totalItems' => 0
-            ]
+                'totalItems' => 0,
+            ],
         ];
     }
 
     /**
      * Override setUserId to store the value in a property we can access
      */
-    public function setUserId(string $userId): void {
+    public function setUserId(string $userId): void
+    {
         parent::setUserId($userId);
         $this->userIdValue = $userId;
     }
@@ -74,7 +80,8 @@ class TestProjectService extends ProjectService {
     /**
      * Get the current user ID
      */
-    public function getUserId(): string {
+    public function getUserId(): string
+    {
         return $this->userIdValue;
     }
 }
@@ -138,7 +145,7 @@ class ProjectServiceTest extends TestCase
             ->method('getFolders')
             ->willReturnMap([
                 [1, ['/folder1', '/folder2']],
-                [2, ['/folder3']]
+                [2, ['/folder3']],
             ]);
 
         $result = $this->service->findAll();
@@ -212,7 +219,7 @@ class ProjectServiceTest extends TestCase
             ->method('nodeExists')
             ->willReturnMap([
                 ['folder1', true],
-                ['non-existent-folder', false]
+                ['non-existent-folder', false],
             ]);
 
         $this->expectException(NotFoundException::class);
@@ -336,8 +343,8 @@ class ProjectServiceTest extends TestCase
             'pagination' => [
                 'currentPage' => 1,
                 'totalPages' => 1,
-                'totalItems' => 3
-            ]
+                'totalItems' => 3,
+            ],
         ];
 
         // Configure our test service to return the expected result

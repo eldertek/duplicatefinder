@@ -7,7 +7,6 @@ use OCA\DuplicateFinder\Db\FileInfoMapper;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FolderService;
-use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
@@ -204,12 +203,12 @@ class CompleteWorkflowTest extends TestCase
 
         // 2. Vérifier que les fichiers sont indexés
         $fileInfos = $this->fileInfoMapper->findAll($this->testUserId);
-        $this->assertGreaterThanOrEqual(5, count($fileInfos), "Les fichiers de test devraient être indexés");
+        $this->assertGreaterThanOrEqual(5, count($fileInfos), 'Les fichiers de test devraient être indexés');
 
         // 3. Vérifier que les doublons sont détectés
         $duplicates = $this->fileDuplicateService->findAll('all', $this->testUserId);
         $this->assertArrayHasKey('entities', $duplicates, "Le résultat devrait contenir une clé 'entities'");
-        $this->assertGreaterThanOrEqual(1, count($duplicates['entities']), "Au moins 1 groupe de doublons devrait être détecté");
+        $this->assertGreaterThanOrEqual(1, count($duplicates['entities']), 'Au moins 1 groupe de doublons devrait être détecté');
 
         // Afficher des informations de débogage sur les doublons trouvés
         echo "\nNombre de groupes de doublons trouvés: " . count($duplicates['entities']) . "\n";
@@ -226,7 +225,7 @@ class CompleteWorkflowTest extends TestCase
                 }, $files);
 
                 // Afficher les chemins pour le débogage
-                echo "Groupe de doublons avec " . count($files) . " fichiers:\n";
+                echo 'Groupe de doublons avec ' . count($files) . " fichiers:\n";
                 foreach ($paths as $path) {
                     echo "  - $path\n";
                 }
@@ -238,10 +237,18 @@ class CompleteWorkflowTest extends TestCase
                 $hasDuplicate2 = false;
 
                 foreach ($paths as $path) {
-                    if (strpos($path, 'file1.txt') !== false) $hasFile1 = true;
-                    if (strpos($path, 'duplicate1.txt') !== false) $hasDuplicate1 = true;
-                    if (strpos($path, 'file2.txt') !== false) $hasFile2 = true;
-                    if (strpos($path, 'duplicate2.txt') !== false) $hasDuplicate2 = true;
+                    if (strpos($path, 'file1.txt') !== false) {
+                        $hasFile1 = true;
+                    }
+                    if (strpos($path, 'duplicate1.txt') !== false) {
+                        $hasDuplicate1 = true;
+                    }
+                    if (strpos($path, 'file2.txt') !== false) {
+                        $hasFile2 = true;
+                    }
+                    if (strpos($path, 'duplicate2.txt') !== false) {
+                        $hasDuplicate2 = true;
+                    }
                 }
 
                 if ($hasFile1 && $hasDuplicate1) {
@@ -255,6 +262,6 @@ class CompleteWorkflowTest extends TestCase
         }
 
         // Vérifier qu'au moins un des groupes de doublons attendus a été trouvé
-        $this->assertTrue($foundDuplicate1 || $foundDuplicate2, "Au moins un des groupes de doublons attendus devrait être trouvé");
+        $this->assertTrue($foundDuplicate1 || $foundDuplicate2, 'Au moins un des groupes de doublons attendus devrait être trouvé');
     }
 }

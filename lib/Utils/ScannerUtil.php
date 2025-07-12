@@ -1,28 +1,25 @@
 <?php
+
 namespace OCA\DuplicateFinder\Utils;
 
-use Psr\Log\LoggerInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use OC\Files\Utils\Scanner;
-use OCP\IDBConnection;
-use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Files\NotFoundException;
-use OCP\Files\Node;
-use OCP\Files\Folder;
-use OCP\Lock\LockedException;
-
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FilterService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCA\DuplicateFinder\Service\ShareService;
-use OCA\DuplicateFinder\Utils\CMDUtils;
+use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\Folder;
+use OCP\Files\Node;
+use OCP\Files\NotFoundException;
+use OCP\IDBConnection;
+use OCP\Lock\LockedException;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class ScannerUtil
 {
-
-
     /** @var IDBConnection */
     private $connection;
     /** @var IEventDispatcher */
@@ -62,17 +59,18 @@ class ScannerUtil
         FileInfoService $fileInfoService,
         ?OutputInterface $output,
         ?\Closure $abortIfInterrupted
-    ) : void {
+    ): void {
         $this->fileInfoService = $fileInfoService;
         $this->output = $output;
         $this->abortIfInterrupted = $abortIfInterrupted;
     }
 
-    public function scan(string $user, string $path, bool $isShared = false) : void
+    public function scan(string $user, string $path, bool $isShared = false): void
     {
         if (!$isShared) {
             $this->showOutput('Start searching files for '.$user.' in path '.$path);
         }
+
         try {
             // Check if the path contains a .nodupefinder file
             $userFolder = $this->folderService->getUserFolder($user);
@@ -87,7 +85,7 @@ class ScannerUtil
                 } catch (NotFoundException $e) {
                     $this->logger->warning('Path not found, cannot check for .nodupefinder: {path}', [
                         'path' => $path,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                     // If we can't find the node, proceed with scanning
                     $node = null;
@@ -97,6 +95,7 @@ class ScannerUtil
             // If we have a valid node and it's a folder, check for .nodupefinder
             if ($node instanceof Folder && $this->filterService->shouldSkipDirectory($node)) {
                 $this->showOutput('Skipping directory due to .nodupefinder file: ' . $path);
+
                 return;
             }
 
@@ -108,6 +107,7 @@ class ScannerUtil
             }
         } catch (LockedException $e) {
             $this->showOutput('<e>File locked, attempting to release: ' . $e->getPath() . '</e>');
+
             throw $e; // Rethrow to be handled in FileInfoService
         } catch (\Exception $e) {
             $errorMessage = 'An error occurred during scanning: ' . $e->getMessage();
@@ -116,34 +116,35 @@ class ScannerUtil
         }
     }
 
-    private function initializeScanner(string $user, bool $isShared = false) : Scanner
+    private function initializeScanner(string $user, bool $isShared = false): Scanner
     {
         $scanner = new Scanner($user, $this->connection, $this->eventDispatcher, $this->logger);
         $scanner->listen(
             '\OC\Files\Utils\Scanner',
             'postScanFile',
             function ($path) use ($user, $isShared) {
-                $this->showOutput('Scanning '.($isShared ? 'Shared Node ':'').$path, true);
+                $this->showOutput('Scanning '.($isShared ? 'Shared Node ' : '').$path, true);
                 $this->saveScannedFile($path, $user);
             }
         );
+
         return $scanner;
     }
 
     private function saveScannedFile(
         string $path,
         string $user
-    ) : void {
+    ): void {
         try {
             $this->fileInfoService->save($path, $user);
         } catch (NotFoundException $e) {
             $this->logger->error('The given path doesn\'t exists ('.$path.').', [
                 'app' => Application::ID,
-                'exception' => $e
+                'exception' => $e,
             ]);
             $this->showOutput('<e>The given path doesn\'t exists ('.$path.').</e>');
         } catch (ForcedToIgnoreFileException $e) {
-            $this->logger->info($e->getMessage(), ['exception'=> $e]);
+            $this->logger->info($e->getMessage(), ['exception' => $e]);
             $this->showOutput('Skipped '.$path, true);
         }
         if ($this->abortIfInterrupted) {
@@ -169,6 +170,7 @@ class ScannerUtil
                     // Check if the shared folder contains a .nodupefinder file
                     if ($node instanceof Folder && $this->filterService->shouldSkipDirectory($node)) {
                         $this->showOutput('Skipping shared directory due to .nodupefinder file: ' . $node->getPath());
+
                         continue;
                     }
                     $this->scan($share->getSharedBy(), $node->getPath(), true);
@@ -178,7 +180,7 @@ class ScannerUtil
         unset($share);
     }
 
-    private function showOutput(string $message, bool $isVerbose = false) : void
+    private function showOutput(string $message, bool $isVerbose = false): void
     {
         CMDUtils::showIfOutputIsPresent(
             $message,

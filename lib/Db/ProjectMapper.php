@@ -10,10 +10,12 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 
-class ProjectMapper extends QBMapper {
+class ProjectMapper extends QBMapper
+{
     private LoggerInterface $logger;
 
-    public function __construct(IDBConnection $db, LoggerInterface $logger) {
+    public function __construct(IDBConnection $db, LoggerInterface $logger)
+    {
         parent::__construct($db, 'df_projects', Project::class);
         $this->logger = $logger;
     }
@@ -26,7 +28,8 @@ class ProjectMapper extends QBMapper {
      * @return Project
      * @throws DoesNotExistException if not found
      */
-    public function find(int $id, string $userId): Project {
+    public function find(int $id, string $userId): Project
+    {
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('*')
@@ -47,7 +50,8 @@ class ProjectMapper extends QBMapper {
      * @param string $userId The user ID
      * @return array Array of Project objects
      */
-    public function findAll(string $userId): array {
+    public function findAll(string $userId): array
+    {
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('*')
@@ -66,7 +70,8 @@ class ProjectMapper extends QBMapper {
      * @param int $projectId The project ID
      * @param array $folderPaths Array of folder paths
      */
-    public function addFolders(int $projectId, array $folderPaths): void {
+    public function addFolders(int $projectId, array $folderPaths): void
+    {
         foreach ($folderPaths as $folderPath) {
             $qb = $this->db->getQueryBuilder();
             $qb->insert('df_folders')
@@ -84,7 +89,8 @@ class ProjectMapper extends QBMapper {
      * @param int $projectId The project ID
      * @return array Array of folder paths
      */
-    public function getFolders(int $projectId): array {
+    public function getFolders(int $projectId): array
+    {
         $qb = $this->db->getQueryBuilder();
         $qb->select('folder_path')
            ->from('df_folders')
@@ -107,7 +113,8 @@ class ProjectMapper extends QBMapper {
      *
      * @param int $projectId The project ID
      */
-    public function removeFolders(int $projectId): void {
+    public function removeFolders(int $projectId): void
+    {
         $qb = $this->db->getQueryBuilder();
         $qb->delete('df_folders')
            ->where(
@@ -122,11 +129,12 @@ class ProjectMapper extends QBMapper {
      * @param int $projectId The project ID
      * @param int $duplicateId The duplicate ID
      */
-    public function addDuplicate(int $projectId, int $duplicateId): void {
+    public function addDuplicate(int $projectId, int $duplicateId): void
+    {
         $this->logger->debug('Adding duplicate to project', [
             'app' => 'duplicatefinder',
             'projectId' => $projectId,
-            'duplicateId' => $duplicateId
+            'duplicateId' => $duplicateId,
         ]);
 
         // Check if the duplicate is already associated with the project
@@ -148,7 +156,7 @@ class ProjectMapper extends QBMapper {
             $this->logger->debug('Duplicate not yet associated with project, adding it', [
                 'app' => 'duplicatefinder',
                 'projectId' => $projectId,
-                'duplicateId' => $duplicateId
+                'duplicateId' => $duplicateId,
             ]);
 
             $qb = $this->db->getQueryBuilder();
@@ -162,7 +170,7 @@ class ProjectMapper extends QBMapper {
             $this->logger->debug('Duplicate already associated with project, skipping', [
                 'app' => 'duplicatefinder',
                 'projectId' => $projectId,
-                'duplicateId' => $duplicateId
+                'duplicateId' => $duplicateId,
             ]);
         }
     }
@@ -173,10 +181,11 @@ class ProjectMapper extends QBMapper {
      * @param int $projectId The project ID
      * @return array Array of duplicate IDs
      */
-    public function getDuplicateIds(int $projectId): array {
+    public function getDuplicateIds(int $projectId): array
+    {
         $this->logger->debug('Getting duplicate IDs for project', [
             'app' => 'duplicatefinder',
-            'projectId' => $projectId
+            'projectId' => $projectId,
         ]);
 
         $qb = $this->db->getQueryBuilder();
@@ -197,7 +206,7 @@ class ProjectMapper extends QBMapper {
             'app' => 'duplicatefinder',
             'projectId' => $projectId,
             'count' => count($duplicateIds),
-            'duplicateIds' => $duplicateIds
+            'duplicateIds' => $duplicateIds,
         ]);
 
         return $duplicateIds;
@@ -208,10 +217,11 @@ class ProjectMapper extends QBMapper {
      *
      * @param int $projectId The project ID
      */
-    public function removeDuplicates(int $projectId): void {
+    public function removeDuplicates(int $projectId): void
+    {
         $this->logger->debug('Removing all duplicates for project', [
             'app' => 'duplicatefinder',
-            'projectId' => $projectId
+            'projectId' => $projectId,
         ]);
 
         $qb = $this->db->getQueryBuilder();
@@ -225,7 +235,7 @@ class ProjectMapper extends QBMapper {
         $this->logger->debug('Removed duplicates for project', [
             'app' => 'duplicatefinder',
             'projectId' => $projectId,
-            'count' => $count
+            'count' => $count,
         ]);
     }
 
@@ -235,7 +245,8 @@ class ProjectMapper extends QBMapper {
      * @param int $projectId The project ID
      * @param string $lastScan The last scan time in ISO format
      */
-    public function updateLastScan(int $projectId, string $lastScan): void {
+    public function updateLastScan(int $projectId, string $lastScan): void
+    {
         $qb = $this->db->getQueryBuilder();
         $qb->update($this->getTableName())
            ->set('last_scan', $qb->createNamedParameter($lastScan, IQueryBuilder::PARAM_STR))

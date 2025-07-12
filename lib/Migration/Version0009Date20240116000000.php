@@ -9,15 +9,16 @@ use OCP\DB\ISchemaWrapper;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
-class Version0009Date20240116000000 extends SimpleMigrationStep {
-
+class Version0009Date20240116000000 extends SimpleMigrationStep
+{
     /**
      * @param IOutput $output
      * @param Closure $schemaClosure The `\Closure` returns \OCP\DB\ISchemaWrapper
      * @param array $options
      * @return null|ISchemaWrapper
      */
-    public function changeSchema(IOutput $output, Closure $schemaClosure, array $options) {
+    public function changeSchema(IOutput $output, Closure $schemaClosure, array $options)
+    {
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
 
@@ -43,6 +44,7 @@ class Version0009Date20240116000000 extends SimpleMigrationStep {
             $table->addIndex(['user_id'], 'df_folders_user_id_idx');
             $table->addUniqueIndex(['user_id', 'folder_path'], 'df_folders_unique_idx');
         }
+
         return $schema;
     }
 
@@ -51,7 +53,8 @@ class Version0009Date20240116000000 extends SimpleMigrationStep {
      * @param Closure $schemaClosure The `\Closure` returns \OCP\DB\ISchemaWrapper
      * @param array $options
      */
-    public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {
+    public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options)
+    {
         $output->info('Origin folders migration completed successfully');
     }
 }

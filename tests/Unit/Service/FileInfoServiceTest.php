@@ -18,9 +18,9 @@ use OCP\IDBConnection;
 use OCP\Lock\ILockingProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
-class FileInfoServiceTest extends TestCase {
+class FileInfoServiceTest extends TestCase
+{
     private $mapper;
     private $eventDispatcher;
     private $logger;
@@ -34,7 +34,8 @@ class FileInfoServiceTest extends TestCase {
     private $excludedFolderService;
     private $service;
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         parent::setUp();
 
         $this->mapper = $this->createMock(FileInfoMapper::class);
@@ -64,7 +65,8 @@ class FileInfoServiceTest extends TestCase {
         );
     }
 
-    public function testDeleteSetsUserContextWhenOwnerExists() {
+    public function testDeleteSetsUserContextWhenOwnerExists()
+    {
         // Créer un mock pour FileInfo avec un propriétaire
         $fileInfo = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
@@ -111,7 +113,8 @@ class FileInfoServiceTest extends TestCase {
         $this->assertSame($fileInfo, $result);
     }
 
-    public function testUpdateFileMetaSetsUserContextFromOwner() {
+    public function testUpdateFileMetaSetsUserContextFromOwner()
+    {
         // Créer un mock pour FileInfo
         $fileInfo = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
@@ -173,7 +176,8 @@ class FileInfoServiceTest extends TestCase {
         $this->assertSame($fileInfo, $result);
     }
 
-    public function testUpdateFileMetaSetsUserContextFromFallbackUID() {
+    public function testUpdateFileMetaSetsUserContextFromFallbackUID()
+    {
         // Créer un mock pour FileInfo
         $fileInfo = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
@@ -235,7 +239,8 @@ class FileInfoServiceTest extends TestCase {
      * Test that hasAccessRight correctly identifies files that belong to other users
      * and prevents them from being included in the current user's duplicates
      */
-    public function testHasAccessRightFiltersByOwner() {
+    public function testHasAccessRightFiltersByOwner()
+    {
         // Create a FileInfo mock for a file owned by another user
         $fileInfo = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
@@ -264,7 +269,8 @@ class FileInfoServiceTest extends TestCase {
     /**
      * Test that scanFiles only includes files that the current user has access to
      */
-    public function testScanFilesOnlyIncludesFilesForCurrentUser() {
+    public function testScanFilesOnlyIncludesFilesForCurrentUser()
+    {
         // Create a mock for the user folder
         $userFolder = $this->createMock(Folder::class);
         $userFolder->method('getPath')->willReturn('/currentuser/files');

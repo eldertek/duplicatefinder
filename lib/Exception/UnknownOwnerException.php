@@ -2,8 +2,6 @@
 
 namespace OCA\DuplicateFinder\Exception;
 
-use Throwable;
-
 class UnknownOwnerException extends \Exception
 {
     public function __construct(?string $path = null)

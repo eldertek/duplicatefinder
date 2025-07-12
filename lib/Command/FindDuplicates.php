@@ -3,9 +3,9 @@
 namespace OCA\DuplicateFinder\Command;
 
 use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
-use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
 use OCA\DuplicateFinder\Service\ProjectService;
 use OCA\DuplicateFinder\Utils\CMDUtils;
@@ -133,6 +133,7 @@ class FindDuplicates extends Command
 
         if ($this->encryptionManager->isEnabled()) {
             $output->writeln('Encryption is enabled. Aborted.');
+
             return 1;
         }
 
@@ -143,6 +144,7 @@ class FindDuplicates extends Command
         // Check if project ID is specified but no user is specified
         if ($projectId !== null && empty($users)) {
             $output->writeln('<error>When using --project option, you must specify a user with --user option.</error>');
+
             return 1;
         }
 
@@ -172,6 +174,7 @@ class FindDuplicates extends Command
         foreach ($users as $user) {
             if (!$this->userManager->userExists($user)) {
                 $this->output->writeln('User ' . $user . ' is unknown.');
+
                 return 1;
             }
 
@@ -212,6 +215,7 @@ class FindDuplicates extends Command
     {
         if (!$this->userManager->userExists($user)) {
             $this->output->writeln('<e>User ' . $user . ' is unknown.</e>');
+
             return 1;
         }
 
@@ -232,6 +236,7 @@ class FindDuplicates extends Command
                 }
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                 $this->output->writeln('<e>Project with ID ' . $projectId . ' not found for user ' . $user . '.</e>');
+
                 return 1;
             }
 
@@ -277,9 +282,10 @@ class FindDuplicates extends Command
         } catch (\Exception $e) {
             $this->logger->error('Error scanning project: ' . $e->getMessage(), [
                 'app' => Application::ID,
-                'exception' => $e
+                'exception' => $e,
             ]);
             $this->output->writeln('<e>Error scanning project: ' . $e->getMessage() . '</e>');
+
             return 1;
         }
     }
@@ -299,6 +305,7 @@ class FindDuplicates extends Command
 
         $callback = function () {
             pcntl_signal_dispatch();
+
             return false; // Continue scanning
         };
 

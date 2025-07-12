@@ -4,18 +4,19 @@ namespace OCA\DuplicateFinder\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
-use OCP\Migration\SimpleMigrationStep;
 use OCP\Migration\IOutput;
+use OCP\Migration\SimpleMigrationStep;
 
-class Version000000Date20240101000000 extends SimpleMigrationStep {
-
+class Version000000Date20240101000000 extends SimpleMigrationStep
+{
     /**
      * @param IOutput $output
      * @param Closure $schemaClosure The `\Closure` returns \OCP\DB\ISchemaWrapper
      * @param array $options
      * @return null|ISchemaWrapper
      */
-    public function changeSchema(IOutput $output, Closure $schemaClosure, array $options) {
+    public function changeSchema(IOutput $output, Closure $schemaClosure, array $options)
+    {
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
 
@@ -27,11 +28,11 @@ class Version000000Date20240101000000 extends SimpleMigrationStep {
             ]);
             $table->addColumn('type', 'string', [
                 'notnull' => true,
-                'length' => 64
+                'length' => 64,
             ]);
             $table->addColumn('value', 'string', [
                 'notnull' => true,
-                'length' => 4000
+                'length' => 4000,
             ]);
             $table->addColumn('user_id', 'string', [
                 'notnull' => true,
@@ -48,4 +49,4 @@ class Version000000Date20240101000000 extends SimpleMigrationStep {
 
         return $schema;
     }
-} 
+}

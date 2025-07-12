@@ -3,14 +3,24 @@
 namespace OCA\DuplicateFinder\Tests\Unit;
 
 // Mocks pour les interfaces Nextcloud
-interface IRootFolder {}
-interface IEventDispatcher {}
-interface ILockingProvider {}
-interface IDBConnection {}
-interface IUser {
+interface IRootFolder
+{
+}
+interface IEventDispatcher
+{
+}
+interface ILockingProvider
+{
+}
+interface IDBConnection
+{
+}
+interface IUser
+{
     public function getUID();
 }
-interface Node {
+interface Node
+{
     public function getType();
     public function isMounted();
     public function getSize();
@@ -29,61 +39,80 @@ interface Node {
 }
 
 // Namespace OCP\Files
+
 namespace OCP\Files;
 
 use OCA\DuplicateFinder\Tests\Unit\IRootFolder as BaseIRootFolder;
 use OCA\DuplicateFinder\Tests\Unit\Node as BaseNode;
 
-interface IRootFolder extends BaseIRootFolder {
+interface IRootFolder extends BaseIRootFolder
+{
     public function getUserFolder($userId);
     public function get($path);
 }
 
-interface Node extends BaseNode {}
+interface Node extends BaseNode
+{
+}
 
-class NotFoundException extends \Exception {}
+class NotFoundException extends \Exception
+{
+}
 
-class FileInfo {
-    const TYPE_FILE = 'file';
-    const TYPE_FOLDER = 'folder';
+class FileInfo
+{
+    public const TYPE_FILE = 'file';
+    public const TYPE_FOLDER = 'folder';
 }
 
 // Namespace OCP\Lock
+
 namespace OCP\Lock;
 
-interface ILockingProvider {
-    const LOCK_SHARED = 1;
-    const LOCK_EXCLUSIVE = 2;
-    
+interface ILockingProvider
+{
+    public const LOCK_SHARED = 1;
+    public const LOCK_EXCLUSIVE = 2;
+
     public function releaseAll($path, $type);
     public function isLocked($path, $type);
 }
 
-class LockedException extends \Exception {
+class LockedException extends \Exception
+{
     public function getPath();
 }
 
 // Namespace OCP\EventDispatcher
+
 namespace OCP\EventDispatcher;
 
 use OCA\DuplicateFinder\Tests\Unit\IEventDispatcher as BaseIEventDispatcher;
 
-interface IEventDispatcher extends BaseIEventDispatcher {
+interface IEventDispatcher extends BaseIEventDispatcher
+{
     public function dispatchTyped($event);
 }
 
 // Namespace OCP\Files\Storage
+
 namespace OCP\Files\Storage;
 
-interface IStorage {
+interface IStorage
+{
     public function hash($type, $path);
 }
 
 // Namespace OCP
+
 namespace OCP;
 
 use OCA\DuplicateFinder\Tests\Unit\IDBConnection as BaseIDBConnection;
 use OCA\DuplicateFinder\Tests\Unit\IUser as BaseIUser;
 
-interface IDBConnection extends BaseIDBConnection {}
-interface IUser extends BaseIUser {}
+interface IDBConnection extends BaseIDBConnection
+{
+}
+interface IUser extends BaseIUser
+{
+}

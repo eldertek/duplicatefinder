@@ -145,8 +145,8 @@ class ProjectApiControllerTest extends TestCase
                 'pagination' => [
                     'totalItems' => 0,
                     'totalPages' => 0,
-                    'currentPage' => 1
-                ]
+                    'currentPage' => 1,
+                ],
             ]);
 
         // Call the duplicates method

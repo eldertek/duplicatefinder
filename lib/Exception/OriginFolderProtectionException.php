@@ -6,5 +6,6 @@ namespace OCA\DuplicateFinder\Exception;
 
 use Exception;
 
-class OriginFolderProtectionException extends Exception {
-} 
+class OriginFolderProtectionException extends Exception
+{
+}

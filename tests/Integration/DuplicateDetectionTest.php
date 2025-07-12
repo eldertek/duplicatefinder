@@ -2,17 +2,13 @@
 
 namespace OCA\DuplicateFinder\Tests\Integration;
 
-use OCA\DuplicateFinder\Db\FileInfo;
-use OCA\DuplicateFinder\Db\FileInfoMapper;
-use OCA\DuplicateFinder\Db\FileDuplicate;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
-use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Db\FileInfoMapper;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
-use OCP\Files\Node;
-use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 
@@ -161,24 +157,24 @@ class DuplicateDetectionTest extends TestCase
             'unique' => [
                 [
                     'path' => $uniqueFile->getPath(),
-                    'node' => $uniqueFile
-                ]
+                    'node' => $uniqueFile,
+                ],
             ],
             'duplicates' => [
                 [
                     'path' => $duplicate1->getPath(),
-                    'node' => $duplicate1
+                    'node' => $duplicate1,
                 ],
                 [
                     'path' => $duplicate2->getPath(),
-                    'node' => $duplicate2
+                    'node' => $duplicate2,
                 ],
                 [
                     'path' => $duplicate3->getPath(),
-                    'node' => $duplicate3
-                ]
+                    'node' => $duplicate3,
+                ],
             ],
-            'folders' => [$folder1, $folder2]
+            'folders' => [$folder1, $folder2],
         ];
     }
 
@@ -190,6 +186,7 @@ class DuplicateDetectionTest extends TestCase
         if ($this->userFolder->nodeExists($name)) {
             return $this->userFolder->get($name);
         }
+
         return $this->userFolder->newFolder($name);
     }
 
@@ -201,10 +198,12 @@ class DuplicateDetectionTest extends TestCase
         if ($folder->nodeExists($name)) {
             $file = $folder->get($name);
             $file->putContent($content);
+
             return $file;
         }
         $file = $folder->newFile($name);
         $file->putContent($content);
+
         return $file;
     }
 

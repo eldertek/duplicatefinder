@@ -1,8 +1,9 @@
 <?php
+
 namespace OCA\DuplicateFinder\Db;
 
-use OCP\IDBConnection;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -18,14 +19,14 @@ class FileInfoMapper extends EQBMapper
         $this->logger = $logger;
     }
 
-  /**
-   * @throws \OCP\AppFramework\Db\DoesNotExistException
-   */
-    public function find(string $path, ?string $userID = null):FileInfo
+    /**
+     * @throws \OCP\AppFramework\Db\DoesNotExistException
+     */
+    public function find(string $path, ?string $userID = null): FileInfo
     {
         $this->logger->debug('Finding file by path', [
             'path' => $path,
-            'userID' => $userID
+            'userID' => $userID,
         ]);
 
         $qb = $this->db->getQueryBuilder();
@@ -38,10 +39,10 @@ class FileInfoMapper extends EQBMapper
             $qb->andWhere($qb->expr()->eq('owner', $qb->createNamedParameter($userID)));
         }
         $entities = $this->findEntities($qb);
-        
+
         $this->logger->debug('Found files by path', [
             'path' => $path,
-            'count' => count($entities)
+            'count' => count($entities),
         ]);
 
         if ($entities) {
@@ -50,8 +51,9 @@ class FileInfoMapper extends EQBMapper
                     'path' => $path,
                     'id' => $entities[0]->getId(),
                     'hash' => $entities[0]->getFileHash(),
-                    'ignored' => $entities[0]->isIgnored() ? 'true' : 'false'
+                    'ignored' => $entities[0]->isIgnored() ? 'true' : 'false',
                 ]);
+
                 return $entities[0];
             }
             foreach ($entities as $entity) {
@@ -61,8 +63,9 @@ class FileInfoMapper extends EQBMapper
                         'userID' => $userID,
                         'id' => $entity->getId(),
                         'hash' => $entity->getFileHash(),
-                        'ignored' => $entity->isIgnored() ? 'true' : 'false'
+                        'ignored' => $entity->isIgnored() ? 'true' : 'false',
                     ]);
+
                     return $entity;
                 }
             }
@@ -71,19 +74,20 @@ class FileInfoMapper extends EQBMapper
 
         $this->logger->debug('File not found', [
             'path' => $path,
-            'userID' => $userID
+            'userID' => $userID,
         ]);
+
         throw new \OCP\AppFramework\Db\DoesNotExistException('FileInfo not found');
     }
 
-  /**
-   * @return array<FileInfo>
-   */
+    /**
+     * @return array<FileInfo>
+     */
     public function findByHash(string $hash, string $type = 'file_hash'): array
     {
         $this->logger->debug('Finding files by hash', [
             'hash' => $hash,
-            'type' => $type
+            'type' => $type,
         ]);
 
         $qb = $this->db->getQueryBuilder();
@@ -95,22 +99,22 @@ class FileInfoMapper extends EQBMapper
         );
 
         $entities = $this->findEntities($qb);
-        
+
         $this->logger->debug('Found files by hash', [
             'hash' => $hash,
             'count' => count($entities),
-            'ignored' => false
+            'ignored' => false,
         ]);
 
         return $this->entitiesToIdArray($entities);
     }
 
-    public function countByHash(string $hash, string $type = 'file_hash'):int
+    public function countByHash(string $hash, string $type = 'file_hash'): int
     {
         return $this->countBy($type, $hash);
     }
 
-    public function countBySize(int $size):int
+    public function countBySize(int $size): int
     {
         return $this->countBy('size', $size, IQueryBuilder::PARAM_INT);
     }
@@ -118,7 +122,7 @@ class FileInfoMapper extends EQBMapper
     /**
      * @return array<FileInfo>
      */
-    public function findBySize(int $size, bool $onlyEmptyHash = true) : array
+    public function findBySize(int $size, bool $onlyEmptyHash = true): array
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
@@ -129,10 +133,11 @@ class FileInfoMapper extends EQBMapper
         if ($onlyEmptyHash) {
             $qb->andWhere($qb->expr()->isNull('file_hash'));
         }
+
         return $this->entitiesToIdArray($this->findEntities($qb));
     }
 
-    public function findById(int $id):FileInfo
+    public function findById(int $id): FileInfo
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
@@ -140,6 +145,7 @@ class FileInfoMapper extends EQBMapper
         ->where(
             $qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT))
         );
+
         return $this->findEntity($qb);
     }
 
@@ -149,18 +155,18 @@ class FileInfoMapper extends EQBMapper
     public function findAll(): array
     {
         $this->logger->debug('Finding all files');
-        
+
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
            ->from($this->getTableName());
-        
+
         $entities = $this->findEntities($qb);
-        
+
         $this->logger->debug('Found all files', [
             'count' => count($entities),
-            'ignoredCount' => count(array_filter($entities, function($e) { return $e->isIgnored(); }))
+            'ignoredCount' => count(array_filter($entities, function ($e) { return $e->isIgnored(); })),
         ]);
-        
+
         return $entities;
     }
 
@@ -168,13 +174,14 @@ class FileInfoMapper extends EQBMapper
      * @param array<FileInfo> $entities
      * @return array<FileInfo>
      */
-    private function entitiesToIdArray(array $entities) : array
+    private function entitiesToIdArray(array $entities): array
     {
-        $result = array();
+        $result = [];
         foreach ($entities as $entity) {
             $result[$entity->getId()] = $entity;
         }
         unset($entity);
+
         return $result;
     }
 }

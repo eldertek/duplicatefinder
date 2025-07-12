@@ -1,11 +1,12 @@
 <?php
+
 namespace OCA\DuplicateFinder\Controller;
 
+use OCA\DuplicateFinder\Service\ConfigService;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use OCA\DuplicateFinder\Service\ConfigService;
 
 class SettingsApiController extends AbstractAPIController
 {
@@ -33,7 +34,7 @@ class SettingsApiController extends AbstractAPIController
             'backgroundjob_interval_cleanup' => $this->configService->getCleanupJobInterval(),
             'disable_filesystem_events' => $this->configService->areFilesytemEventsDisabled(),
             'ignore_mounted_files' => $this->configService->areMountedFilesIgnored(),
-            'installed_version' => $this->configService->getInstalledVersion()
+            'installed_version' => $this->configService->getInstalledVersion(),
         ];
     }
 
@@ -52,7 +53,7 @@ class SettingsApiController extends AbstractAPIController
             'backgroundjob_interval_find' => 'setFindJobInterval',
             'backgroundjob_interval_cleanup' => 'setCleanupJobInterval',
             'disable_filesystem_events' => 'setFilesytemEventsDisabled',
-            'ignore_mounted_files' => 'setMountedFilesIgnored'
+            'ignore_mounted_files' => 'setMountedFilesIgnored',
         ];
 
         if (!array_key_exists($key, $configKeys)) {

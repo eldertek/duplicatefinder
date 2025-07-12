@@ -2,10 +2,10 @@
 
 namespace OCA\DuplicateFinder\Db;
 
-use OCP\IDBConnection;
-use OCP\DB\QueryBuilder\IQueryBuilder;
-use Psr\Log\LoggerInterface;
 use OCP\AppFramework\Db\Entity;
+use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\IDBConnection;
+use Psr\Log\LoggerInterface;
 
 /**
  * @extends EQBMapper<FileDuplicate>
@@ -25,7 +25,7 @@ class FileDuplicateMapper extends EQBMapper
     {
         $this->logger->debug('Finding duplicate by hash', [
             'hash' => $hash,
-            'type' => $type
+            'type' => $type,
         ]);
 
         $qb = $this->db->getQueryBuilder();
@@ -41,14 +41,16 @@ class FileDuplicateMapper extends EQBMapper
             $this->logger->debug('Found duplicate', [
                 'hash' => $hash,
                 'id' => $duplicate->getId(),
-                'fileCount' => count($duplicate->getFiles())
+                'fileCount' => count($duplicate->getFiles()),
             ]);
+
             return $duplicate;
         } catch (\Exception $e) {
             $this->logger->debug('No duplicate found', [
                 'hash' => $hash,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -70,7 +72,7 @@ class FileDuplicateMapper extends EQBMapper
             'user' => $user,
             'limit' => $limit,
             'offset' => $offset,
-            'orderBy' => json_encode($orderBy)
+            'orderBy' => json_encode($orderBy),
         ]);
 
         $qb = $this->db->getQueryBuilder();
@@ -95,9 +97,9 @@ class FileDuplicateMapper extends EQBMapper
 
         $this->logger->debug('Found duplicates in database', [
             'totalCount' => count($duplicates),
-            'acknowledgedCount' => count(array_filter($duplicates, function($d) { return $d->getAcknowledged(); })),
+            'acknowledgedCount' => count(array_filter($duplicates, function ($d) { return $d->getAcknowledged(); })),
             'query' => $qb->getSQL(),
-            'params' => json_encode($qb->getParameters())
+            'params' => json_encode($qb->getParameters()),
         ]);
 
         return $duplicates;
@@ -127,6 +129,7 @@ class FileDuplicateMapper extends EQBMapper
             return true;
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
+
             return false;
         }
     }
@@ -151,6 +154,7 @@ class FileDuplicateMapper extends EQBMapper
             return true;
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
+
             return false;
         }
     }
@@ -191,14 +195,14 @@ class FileDuplicateMapper extends EQBMapper
         if ($entity instanceof FileDuplicate && ($entity->getType() === null || $entity->getType() === '')) {
             $entity->setType('file_hash');
             $this->logger->warning('Setting default type for duplicate before insert', [
-                'hash' => $entity->getHash()
+                'hash' => $entity->getHash(),
             ]);
         }
 
         $this->logger->debug('Inserting new duplicate', [
             'hash' => $entity->getHash(),
             'type' => $entity->getType(),
-            'fileCount' => count($entity->getFiles())
+            'fileCount' => count($entity->getFiles()),
         ]);
 
         try {
@@ -206,15 +210,17 @@ class FileDuplicateMapper extends EQBMapper
             $this->logger->debug('Successfully inserted duplicate', [
                 'id' => $result->getId(),
                 'hash' => $result->getHash(),
-                'type' => $result->getType()
+                'type' => $result->getType(),
             ]);
+
             return $result;
         } catch (\Exception $e) {
             $this->logger->error('Failed to insert duplicate', [
                 'hash' => $entity->getHash(),
                 'type' => $entity->getType(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -226,7 +232,7 @@ class FileDuplicateMapper extends EQBMapper
             $entity->setType('file_hash');
             $this->logger->warning('Setting default type for duplicate before update', [
                 'id' => $entity->getId(),
-                'hash' => $entity->getHash()
+                'hash' => $entity->getHash(),
             ]);
         }
 
@@ -234,7 +240,7 @@ class FileDuplicateMapper extends EQBMapper
             'id' => $entity->getId(),
             'hash' => $entity->getHash(),
             'type' => $entity->getType(),
-            'fileCount' => count($entity->getFiles())
+            'fileCount' => count($entity->getFiles()),
         ]);
 
         try {
@@ -242,16 +248,18 @@ class FileDuplicateMapper extends EQBMapper
             $this->logger->debug('Successfully updated duplicate', [
                 'id' => $result->getId(),
                 'hash' => $result->getHash(),
-                'type' => $result->getType()
+                'type' => $result->getType(),
             ]);
+
             return $result;
         } catch (\Exception $e) {
             $this->logger->error('Failed to update duplicate', [
                 'id' => $entity->getId(),
                 'hash' => $entity->getHash(),
                 'type' => $entity->getType(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -260,22 +268,24 @@ class FileDuplicateMapper extends EQBMapper
     {
         $this->logger->debug('Deleting duplicate', [
             'id' => $entity->getId(),
-            'hash' => $entity->getHash()
+            'hash' => $entity->getHash(),
         ]);
 
         try {
             $result = parent::delete($entity);
             $this->logger->debug('Successfully deleted duplicate', [
                 'id' => $entity->getId(),
-                'hash' => $entity->getHash()
+                'hash' => $entity->getHash(),
             ]);
+
             return $result;
         } catch (\Exception $e) {
             $this->logger->error('Failed to delete duplicate', [
                 'id' => $entity->getId(),
                 'hash' => $entity->getHash(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -286,15 +296,19 @@ class FileDuplicateMapper extends EQBMapper
      * @param string $userId The user ID
      * @return array Array of duplicate data (id, hash, type)
      */
-    public function findDuplicatesWithFiles(string $userId): array {
+    public function findDuplicatesWithFiles(string $userId): array
+    {
         $qb = $this->db->getQueryBuilder();
         $qb->select('d.id', 'd.hash', 'd.type')
            ->from($this->getTableName(), 'd')
-           ->innerJoin('d', 'duplicatefinder_finfo', 'f',
-                $qb->expr()->andX(
-                    $qb->expr()->eq('f.file_hash', 'd.hash'),
-                    $qb->expr()->eq('f.owner', $qb->createNamedParameter($userId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
-                )
+           ->innerJoin(
+               'd',
+               'duplicatefinder_finfo',
+               'f',
+               $qb->expr()->andX(
+                   $qb->expr()->eq('f.file_hash', 'd.hash'),
+                   $qb->expr()->eq('f.owner', $qb->createNamedParameter($userId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
+               )
            );
 
         $result = $qb->executeQuery();
@@ -315,7 +329,8 @@ class FileDuplicateMapper extends EQBMapper
      * @param string $userId The user ID
      * @return array Array of file paths and sizes
      */
-    public function findFilesByHash(string $hash, string $userId): array {
+    public function findFilesByHash(string $hash, string $userId): array
+    {
         $qb = $this->db->getQueryBuilder();
         $qb->select('f.path', 'f.size', 'f.updated_at')
            ->from('duplicatefinder_finfo', 'f')
@@ -333,7 +348,7 @@ class FileDuplicateMapper extends EQBMapper
             $files[] = [
                 'path' => $row['path'],
                 'size' => $row['size'] ?? 0,
-                'updated_at' => $row['updated_at'] ?? time()
+                'updated_at' => $row['updated_at'] ?? time(),
             ];
         }
         $result->closeCursor();
@@ -350,7 +365,8 @@ class FileDuplicateMapper extends EQBMapper
      * @param int $offset The offset for pagination
      * @return array Array of FileDuplicate objects
      */
-    public function findByIds(array $ids, string $type = 'all', int $limit = 50, int $offset = 0): array {
+    public function findByIds(array $ids, string $type = 'all', int $limit = 50, int $offset = 0): array
+    {
         if (empty($ids)) {
             return [];
         }
@@ -383,7 +399,8 @@ class FileDuplicateMapper extends EQBMapper
      * @param string $type The type of duplicates to count ('all', 'acknowledged', 'unacknowledged')
      * @return int The count of duplicates
      */
-    public function countByIds(array $ids, string $type = 'all'): int {
+    public function countByIds(array $ids, string $type = 'all'): int
+    {
         if (empty($ids)) {
             return 0;
         }

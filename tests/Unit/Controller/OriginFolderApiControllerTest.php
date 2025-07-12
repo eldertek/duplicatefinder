@@ -64,13 +64,13 @@ class OriginFolderApiControllerTest extends TestCase
             'folders' => [
                 [
                     'id' => 1,
-                    'path' => '/path/to/folder1'
+                    'path' => '/path/to/folder1',
                 ],
                 [
                     'id' => 2,
-                    'path' => '/path/to/folder2'
-                ]
-            ]
+                    'path' => '/path/to/folder2',
+                ],
+            ],
         ];
         $this->assertEquals($expectedData, $response->getData());
     }
@@ -115,7 +115,7 @@ class OriginFolderApiControllerTest extends TestCase
         $this->assertEquals(Http::STATUS_CREATED, $response->getStatus());
         $this->assertEquals([
             'created' => $folders,
-            'errors' => []
+            'errors' => [],
         ], $response->getData());
     }
 

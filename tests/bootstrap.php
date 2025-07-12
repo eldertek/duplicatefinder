@@ -17,22 +17,24 @@ require_once $nextcloudPath . '/lib/base.php';
 try {
     \OC::$server->getAppManager()->enableApp('duplicatefinder');
 } catch (\Exception $e) {
-    echo "Warning: Could not enable duplicatefinder app: " . $e->getMessage() . "\n";
+    echo 'Warning: Could not enable duplicatefinder app: ' . $e->getMessage() . "\n";
 }
 
 // Ajouter les namespaces de test
 try {
     \OC::$composerAutoloader->addPsr4('OCA\\DuplicateFinder\\Tests\\', __DIR__, true);
 } catch (\Exception $e) {
-    echo "Warning: Could not add test namespace: " . $e->getMessage() . "\n";
+    echo 'Warning: Could not add test namespace: ' . $e->getMessage() . "\n";
     // Fallback: utiliser l'autoloader standard
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
 // Définir une classe de remplacement pour OC_Hook si nécessaire
 if (!class_exists('OC_Hook')) {
-    class OC_Hook {
-        public static function clear() {
+    class OC_Hook
+    {
+        public static function clear()
+        {
             // Ne rien faire
         }
     }
@@ -43,8 +45,10 @@ if (!class_exists('OC_Hook')) {
 
 // Définir une classe de remplacement pour OC_App si nécessaire
 if (!class_exists('OC_App')) {
-    class OC_App {
-        public static function loadApp($appName) {
+    class OC_App
+    {
+        public static function loadApp($appName)
+        {
             // Ne rien faire
         }
     }

@@ -15,18 +15,21 @@ use OCP\AppFramework\Db\Entity;
  * @method string getCreatedAt()
  * @method void setCreatedAt(string $createdAt)
  */
-class OriginFolder extends Entity implements JsonSerializable {
+class OriginFolder extends Entity implements JsonSerializable
+{
     protected string $userId = '';
     protected string $folderPath = '';
     protected string $createdAt = '';
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->addType('userId', 'string');
         $this->addType('folderPath', 'string');
         $this->addType('createdAt', 'string');
     }
 
-    public function jsonSerialize(): array {
+    public function jsonSerialize(): array
+    {
         return [
             'id' => $this->id,
             'userId' => $this->userId,
@@ -34,4 +37,4 @@ class OriginFolder extends Entity implements JsonSerializable {
             'createdAt' => $this->createdAt,
         ];
     }
-} 
+}

@@ -1,13 +1,13 @@
 <?php
+
 namespace OCA\DuplicateFinder\Db;
 
 use JsonSerializable;
-use OCP\AppFramework\Db\Entity;
 use OCA\DuplicateFinder\Utils\JSONDateTime;
+use OCP\AppFramework\Db\Entity;
 
 class EEntity extends Entity implements JsonSerializable
 {
-
     /** @var bool */
     private $keepAsPrimary = false;
     /** @var array<string> */
@@ -22,10 +22,10 @@ class EEntity extends Entity implements JsonSerializable
         'internalTypes' => [true, true],
         'relationalFields' => [true, true],
         'changedRelations' => [true, true],
-        'internalProperties' => [true, true]
+        'internalProperties' => [true, true],
     ];
 
-    protected function addInternalType(string $name, string $type):void
+    protected function addInternalType(string $name, string $type): void
     {
         if ($type === 'date') {
             $this->internalTypes[$name] = 'date';
@@ -40,17 +40,17 @@ class EEntity extends Entity implements JsonSerializable
         string $name,
         bool $excludeFromJSON = false,
         bool $excludeFromDB = true
-    ):void {
+    ): void {
         $this->internalProperties[$name] = [$excludeFromJSON, $excludeFromDB];
     }
 
-    protected function addRelationalField(string $field):void
+    protected function addRelationalField(string $field): void
     {
         $this->relationalFields[$field] = 1;
         $this->changedRelations[$field] = [];
     }
 
-    public function resetUpdatedRelationalFields():void
+    public function resetUpdatedRelationalFields(): void
     {
         foreach ($this->changedRelations as $field => $value) {
             $this->changedRelations[$field] = [];
@@ -63,7 +63,7 @@ class EEntity extends Entity implements JsonSerializable
      * @param mixed $key
      * @param mixed $value
      */
-    protected function markRelationalFieldUpdated(string $field, $key, $value = null):void
+    protected function markRelationalFieldUpdated(string $field, $key, $value = null): void
     {
         $this->changedRelations[$field][$key] = $value;
     }
@@ -71,7 +71,7 @@ class EEntity extends Entity implements JsonSerializable
     /**
      * @return array<mixed>;
      */
-    public function getRelationalFields():array
+    public function getRelationalFields(): array
     {
         return $this->relationalFields;
     }
@@ -79,7 +79,7 @@ class EEntity extends Entity implements JsonSerializable
     /**
      * @return array<array<bool>>
      */
-    public function getInternalProperties():array
+    public function getInternalProperties(): array
     {
         return $this->internalProperties;
     }
@@ -87,11 +87,12 @@ class EEntity extends Entity implements JsonSerializable
     /**
      * @return array<array>;
      */
-    public function getUpdatedRelationalFields(?string $field = null):array
+    public function getUpdatedRelationalFields(?string $field = null): array
     {
         if ($field !== null) {
             return $this->changedRelations[$field];
         }
+
         return $this->changedRelations;
     }
 
@@ -107,17 +108,17 @@ class EEntity extends Entity implements JsonSerializable
         }
     }
 
-  /**
-   * Method-Wrapper setter of the Entity to support new types (date, json)
-     * @param string $name
-     * @param array<mixed> $args
-     * @return void
-   */
+    /**
+     * Method-Wrapper setter of the Entity to support new types (date, json)
+       * @param string $name
+       * @param array<mixed> $args
+       * @return void
+     */
     protected function setter(string $name, array $args): void
     {
         $type = $this->getFieldTypeByName($name);
-      // If a date fild has another value type than DateTime we exepct,
-      // that the db can handle it or the app know what it does
+        // If a date fild has another value type than DateTime we exepct,
+        // that the db can handle it or the app know what it does
         if ($type === 'date' && $args[0] instanceof \DateTime) {
             $args[0] = $args[0]->getTimestamp();
         } elseif ($type === 'json') {
@@ -126,11 +127,11 @@ class EEntity extends Entity implements JsonSerializable
         parent::setter($name, $args);
     }
 
-  /**
-   * Method-Wrapper getter of the Entity to support new types (date, json)
-     * @param string $name
-     * @return mixed
-   */
+    /**
+     * Method-Wrapper getter of the Entity to support new types (date, json)
+       * @param string $name
+       * @return mixed
+     */
     protected function getter(string $name): mixed
     {
         $result = parent::getter($name);
@@ -139,19 +140,20 @@ class EEntity extends Entity implements JsonSerializable
         }
         $type = $this->getFieldTypeByName($name);
         if ($type === 'date' && (is_null($result) || is_numeric($result))) {
-          // Use a custom DateTime object that serializes to a well-known date-time-format
+            // Use a custom DateTime object that serializes to a well-known date-time-format
             $result = (new JSONDateTime())->setTimestamp((int)$result);
         } elseif ($type === 'json') {
             $result = json_decode($result);
         }
+
         return $result;
     }
 
-  /**
-   * Helper to prevent code dupplication in getter and setter
-     * @param string $fieldName
-     * @return string
-   */
+    /**
+     * Helper to prevent code dupplication in getter and setter
+       * @param string $fieldName
+       * @return string
+     */
     private function getFieldTypeByName($fieldName)
     {
         if (isset($this->internalTypes[$fieldName])) {
@@ -162,14 +164,15 @@ class EEntity extends Entity implements JsonSerializable
         if (isset($fieldTypes[$fieldName])) {
             return $fieldTypes[$fieldName];
         }
+
         return 'string';
     }
 
-  /**
-   * Dynamically Build the JSON-Array
-     * @return array<mixed> serialized data
-     * @throws \ReflectionException
-     */
+    /**
+     * Dynamically Build the JSON-Array
+       * @return array<mixed> serialized data
+       * @throws \ReflectionException
+       */
     #[\ReturnTypeWillChange]
     public function jsonSerialize(): array
     {
@@ -189,6 +192,7 @@ class EEntity extends Entity implements JsonSerializable
             $json[$property] = $this->$methodName();
         }
         unset($value);
+
         return $json;
     }
 

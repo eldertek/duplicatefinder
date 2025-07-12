@@ -1,15 +1,16 @@
 <?php
+
 namespace OCA\DuplicateFinder\Utils;
 
-use OCP\Files\Node;
-use OCP\Files\Folder;
-use OCP\Share\IShare;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Exception\UnknownOwnerException;
+use OCP\Files\Folder;
+use OCP\Files\Node;
+use OCP\Share\IShare;
 
 class PathConversionUtils
 {
-    public static function convertRelativePathToUserFolder(FileInfo $fileInfo, Folder $userFolder) : string
+    public static function convertRelativePathToUserFolder(FileInfo $fileInfo, Folder $userFolder): string
     {
         if ($fileInfo->getOwner()) {
             return substr($fileInfo->getPath(), strlen($userFolder->getPath()));
@@ -24,7 +25,7 @@ class PathConversionUtils
         Node $srcNode,
         IShare $share,
         int $strippedFolders
-    ) : string {
+    ): string {
         if ($share->getNodeType() === 'file') {
             return $targetUserFolder->getPath().$share->getTarget();
         }
@@ -32,6 +33,7 @@ class PathConversionUtils
         $srcPathParts = explode('/', $srcPath);
         $srcPathParts = array_slice($srcPathParts, -$strippedFolders);
         $srcPath = implode('/', $srcPathParts);
+
         return $targetUserFolder->getPath().$share->getTarget().'/'.$srcPath;
     }
 }

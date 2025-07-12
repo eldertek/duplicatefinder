@@ -6,7 +6,6 @@ use OCA\DuplicateFinder\Controller\FileApiController;
 use OCA\DuplicateFinder\Service\FileService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-
 use OCP\Files\NotFoundException;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;

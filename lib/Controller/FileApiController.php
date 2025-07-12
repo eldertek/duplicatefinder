@@ -15,7 +15,8 @@ use Psr\Log\LoggerInterface;
 /**
  * @package OCA\DuplicateFinder\Controller
  */
-class FileApiController extends Controller {
+class FileApiController extends Controller
+{
     private FileService $service;
     private string $userId;
     private LoggerInterface $logger;
@@ -35,12 +36,13 @@ class FileApiController extends Controller {
 
     /**
      * Delete one or multiple files
-     * 
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      * @return JSONResponse
      */
-    public function delete(): JSONResponse {
+    public function delete(): JSONResponse
+    {
         $path = $this->request->getParam('path');
         $paths = $this->request->getParam('paths');
 
@@ -64,25 +66,27 @@ class FileApiController extends Controller {
                     } catch (Exception $e) {
                         $this->logger->error('Error deleting file: {error}', [
                             'error' => $e->getMessage(),
-                            'path' => $singlePath
+                            'path' => $singlePath,
                         ]);
                         $results['errors'][] = [
                             'path' => $singlePath,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ];
                     }
                 }
+
                 return new JSONResponse($results);
             } else {
                 $this->logger->debug('Attempting to delete single file: {path}', ['path' => $path]);
                 $this->service->deleteFile($this->userId, $path);
                 $this->logger->info('Successfully deleted file: {path}', ['path' => $path]);
+
                 return new JSONResponse(['status' => 'success']);
             }
         } catch (Exception $e) {
             $this->logger->error('Error deleting file: {error}', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $status = match (true) {
@@ -95,23 +99,23 @@ class FileApiController extends Controller {
             $message = match (true) {
                 $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => [
                     'error' => 'ORIGIN_FOLDER_PROTECTED',
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ],
                 $e instanceof \OCP\Files\NotFoundException => [
                     'error' => 'FILE_NOT_FOUND',
-                    'message' => 'File not found: ' . $path
+                    'message' => 'File not found: ' . $path,
                 ],
                 $e instanceof \OCP\Files\NotPermittedException => [
                     'error' => 'PERMISSION_DENIED',
-                    'message' => 'Permission denied to delete file: ' . $path
+                    'message' => 'Permission denied to delete file: ' . $path,
                 ],
                 default => [
                     'error' => 'INTERNAL_ERROR',
-                    'message' => 'An unexpected error occurred'
+                    'message' => 'An unexpected error occurred',
                 ],
             };
 
             return new JSONResponse($message, $status);
         }
     }
-} 
+}

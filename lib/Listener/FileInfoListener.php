@@ -1,11 +1,12 @@
 <?php
+
 namespace OCA\DuplicateFinder\Listener;
 
-use Psr\Log\LoggerInterface;
-use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventListener;
 use OCA\DuplicateFinder\Event\AbstractFileInfoEvent;
 use OCA\DuplicateFinder\Service\FileInfoService;
+use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventListener;
+use Psr\Log\LoggerInterface;
 
 /**
  * @template T of Event
@@ -13,7 +14,6 @@ use OCA\DuplicateFinder\Service\FileInfoService;
  */
 class FileInfoListener implements IEventListener
 {
-
     /** @var FileInfoService */
     private $fileInfoService;
     /** @var LoggerInterface */
@@ -36,21 +36,21 @@ class FileInfoListener implements IEventListener
                     'path' => $fileInfo->getPath(),
                     'size' => $fileInfo->getSize(),
                     'hash' => $fileInfo->getFileHash(),
-                    'eventType' => get_class($event)
+                    'eventType' => get_class($event),
                 ]);
 
                 $count = $this->fileInfoService->countBySize($fileInfo->getSize());
                 $this->logger->debug('Found files with same size', [
                     'path' => $fileInfo->getPath(),
                     'size' => $fileInfo->getSize(),
-                    'count' => $count
+                    'count' => $count,
                 ]);
 
                 if ($count > 1) {
                     $this->logger->debug('Multiple files with same size found, calculating hashes', [
                         'path' => $fileInfo->getPath(),
                         'size' => $fileInfo->getSize(),
-                        'count' => $count
+                        'count' => $count,
                     ]);
 
                     $files = $this->fileInfoService->findBySize($fileInfo->getSize());
@@ -59,7 +59,7 @@ class FileInfoListener implements IEventListener
                             'path' => $finfo->getPath(),
                             'size' => $finfo->getSize(),
                             'currentHash' => $finfo->getFileHash(),
-                            'isIgnored' => $finfo->isIgnored() ? 'true' : 'false'
+                            'isIgnored' => $finfo->isIgnored() ? 'true' : 'false',
                         ]);
 
                         $this->fileInfoService->calculateHashes($finfo, $event->getUserID());
@@ -68,7 +68,7 @@ class FileInfoListener implements IEventListener
                 } else {
                     $this->logger->debug('No other files with same size, skipping hash calculation', [
                         'path' => $fileInfo->getPath(),
-                        'size' => $fileInfo->getSize()
+                        'size' => $fileInfo->getSize(),
                     ]);
 
                     $this->fileInfoService->calculateHashes($fileInfo, $event->getUserID(), false);
@@ -78,7 +78,7 @@ class FileInfoListener implements IEventListener
             $this->logger->error('Failed to handle file info event', [
                 'path' => isset($fileInfo) ? $fileInfo->getPath() : 'unknown',
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }

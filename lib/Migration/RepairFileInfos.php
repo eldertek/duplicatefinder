@@ -1,18 +1,18 @@
 <?php
+
 namespace OCA\DuplicateFinder\Migration;
 
-use \Psr\Log\LoggerInterface;
-use OCP\IDBConnection;
-use OCP\Migration\IOutput;
-use OCP\Migration\IRepairStep;
-use OCP\Files\NotFoundException;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\FileInfoService;
+use OCP\Files\NotFoundException;
+use OCP\IDBConnection;
+use OCP\Migration\IOutput;
+use OCP\Migration\IRepairStep;
+use Psr\Log\LoggerInterface;
 
 class RepairFileInfos implements IRepairStep
 {
-
     /** @var ConfigService */
     private $config;
     /** @var IDBConnection */
@@ -63,17 +63,18 @@ class RepairFileInfos implements IRepairStep
         $this->clearDuplicateObjects($output);
     }
 
-    protected function shouldRun() : bool
+    protected function shouldRun(): bool
     {
         return version_compare($this->config->getInstalledVersion(), '0.0.9', '>');
     }
 
-    private function updatePathHashes(IOutput $output) : void
+    private function updatePathHashes(IOutput $output): void
     {
         $invalidObjects = $this->getInvalidPathHashObjects();
         $output->startProgress(count($invalidObjects));
         foreach ($invalidObjects as $row) {
             $fileInfo = null;
+
             try {
                 $fileInfo = $this->fileInfoService->findById($row['id']);
                 $fileInfo->setPath($fileInfo->getPath());
@@ -83,7 +84,7 @@ class RepairFileInfos implements IRepairStep
                     $this->fileInfoService->delete($fileInfo);
                 }
             } catch (\Exception $e) {
-                $this->logger->error($e->getMessage(), ['exception'=> $e]);
+                $this->logger->error($e->getMessage(), ['exception' => $e]);
             }
             $output->advance();
         }
@@ -94,7 +95,7 @@ class RepairFileInfos implements IRepairStep
     /**
      * @return array<string,mixed>
      */
-    private function getInvalidPathHashObjects() : array
+    private function getInvalidPathHashObjects(): array
     {
         $qb = $this->connection->getQueryBuilder();
         $qb->select('*')
@@ -103,17 +104,18 @@ class RepairFileInfos implements IRepairStep
             ->orWhere($qb->expr()->eq('path_hash', $qb->createNamedParameter('')));
         $result = $qb->executeQuery();
         if (!$result) {
-            return array();
+            return [];
         }
         $rows = $result->fetchAll();
         $result->closeCursor();
+
         return $rows;
     }
 
-    private function clearDuplicateObjects(IOutput $output) : void
+    private function clearDuplicateObjects(IOutput $output): void
     {
         $entities = $this->fileInfoService->findAll(false);
-        $paths = array();
+        $paths = [];
         $output->startProgress(count($entities));
         foreach ($entities as $entity) {
             try {
@@ -126,11 +128,11 @@ class RepairFileInfos implements IRepairStep
                         $paths[$hash][$owner] = true;
                     }
                 } else {
-                    $paths[$hash] = array();
+                    $paths[$hash] = [];
                     $paths[$hash][$owner] = true;
                 }
             } catch (\Exception $e) {
-                $this->logger->error($e->getMessage(), ['exception'=> $e]);
+                $this->logger->error($e->getMessage(), ['exception' => $e]);
             }
             $output->advance();
         }

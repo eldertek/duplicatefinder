@@ -12,7 +12,8 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
-class OriginFolderApiController extends Controller {
+class OriginFolderApiController extends Controller
+{
     private OriginFolderService $service;
     private string $userId;
     private LoggerInterface $logger;
@@ -34,16 +35,18 @@ class OriginFolderApiController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function index(): JSONResponse {
+    public function index(): JSONResponse
+    {
         try {
             $folders = $this->service->findAll();
+
             return new JSONResponse([
                 'folders' => array_map(function ($folder) {
                     return [
                         'id' => $folder->getId(),
-                        'path' => $folder->getFolderPath()
+                        'path' => $folder->getFolderPath(),
                     ];
-                }, $folders)
+                }, $folders),
             ]);
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
@@ -54,7 +57,8 @@ class OriginFolderApiController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function create(array $folders): JSONResponse {
+    public function create(array $folders): JSONResponse
+    {
         try {
             $this->logger->debug('Creating origin folders: {folders}', ['folders' => json_encode($folders)]);
             $createdFolders = [];
@@ -69,23 +73,23 @@ class OriginFolderApiController extends Controller {
                 } catch (Exception $e) {
                     $this->logger->error('Failed to create origin folder: {path}, error: {error}', [
                         'path' => $folderPath,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                     $errors[] = [
                         'path' => $folderPath,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
                 }
             }
 
             $this->logger->debug('Creation complete. Created: {created}, Errors: {errors}', [
                 'created' => count($createdFolders),
-                'errors' => count($errors)
+                'errors' => count($errors),
             ]);
 
             return new JSONResponse([
                 'created' => $createdFolders,
-                'errors' => $errors
+                'errors' => $errors,
             ], empty($errors) ? Http::STATUS_CREATED : Http::STATUS_MULTI_STATUS);
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
@@ -96,12 +100,14 @@ class OriginFolderApiController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function destroy(int $id): JSONResponse {
+    public function destroy(int $id): JSONResponse
+    {
         try {
             $folder = $this->service->delete($id);
+
             return new JSONResponse($folder);
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
         }
     }
-} 
+}

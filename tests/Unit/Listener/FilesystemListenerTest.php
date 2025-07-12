@@ -3,17 +3,14 @@
 namespace OCA\DuplicateFinder\Tests\Unit\Listener;
 
 use OCA\DuplicateFinder\Db\FileInfo;
-use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
 use OCA\DuplicateFinder\Listener\FilesystemListener;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
-use OCP\Files\File;
-use OCP\Files\Folder;
-use OCP\Files\Node;
+use OCP\Files\Events\Node\NodeCreatedEvent;
 use OCP\Files\Events\Node\NodeDeletedEvent;
 use OCP\Files\Events\Node\NodeRenamedEvent;
-use OCP\Files\Events\Node\NodeCreatedEvent;
+use OCP\Files\File;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;

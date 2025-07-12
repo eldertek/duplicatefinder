@@ -13,7 +13,8 @@ use OCP\Files\NotFoundException;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-class CleanUpDBTest extends TestCase {
+class CleanUpDBTest extends TestCase
+{
     private $fileInfoService;
     private $folderService;
     private $logger;
@@ -22,7 +23,8 @@ class CleanUpDBTest extends TestCase {
     private $excludedFolderService;
     private $job;
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         parent::setUp();
 
         $this->fileInfoService = $this->createMock(FileInfoService::class);
@@ -42,7 +44,8 @@ class CleanUpDBTest extends TestCase {
         );
     }
 
-    public function testRunSetsUserContextForEachFile() {
+    public function testRunSetsUserContextForEachFile()
+    {
         // Créer des mocks pour les FileInfo
         $fileInfo1 = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
@@ -86,7 +89,8 @@ class CleanUpDBTest extends TestCase {
         $this->invokePrivateMethod($this->job, 'run', [null]);
     }
 
-    public function testRunHandlesNotFoundException() {
+    public function testRunHandlesNotFoundException()
+    {
         // Créer un mock pour FileInfo
         $fileInfo = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
@@ -120,7 +124,8 @@ class CleanUpDBTest extends TestCase {
         $this->invokePrivateMethod($this->job, 'run', [null]);
     }
 
-    public function testRunHandlesGenericException() {
+    public function testRunHandlesGenericException()
+    {
         // Créer un mock pour FileInfo
         $fileInfo = $this->getMockBuilder(FileInfo::class)
             ->disableOriginalConstructor()
@@ -165,7 +170,8 @@ class CleanUpDBTest extends TestCase {
      * @param array $parameters Les paramètres à passer à la méthode
      * @return mixed Le résultat de l'appel de méthode
      */
-    private function invokePrivateMethod($object, $methodName, array $parameters = []) {
+    private function invokePrivateMethod($object, $methodName, array $parameters = [])
+    {
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
         $method->setAccessible(true);
