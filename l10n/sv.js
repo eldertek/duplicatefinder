@@ -11,6 +11,7 @@ OC.L10N.register(
     "Ignore Mounted Files" : "Ignorera monterade filer",
     "When true, files mounted on external storage will be ignored." : "När sant, kommer filer monterade på extern lagring att ignoreras.",
     "Ignore mounted file" : "Ignorera monterad fil",
+    "Default order" : "Standardordning",
     "Unselect all" : "Avmarkera alla",
     "Select all" : "Välj alla",
     "Back" : "Tillbaka",

@@ -38,6 +38,7 @@ OC.L10N.register(
     "Start preview" : "Démarrer la prévisualisation",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Nombre de fichiers à supprimer: {count}, Espace qui sera libéré : {size}",
     "Loading page {current} of {total}…" : "Chargement de la page {current}sur {total}...",
+    "Default order" : "Ordre par défaut",
     "Unselect all" : "Tout désélectionner",
     "Select all" : "Tout sélectionner",
     "No duplicates found" : "Aucun doublon trouvé",

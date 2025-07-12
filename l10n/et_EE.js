@@ -17,6 +17,7 @@ OC.L10N.register(
     "Could not save settings" : "Seadistuste salvestamine ei õnnestunud",
     "All duplicates cleared" : "Kõik topeltobjektid on eemaldatud",
     "Could not clear duplicates" : "Topeltobjektide eemaldamine ei õnnestunud",
+    "Default order" : "Vaikejärjestus",
     "Unselect all" : "Eemalda kogu valik",
     "Select all" : "Vali kõik",
     "No duplicates found" : "Topeltobjekte ei leidu",

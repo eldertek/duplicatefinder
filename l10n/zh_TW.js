@@ -36,6 +36,7 @@ OC.L10N.register(
     "Clear all duplicates" : "清除所有重複項目",
     "Find all duplicates" : "尋找所有重複項目",
     "Total files to delete: {count}, Space that will be freed: {size}" : "要刪除的檔案總數：{count}，將釋放的空間：{size}",
+    "Default order" : "預設順序",
     "Unselect all" : "取消全選",
     "Select all" : "全選",
     "No duplicate files were found that can be deleted. This could be because there are no duplicates, or all duplicates are in protected folders." : "找不到可以刪除的重複檔案。這可能是因為沒有重複檔案，或是所有重複檔案都位於受保護的資料夾中。",

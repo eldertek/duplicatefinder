@@ -39,6 +39,7 @@ OC.L10N.register(
     "Bulk merge duplicates" : "Duplicaten en masse samenvoegen",
     "Preview and merge multiple duplicates at once while preserving files in protected folders." : "Meerdere duplicaten tegelijk weergeven en samenvoegen met behoud van bestanden in beveiligde mappen.",
     "Start preview" : "Voorbeeldweergave starten",
+    "Default order" : "Standaard volgorde",
     "Unselect all" : "Selectie opheffen",
     "Select all" : "Alles selecteren",
     "Back" : "Terug",

@@ -7,6 +7,7 @@ OC.L10N.register(
     "Projects" : "Projektai",
     "Could not fetch settings" : "Nepavyko gauti nustatymų",
     "Settings saved" : "Nustatymai įrašyti",
+    "Default order" : "Numatytoji tvarka",
     "Select all" : "Pažymėti viską",
     "Back" : "Atgal",
     "Preview" : "Peržiūra",

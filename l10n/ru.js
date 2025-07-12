@@ -32,6 +32,7 @@ OC.L10N.register(
     "Clear all duplicates" : "Очистить все дубликаты",
     "Find all duplicates" : "Найти все дубликаты",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Всех файлов будет удалено: {count}. Место, которое будет освобождено: {size}",
+    "Default order" : "Порядок по умолчанию",
     "Unselect all" : "Отменить выделение для всех",
     "Select all" : "Выбрать всё",
     "Back" : "Назад",

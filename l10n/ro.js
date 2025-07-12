@@ -19,6 +19,7 @@ OC.L10N.register(
     "Background Job Cleanup Interval (seconds)" : "Interval de curățare a procesului de fundal (secunde)",
     "Background Job Find Duplicates Interval (seconds)" : "Intervalul procesului din fundal de găsire a duplicatelor (secunde)",
     "The interval in seconds for the find duplicates background job." : "Intervalul în secunde pentru procesul din fundal de găsire a duplicatelor.",
+    "Default order" : "Ordinea impicită",
     "Unselect all" : "Deselectează tot",
     "Select all" : "Selectează tot",
     "Back" : "Înapoi",

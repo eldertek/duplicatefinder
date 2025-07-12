@@ -38,6 +38,7 @@ OC.L10N.register(
     "Start preview" : "Spustiť ukážku",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Súbory pre odstránenie: {count}, Miesto ktoré bude uvoľnené: {size}",
     "Loading page {current} of {total}…" : "Nahráva sa stránka {current} z {total}...",
+    "Default order" : "Predvolené poradie",
     "Unselect all" : "Zrušiť výber",
     "Select all" : "Vybrať všetko",
     "No duplicates found" : "Nenašli sa žiadne duplikáty",
