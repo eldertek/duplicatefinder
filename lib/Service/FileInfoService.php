@@ -691,6 +691,11 @@ class FileInfoService
 
         try {
             $node = $this->folderService->getNodeByFileInfo($fileInfo, $user);
+            if ($node === null) {
+                // Node is null (likely Team Folders with non-existent user) - deny access silently
+                return false;
+            }
+            
             $this->logger->debug('FileInfoService::hasAccessRight - Got node for file', [
                 'node_path' => $node->getPath(),
                 'node_type' => get_class($node),
@@ -703,6 +708,9 @@ class FileInfoService
             ]);
 
             return !is_null($path);
+        } catch (\OC\User\NoUserException $e) {
+            // Handle Team Folders where user doesn't exist - deny access silently (following Nextcloud core approach)
+            return false;
         } catch (NotFoundException $e) {
             $this->logger->debug('FileInfoService::hasAccessRight - Node not found', [
                 'exception' => $e->getMessage(),

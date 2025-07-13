@@ -46,18 +46,14 @@ class FolderService
                 $userFolder = $this->rootFolder->getUserFolder($fileInfo->getOwner());
             } catch (\OC\User\NoUserException $e) {
                 // Handle Team Folders or system files where owner doesn't exist as regular user
-                $this->logger->debug('Owner user does not exist, likely a Team/Group folder', [
-                    'owner' => $fileInfo->getOwner(),
-                    'path' => $fileInfo->getPath(),
-                    'fallbackUID' => $fallbackUID,
-                ]);
+                // Log silently and continue - not a blocking error (following Nextcloud core approach)
                 // Try with fallback UID or use root folder directly
                 if (!is_null($fallbackUID)) {
                     try {
                         $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
                         $fileInfo->setOwner($fallbackUID);
                     } catch (\OC\User\NoUserException $e2) {
-                        // Fallback UID also doesn't exist, will use root folder
+                        // Fallback UID also doesn't exist, will use root folder - this is expected for Team Folders
                     }
                 }
             }
@@ -66,7 +62,7 @@ class FolderService
                 $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
                 $fileInfo->setOwner($fallbackUID);
             } catch (\OC\User\NoUserException $e) {
-                // Fallback UID doesn't exist, will use root folder
+                // Fallback UID doesn't exist, will use root folder - this is expected for Team Folders
             }
         }
         if (!is_null($userFolder)) {

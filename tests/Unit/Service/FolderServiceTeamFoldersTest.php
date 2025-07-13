@@ -54,17 +54,9 @@ class FolderServiceTeamFoldersTest extends TestCase
             ->with('/admin/files/TeamFolder/document.pdf')
             ->willReturn($mockNode);
 
-        // Logger should log this as Team Folder detection
-        $this->logger->expects($this->once())
-            ->method('debug')
-            ->with(
-                $this->stringContains('Owner user does not exist, likely a Team/Group folder'),
-                $this->containsEqual([
-                    'owner' => 'admin',
-                    'path' => '/admin/files/TeamFolder/document.pdf',
-                    'fallbackUID' => null,
-                ])
-            );
+        // No logging should occur for Team Folders (following Nextcloud core approach)
+        $this->logger->expects($this->never())
+            ->method('debug');
 
         $result = $this->folderService->getNodeByFileInfo($fileInfo);
 
@@ -154,7 +146,7 @@ class FolderServiceTeamFoldersTest extends TestCase
             ->with('Documents/file.txt')
             ->willReturn($mockNode);
 
-        // No debug logging should occur for normal users
+        // No logging should occur for normal users
         $this->logger->expects($this->never())
             ->method('debug');
 
