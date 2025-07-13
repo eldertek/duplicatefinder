@@ -1,0 +1,26 @@
+{ "translations": {
+    "Help" : "ヘルプ",
+    "Filters" : "フィルター",
+    "Projects" : "プロジェクト",
+    "Settings saved" : "設定が保存されました",
+    "Default order" : "デフォルト順",
+    "Unselect all" : "すべて選択解除",
+    "Select all" : "すべて選択",
+    "Back" : "戻る",
+    "Preview" : "プレビュー",
+    "File" : "ファイル",
+    "Delete" : "削除",
+    "Default" : "デフォルト",
+    "Settings" : "設定",
+    "Close" : "閉じる",
+    "Edit" : "編集",
+    "Remove folder" : "フォルダーを削除",
+    "Cancel" : "キャンセル",
+    "No results found" : "結果が見つかりません",
+    "Previous" : "前へ",
+    "Next" : "次へ",
+    "Advanced Settings" : "詳細設定",
+    "Note:" : "注意：",
+    "File not found" : "ファイルが見つかりません"
+},"pluralForm" :"nplurals=1; plural=0;"
+}

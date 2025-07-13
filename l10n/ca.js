@@ -38,6 +38,7 @@ OC.L10N.register(
     "Start preview" : "Inicia la previsualització",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Total de fitxers a suprimir: {count}, espai que s'alliberarà: {size}",
     "Loading page {current} of {total}…" : "S'està carregant la pàgina {current} de {total}…",
+    "Default order" : "Ordre per defecte",
     "Unselect all" : "Anul·la tota la selecció",
     "Select all" : "Selecciona-ho tot",
     "No duplicates found" : "No s'ha trobat cap duplicat",

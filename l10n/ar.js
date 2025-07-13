@@ -38,6 +38,7 @@ OC.L10N.register(
     "Start preview" : "إبدإ المعاينة",
     "Total files to delete: {count}, Space that will be freed: {size}" : "عدد الملفات التي سيتم حذفها: {count}, المساحة التي سيتم تفريغها: {size}",
     "Loading page {current} of {total}…" : "تحميل الصفحة {current} من {total}…",
+    "Default order" : "الترتيب التلقائي",
     "Unselect all" : "إلغاء الاختيار للكل",
     "Select all" : "تحديد الكل",
     "No duplicates found" : "لا توجد أي تكرارات",

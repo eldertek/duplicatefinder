@@ -6,6 +6,7 @@ OC.L10N.register(
     "Filters" : "Филтри",
     "Projects" : "Проекти",
     "Settings saved" : "Настройките са запазени",
+    "Default order" : "Стандартна подредба",
     "Unselect all" : "Отмяна на избора на всички",
     "Select all" : "Избери всички",
     "Duplicate group" : "Дублиране на група",

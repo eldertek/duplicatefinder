@@ -1,0 +1,26 @@
+{ "translations": {
+    "FAQ" : "FAQ",
+    "Help" : "راهنما",
+    "Filters" : "Filters",
+    "Projects" : "پروژه ها",
+    "Settings saved" : "تنظیمات ذخیره شد",
+    "Default order" : "سفارش پیش فرض",
+    "Unselect all" : "همه را لغو انتخاب کنید",
+    "Select all" : "انتخاب همه",
+    "Back" : "Back",
+    "Duplicate group" : "Duplicate group",
+    "Preview" : "پیش‌نمایش",
+    "Select All" : "گزینش همه",
+    "File" : "فایل",
+    "Delete" : "حذف",
+    "Default" : "پیش‌فرض",
+    "Settings" : "تنظیمات",
+    "Close" : "بستن",
+    "Edit" : "ویرایش",
+    "Remove folder" : "پوشه را حذف کنید.",
+    "Cancel" : "ردکردن",
+    "Previous" : "پیشین",
+    "Advanced Settings" : "تنظمیات پیش‌رفته",
+    "File not found" : "فایل یافت نشد"
+},"pluralForm" :"nplurals=2; plural=(n > 1);"
+}

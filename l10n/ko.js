@@ -1,0 +1,28 @@
+OC.L10N.register(
+    "duplicatefinder",
+    {
+    "Help" : "도움말",
+    "Filters" : "필터",
+    "Projects" : "프로젝트",
+    "Settings saved" : "설정 저장됨",
+    "Default order" : "기본 순서",
+    "Unselect all" : "모두 선택 해제",
+    "Select all" : "모두 선택",
+    "Back" : "뒤로",
+    "Preview" : "미리 보기",
+    "Select All" : "모두 선택",
+    "File" : "파일",
+    "Delete" : "삭제",
+    "Default" : "디폴트",
+    "Settings" : "설정",
+    "Close" : "닫기",
+    "Edit" : "편집",
+    "Cancel" : "취소",
+    "No results found" : "결과 없음",
+    "Previous" : "이전",
+    "Next" : "다음",
+    "Advanced Settings" : "고급 설정",
+    "Note:" : "메모:",
+    "File not found" : "파일을 찾을 수 없음"
+},
+"nplurals=1; plural=0;");

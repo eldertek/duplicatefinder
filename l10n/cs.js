@@ -42,6 +42,7 @@ OC.L10N.register(
     "Start preview" : "Spustit náhled",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Celkem souborů ke smazání: {count}, Prostor, který bude uvolněn: {size}",
     "Loading page {current} of {total}…" : "Načítání stránky {current} z {total}…",
+    "Default order" : "Výchozí pořadí",
     "Size (largest first)" : "Velikost (největší první)",
     "Size (smallest first)" : "Velikost (nejmenší první)",
     "Unselect all" : "Zrušit výběr všeho",
