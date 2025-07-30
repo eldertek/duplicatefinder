@@ -26,6 +26,7 @@ OC.L10N.register(
     "No duplicates found" : "Topeltobjekte ei leidu",
     "Back" : "Tagasi",
     "Files in origin folders are automatically protected and will not be deleted." : "Lähtekaustades olevad failid on kaitstud automaatselt ega kuulu kustutamisele.",
+    "Duplicate group" : "Topeltgrupp",
     "{count} protected files in origin folders" : "{count} kaitstud faili lähtekaustas",
     "Duplicate group (all files protected)" : "Topeltfailide grupp (kõik failid on katstud)",
     "All {count} files are in origin folders and cannot be deleted" : "Kõik {count} faili asuvad lähtekaustades ning neid pole võimalik kustutada",
