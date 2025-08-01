@@ -37,6 +37,7 @@ OC.L10N.register(
     "Start preview" : "Έναρξη προεπισκόπησης",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Συνολικά αρχεία προς διαγραφή: {count}, Χώρος που θα απελευθερωθεί: {size}",
     "Loading page {current} of {total}…" : "Φόρτωση σελίδας {current} από {total}…",
+    "Default order" : "Προεπιλεγμένη σειρά",
     "Unselect all" : "Αποεπιλογή όλων",
     "Select all" : "Επιλογή όλων",
     "No duplicates found" : "Δεν βρέθηκαν διπλότυπα",

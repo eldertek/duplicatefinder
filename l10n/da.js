@@ -42,6 +42,7 @@ OC.L10N.register(
     "Start preview" : "Start forhåndsvisning",
     "Total files to delete: {count}, Space that will be freed: {size}" : "Samlede filer sletning: {count}, Plads, der vil blive frigjort: {size}",
     "Loading page {current} of {total}…" : "Indlæser side {current} ud af {total}...",
+    "Default order" : "Standard rækkefølge",
     "Size (largest first)" : "Størrelse (største først)",
     "Size (smallest first)" : "Størrelse (mindste først)",
     "Unselect all" : "Fravælg alle",
