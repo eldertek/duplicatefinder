@@ -54,6 +54,7 @@ OC.L10N.register(
     "Cancel" : "Avbryt",
     "No results found" : "Ingen resultater funnet",
     "Previous" : "Forrige",
+    "Next" : "Neste",
     "Advanced Settings" : "Avanserte innstillinger",
     "Note:" : "Merk:",
     "Error fetching duplicates." : "Feil ved henting av duplikater.",

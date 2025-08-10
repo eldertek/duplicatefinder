@@ -1,0 +1,28 @@
+OC.L10N.register(
+    "duplicatefinder",
+    {
+    "Help" : "Msaada",
+    "Filters" : "Filters",
+    "Projects" : "Projects",
+    "Settings saved" : "Settings saved",
+    "Unselect all" : "Acha kuchagua zote",
+    "Select all" : "Chagua zote",
+    "Back" : "Rudi",
+    "Preview" : "Mwonekano wa awali",
+    "Select All" : "Select All",
+    "File" : "Faili",
+    "Delete" : "Futa",
+    "Default" : "Chaguo msingi",
+    "Settings" : "Mipangilio",
+    "Close" : "Funga",
+    "Edit" : "Hariri",
+    "Remove folder" : "Remove folder",
+    "Cancel" : "Cancel",
+    "No results found" : "Hakuna matokeo yaliyopatikana",
+    "Previous" : "Iliyopita",
+    "Next" : "Next",
+    "Advanced Settings" : "Advanced Settings",
+    "Note:" : "Kumbuka:",
+    "File not found" : "Faili halipatikani"
+},
+"nplurals=2; plural=(n != 1);");
