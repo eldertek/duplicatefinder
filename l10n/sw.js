@@ -5,6 +5,7 @@ OC.L10N.register(
     "Filters" : "Filters",
     "Projects" : "Projects",
     "Settings saved" : "Settings saved",
+    "Default order" : "Default order",
     "Unselect all" : "Acha kuchagua zote",
     "Select all" : "Chagua zote",
     "Back" : "Rudi",

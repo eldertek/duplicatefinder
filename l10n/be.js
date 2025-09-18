@@ -1,0 +1,28 @@
+OC.L10N.register(
+    "duplicatefinder",
+    {
+    "Help" : "Даведка",
+    "Filters" : "Фільтры",
+    "Projects" : "Праекты",
+    "Settings saved" : "Налады захаваны",
+    "Clear all duplicates" : "Ачысціць усе дублікаты",
+    "Unselect all" : "Скасаваць выбар усіх",
+    "Select all" : "Выбраць усе",
+    "Back" : "Назад",
+    "Preview" : "Перадпрагляд",
+    "File" : "Файл",
+    "Delete" : "Выдаліць",
+    "Default" : "Прадвызначаныя",
+    "Settings" : "Налады",
+    "Close" : "Закрыць",
+    "Edit" : "Рэдагаваць",
+    "Project Name" : "Назва праекта",
+    "Cancel" : "Скасаваць",
+    "Search & Navigation" : "Пошук і навігацыя",
+    "Advanced Settings" : "Пашыраныя налады",
+    "Note:" : "Заўвага:",
+    "Finding Duplicates" : "Пошук дублікатаў",
+    "\"Find all duplicates\"" : "\"Знайсці ўсе дублікаты\"",
+    "File not found" : "Файл не знойдзены"
+},
+"nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);");
