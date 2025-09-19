@@ -19,6 +19,7 @@ OC.L10N.register(
     "Project Name" : "Назва праекта",
     "Cancel" : "Скасаваць",
     "Search & Navigation" : "Пошук і навігацыя",
+    "No results found" : "Вынікаў не знойдзена",
     "Advanced Settings" : "Пашыраныя налады",
     "Note:" : "Заўвага:",
     "Finding Duplicates" : "Пошук дублікатаў",
