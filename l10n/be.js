@@ -15,6 +15,7 @@ OC.L10N.register(
     "Default" : "Прадвызначаныя",
     "Settings" : "Налады",
     "Close" : "Закрыць",
+    "Project" : "Праект",
     "Edit" : "Рэдагаваць",
     "Project Name" : "Назва праекта",
     "Cancel" : "Скасаваць",
