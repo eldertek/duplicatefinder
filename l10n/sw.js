@@ -17,6 +17,7 @@ OC.L10N.register(
     "Default" : "Chaguo msingi",
     "Settings" : "Mipangilio",
     "Close" : "Funga",
+    "Project" : "Project",
     "Edit" : "Hariri",
     "Remove folder" : "Remove folder",
     "Cancel" : "Cancel",
