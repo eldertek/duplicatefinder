@@ -69,6 +69,7 @@ OC.L10N.register(
     "Settings" : "Ustawienia",
     "Close" : "Zamknij",
     "Load More" : "Wczytaj więcej",
+    "Project" : "Projekt",
     "Edit" : "Edycja",
     "View Results" : "Pokaż wyniki",
     "Remove folder" : "Usuń katalog",

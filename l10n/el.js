@@ -94,6 +94,7 @@ OC.L10N.register(
     "Failed to load origin folders" : "Αποτυχία φόρτωσης φακέλων προέλευσης",
     "Configure folders that should be considered as origin folders. Files in these folders will never be marked as duplicates to be deleted." : "Ρυθμίστε τους φακέλους που πρέπει να θεωρηθούν ως φάκελοι προέλευσης. Τα αρχεία σε αυτούς τους φακέλους δεν θα σημειώνονται ποτέ ως διπλότυπα για διαγραφή.",
     "Add Origin Folder" : "Προσθήκη Φακέλου Προέλευσης",
+    "Project" : "Έργο",
     "Edit" : "Επεξεργασία",
     "Remove folder" : "Κατάργηση φακέλου",
     "Cancel" : "Ακύρωση",
