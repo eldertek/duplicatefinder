@@ -21,6 +21,7 @@ OC.L10N.register(
     "Cancel" : "Скасаваць",
     "Search & Navigation" : "Пошук і навігацыя",
     "No results found" : "Вынікаў не знойдзена",
+    "Previous" : "Папярэдняя",
     "Advanced Settings" : "Пашыраныя налады",
     "Note:" : "Заўвага:",
     "Finding Duplicates" : "Пошук дублікатаў",
