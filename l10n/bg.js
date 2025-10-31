@@ -9,6 +9,7 @@ OC.L10N.register(
     "Default order" : "Стандартна подредба",
     "Unselect all" : "Отмяна на избора на всички",
     "Select all" : "Избери всички",
+    "Back" : "Назад",
     "Duplicate group" : "Дублиране на група",
     "Preview" : "Визуализация",
     "Select All" : "Избор на всички",
