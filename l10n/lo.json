@@ -1,0 +1,27 @@
+{ "translations": {
+    "FAQ" : "FAQ",
+    "Help" : "ການຊ່ວຍເຫຼືອ",
+    "Filters" : "Filters",
+    "Projects" : "Projects",
+    "Settings saved" : "Settings saved",
+    "Default order" : "Default order",
+    "Select all" : "ເລືອກທັງໝົດ",
+    "Back" : "ກັບຄືນ",
+    "Preview" : "ເບິ່ງຕົວຢ່າງ",
+    "Select All" : "Select All",
+    "File" : "ຟາຍ",
+    "Delete" : "ລຶບ",
+    "Default" : "ເລີ່ມຕົ້ນ",
+    "Settings" : "ການຕັ້ງຄ່າ",
+    "Close" : "ປິດ",
+    "Edit" : "ແກ້ໄຂ",
+    "Remove folder" : "Remove folder",
+    "Cancel" : "ຍົກເລີກ",
+    "No results found" : "ບໍ່ພົບຜົນລັບ",
+    "Previous" : "ກ່ອນໜ້າ",
+    "Next" : "Next",
+    "Advanced Settings" : "ຕັ້ງ​ຄ່າ​ຂັ້ນ​ສູງ",
+    "Note:" : "ໝາຍເຫດ:",
+    "File not found" : "File not found"
+},"pluralForm" :"nplurals=1; plural=0;"
+}
