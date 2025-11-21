@@ -16,6 +16,7 @@ OC.L10N.register(
     "Default" : "ເລີ່ມຕົ້ນ",
     "Settings" : "ການຕັ້ງຄ່າ",
     "Close" : "ປິດ",
+    "Project" : "ໂຄງການ",
     "Edit" : "ແກ້ໄຂ",
     "Remove folder" : "Remove folder",
     "Cancel" : "ຍົກເລີກ",
