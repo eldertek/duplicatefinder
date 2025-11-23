@@ -23,6 +23,7 @@ OC.L10N.register(
     "Cancel" : "ردکردن",
     "Previous" : "پیشین",
     "Advanced Settings" : "تنظمیات پیش‌رفته",
+    "Note:" : "یادداشت: ",
     "File not found" : "فایل یافت نشد"
 },
 "nplurals=2; plural=(n > 1);");
