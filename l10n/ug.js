@@ -57,6 +57,7 @@ OC.L10N.register(
     "Cancel" : "بىكار قىلىش",
     "No results found" : "ھېچقانداق نەتىجە تېپىلمىدى",
     "Previous" : "ئالدىنقى",
+    "Next" : "كېيىنكى",
     "Advanced Settings" : "ئىلغار تەڭشەكلەر",
     "Note:" : "ئەسكەرتىش:",
     "Error fetching duplicates." : "كۆپەيتىلگەن نۇسخىسىنى ئېلىشتا خاتالىق.",
