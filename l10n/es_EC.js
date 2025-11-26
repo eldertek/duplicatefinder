@@ -1,0 +1,28 @@
+OC.L10N.register(
+    "duplicatefinder",
+    {
+    "FAQ" : "FAQ",
+    "Help" : "Ayuda",
+    "Filters" : "Filtros",
+    "Projects" : "Proyectos",
+    "Settings saved" : "Se han guardado las configuraciones ",
+    "Default order" : "Ordenamiento predeterminado",
+    "Unselect all" : "Desmarcar todo.",
+    "Select all" : "Seleccionar todo",
+    "Back" : "Regresar",
+    "Duplicate group" : "Grupo duplicado",
+    "Preview" : "Previsualizar",
+    "Select All" : "Seleccionar todo",
+    "File" : "Archivo",
+    "Delete" : "Borrar",
+    "Settings" : "Ajustes",
+    "Close" : "Cerrar",
+    "Edit" : "Editar",
+    "Remove folder" : "Eliminar carpeta",
+    "Cancel" : "Cancelar",
+    "This action cannot be undone." : "Esta acción no se puede deshacer.",
+    "No results found" : "No se encontraron resultados",
+    "Previous" : "Previo",
+    "Advanced Settings" : "Configuración avanzada"
+},
+"nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");
