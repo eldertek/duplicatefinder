@@ -85,6 +85,7 @@ OC.L10N.register(
     "Edit" : "編輯",
     "Remove folder" : "移除資料夾",
     "Cancel" : "取消",
+    "This action cannot be undone." : "此動作無法還原。",
     "Simple search" : "簡易搜尋",
     "Wildcard search (*, ?)" : "萬用字元搜尋 (*, ?)",
     "General Questions" : "一般問題",
