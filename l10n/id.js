@@ -19,6 +19,7 @@ OC.L10N.register(
     "Edit" : "Sunting",
     "Remove folder" : "Hapus folder",
     "Cancel" : "Batal",
+    "This action cannot be undone." : "Tindakan ini tidak dapat dibatalkan.",
     "No results found" : "Tidak ada hasil ditemukan",
     "Previous" : "Sebelumnya",
     "Next" : "Berikutnya",
