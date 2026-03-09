@@ -46,6 +46,7 @@ OC.L10N.register(
     "Preview" : "Voorbeeld",
     "Select All" : "Alles selecteren",
     "File" : "Bestand",
+    "Open Folder" : "Open Map",
     "Delete" : "Verwijderen",
     "Default" : "Standaard",
     "Settings" : "Instellingen",
