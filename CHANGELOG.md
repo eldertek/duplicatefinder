@@ -1,3 +1,9 @@
+## 1.7.5 - TBD
+### Fixed
+- Fixed compatibility with Nextcloud v33 by updating QueryBuilder API calls
+- Replaced deprecated `execute()` with `executeQuery()` for SELECT statements
+- Replaced deprecated `execute()` with `executeStatement()` for INSERT/UPDATE/DELETE statements
+
 ## 1.7.4 - 2025-01-11
 ### Critical Security Fix
 - **CRITICAL**: Fixed automatic file deletion bug that could cause permanent data loss (Fix [#153](https://github.com/eldertek/duplicatefinder/issues/153))
