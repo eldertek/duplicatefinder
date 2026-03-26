@@ -8,6 +8,7 @@ OC.L10N.register(
     "Could not fetch settings" : "Nepavyko gauti nustatymų",
     "Settings saved" : "Nustatymai įrašyti",
     "Default order" : "Numatytoji tvarka",
+    "Unselect all" : "Atšaukti visų pasirinkimą",
     "Select all" : "Pažymėti viską",
     "Back" : "Atgal",
     "Preview" : "Peržiūra",
