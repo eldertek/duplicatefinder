@@ -51,6 +51,7 @@ OC.L10N.register(
     "Acknowledge it" : "確認它",
     "Select All" : "選取全部",
     "No duplicates found or no duplicate selected." : "找不到重複的項目或未選取重複的項目。",
+    "Open Settings" : "開啟設定",
     "File" : "檔案",
     "Path:" : "路徑：",
     "Open File" : "開啟檔案",
