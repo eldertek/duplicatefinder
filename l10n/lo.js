@@ -11,6 +11,7 @@ OC.L10N.register(
     "Back" : "ກັບຄືນ",
     "Preview" : "ເບິ່ງຕົວຢ່າງ",
     "Select All" : "Select All",
+    "Open Settings" : "ເປີດການຕັ້ງຄ່າ",
     "File" : "ຟາຍ",
     "Delete" : "ລຶບ",
     "Default" : "ເລີ່ມຕົ້ນ",
