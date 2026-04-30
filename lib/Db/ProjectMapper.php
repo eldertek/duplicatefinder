@@ -79,7 +79,7 @@ class ProjectMapper extends QBMapper
                    'project_id' => $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT),
                    'folder_path' => $qb->createNamedParameter($folderPath, IQueryBuilder::PARAM_STR),
                ])
-               ->execute();
+               ->executeStatement();
         }
     }
 
@@ -98,7 +98,7 @@ class ProjectMapper extends QBMapper
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            );
 
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $folders = [];
         while ($row = $result->fetch()) {
             $folders[] = $row['folder_path'];
@@ -120,7 +120,7 @@ class ProjectMapper extends QBMapper
            ->where(
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            )
-           ->execute();
+           ->executeStatement();
     }
 
     /**
@@ -148,7 +148,7 @@ class ProjectMapper extends QBMapper
                $qb->expr()->eq('duplicate_id', $qb->createNamedParameter($duplicateId, IQueryBuilder::PARAM_INT))
            );
 
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $exists = $result->fetch();
         $result->closeCursor();
 
@@ -165,7 +165,7 @@ class ProjectMapper extends QBMapper
                    'project_id' => $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT),
                    'duplicate_id' => $qb->createNamedParameter($duplicateId, IQueryBuilder::PARAM_INT),
                ])
-               ->execute();
+               ->executeStatement();
         } else {
             $this->logger->debug('Duplicate already associated with project, skipping', [
                 'app' => 'duplicatefinder',
@@ -195,7 +195,7 @@ class ProjectMapper extends QBMapper
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            );
 
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $duplicateIds = [];
         while ($row = $result->fetch()) {
             $duplicateIds[] = (int)$row['duplicate_id'];
@@ -230,7 +230,7 @@ class ProjectMapper extends QBMapper
                $qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            );
 
-        $count = $qb->execute();
+        $count = $qb->executeStatement();
 
         $this->logger->debug('Removed duplicates for project', [
             'app' => 'duplicatefinder',
@@ -253,6 +253,6 @@ class ProjectMapper extends QBMapper
            ->where(
                $qb->expr()->eq('id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT))
            )
-           ->execute();
+           ->executeStatement();
     }
 }

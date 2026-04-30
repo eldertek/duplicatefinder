@@ -63,7 +63,7 @@ abstract class EQBMapper extends QBMapper
             ->where(
                 $qb->expr()->eq('id', $qb->createNamedParameter($entity->getId(), $idType))
             );
-            $qb = $qb->execute();
+            $qb = $qb->executeQuery();
 
             $values = [];
             if (!is_int($qb)) {
@@ -101,7 +101,7 @@ abstract class EQBMapper extends QBMapper
             ->where(
                 $qb->expr()->eq('id', $qb->createNamedParameter($entity->getId(), $idType))
             );
-            $qb = $qb->execute();
+            $qb = $qb->executeStatement();
             if (!is_int($qb)) {
                 $qb->closeCursor();
             }
@@ -135,7 +135,7 @@ abstract class EQBMapper extends QBMapper
                         $qb->expr()->eq('rid', $qb->createNamedParameter($key, IQueryBuilder::PARAM_INT))
                     );
                 }
-                $qb = $qb->execute();
+                $qb = $qb->executeStatement();
                 if (!is_int($qb)) {
                     $qb->closeCursor();
                 }
@@ -159,7 +159,7 @@ abstract class EQBMapper extends QBMapper
         ->where(
             $qb->expr()->eq($field, $qb->createNamedParameter($value, $type))
         );
-        $qb = $qb->execute();
+        $qb = $qb->executeQuery();
         if (!is_int($qb)) {
             if (!$this->db->getDatabasePlatform() instanceof SqlitePlatform
               && !$this->db->getDatabasePlatform() instanceof PostgreSQL94Platform
@@ -180,9 +180,9 @@ abstract class EQBMapper extends QBMapper
     {
         $qb = $this->db->getQueryBuilder();
         if (is_null($table)) {
-            $qb = $qb->delete($this->getTableName())->execute();
+            $qb = $qb->delete($this->getTableName())->executeStatement();
         } else {
-            $qb = $qb->delete($table)->execute();
+            $qb = $qb->delete($table)->executeStatement();
         }
         if (!is_int($qb)) {
             $qb->closeCursor();
