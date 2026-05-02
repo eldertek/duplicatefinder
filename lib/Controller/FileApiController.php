@@ -10,6 +10,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -64,13 +65,12 @@ class FileApiController extends Controller
                         $this->logger->info('Successfully deleted file: {path}', ['path' => $singlePath]);
                         $results['success'][] = $singlePath;
                     } catch (Exception $e) {
-                        $this->logger->error('Error deleting file: {error}', [
-                            'error' => $e->getMessage(),
-                            'path' => $singlePath,
-                        ]);
+                        $this->logDeletionFailure($e, $singlePath);
+                        $error = $this->getDeletionError($e, $singlePath);
                         $results['errors'][] = [
                             'path' => $singlePath,
-                            'error' => $e->getMessage(),
+                            'error' => $error['error'],
+                            'message' => $error['message'],
                         ];
                     }
                 }
@@ -84,38 +84,69 @@ class FileApiController extends Controller
                 return new JSONResponse(['status' => 'success']);
             }
         } catch (Exception $e) {
-            $this->logger->error('Error deleting file: {error}', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+            $this->logDeletionFailure($e, $path, true);
 
-            $status = match (true) {
-                $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => Http::STATUS_FORBIDDEN,
-                $e instanceof \OCP\Files\NotFoundException => Http::STATUS_NOT_FOUND,
-                $e instanceof \OCP\Files\NotPermittedException => Http::STATUS_FORBIDDEN,
-                default => Http::STATUS_INTERNAL_SERVER_ERROR,
-            };
-
-            $message = match (true) {
-                $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => [
-                    'error' => 'ORIGIN_FOLDER_PROTECTED',
-                    'message' => $e->getMessage(),
-                ],
-                $e instanceof \OCP\Files\NotFoundException => [
-                    'error' => 'FILE_NOT_FOUND',
-                    'message' => 'File not found: ' . $path,
-                ],
-                $e instanceof \OCP\Files\NotPermittedException => [
-                    'error' => 'PERMISSION_DENIED',
-                    'message' => 'Permission denied to delete file: ' . $path,
-                ],
-                default => [
-                    'error' => 'INTERNAL_ERROR',
-                    'message' => 'An unexpected error occurred',
-                ],
-            };
-
-            return new JSONResponse($message, $status);
+            return new JSONResponse(
+                $this->getDeletionError($e, $path),
+                $this->getDeletionErrorStatus($e)
+            );
         }
+    }
+
+    private function getDeletionErrorStatus(Exception $e): int
+    {
+        return match (true) {
+            $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => Http::STATUS_FORBIDDEN,
+            $e instanceof \OCP\Files\NotFoundException => Http::STATUS_NOT_FOUND,
+            $e instanceof \OCP\Files\NotPermittedException => Http::STATUS_FORBIDDEN,
+            $e instanceof LockedException => Http::STATUS_LOCKED,
+            default => Http::STATUS_INTERNAL_SERVER_ERROR,
+        };
+    }
+
+    private function getDeletionError(Exception $e, string $path): array
+    {
+        return match (true) {
+            $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => [
+                'error' => 'ORIGIN_FOLDER_PROTECTED',
+                'message' => $e->getMessage(),
+            ],
+            $e instanceof \OCP\Files\NotFoundException => [
+                'error' => 'FILE_NOT_FOUND',
+                'message' => 'File not found: ' . $path,
+            ],
+            $e instanceof \OCP\Files\NotPermittedException => [
+                'error' => 'PERMISSION_DENIED',
+                'message' => 'Permission denied to delete file: ' . $path,
+            ],
+            $e instanceof LockedException => [
+                'error' => 'FILE_LOCKED',
+                'message' => 'File is locked: ' . $path,
+            ],
+            default => [
+                'error' => 'INTERNAL_ERROR',
+                'message' => 'An unexpected error occurred',
+            ],
+        };
+    }
+
+    private function logDeletionFailure(Exception $e, string $path, bool $includeTrace = false): void
+    {
+        $context = [
+            'error' => $e->getMessage(),
+            'path' => $path,
+        ];
+
+        if ($e instanceof LockedException) {
+            $this->logger->warning('File deletion blocked by lock: {error}', $context);
+
+            return;
+        }
+
+        if ($includeTrace) {
+            $context['trace'] = $e->getTraceAsString();
+        }
+
+        $this->logger->error('Error deleting file: {error}', $context);
     }
 }

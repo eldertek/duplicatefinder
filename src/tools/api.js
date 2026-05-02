@@ -92,6 +92,9 @@ export const deleteFile = async (file) => {
             case 'PERMISSION_DENIED':
                 showErrorNotification(t('duplicatefinder', 'Permission denied to delete file'));
                 break;
+            case 'FILE_LOCKED':
+                showErrorNotification(t('duplicatefinder', 'File is currently locked. Please try again later.'));
+                break;
             default:
                 showErrorNotification(t('duplicatefinder', 'Error deleting file'));
         }

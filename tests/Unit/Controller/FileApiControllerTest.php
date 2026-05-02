@@ -8,6 +8,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\NotFoundException;
 use OCP\IRequest;
+use OCP\Lock\LockedException;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -118,6 +119,66 @@ class FileApiControllerTest extends TestCase
         $this->assertInstanceOf(JSONResponse::class, $response);
         $this->assertEquals(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
         $this->assertEquals(['error' => 'INTERNAL_ERROR', 'message' => 'An unexpected error occurred'], $response->getData());
+    }
+
+    public function testDeleteWithLockedException()
+    {
+        $filePath = '/path/to/locked-file.jpg';
+
+        $this->request->expects($this->exactly(2))
+            ->method('getParam')
+            ->withConsecutive(['path'], ['paths'])
+            ->willReturnOnConsecutiveCalls($filePath, null);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $filePath)
+            ->willThrowException(new LockedException($filePath));
+
+        $this->logger->expects($this->never())
+            ->method('error');
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with('File deletion blocked by lock: {error}', $this->anything());
+
+        $response = $this->controller->delete();
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertEquals(Http::STATUS_LOCKED, $response->getStatus());
+        $this->assertEquals(['error' => 'FILE_LOCKED', 'message' => 'File is locked: ' . $filePath], $response->getData());
+    }
+
+    public function testDeleteMultipleIncludesStructuredLockedError()
+    {
+        $lockedPath = '/path/to/locked-file.jpg';
+
+        $this->request->expects($this->exactly(2))
+            ->method('getParam')
+            ->withConsecutive(['path'], ['paths'])
+            ->willReturnOnConsecutiveCalls(null, [$lockedPath]);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $lockedPath)
+            ->willThrowException(new LockedException($lockedPath));
+
+        $this->logger->expects($this->never())
+            ->method('error');
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with('File deletion blocked by lock: {error}', $this->anything());
+
+        $response = $this->controller->delete();
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertEquals([
+            'success' => [],
+            'errors' => [[
+                'path' => $lockedPath,
+                'error' => 'FILE_LOCKED',
+                'message' => 'File is locked: ' . $lockedPath,
+            ]],
+        ], $response->getData());
     }
 
     // Suppression des tests testInfo, testInfoWithNotFoundException et testInfoWithGenericException
