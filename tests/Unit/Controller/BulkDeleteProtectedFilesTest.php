@@ -4,14 +4,18 @@ namespace OCA\DuplicateFinder\Tests\Unit\Controller;
 
 use OCA\DuplicateFinder\Controller\DuplicateApiController;
 use OCA\DuplicateFinder\Db\FileDuplicate;
+use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
-use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Test for Issue #152: Bulk delete with origin folders
@@ -38,15 +42,26 @@ class BulkDeleteProtectedFilesTest extends TestCase
         parent::setUp();
 
         $this->request = $this->createMock(IRequest::class);
+        $userSession = $this->createMock(IUserSession::class);
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('user');
+        $userSession->method('getUser')->willReturn($user);
         $this->duplicateService = $this->createMock(FileDuplicateService::class);
         $this->fileInfoService = $this->createMock(FileInfoService::class);
+        $fileDuplicateMapper = $this->createMock(FileDuplicateMapper::class);
+        $userManager = $this->createMock(IUserManager::class);
+        $logger = $this->createMock(LoggerInterface::class);
         $this->originFolderService = $this->createMock(OriginFolderService::class);
 
         $this->controller = new DuplicateApiController(
             'duplicatefinder',
             $this->request,
+            $userSession,
             $this->duplicateService,
             $this->fileInfoService,
+            $fileDuplicateMapper,
+            $userManager,
+            $logger,
             $this->originFolderService
         );
     }
@@ -76,22 +91,21 @@ class BulkDeleteProtectedFilesTest extends TestCase
 
         $this->duplicateService->expects($this->once())
             ->method('findAll')
-            ->with(100, 0)
             ->willReturn([
                 'entities' => [$duplicate],
-                'pagination' => ['page' => 1, 'totalPages' => 1],
+                'pageKey' => 0,
+                'isLastFetched' => true,
             ]);
 
-        $response = $this->controller->getDuplicatesForBulk(1, 100, true);
+        $this->duplicateService->expects($this->once())
+            ->method('getTotalCount')
+            ->willReturn(1);
 
-        $this->assertInstanceOf(DataResponse::class, $response);
+        $response = $this->controller->list(1, 100, 'all', true);
         $data = $response->getData();
 
-        // Check that protected file count is included
-        $this->assertArrayHasKey('duplicateGroups', $data);
-        $duplicateGroups = $data['duplicateGroups'];
-
-        $firstGroup = reset($duplicateGroups);
+        $this->assertSame('success', $data['status']);
+        $firstGroup = $data['entities'][0];
         $this->assertEquals(2, $firstGroup->getProtectedFileCount());
         $this->assertFalse($firstGroup->getHasOnlyProtectedFiles());
 
@@ -123,14 +137,18 @@ class BulkDeleteProtectedFilesTest extends TestCase
             ->method('findAll')
             ->willReturn([
                 'entities' => [$duplicate],
-                'pagination' => ['page' => 1, 'totalPages' => 1],
+                'pageKey' => 0,
+                'isLastFetched' => true,
             ]);
 
-        $response = $this->controller->getDuplicatesForBulk(1, 100, true);
+        $this->duplicateService->expects($this->once())
+            ->method('getTotalCount')
+            ->willReturn(1);
+
+        $response = $this->controller->list(1, 100, 'all', true);
         $data = $response->getData();
 
-        $duplicateGroups = $data['duplicateGroups'];
-        $firstGroup = reset($duplicateGroups);
+        $firstGroup = $data['entities'][0];
 
         // Group should be included but marked as having only protected files
         $this->assertEquals(2, $firstGroup->getProtectedFileCount());
@@ -152,14 +170,19 @@ class BulkDeleteProtectedFilesTest extends TestCase
             ->method('findAll')
             ->willReturn([
                 'entities' => [$duplicate],
-                'pagination' => ['page' => 1, 'totalPages' => 1],
+                'pageKey' => 0,
+                'isLastFetched' => true,
             ]);
 
-        $response = $this->controller->getDuplicatesForBulk(1, 100, true);
+        $this->duplicateService->expects($this->once())
+            ->method('getTotalCount')
+            ->willReturn(1);
+
+        $response = $this->controller->list(1, 100, 'all', true);
         $data = $response->getData();
 
         // Empty group should be removed
-        $this->assertArrayHasKey('duplicateGroups', $data);
-        $this->assertCount(0, $data['duplicateGroups']);
+        $this->assertSame('success', $data['status']);
+        $this->assertCount(0, $data['entities']);
     }
 }

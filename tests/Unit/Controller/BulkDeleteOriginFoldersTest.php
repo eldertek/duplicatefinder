@@ -10,6 +10,7 @@ use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -28,6 +29,9 @@ class BulkDeleteOriginFoldersTest extends TestCase
 
         $request = $this->createMock(IRequest::class);
         $userSession = $this->createMock(IUserSession::class);
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('user');
+        $userSession->method('getUser')->willReturn($user);
         $this->fileDuplicateService = $this->createMock(FileDuplicateService::class);
         $this->fileInfoService = $this->createMock(FileInfoService::class);
         $fileDuplicateMapper = $this->createMock(FileDuplicateMapper::class);
@@ -134,6 +138,10 @@ class BulkDeleteOriginFoldersTest extends TestCase
                 'pageKey' => 0,
                 'isLastFetched' => true,
             ]);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('getTotalCount')
+            ->willReturn(1);
 
         $response = $this->controller->list(1, 30, 'unacknowledged', true);
         $data = $response->getData();
