@@ -51,7 +51,6 @@ class FolderService
                 if (!is_null($fallbackUID)) {
                     try {
                         $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
-                        $fileInfo->setOwner($fallbackUID);
                     } catch (\OC\User\NoUserException $e2) {
                         // Fallback UID also doesn't exist, will use root folder - this is expected for Team Folders
                     }
@@ -60,16 +59,22 @@ class FolderService
         } elseif (!is_null($fallbackUID)) {
             try {
                 $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
-                $fileInfo->setOwner($fallbackUID);
             } catch (\OC\User\NoUserException $e) {
                 // Fallback UID doesn't exist, will use root folder - this is expected for Team Folders
             }
         }
         if (!is_null($userFolder)) {
             try {
-                $relativePath = PathConversionUtils::convertRelativePathToUserFolder($fileInfo, $userFolder);
+                if ($this->isPathInsideFolder($fileInfo->getPath(), $userFolder->getPath())) {
+                    if (!is_null($fallbackUID) && $fileInfo->getOwner() !== $fallbackUID) {
+                        $fileInfo->setOwner($fallbackUID);
+                    }
 
-                return $userFolder->get($relativePath);
+                    $relativePath = PathConversionUtils::convertRelativePathToUserFolder($fileInfo, $userFolder);
+                    $node = $userFolder->get($relativePath);
+
+                    return $node;
+                }
             } catch (NotFoundException $e) {
                 //If the file is not known in the user root (cached) it's fine to use the root
             }
@@ -86,5 +91,12 @@ class FolderService
 
             return null;
         }
+    }
+
+    private function isPathInsideFolder(string $path, string $folderPath): bool
+    {
+        $folderPath = rtrim($folderPath, '/');
+
+        return $path === $folderPath || str_starts_with($path, $folderPath . '/');
     }
 }

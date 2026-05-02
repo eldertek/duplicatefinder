@@ -8,6 +8,7 @@ use OCA\DuplicateFinder\Service\FolderService;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
+use OCP\Files\NotFoundException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -54,13 +55,13 @@ class FolderServiceNoUserExceptionTest extends TestCase
             ->with('admin')
             ->willThrowException(new NoUserException('Backends provided no user object'));
 
-        // Logger should log the issue
-        $this->logger->expects($this->once())
-            ->method('debug')
-            ->with(
-                $this->stringContains('likely a Team/Group folder'),
-                $this->arrayHasKey('owner')
-            );
+        $this->rootFolder->expects($this->once())
+            ->method('get')
+            ->with('/admin/files/teamfolder/test.txt')
+            ->willThrowException(new NotFoundException());
+
+        $this->logger->expects($this->never())
+            ->method('error');
 
         // Should return null without throwing exception
         $result = $this->service->getNodeByFileInfo($fileInfo);
@@ -77,6 +78,8 @@ class FolderServiceNoUserExceptionTest extends TestCase
         $fileInfo->setOwner('admin');
 
         $fallbackUID = 'realuser';
+        $userFolder = $this->createMock(Folder::class);
+        $node = $this->createMock(Node::class);
 
         // First call throws NoUserException
         $this->rootFolder->expects($this->exactly(2))
@@ -84,13 +87,25 @@ class FolderServiceNoUserExceptionTest extends TestCase
             ->withConsecutive(['admin'], [$fallbackUID])
             ->willReturnOnConsecutiveCalls(
                 $this->throwException(new NoUserException('No user object')),
-                $this->createMock(Folder::class)
+                $userFolder
             );
+
+        $userFolder->expects($this->once())
+            ->method('getPath')
+            ->willReturn('/realuser/files');
+
+        $userFolder->expects($this->never())
+            ->method('get');
+
+        $this->rootFolder->expects($this->once())
+            ->method('get')
+            ->with('/admin/files/teamfolder/test.txt')
+            ->willReturn($node);
 
         $result = $this->service->getNodeByFileInfo($fileInfo, $fallbackUID);
 
-        // Should have updated the owner to fallback UID
-        $this->assertEquals($fallbackUID, $fileInfo->getOwner());
+        $this->assertSame($node, $result);
+        $this->assertEquals('admin', $fileInfo->getOwner());
     }
 
     /**
@@ -110,9 +125,13 @@ class FolderServiceNoUserExceptionTest extends TestCase
             ->with('user')
             ->willReturn($userFolder);
 
+        $userFolder->expects($this->exactly(2))
+            ->method('getPath')
+            ->willReturn('/user/files');
+
         $userFolder->expects($this->once())
             ->method('get')
-            ->with('normal/file.txt')
+            ->with('/normal/file.txt')
             ->willReturn($node);
 
         $result = $this->service->getNodeByFileInfo($fileInfo);
@@ -137,10 +156,13 @@ class FolderServiceNoUserExceptionTest extends TestCase
             ->withConsecutive(['admin'], [$fallbackUID])
             ->willThrowException(new NoUserException('No user object'));
 
-        // Should log twice
-        $this->logger->expects($this->once())
-            ->method('debug')
-            ->with($this->stringContains('likely a Team/Group folder'));
+        $this->rootFolder->expects($this->once())
+            ->method('get')
+            ->with('/admin/files/teamfolder/test.txt')
+            ->willThrowException(new NotFoundException());
+
+        $this->logger->expects($this->never())
+            ->method('error');
 
         $result = $this->service->getNodeByFileInfo($fileInfo, $fallbackUID);
 

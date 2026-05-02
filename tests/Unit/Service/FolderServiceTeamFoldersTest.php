@@ -43,13 +43,13 @@ class FolderServiceTeamFoldersTest extends TestCase
         $mockNode = $this->createMock(Node::class);
 
         // First call to getUserFolder throws NoUserException
-        $this->rootFolder->expects($this->at(0))
+        $this->rootFolder->expects($this->once())
             ->method('getUserFolder')
             ->with('admin')
             ->willThrowException(new NoUserException('Backends provided no user object'));
 
         // Should fall back to root folder access
-        $this->rootFolder->expects($this->at(1))
+        $this->rootFolder->expects($this->once())
             ->method('get')
             ->with('/admin/files/TeamFolder/document.pdf')
             ->willReturn($mockNode);
@@ -75,26 +75,61 @@ class FolderServiceTeamFoldersTest extends TestCase
         $userFolder = $this->createMock(Folder::class);
         $mockNode = $this->createMock(Node::class);
 
-        // First getUserFolder call fails
-        $this->rootFolder->expects($this->at(0))
+        $this->rootFolder->expects($this->exactly(2))
             ->method('getUserFolder')
-            ->with('admin')
-            ->willThrowException(new NoUserException());
-
-        // Second call with fallback UID succeeds
-        $this->rootFolder->expects($this->at(1))
-            ->method('getUserFolder')
-            ->with('realuser')
-            ->willReturn($userFolder);
+            ->withConsecutive(['admin'], ['realuser'])
+            ->willReturnOnConsecutiveCalls(
+                $this->throwException(new NoUserException()),
+                $userFolder
+            );
 
         $userFolder->expects($this->once())
+            ->method('getPath')
+            ->willReturn('/realuser/files');
+
+        $userFolder->expects($this->never())
+            ->method('get');
+
+        $this->rootFolder->expects($this->once())
             ->method('get')
+            ->with('/admin/files/TeamFolder/file.txt')
             ->willReturn($mockNode);
 
         $result = $this->folderService->getNodeByFileInfo($fileInfo, 'realuser');
 
         $this->assertSame($mockNode, $result);
-        $this->assertEquals('realuser', $fileInfo->getOwner());
+        $this->assertEquals('admin', $fileInfo->getOwner());
+    }
+
+    /**
+     * Test fallback UID for a normal scan when FileInfo has no owner yet
+     */
+    public function testGetNodeByFileInfoSetsFallbackOwnerForMatchingUserPath()
+    {
+        $fileInfo = new FileInfo();
+        $fileInfo->setPath('/admin/files/Documents/file.txt');
+
+        $userFolder = $this->createMock(Folder::class);
+        $mockNode = $this->createMock(Node::class);
+
+        $this->rootFolder->expects($this->once())
+            ->method('getUserFolder')
+            ->with('admin')
+            ->willReturn($userFolder);
+
+        $userFolder->expects($this->exactly(2))
+            ->method('getPath')
+            ->willReturn('/admin/files');
+
+        $userFolder->expects($this->once())
+            ->method('get')
+            ->with('/Documents/file.txt')
+            ->willReturn($mockNode);
+
+        $result = $this->folderService->getNodeByFileInfo($fileInfo, 'admin');
+
+        $this->assertSame($mockNode, $result);
+        $this->assertEquals('admin', $fileInfo->getOwner());
     }
 
     /**
@@ -141,9 +176,13 @@ class FolderServiceTeamFoldersTest extends TestCase
             ->with('normaluser')
             ->willReturn($userFolder);
 
+        $userFolder->expects($this->exactly(2))
+            ->method('getPath')
+            ->willReturn('/normaluser/files');
+
         $userFolder->expects($this->once())
             ->method('get')
-            ->with('Documents/file.txt')
+            ->with('/Documents/file.txt')
             ->willReturn($mockNode);
 
         // No logging should occur for normal users
