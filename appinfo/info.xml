@@ -56,7 +56,7 @@
     <donation>https://patreon.com/eldertek</donation>
       
     <dependencies>
-        <nextcloud min-version="28" max-version="31"/>
+        <nextcloud min-version="28" max-version="33"/>
     </dependencies>
 
     <background-jobs>

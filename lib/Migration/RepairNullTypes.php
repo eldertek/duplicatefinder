@@ -46,7 +46,7 @@ class RepairNullTypes implements IRepairStep
            ->from('duplicatefinder_dups')
            ->where($qb->expr()->isNull('type'));
 
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $count = (int)$result->fetchOne();
         $result->closeCursor();
 
@@ -59,7 +59,7 @@ class RepairNullTypes implements IRepairStep
                     ->set('type', $updateQb->createNamedParameter('file_hash'))
                     ->where($updateQb->expr()->isNull('type'));
 
-            $updated = $updateQb->execute();
+            $updated = $updateQb->executeStatement();
 
             $output->info("Fixed {$updated} records with NULL type values.");
             $this->logger->info("Fixed {$updated} records with NULL type values in duplicatefinder_dups table.");
