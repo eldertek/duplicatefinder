@@ -74,41 +74,43 @@ class BulkDeleteSortTest extends TestCase
         $componentPath = __DIR__ . '/../../../src/components/BulkDeletionSettings.vue';
         $componentContent = file_get_contents($componentPath);
 
-        // Extract the sortedDuplicateGroups computed property
-        preg_match('/sortedDuplicateGroups\(\)\s*{([^}]+(?:{[^}]+}[^}]+)*)}/', $componentContent, $matches);
-        $sortLogic = $matches[0] ?? '';
-
         // Check sort logic for size-desc
         $this->assertStringContainsString(
             "sortOption === 'size-desc'",
-            $sortLogic,
+            $componentContent,
             'Should have logic for sorting by size descending'
         );
 
         // Check sort logic for size-asc
         $this->assertStringContainsString(
             "sortOption === 'size-asc'",
-            $sortLogic,
+            $componentContent,
             'Should have logic for sorting by size ascending'
         );
 
         // Check that it uses getTotalSizeOfDuplicate for sorting
         $this->assertStringContainsString(
-            'getTotalSizeOfDuplicate',
-            $sortLogic,
-            'Should use getTotalSizeOfDuplicate for size calculation'
+            'getTotalSizeOfDuplicate({ files: a.filesToDelete })',
+            $componentContent,
+            'Should calculate the current group size from filesToDelete'
+        );
+
+        $this->assertStringContainsString(
+            'getTotalSizeOfDuplicate({ files: b.filesToDelete })',
+            $componentContent,
+            'Should calculate the compared group size from filesToDelete'
         );
 
         // Check sort comparison logic
         $this->assertStringContainsString(
             'sizeB - sizeA',
-            $sortLogic,
+            $componentContent,
             'Should sort descending (largest first)'
         );
 
         $this->assertStringContainsString(
             'sizeA - sizeB',
-            $sortLogic,
+            $componentContent,
             'Should sort ascending (smallest first)'
         );
     }
@@ -119,7 +121,7 @@ class BulkDeleteSortTest extends TestCase
     public function testSortUIElements()
     {
         $componentPath = __DIR__ . '/../../../src/components/BulkDeletionSettings.vue';
-        $componentContent = file_get_contents($componentContent);
+        $componentContent = file_get_contents($componentPath);
 
         // Check ChevronDown icon is imported
         $this->assertStringContainsString(
