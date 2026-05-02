@@ -90,8 +90,7 @@
                   v-if="group.filesToDelete.length > 0"
                   :checked="isGroupSelected(hash)"
                   @update:checked="toggleGroup(hash)"
-                  type="checkbox"
-                  :name="`group-select-${hash}`">
+                  type="checkbox">
                   <span class="group-title">
                     {{ t('duplicatefinder', 'Duplicate group') }}
                     <span class="group-stats">
@@ -121,8 +120,7 @@
                     <NcCheckboxRadioSwitch
                       :checked="isFileSelected(hash, index)"
                       @update:checked="toggleFile(hash, index)"
-                      type="checkbox"
-                      :name="`file-select-${hash}-${index}`">
+                      type="checkbox">
                       <div class="file-info">
                         <span v-html="file.humanizedPath"></span>
                         <span class="file-size">{{ formatBytes(file.size) }}</span>

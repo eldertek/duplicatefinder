@@ -2,12 +2,33 @@
 
 define('PHPUNIT_RUN', 1);
 
+function isVueTestRun(array $argv): bool
+{
+    foreach ($argv as $index => $argument) {
+        if ($argument === '--testsuite' && ($argv[$index + 1] ?? null) === 'vue') {
+            return true;
+        }
+
+        if ($argument === '--testsuite=vue' || str_contains($argument, 'tests/Vue') || str_contains($argument, 'tests\\Vue')) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Chemin vers l'installation Nextcloud
-$nextcloudPath = '/var/www/nextcloud';
+$nextcloudPath = getenv('NEXTCLOUD_PATH') ?: '/var/www/nextcloud';
 
 // Vérifier si le chemin Nextcloud existe
 if (!file_exists($nextcloudPath)) {
-    die('Nextcloud installation not found at ' . $nextcloudPath);
+    if (isVueTestRun($_SERVER['argv'] ?? [])) {
+        require_once __DIR__ . '/../vendor/autoload.php';
+        return;
+    }
+
+    fwrite(STDERR, 'Nextcloud installation not found at ' . $nextcloudPath . PHP_EOL);
+    exit(1);
 }
 
 // Charger l'environnement Nextcloud

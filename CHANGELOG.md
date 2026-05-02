@@ -1,3 +1,7 @@
+## 1.7.5 - Unreleased
+### Fixed
+- Fixed checkbox array error in bulk delete by keeping `NcCheckboxRadioSwitch` boolean checkboxes out of checkbox-group mode (Fix [#145](https://github.com/eldertek/duplicatefinder/issues/145))
+
 ## 1.7.4 - 2025-01-11
 ### Critical Security Fix
 - **CRITICAL**: Fixed automatic file deletion bug that could cause permanent data loss (Fix [#153](https://github.com/eldertek/duplicatefinder/issues/153))

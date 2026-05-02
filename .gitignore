@@ -3,6 +3,7 @@
 /vendor/
 /build/
 node_modules/
+.nextcloud-dev/
 .phpunit.result.cache
 CLAUDE.md
 CLAUDE.local.md

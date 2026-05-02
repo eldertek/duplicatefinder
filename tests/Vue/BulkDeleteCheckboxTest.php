@@ -7,41 +7,51 @@ use PHPUnit\Framework\TestCase;
 class BulkDeleteCheckboxTest extends TestCase
 {
     /**
-     * Test that checkbox names are unique to prevent array error
-     * This tests the fix for issue #145
+     * Test that bulk delete checkboxes do not opt into checkbox-group mode.
+     * This tests the fix for issue #145.
      */
-    public function testCheckboxNamesAreUnique()
+    public function testBulkDeleteCheckboxesDoNotUseNamesWithBooleanCheckedBindings()
     {
-        // Read the Vue component
         $componentPath = __DIR__ . '/../../src/components/BulkDeletionSettings.vue';
         $componentContent = file_get_contents($componentPath);
 
-        // Check that group checkboxes have unique names with hash
-        $this->assertMatchesRegularExpression(
-            '/:name="`group-select-\${hash}`"/',
+        $this->assertStringNotContainsString(
+            ':name="`group-select-${hash}`"',
             $componentContent,
-            'Group checkboxes should have unique names including the hash'
+            'Named boolean group checkboxes trigger NcCheckboxRadioSwitch checkbox-group mode'
         );
 
-        // Check that file checkboxes have unique names with hash and index
-        $this->assertMatchesRegularExpression(
-            '/:name="`file-select-\${hash}-\${index}`"/',
+        $this->assertStringNotContainsString(
+            ':name="`file-select-${hash}-${index}`"',
             $componentContent,
-            'File checkboxes should have unique names including hash and index'
+            'Named boolean file checkboxes trigger NcCheckboxRadioSwitch checkbox-group mode'
         );
 
-        // Ensure no static name="group-select" exists
         $this->assertDoesNotMatchRegularExpression(
-            '/name="group-select"/',
+            '/<NcCheckboxRadioSwitch\b[^>]*\bname=/s',
             $componentContent,
-            'Static checkbox names should not exist'
+            'Bulk delete NcCheckboxRadioSwitch instances should not pass a name prop'
+        );
+    }
+
+    /**
+     * Test that the served compiled asset matches the Vue source fix.
+     */
+    public function testCompiledBulkDeleteAssetDoesNotUseCheckboxNames()
+    {
+        $assetPath = __DIR__ . '/../../js/duplicatefinder-main.js';
+        $assetContent = file_get_contents($assetPath);
+
+        $this->assertStringNotContainsString(
+            'group-select',
+            $assetContent,
+            'Compiled asset should not include group checkbox names'
         );
 
-        // Ensure no static name="file-select" exists
-        $this->assertDoesNotMatchRegularExpression(
-            '/name="file-select"/',
-            $componentContent,
-            'Static checkbox names should not exist'
+        $this->assertStringNotContainsString(
+            'file-select',
+            $assetContent,
+            'Compiled asset should not include file checkbox names'
         );
     }
 
