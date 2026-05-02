@@ -3,6 +3,7 @@
 - Fixed checkbox array error in bulk delete by keeping `NcCheckboxRadioSwitch` boolean checkboxes out of checkbox-group mode (Fix [#145](https://github.com/eldertek/duplicatefinder/issues/145))
 - Return a `FILE_LOCKED` API error and a clear notification when a locked file cannot be deleted (Fix [#161](https://github.com/eldertek/duplicatefinder/issues/161))
 - Fixed compatibility with Nextcloud 33 by replacing deprecated QueryBuilder `execute()` calls and extending the supported Nextcloud range to 33 (Fix [#168](https://github.com/eldertek/duplicatefinder/issues/168), [#166](https://github.com/eldertek/duplicatefinder/issues/166), PR [#169](https://github.com/eldertek/duplicatefinder/pull/169))
+- Fixed project migration installation when legacy duplicate tables are missing (Fix [#157](https://github.com/eldertek/duplicatefinder/issues/157))
 
 ## 1.7.4 - 2025-01-11
 ### Critical Security Fix

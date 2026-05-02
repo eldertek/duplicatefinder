@@ -70,6 +70,8 @@ class Version0010Date20250414000000 extends SimpleMigrationStep
             );
         }
 
+        $this->ensureLegacyDuplicateTables($schema);
+
         if (!$schema->hasTable('df_duplicates')) {
             $table = $schema->createTable('df_duplicates');
             $table->addColumn('id', 'integer', [
@@ -101,5 +103,41 @@ class Version0010Date20250414000000 extends SimpleMigrationStep
         }
 
         return $schema;
+    }
+
+    private function ensureLegacyDuplicateTables(ISchemaWrapper $schema): void
+    {
+        if (!$schema->hasTable('duplicatefinder_dups')) {
+            $table = $schema->createTable('duplicatefinder_dups');
+            $table->addColumn('id', 'integer', [
+                'autoincrement' => true,
+                'notnull' => true,
+            ]);
+            $table->addColumn('type', 'string', [
+                'notnull' => true,
+                'length' => 200,
+            ]);
+            $table->addColumn('hash', 'string', [
+                'notnull' => true,
+                'length' => 200,
+            ]);
+            $table->setPrimaryKey(['id']);
+            $table->addIndex(['type', 'hash'], 'duplicatefinder_dh_idx');
+        }
+
+        if (!$schema->hasTable('duplicatefinder_dups_f')) {
+            $table = $schema->createTable('duplicatefinder_dups_f');
+            $table->addColumn('id', 'integer', [
+                'notnull' => true,
+            ]);
+            $table->addColumn('rid', 'integer', [
+                'notnull' => true,
+            ]);
+            $table->addColumn('value', 'string', [
+                'notnull' => false,
+                'length' => 200,
+            ]);
+            $table->setPrimaryKey(['id', 'rid']);
+        }
     }
 }
