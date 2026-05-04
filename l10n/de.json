@@ -423,6 +423,7 @@
     "Cannot delete file as it is in an origin folder" : "Datei kann nicht gelöscht werden, da sie sich in einem Ursprungsordner befindet",
     "File not found" : "Datei nicht gefunden",
     "Permission denied to delete file" : "Berechtigung zum Löschen der Datei verweigert",
+    "File is currently locked. Please try again later." : "Datei ist derzeit gesperrt. Bitte später noch einmal versuchen.",
     "Error deleting file" : "Fehler beim Löschen der Datei",
     "{count} files deleted successfully." : "{count} Dateien gelöscht.",
     "Failed to delete {count} files." : "{count} Dateien konnten nicht gelöscht werden",

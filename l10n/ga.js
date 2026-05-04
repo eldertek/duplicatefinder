@@ -425,6 +425,7 @@ OC.L10N.register(
     "Cannot delete file as it is in an origin folder" : "Ní féidir an comhad a scriosadh mar go bhfuil sé i bhfillteán tionscnaimh",
     "File not found" : "Comhad gan aimsiú",
     "Permission denied to delete file" : "Diúltaíodh cead an comhad a scriosadh",
+    "File is currently locked. Please try again later." : "Tá an comhad faoi ghlas faoi láthair. Déan iarracht arís ar ball.",
     "Error deleting file" : "Earráid agus an comhad á scriosadh",
     "{count} files deleted successfully." : "{count}scriostar na comhaid go rathúil.",
     "Failed to delete {count} files." : "Theip ar scriosadh {count} comhad.",
