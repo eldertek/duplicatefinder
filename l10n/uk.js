@@ -425,6 +425,7 @@ OC.L10N.register(
     "Cannot delete file as it is in an origin folder" : "Неможливо видалити файл, оскільки він знаходиться у папці-джерелі",
     "File not found" : "Файл не знайдено",
     "Permission denied to delete file" : "Відмовлено у видаленні файлу",
+    "File is currently locked. Please try again later." : "Файл зараз заблоковано. Спробуйте пізніше.",
     "Error deleting file" : "Помилка видалення файлу",
     "{count} files deleted successfully." : "{count} файли успішно видалено.",
     "Failed to delete {count} files." : "Не вдалося видалити файли {count}.",
