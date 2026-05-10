@@ -423,6 +423,7 @@
     "Cannot delete file as it is in an origin folder" : "Não é possível excluir o arquivo porque ele está em uma pasta de origem",
     "File not found" : "Arquivo não encontrado",
     "Permission denied to delete file" : "Permissão negada para excluir arquivo",
+    "File is currently locked. Please try again later." : "O arquivo está trancado no momento. Tente novamente mais tarde.",
     "Error deleting file" : "Erro ao excluir arquivo",
     "{count} files deleted successfully." : "{count} arquivos excluídos com sucesso.",
     "Failed to delete {count} files." : "Falha ao excluir {count} arquivos.",
