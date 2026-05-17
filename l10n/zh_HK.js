@@ -425,6 +425,7 @@ OC.L10N.register(
     "Cannot delete file as it is in an origin folder" : "因為檔案位於原始資料夾中，因此無法刪除檔案",
     "File not found" : "找不到檔案",
     "Permission denied to delete file" : "無權刪除檔案",
+    "File is currently locked. Please try again later." : "檔案目前被上鎖，請稍候再試",
     "Error deleting file" : "刪除檔案時發生錯誤",
     "{count} files deleted successfully." : "成功刪除 {count} 個檔案。",
     "Failed to delete {count} files." : "刪除 {count} 個檔案失敗。",
