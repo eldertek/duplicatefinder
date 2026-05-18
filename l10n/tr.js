@@ -425,6 +425,7 @@ OC.L10N.register(
     "Cannot delete file as it is in an origin folder" : "Dosya bir kaynak klasörde bulunduğundan silinemez",
     "File not found" : "Dosya bulunamadı",
     "Permission denied to delete file" : "Dosyanın silinmesine izin verilmedi",
+    "File is currently locked. Please try again later." : "Dosya kilitli. Lütfen bir süre sonra yeniden deneyin.",
     "Error deleting file" : "Dosya silinirken sorun çıktı",
     "{count} files deleted successfully." : "{count} dosya silindi",
     "Failed to delete {count} files." : "{count} dosya silinemedi.",
