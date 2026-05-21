@@ -15,6 +15,7 @@ OC.L10N.register(
     "File hash copied to clipboard" : "Failo maiša nukopijuota į iškarpinę",
     "Show Preview" : "Rodyti peržiūrą",
     "Copy File Hash" : "Kopijuoti failo maišą",
+    "Open Settings" : "Atidaryti nustatymus",
     "File" : "Failas",
     "Path:" : "Kelias:",
     "Open File" : "Atverti failą",
