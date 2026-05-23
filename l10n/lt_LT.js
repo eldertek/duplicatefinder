@@ -27,6 +27,7 @@ OC.L10N.register(
     "Load More" : "Įkelti daugiau",
     "Failed to remove folder" : "Nepavyko pašalinti aplanko",
     "File Hash" : "Failo maiša",
+    "Project" : "Projektas",
     "Edit" : "Taisyti",
     "Remove folder" : "Šalinti aplanką",
     "Cancel" : "Atsisakyti",
