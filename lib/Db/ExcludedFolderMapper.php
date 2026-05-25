@@ -116,7 +116,7 @@ class ExcludedFolderMapper extends QBMapper
            ->andWhere($qb->expr()->eq('folder_path', $qb->createNamedParameter($path)));
 
         $result = $qb->executeQuery();
-        $exists = $result->fetch();
+        $exists = $result->fetchAssociative();
         $result->closeCursor();
 
         $this->logger->debug('Folder exclusion check result', [

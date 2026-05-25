@@ -182,7 +182,7 @@ class FileDuplicateMapper extends EQBMapper
 
         // Execute the query and fetch the result
         $result = $qb->executeQuery();
-        $row = $result->fetch();
+        $row = $result->fetchAssociative();
         $result->closeCursor();
 
         // Return the count result as an integer
@@ -314,7 +314,7 @@ class FileDuplicateMapper extends EQBMapper
         $result = $qb->executeQuery();
         $duplicates = [];
 
-        while ($row = $result->fetch()) {
+        while ($row = $result->fetchAssociative()) {
             $duplicates[] = $row;
         }
         $result->closeCursor();
@@ -344,7 +344,7 @@ class FileDuplicateMapper extends EQBMapper
         $result = $qb->executeQuery();
         $files = [];
 
-        while ($row = $result->fetch()) {
+        while ($row = $result->fetchAssociative()) {
             $files[] = [
                 'path' => $row['path'],
                 'size' => $row['size'] ?? 0,

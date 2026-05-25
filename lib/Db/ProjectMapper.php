@@ -100,7 +100,7 @@ class ProjectMapper extends QBMapper
 
         $result = $qb->executeQuery();
         $folders = [];
-        while ($row = $result->fetch()) {
+        while ($row = $result->fetchAssociative()) {
             $folders[] = $row['folder_path'];
         }
         $result->closeCursor();
@@ -149,7 +149,7 @@ class ProjectMapper extends QBMapper
            );
 
         $result = $qb->executeQuery();
-        $exists = $result->fetch();
+        $exists = $result->fetchAssociative();
         $result->closeCursor();
 
         if (!$exists) {
@@ -197,7 +197,7 @@ class ProjectMapper extends QBMapper
 
         $result = $qb->executeQuery();
         $duplicateIds = [];
-        while ($row = $result->fetch()) {
+        while ($row = $result->fetchAssociative()) {
             $duplicateIds[] = (int)$row['duplicate_id'];
         }
         $result->closeCursor();
