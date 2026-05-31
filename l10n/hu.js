@@ -31,6 +31,7 @@ OC.L10N.register(
     "Default" : "Alapértelmezett",
     "Settings" : "Beállítások",
     "Close" : "Bezárás",
+    "Project" : "Projekt",
     "Edit" : "Szerkesztés",
     "Remove folder" : "Mappa eltávolítása",
     "Cancel" : "Mégse",
