@@ -174,6 +174,9 @@
     "Click \"Create New Project\"" : "Klõpsa „Loo uus projekt“",
     "Add one or more folders to include in the scan" : "Lisa üks või enam skaneeritavat kausta",
     "Click \"Create Project\"" : "Klõpsa „Loo projekt“",
+    "Delete a project when you no longer need it" : "Kustuta projekt, kui sa seda enam ei vaja",
+    "Using OCC command (admin only):" : "Kasutades OCC-käsku (vaid peakasutaja õigustes):",
+    "Scan specific user:" : "Skaneeri konkreetse kasutaja faile:",
     "Welcome to Duplicate Finder!" : "Tere tulemast kasutama topeltobjektide otsijat!",
     "File deleted successfully." : "Faili kustutamine õnnestus",
     "Cannot delete file as it is in an origin folder" : "Kuna ta asub lähtekaustas, siis faili kustutamine pole võimalik",
@@ -187,7 +190,20 @@
     "Origin folders saved successfully" : "Lähtekausta salvestamine õnnestus",
     "Failed to save origin folders" : "Lähtekausta salvestamine ei õnnestunud",
     "Failed to delete origin folder" : "Lähtekausta kustutamine ei õnnestunud",
+    "Failed to load filters" : "Filtrite laadimine ei õnnestunud",
+    "Filter added successfully" : "Filtri lisamine õnnestus",
+    "Failed to add filter" : "Filtri lisamine ei õnnestunud",
+    "Failed to initiate duplicate search" : "Topeltfailide otsingu käivitamine ei õnnestunud",
+    "Filter removed successfully" : "Filtri eemaldamine õnnestus",
+    "Failed to remove filter" : "Filtri eemaldamine ei õnnestunud",
+    "Project created successfully" : "Projekti loomine õnnestus",
+    "Failed to create project" : "Projekti loomine ei õnnestunud",
+    "Project updated successfully" : "Projekti uuendamine õnnestus",
+    "Failed to update project" : "Projekti uuendamine ei õnnestunud",
+    "Project deleted successfully" : "Projekti kustutamine õnnestus",
+    "Failed to delete project" : "Projekti kustutamine ei õnnestunud",
     "Project scan initiated" : "Projekti skaneerimine on käivitatud",
-    "Failed to initiate project scan" : "Projekti skaneerimise käivitamine ei õnnestunud"
+    "Failed to initiate project scan" : "Projekti skaneerimise käivitamine ei õnnestunud",
+    "The viewer is not available" : "Vaatamisrakendus pole saadaval"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }
