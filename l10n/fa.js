@@ -18,6 +18,7 @@ OC.L10N.register(
     "Default" : "پیش‌فرض",
     "Settings" : "تنظیمات",
     "Close" : "بستن",
+    "Project" : "پروژه",
     "Edit" : "ویرایش",
     "Remove folder" : "پوشه را حذف کنید.",
     "Cancel" : "ردکردن",
