@@ -22,6 +22,7 @@ OC.L10N.register(
     "Edit" : "ویرایش",
     "Remove folder" : "پوشه را حذف کنید.",
     "Cancel" : "ردکردن",
+    "No results found" : "No results found",
     "Previous" : "پیشین",
     "Next" : "بعدی",
     "Advanced Settings" : "تنظمیات پیش‌رفته",

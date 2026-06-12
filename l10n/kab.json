@@ -1,0 +1,26 @@
+{ "translations": {
+    "Help" : "Tallalt",
+    "Filters" : "Imsizdigen",
+    "Projects" : "Isenfaren",
+    "Settings saved" : "Iγewwaṛen ttwakelsen",
+    "Select all" : "Fren akk",
+    "Back" : "Retour",
+    "Preview" : "Pre-timeẓriwt",
+    "Select All" : "Fren-iten akk",
+    "Open Settings" : "Ldi iɣewwaren",
+    "File" : "Afaylu",
+    "Delete" : "Kkes",
+    "Default" : "Prédéfini(e)",
+    "Settings" : "Iɣewwaṛen",
+    "Close" : "Mdel",
+    "Edit" : "Ẓreg",
+    "Cancel" : "Cancel",
+    "This action cannot be undone." : "Tigawt-agi ulamek ara tettwasefsex.",
+    "No results found" : "Ur d-yufi kra seg unadi",
+    "Previous" : "Ɣer deffir",
+    "Next" : "Uḍfir",
+    "Advanced Settings" : "Iɣewwaren leqqayen",
+    "Note:" : "Tazmilt:",
+    "File not found" : "Ulac afaylu"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}
