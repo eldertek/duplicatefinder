@@ -425,6 +425,7 @@ OC.L10N.register(
     "Cannot delete file as it is in an origin folder" : "Cannot delete file as it is in an origin folder",
     "File not found" : "File not found",
     "Permission denied to delete file" : "Permission denied to delete file",
+    "File is currently locked. Please try again later." : "File is currently locked. Please try again later.",
     "Error deleting file" : "Error deleting file",
     "{count} files deleted successfully." : "{count} files deleted successfully.",
     "Failed to delete {count} files." : "Failed to delete {count} files.",
