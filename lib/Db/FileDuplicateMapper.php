@@ -23,11 +23,6 @@ class FileDuplicateMapper extends EQBMapper
 
     public function find(string $hash, string $type = 'file_hash'): FileDuplicate
     {
-        $this->logger->debug('Finding duplicate by hash', [
-            'hash' => $hash,
-            'type' => $type,
-        ]);
-
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
             ->from($this->getTableName())
@@ -36,23 +31,7 @@ class FileDuplicateMapper extends EQBMapper
                 $qb->expr()->eq('type', $qb->createNamedParameter($type))
             );
 
-        try {
-            $duplicate = $this->findEntity($qb);
-            $this->logger->debug('Found duplicate', [
-                'hash' => $hash,
-                'id' => $duplicate->getId(),
-                'fileCount' => count($duplicate->getFiles()),
-            ]);
-
-            return $duplicate;
-        } catch (\Exception $e) {
-            $this->logger->debug('No duplicate found', [
-                'hash' => $hash,
-                'error' => $e->getMessage(),
-            ]);
-
-            throw $e;
-        }
+        return $this->findEntity($qb);
     }
 
     /**
@@ -68,13 +47,6 @@ class FileDuplicateMapper extends EQBMapper
         ?int $offset = null,
         ?array $orderBy = [['hash'], ['type']]
     ): array {
-        $this->logger->debug('Starting findAll duplicates query', [
-            'user' => $user,
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderBy' => json_encode($orderBy),
-        ]);
-
         $qb = $this->db->getQueryBuilder();
         $qb->select('d.id as id', 'd.type', 'd.hash', 'd.acknowledged')
             ->from($this->getTableName(), 'd');
@@ -93,16 +65,7 @@ class FileDuplicateMapper extends EQBMapper
             unset($order);
         }
 
-        $duplicates = $this->findEntities($qb);
-
-        $this->logger->debug('Found duplicates in database', [
-            'totalCount' => count($duplicates),
-            'acknowledgedCount' => count(array_filter($duplicates, function ($d) { return $d->getAcknowledged(); })),
-            'query' => $qb->getSQL(),
-            'params' => json_encode($qb->getParameters()),
-        ]);
-
-        return $duplicates;
+        return $this->findEntities($qb);
     }
 
     public function clear(?string $table = null): void
@@ -199,21 +162,8 @@ class FileDuplicateMapper extends EQBMapper
             ]);
         }
 
-        $this->logger->debug('Inserting new duplicate', [
-            'hash' => $entity->getHash(),
-            'type' => $entity->getType(),
-            'fileCount' => count($entity->getFiles()),
-        ]);
-
         try {
-            $result = parent::insert($entity);
-            $this->logger->debug('Successfully inserted duplicate', [
-                'id' => $result->getId(),
-                'hash' => $result->getHash(),
-                'type' => $result->getType(),
-            ]);
-
-            return $result;
+            return parent::insert($entity);
         } catch (\Exception $e) {
             $this->logger->error('Failed to insert duplicate', [
                 'hash' => $entity->getHash(),
@@ -236,22 +186,8 @@ class FileDuplicateMapper extends EQBMapper
             ]);
         }
 
-        $this->logger->debug('Updating duplicate', [
-            'id' => $entity->getId(),
-            'hash' => $entity->getHash(),
-            'type' => $entity->getType(),
-            'fileCount' => count($entity->getFiles()),
-        ]);
-
         try {
-            $result = parent::update($entity);
-            $this->logger->debug('Successfully updated duplicate', [
-                'id' => $result->getId(),
-                'hash' => $result->getHash(),
-                'type' => $result->getType(),
-            ]);
-
-            return $result;
+            return parent::update($entity);
         } catch (\Exception $e) {
             $this->logger->error('Failed to update duplicate', [
                 'id' => $entity->getId(),
@@ -266,19 +202,8 @@ class FileDuplicateMapper extends EQBMapper
 
     public function delete(Entity $entity): Entity
     {
-        $this->logger->debug('Deleting duplicate', [
-            'id' => $entity->getId(),
-            'hash' => $entity->getHash(),
-        ]);
-
         try {
-            $result = parent::delete($entity);
-            $this->logger->debug('Successfully deleted duplicate', [
-                'id' => $entity->getId(),
-                'hash' => $entity->getHash(),
-            ]);
-
-            return $result;
+            return parent::delete($entity);
         } catch (\Exception $e) {
             $this->logger->error('Failed to delete duplicate', [
                 'id' => $entity->getId(),

@@ -84,7 +84,15 @@ class FolderService
         try {
             return $this->rootFolder->get($fileInfo->getPath());
         } catch (NotFoundException $e) {
-            $this->logger->warning('File not found even with root folder access', [
+            $this->logger->debug('File not found even with root folder access', [
+                'path' => $fileInfo->getPath(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        } catch (\OC\User\NoUserException $e) {
+            // Group folders / Team folders paths whose "user" segment is not a real user (#158)
+            $this->logger->debug('No user object for path, skipping', [
                 'path' => $fileInfo->getPath(),
                 'error' => $e->getMessage(),
             ]);

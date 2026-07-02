@@ -7,18 +7,14 @@ use OCA\DuplicateFinder\Service\FilterService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCA\DuplicateFinder\Service\ShareService;
 use OCA\DuplicateFinder\Utils\ScannerUtil;
-use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\File;
 use OCP\Files\Folder;
-use OCP\Files\Node;
-use OCP\IDBConnection;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ScannerUtilTest extends TestCase
 {
-    private $connection;
-    private $eventDispatcher;
     private $logger;
     private $shareService;
     private $filterService;
@@ -31,8 +27,6 @@ class ScannerUtilTest extends TestCase
     {
         parent::setUp();
 
-        $this->connection = $this->createMock(IDBConnection::class);
-        $this->eventDispatcher = $this->createMock(IEventDispatcher::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->shareService = $this->createMock(ShareService::class);
         $this->filterService = $this->createMock(FilterService::class);
@@ -41,8 +35,6 @@ class ScannerUtilTest extends TestCase
         $this->output = $this->createMock(OutputInterface::class);
 
         $this->scannerUtil = new ScannerUtil(
-            $this->connection,
-            $this->eventDispatcher,
             $this->logger,
             $this->shareService,
             $this->filterService,
@@ -54,160 +46,112 @@ class ScannerUtilTest extends TestCase
 
     public function testScanSkipsDirectoryWithNoDupeFinderFile()
     {
-        // Create mock folder
         $folder = $this->createMock(Folder::class);
         $userFolder = $this->createMock(Folder::class);
 
-        // Set up the user folder
-        $this->folderService->expects($this->once())
-            ->method('getUserFolder')
+        $this->folderService->method('getUserFolder')
             ->with('testuser')
             ->willReturn($userFolder);
-
-        // Set up the path
-        $userFolder->expects($this->once())
-            ->method('getPath')
-            ->willReturn('/testuser/files');
-
-        // Set up the node retrieval
-        $userFolder->expects($this->once())
-            ->method('get')
+        $userFolder->method('getPath')->willReturn('/testuser/files');
+        $userFolder->method('get')
             ->with('test/path')
             ->willReturn($folder);
 
-        // Set up the .nodupefinder check
         $this->filterService->expects($this->once())
             ->method('shouldSkipDirectory')
             ->with($folder)
             ->willReturn(true);
 
-        // The scanner should not be initialized if the directory is skipped
-        $this->eventDispatcher->expects($this->never())
-            ->method('dispatch');
+        // Nothing gets saved when the directory is skipped
+        $this->fileInfoService->expects($this->never())
+            ->method('save');
+        $folder->expects($this->never())
+            ->method('getDirectoryListing');
 
-        // Execute the scan method
         $this->scannerUtil->scan('testuser', '/testuser/files/test/path');
     }
 
-    public function testScanProcessesDirectoryWithoutNoDupeFinderFile()
-    {
-        // This test is more complex as it would need to mock the Scanner class
-        // which is not easily accessible for testing. For a real implementation,
-        // you would need to use a more sophisticated approach or integration tests.
-
-        // For now, we'll just verify that the directory is checked for .nodupefinder
-        // and the scan would proceed if it doesn't have one
-
-        // Create mock folder
-        $folder = $this->createMock(Folder::class);
-        $userFolder = $this->createMock(Folder::class);
-
-        // Set up the user folder
-        $this->folderService->expects($this->once())
-            ->method('getUserFolder')
-            ->with('testuser')
-            ->willReturn($userFolder);
-
-        // Set up the path
-        $userFolder->expects($this->once())
-            ->method('getPath')
-            ->willReturn('/testuser/files');
-
-        // Set up the node retrieval
-        $userFolder->expects($this->once())
-            ->method('get')
-            ->with('test/path')
-            ->willReturn($folder);
-
-        // Set up the .nodupefinder check - this time it returns false
-        $this->filterService->expects($this->once())
-            ->method('shouldSkipDirectory')
-            ->with($folder)
-            ->willReturn(false);
-
-        // We can't easily test the actual scanning process without mocking the Scanner class,
-        // so we'll just verify that the directory check happens correctly
-
-        // Execute the scan method - this will throw an exception because we can't mock the Scanner class properly
-        // but that's okay for this unit test since we're just testing the directory check
-        try {
-            $this->scannerUtil->scan('testuser', '/testuser/files/test/path');
-        } catch (\Exception $e) {
-            // Expected exception due to incomplete mocking
-        }
-    }
-
-    // Note: We can't directly test scanSharedFiles as it's a private method
-    // Instead, we'll focus on testing the main scan method and its behavior with .nodupefinder files
-
     public function testScanWithNoDupeFinderInRootFolder()
     {
-        // Create mock folder
         $userFolder = $this->createMock(Folder::class);
 
-        // Set up the user folder
-        $this->folderService->expects($this->once())
-            ->method('getUserFolder')
+        $this->folderService->method('getUserFolder')
             ->with('testuser')
             ->willReturn($userFolder);
+        $userFolder->method('getPath')->willReturn('/testuser/files');
 
-        // Set up the path
-        $userFolder->expects($this->once())
-            ->method('getPath')
-            ->willReturn('/testuser/files');
-
-        // In this case, we're testing the root folder itself
-        // so we don't need to mock the 'get' method
-
-        // Set up the .nodupefinder check
         $this->filterService->expects($this->once())
             ->method('shouldSkipDirectory')
             ->with($userFolder)
             ->willReturn(true);
 
-        // The scanner should not be initialized if the directory is skipped
-        $this->eventDispatcher->expects($this->never())
-            ->method('dispatch');
+        $this->fileInfoService->expects($this->never())
+            ->method('save');
 
-        // Execute the scan method
         $this->scannerUtil->scan('testuser', '/testuser/files');
     }
 
-    /**
-     * Test that only files from the current user are scanned
-     * This test verifies that the scan method properly sets up the scanning process
-     * with the correct user context
-     */
-    public function testScanOnlyIncludesFilesForCurrentUser()
+    public function testScanWalksIndexedTreeAndSavesFiles()
     {
-        // Create a mock for the user folder
+        $file1 = $this->createMock(File::class);
+        $file1->method('getPath')->willReturn('/testuser/files/a.txt');
+        $file2 = $this->createMock(File::class);
+        $file2->method('getPath')->willReturn('/testuser/files/sub/b.txt');
+
+        $subFolder = $this->createMock(Folder::class);
+        $subFolder->method('getPath')->willReturn('/testuser/files/sub');
+        $subFolder->method('getDirectoryListing')->willReturn([$file2]);
+
         $userFolder = $this->createMock(Folder::class);
-        $userFolder->method('getPath')->willReturn('/currentuser/files');
+        $userFolder->method('getPath')->willReturn('/testuser/files');
+        $userFolder->method('getDirectoryListing')->willReturn([$file1, $subFolder]);
 
-        // Configure FolderService to return the user folder
-        $this->folderService->expects($this->once())
-            ->method('getUserFolder')
-            ->with('currentuser')
+        $this->folderService->method('getUserFolder')
+            ->with('testuser')
             ->willReturn($userFolder);
+        $this->filterService->method('shouldSkipDirectory')->willReturn(false);
+        $this->shareService->method('getShares')->willReturn([]);
 
-        // Set up the .nodupefinder check - this time it returns false (don't skip)
-        $this->filterService->expects($this->once())
-            ->method('shouldSkipDirectory')
-            ->with($userFolder)
-            ->willReturn(false);
+        $savedPaths = [];
+        $this->fileInfoService->expects($this->exactly(2))
+            ->method('save')
+            ->willReturnCallback(function ($path, $user) use (&$savedPaths) {
+                $savedPaths[] = $path;
 
-        // We can't easily test the actual scanning process without mocking the Scanner class,
-        // so we'll just verify that the scan is initiated with the correct user
+                return new \OCA\DuplicateFinder\Db\FileInfo($path);
+            });
 
-        // Execute the scan method - this will throw an exception because we can't mock the Scanner class properly
-        // but that's okay for this unit test since we're just testing the user context
-        try {
-            $this->scannerUtil->scan('currentuser', '/currentuser/files');
-        } catch (\Exception $e) {
-            // Expected exception due to incomplete mocking
-        }
+        $this->scannerUtil->scan('testuser', '/testuser/files');
 
-        // The key point is that the scan is initiated with the correct user ID,
-        // which ensures only files accessible to that user are included
+        $this->assertEquals(['/testuser/files/a.txt', '/testuser/files/sub/b.txt'], $savedPaths);
+    }
+
+    public function testScanSkipsNestedFolderWithNoDupeFinderFile()
+    {
+        $file1 = $this->createMock(File::class);
+        $file1->method('getPath')->willReturn('/testuser/files/a.txt');
+
+        $skippedFolder = $this->createMock(Folder::class);
+        $skippedFolder->method('getPath')->willReturn('/testuser/files/skipped');
+        $skippedFolder->expects($this->never())->method('getDirectoryListing');
+
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->method('getPath')->willReturn('/testuser/files');
+        $userFolder->method('getDirectoryListing')->willReturn([$skippedFolder, $file1]);
+
+        $this->folderService->method('getUserFolder')
+            ->with('testuser')
+            ->willReturn($userFolder);
+        $this->filterService->method('shouldSkipDirectory')
+            ->willReturnCallback(function ($folder) use ($skippedFolder) {
+                return $folder === $skippedFolder;
+            });
+        $this->shareService->method('getShares')->willReturn([]);
+
+        $this->fileInfoService->expects($this->once())
+            ->method('save')
+            ->with('/testuser/files/a.txt', 'testuser');
+
+        $this->scannerUtil->scan('testuser', '/testuser/files');
     }
 }

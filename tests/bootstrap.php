@@ -22,13 +22,15 @@ $nextcloudPath = getenv('NEXTCLOUD_PATH') ?: '/var/www/nextcloud';
 
 // Vérifier si le chemin Nextcloud existe
 if (!file_exists($nextcloudPath)) {
-    if (isVueTestRun($_SERVER['argv'] ?? [])) {
-        require_once __DIR__ . '/../vendor/autoload.php';
-        return;
-    }
+    // Sans installation Nextcloud, les suites unit/vue tournent avec l'autoload
+    // composer seul (les interfaces OCP viennent du paquet nextcloud/ocp)
+    $loader = require __DIR__ . '/../vendor/autoload.php';
+    $loader->addPsr4('OCA\\DuplicateFinder\\', __DIR__ . '/../lib/');
+    $loader->addPsr4('OCA\\DuplicateFinder\\Tests\\', __DIR__);
+    // Le paquet nextcloud/ocp ne déclare pas d'autoload
+    $loader->addPsr4('OCP\\', __DIR__ . '/../vendor/nextcloud/ocp/OCP/');
 
-    fwrite(STDERR, 'Nextcloud installation not found at ' . $nextcloudPath . PHP_EOL);
-    exit(1);
+    return;
 }
 
 // Charger l'environnement Nextcloud

@@ -2,28 +2,22 @@
 
 namespace OCA\DuplicateFinder\Utils;
 
-use OC\Files\Utils\Scanner;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FilterService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCA\DuplicateFinder\Service\ShareService;
-use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
-use OCP\IDBConnection;
 use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ScannerUtil
 {
-    /** @var IDBConnection */
-    private $connection;
-    /** @var IEventDispatcher */
-    private $eventDispatcher;
     /** @var LoggerInterface */
     private $logger;
     /** @var OutputInterface|null */
@@ -40,15 +34,11 @@ class ScannerUtil
     private $folderService;
 
     public function __construct(
-        IDBConnection $connection,
-        IEventDispatcher $eventDispatcher,
         LoggerInterface $logger,
         ShareService $shareService,
         FilterService $filterService,
         FolderService $folderService
     ) {
-        $this->connection = $connection;
-        $this->eventDispatcher = $eventDispatcher;
         $this->logger = $logger;
         $this->shareService = $shareService;
         $this->filterService = $filterService;
@@ -65,6 +55,12 @@ class ScannerUtil
         $this->abortIfInterrupted = $abortIfInterrupted;
     }
 
+    /**
+     * Walks the already indexed file tree (oc_filecache) instead of using
+     * OC\Files\Utils\Scanner. The storage rescan done by the old approach
+     * rewrote mtime/etag for every row of oc_filecache which caused massive
+     * write load and deadlocks on large instances (#160, #164).
+     */
     public function scan(string $user, string $path, bool $isShared = false): void
     {
         if (!$isShared) {
@@ -72,35 +68,23 @@ class ScannerUtil
         }
 
         try {
-            // Check if the path contains a .nodupefinder file
             $userFolder = $this->folderService->getUserFolder($user);
-            $relativePath = str_replace($userFolder->getPath() . '/', '', $path);
+            $relativePath = trim(str_replace($userFolder->getPath(), '', $path), '/');
 
-            // If we're at the root of the user's folder, we need to get the node differently
-            if ($relativePath === '' || $relativePath === $path) {
-                $node = $userFolder;
-            } else {
-                try {
-                    $node = $userFolder->get($relativePath);
-                } catch (NotFoundException $e) {
-                    $this->logger->warning('Path not found, cannot check for .nodupefinder: {path}', [
-                        'path' => $path,
-                        'error' => $e->getMessage(),
-                    ]);
-                    // If we can't find the node, proceed with scanning
-                    $node = null;
-                }
-            }
-
-            // If we have a valid node and it's a folder, check for .nodupefinder
-            if ($node instanceof Folder && $this->filterService->shouldSkipDirectory($node)) {
-                $this->showOutput('Skipping directory due to .nodupefinder file: ' . $path);
+            try {
+                $node = ($relativePath === '') ? $userFolder : $userFolder->get($relativePath);
+            } catch (NotFoundException $e) {
+                $this->logger->warning('Path not found, skipping scan: {path}', [
+                    'path' => $path,
+                    'error' => $e->getMessage(),
+                ]);
+                $this->showOutput('<e>Skipped '.$path.' because it doesn\'t exist.</e>');
 
                 return;
             }
 
-            $scanner = $this->initializeScanner($user, $isShared);
-            $scanner->scan($path, true);
+            $this->walkNode($node, $user, $isShared);
+
             if (!$isShared) {
                 $this->scanSharedFiles($user, $path);
                 $this->showOutput('Finished searching files');
@@ -116,19 +100,21 @@ class ScannerUtil
         }
     }
 
-    private function initializeScanner(string $user, bool $isShared = false): Scanner
+    private function walkNode(Node $node, string $user, bool $isShared = false): void
     {
-        $scanner = new Scanner($user, $this->connection, $this->eventDispatcher, $this->logger);
-        $scanner->listen(
-            '\OC\Files\Utils\Scanner',
-            'postScanFile',
-            function ($path) use ($user, $isShared) {
-                $this->showOutput('Scanning '.($isShared ? 'Shared Node ' : '').$path, true);
-                $this->saveScannedFile($path, $user);
-            }
-        );
+        if ($node instanceof Folder) {
+            if ($this->filterService->shouldSkipDirectory($node)) {
+                $this->showOutput('Skipping directory due to .nodupefinder file: ' . $node->getPath());
 
-        return $scanner;
+                return;
+            }
+            foreach ($node->getDirectoryListing() as $child) {
+                $this->walkNode($child, $user, $isShared);
+            }
+        } elseif ($node instanceof File) {
+            $this->showOutput('Scanning '.($isShared ? 'Shared Node ' : '').$node->getPath(), true);
+            $this->saveScannedFile($node->getPath(), $user);
+        }
     }
 
     private function saveScannedFile(
@@ -138,7 +124,7 @@ class ScannerUtil
         try {
             $this->fileInfoService->save($path, $user);
         } catch (NotFoundException $e) {
-            $this->logger->error('The given path doesn\'t exists ('.$path.').', [
+            $this->logger->warning('The given path doesn\'t exists ('.$path.').', [
                 'app' => Application::ID,
                 'exception' => $e,
             ]);
@@ -167,13 +153,7 @@ class ScannerUtil
                 if ($node->getType() === \OCP\Files\FileInfo::TYPE_FILE) {
                     $this->saveScannedFile($node->getPath(), $user);
                 } else {
-                    // Check if the shared folder contains a .nodupefinder file
-                    if ($node instanceof Folder && $this->filterService->shouldSkipDirectory($node)) {
-                        $this->showOutput('Skipping shared directory due to .nodupefinder file: ' . $node->getPath());
-
-                        continue;
-                    }
-                    $this->scan($share->getSharedBy(), $node->getPath(), true);
+                    $this->walkNode($node, $user, true);
                 }
             }
         }
