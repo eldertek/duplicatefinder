@@ -2,7 +2,7 @@
 
 namespace OCA\DuplicateFinder\Db;
 
-use Doctrine\DBAL\Platforms\PostgreSQL94Platform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
 use OCP\AppFramework\Db\Entity;
 use OCP\AppFramework\Db\QBMapper;
@@ -67,7 +67,7 @@ abstract class EQBMapper extends QBMapper
 
             $values = [];
             if (!is_int($qb)) {
-                foreach ($qb->fetchAll() as $row) {
+                foreach ($qb->fetchAllAssociative() as $row) {
                     $values[$row['rid']] = $row['value'];
                 }
                 unset($row);
@@ -162,11 +162,11 @@ abstract class EQBMapper extends QBMapper
         $qb = $qb->executeQuery();
         if (!is_int($qb)) {
             if (!$this->db->getDatabasePlatform() instanceof SqlitePlatform
-              && !$this->db->getDatabasePlatform() instanceof PostgreSQL94Platform
+              && !$this->db->getDatabasePlatform() instanceof PostgreSQLPlatform
             ) {
                 $count = $qb->rowCount();
             } else {
-                $count = count($qb->fetchAll());
+                $count = count($qb->fetchAllAssociative());
             }
             $qb->closeCursor();
 

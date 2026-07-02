@@ -106,7 +106,7 @@ class RepairFileInfos implements IRepairStep
         if (!$result) {
             return [];
         }
-        $rows = $result->fetchAll();
+        $rows = $result->fetchAllAssociative();
         $result->closeCursor();
 
         return $rows;
