@@ -35,11 +35,8 @@ class ExcludedFolderService
     private function validateUserContext(): void
     {
         if (empty($this->userId)) {
-            $this->logger->debug('No user context available');
-
             throw new \RuntimeException('User context required for this operation');
         }
-        $this->logger->debug('User context validated: {userId}', ['userId' => $this->userId]);
     }
 
     /**
@@ -49,23 +46,7 @@ class ExcludedFolderService
     {
         $this->validateUserContext();
 
-        $this->logger->debug('Finding all excluded folders', [
-            'userId' => $this->userId,
-        ]);
-
-        $folders = $this->mapper->findAllForUser($this->userId);
-
-        $this->logger->debug('Found excluded folders', [
-            'count' => count($folders),
-            'userId' => $this->userId,
-            'folders' => array_map(fn ($f) => [
-                'id' => $f->getId(),
-                'path' => $f->getFolderPath(),
-                'createdAt' => $f->getCreatedAt()->format('Y-m-d H:i:s'),
-            ], $folders),
-        ]);
-
-        return $folders;
+        return $this->mapper->findAllForUser($this->userId);
     }
 
     public function create(string $folderPath): ExcludedFolder
@@ -155,55 +136,21 @@ class ExcludedFolderService
     {
         $this->validateUserContext();
 
-        $this->logger->debug('Checking if path is in excluded folder', [
-            'path' => $path,
-            'userId' => $this->userId,
-        ]);
-
         // Normalize path for comparison - remove /admin/files/ prefix
         $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $path);
         $normalizedPath = '/' . trim($normalizedPath, '/');
 
-        $this->logger->debug('Normalized path for exclusion check', [
-            'originalPath' => $path,
-            'normalizedPath' => $normalizedPath,
-            'strippedPrefix' => preg_match('#^/[^/]+/files/#', $path) ? 'true' : 'false',
-        ]);
-
         // Get all excluded folders
         $excludedFolders = $this->findAll();
-        $this->logger->debug('Found excluded folders', [
-            'count' => count($excludedFolders),
-            'paths' => array_map(fn ($f) => $f->getFolderPath(), $excludedFolders),
-        ]);
 
         foreach ($excludedFolders as $folder) {
             $excludedPath = '/' . trim($folder->getFolderPath(), '/');
-            $this->logger->debug('Comparing paths for exclusion', [
-                'filePath' => $normalizedPath,
-                'excludedPath' => $excludedPath,
-                'isSubPath' => str_starts_with($normalizedPath, $excludedPath),
-                'exactMatch' => $normalizedPath === $excludedPath,
-            ]);
 
             // Check if the path is either exactly the excluded path or starts with it followed by a slash
             if ($normalizedPath === $excludedPath || str_starts_with($normalizedPath, $excludedPath . '/')) {
-                $this->logger->debug('Path is in excluded folder', [
-                    'path' => $path,
-                    'normalizedPath' => $normalizedPath,
-                    'excludedFolder' => $excludedPath,
-                    'matchType' => $normalizedPath === $excludedPath ? 'exact' : 'subpath',
-                ]);
-
                 return true;
             }
         }
-
-        $this->logger->debug('Path is not in any excluded folder', [
-            'path' => $path,
-            'normalizedPath' => $normalizedPath,
-            'checkedFolders' => count($excludedFolders),
-        ]);
 
         return false;
     }
@@ -216,6 +163,5 @@ class ExcludedFolderService
     public function setUserId(?string $userId): void
     {
         $this->userId = $userId ?? '';
-        $this->logger->debug('Set user ID: {userId}', ['userId' => $this->userId]);
     }
 }

@@ -24,11 +24,6 @@ class FileInfoMapper extends EQBMapper
      */
     public function find(string $path, ?string $userID = null): FileInfo
     {
-        $this->logger->debug('Finding file by path', [
-            'path' => $path,
-            'userID' => $userID,
-        ]);
-
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
         ->from($this->getTableName())
@@ -40,42 +35,17 @@ class FileInfoMapper extends EQBMapper
         }
         $entities = $this->findEntities($qb);
 
-        $this->logger->debug('Found files by path', [
-            'path' => $path,
-            'count' => count($entities),
-        ]);
-
         if ($entities) {
             if (is_null($userID)) {
-                $this->logger->debug('Returning first file found', [
-                    'path' => $path,
-                    'id' => $entities[0]->getId(),
-                    'hash' => $entities[0]->getFileHash(),
-                    'ignored' => $entities[0]->isIgnored() ? 'true' : 'false',
-                ]);
-
                 return $entities[0];
             }
             foreach ($entities as $entity) {
                 if ($entity->getOwner() === $userID) {
-                    $this->logger->debug('Found file for user', [
-                        'path' => $path,
-                        'userID' => $userID,
-                        'id' => $entity->getId(),
-                        'hash' => $entity->getFileHash(),
-                        'ignored' => $entity->isIgnored() ? 'true' : 'false',
-                    ]);
-
                     return $entity;
                 }
             }
             unset($entity);
         }
-
-        $this->logger->debug('File not found', [
-            'path' => $path,
-            'userID' => $userID,
-        ]);
 
         throw new \OCP\AppFramework\Db\DoesNotExistException('FileInfo not found');
     }
@@ -85,11 +55,6 @@ class FileInfoMapper extends EQBMapper
      */
     public function findByHash(string $hash, string $type = 'file_hash'): array
     {
-        $this->logger->debug('Finding files by hash', [
-            'hash' => $hash,
-            'type' => $type,
-        ]);
-
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
         ->from($this->getTableName())
@@ -99,12 +64,6 @@ class FileInfoMapper extends EQBMapper
         );
 
         $entities = $this->findEntities($qb);
-
-        $this->logger->debug('Found files by hash', [
-            'hash' => $hash,
-            'count' => count($entities),
-            'ignored' => false,
-        ]);
 
         return $this->entitiesToIdArray($entities);
     }

@@ -56,15 +56,8 @@ class ShareService
                     $limit
                 );
 
-                // For room shares, log at debug level and skip
+                // Skip room shares
                 if ($shareType === IShare::TYPE_ROOM) {
-                    foreach ($newShares as $share) {
-                        $this->logger->debug('Skipping Talk room share', [
-                            'share_with' => $share->getSharedWith(),
-                            'node_path' => $share->getNode()->getPath(),
-                        ]);
-                    }
-
                     continue;
                 }
 
@@ -84,18 +77,8 @@ class ShareService
 
     public function hasAccessRight(Node $sharedNode, string $user): ?string
     {
-        $this->logger->debug('ShareService::hasAccessRight - Checking access rights', [
-            'user' => $user,
-            'node_path' => $sharedNode->getPath(),
-            'node_owner' => $sharedNode->getOwner() ? $sharedNode->getOwner()->getUID() : 'null',
-        ]);
-
         try {
             $accessList = $this->shareManager->getAccessList($sharedNode, true, true);
-            $this->logger->debug('ShareService::hasAccessRight - Access list retrieved', [
-                'has_user_access' => isset($accessList['users']) && isset($accessList['users'][$user]),
-                'access_list_users' => isset($accessList['users']) ? array_keys($accessList['users']) : [],
-            ]);
 
             if (isset($accessList['users']) && isset($accessList['users'][$user])) {
                 $node = $sharedNode;
@@ -104,20 +87,9 @@ class ShareService
                     $shares = $this->getShares($user, $node, 1);
                     if (!empty($shares)) {
                         $sharedWith = $shares[0]->getSharedWith();
-                        $this->logger->debug('ShareService::hasAccessRight - Found share', [
-                            'target' => $shares[0]->getTarget(),
-                            'node_type' => $shares[0]->getNodeType(),
-                            'shared_with' => $sharedWith,
-                            'share_type' => $shares[0]->getShareType(),
-                        ]);
 
                         // Skip Talk room shares (TYPE_ROOM) or if the user doesn't exist
                         if ($shares[0]->getShareType() === IShare::TYPE_ROOM || !$this->userManager->userExists($sharedWith)) {
-                            $this->logger->debug('ShareService::hasAccessRight - Skipping non-user share', [
-                                'shared_with' => $sharedWith,
-                                'share_type' => $shares[0]->getShareType(),
-                                'user_exists' => $this->userManager->userExists($sharedWith) ? 'true' : 'false',
-                            ]);
                             // Move to parent node and continue
                             $node = $node->getParent();
                             $stripedFolders++;
@@ -150,10 +122,6 @@ class ShareService
                         $node = $node->getParent();
                         $stripedFolders++;
                     } catch (\Throwable $e) {
-                        $this->logger->debug('ShareService::hasAccessRight - No more parent nodes', [
-                            'exception' => $e->getMessage(),
-                        ]);
-
                         break;
                     }
                 }

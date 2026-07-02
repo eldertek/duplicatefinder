@@ -3,8 +3,8 @@
     <div v-if="!previewResults" class="bulk-deletion__content">
       <div class="summary-section">
         <NcEmptyContent
-          :title="t('duplicatefinder', 'Bulk merge duplicates')"
-          :description="t('duplicatefinder', 'Preview and merge multiple duplicates at once while preserving files in protected folders.')"
+          :title="t('duplicatefinder', 'Bulk delete duplicates')"
+          :description="t('duplicatefinder', 'Preview and delete multiple duplicates at once while preserving files in protected folders.')"
           :icon="'icon-delete'">
           <template #action>
             <div class="summary-actions">
@@ -51,12 +51,23 @@
             <NcButton type="tertiary" @click="toggleSelectAll">
               {{ isAllSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
             </NcButton>
+            <NcActions :menu-title="t('duplicatefinder', 'Smart select')" :disabled="isLoading">
+              <template #icon>
+                <ChevronDown :size="20" />
+              </template>
+              <NcActionButton @click="selectAllExcept('first')">
+                {{ t('duplicatefinder', 'Select all except first file of each group') }}
+              </NcActionButton>
+              <NcActionButton @click="selectAllExcept('last')">
+                {{ t('duplicatefinder', 'Select all except last file of each group') }}
+              </NcActionButton>
+            </NcActions>
             <NcButton type="error" @click="confirmBulkDelete"
               :disabled="isLoading || !hasSelectedFiles">
               <template #icon>
                 <NcLoadingIcon v-if="isLoading" />
               </template>
-              {{ t('duplicatefinder', 'Merge selected files') }}
+              {{ t('duplicatefinder', 'Delete selected files') }}
             </NcButton>
           </div>
         </template>
@@ -385,7 +396,7 @@ export default {
     },
 
     async confirmBulkDelete() {
-      if (!confirm(t('duplicatefinder', 'Are you sure you want to merge all selected duplicates? This action cannot be undone.'))) {
+      if (!confirm(t('duplicatefinder', 'Are you sure you want to delete all selected duplicates? This action cannot be undone.'))) {
         return
       }
 
@@ -452,6 +463,15 @@ export default {
     },
     setSortOption(option) {
       this.sortOption = option
+    },
+    selectAllExcept(position) {
+      Object.keys(this.previewResults.duplicateGroups).forEach(hash => {
+        const group = this.previewResults.duplicateGroups[hash]
+        const indexes = Array.from({ length: group.filesToDelete.length }, (_, i) => i)
+        this.$set(this.selectedFiles, hash,
+          position === 'first' ? indexes.slice(1) : indexes.slice(0, -1)
+        )
+      })
     }
   }
 }

@@ -1,3 +1,17 @@
+## 1.8.0 - 2026-07-03
+### Fixed
+- Stopped rescanning the file storage during duplicate scans. The app now walks the already indexed file tree instead of `OC\Files\Utils\Scanner`, which used to rewrite `mtime`/`etag` for the whole `oc_filecache` table and caused massive database load, lock wait timeouts and deadlocks on large instances (Fix [#160](https://github.com/eldertek/duplicatefinder/issues/160), [#164](https://github.com/eldertek/duplicatefinder/issues/164))
+- Stopped logging "Failed to handle file info event" as an error for files that are simply unreachable (deleted files, group folders, vanished users). These cases are now handled gracefully and logged at debug level only (Fix [#154](https://github.com/eldertek/duplicatefinder/issues/154), [#158](https://github.com/eldertek/duplicatefinder/issues/158))
+- Removed the extremely verbose per-file debug logging that could grow Nextcloud logs by gigabytes during scans (Fix [#156](https://github.com/eldertek/duplicatefinder/issues/156))
+- Fixed crashes when a file node cannot be resolved (null node) during hash calculation or metadata update
+
+### Changed
+- Renamed the confusing "Merge selected files" button to "Delete selected files" and aligned the bulk deletion wording with what it actually does (Fix [#159](https://github.com/eldertek/duplicatefinder/issues/159))
+- Extended the supported Nextcloud range to 34 (Fix [#173](https://github.com/eldertek/duplicatefinder/issues/173))
+
+### Added
+- New "Smart select" options in bulk deletion: select all files except the first (or last) of each duplicate group (Fix [#170](https://github.com/eldertek/duplicatefinder/issues/170))
+
 ## 1.7.5 - 2026-05-25
 ### Fixed
 - Fixed checkbox array error in bulk delete by keeping `NcCheckboxRadioSwitch` boolean checkboxes out of checkbox-group mode (Fix [#145](https://github.com/eldertek/duplicatefinder/issues/145))

@@ -54,12 +54,6 @@ class FileDuplicateService
     public function enrich(FileDuplicate $duplicate): FileDuplicate
     {
         $files = $duplicate->getFiles();
-        $this->logger->debug('Starting duplicate enrichment', [
-            'hash' => $duplicate->getHash(),
-            'fileCount' => count($files),
-            'type' => $duplicate->getType(),
-            'acknowledged' => $duplicate->getAcknowledged() ? 'true' : 'false',
-        ]);
 
         // Track unique node IDs to prevent showing the same file multiple times
         $seenNodeIds = [];
@@ -67,24 +61,11 @@ class FileDuplicateService
 
         // Iterate through each FileInfo object to enrich it
         foreach ($files as $key => $fileInfo) {
-            $this->logger->debug('Processing file in duplicate group', [
-                'path' => $fileInfo->getPath(),
-                'hash' => $fileInfo->getFileHash(),
-                'size' => $fileInfo->getSize(),
-                'ignored' => $fileInfo->isIgnored() ? 'true' : 'false',
-            ]);
-
             // Enrich the FileInfo object
             $files[$key] = $this->fileInfoService->enrich($fileInfo);
 
             // Skip if we've already seen this node ID (same physical file)
             if ($files[$key]->getNodeId() && isset($seenNodeIds[$files[$key]->getNodeId()])) {
-                $this->logger->debug('Skipping duplicate node ID', [
-                    'nodeId' => $files[$key]->getNodeId(),
-                    'path' => $fileInfo->getPath(),
-                    'hash' => $fileInfo->getFileHash(),
-                ]);
-
                 continue;
             }
 
@@ -92,13 +73,8 @@ class FileDuplicateService
                 $seenNodeIds[$files[$key]->getNodeId()] = true;
             }
 
-            // Store normalized path for logging
+            // Normalize the path for the origin folder check
             $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $fileInfo->getPath());
-            $this->logger->debug('Processing file path', [
-                'original' => $fileInfo->getPath(),
-                'normalized' => $normalizedPath,
-                'nodeId' => $files[$key]->getNodeId(),
-            ]);
 
             // Check if file is in an origin folder
             $protectionInfo = $this->originFolderService->isPathProtected($normalizedPath);
@@ -107,13 +83,6 @@ class FileDuplicateService
             $uniqueFiles[] = $files[$key];
         }
 
-        $this->logger->debug('Completed duplicate enrichment', [
-            'hash' => $duplicate->getHash(),
-            'originalCount' => count($files),
-            'uniqueCount' => count($uniqueFiles),
-            'skippedCount' => count($files) - count($uniqueFiles),
-        ]);
-
         // Sort the enriched FileInfo objects
         uasort($uniqueFiles, function (FileInfo $a, FileInfo $b) {
             return strnatcmp($a->getPath(), $b->getPath());
@@ -121,10 +90,6 @@ class FileDuplicateService
 
         // Set the sorted and enriched FileInfo objects back to the duplicate
         $duplicate->setFiles(array_values($uniqueFiles));
-        $this->logger->debug('Finished enriching duplicate with hash: {hash}, found {count} unique files', [
-            'hash' => $duplicate->getHash(),
-            'count' => count($uniqueFiles),
-        ]);
 
         return $duplicate;
     }
@@ -162,11 +127,6 @@ class FileDuplicateService
 
         while (count($result) < $pageSize && !$isLastFetched) {
             $offset = ($page - 1) * $pageSize;
-            $this->logger->debug('Fetching duplicates with offset={offset}, limit={limit}', [
-                'offset' => $offset,
-                'limit' => $pageSize,
-            ]);
-
             $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy);
 
             foreach ($entities as $entity) {
@@ -190,7 +150,6 @@ class FileDuplicateService
             $isLastFetched = count($entities) < $pageSize;
             if (count($result) < $pageSize && !$isLastFetched) {
                 $page++;
-                $this->logger->debug('Moving to next page: {page}', ['page' => $page]);
             }
         }
 
@@ -207,33 +166,14 @@ class FileDuplicateService
         FileDuplicate $duplicate,
         string $user
     ): FileDuplicate {
-        $this->logger->debug('FileDuplicateService::stripFilesWithoutAccessRights - Starting', [
-            'user' => $user,
-            'hash' => $duplicate->getHash(),
-            'type' => $duplicate->getType(),
-        ]);
-
         $files = $this->fileInfoService->findByHash($duplicate->getHash(), $duplicate->getType());
-        $this->logger->debug('FileDuplicateService::stripFilesWithoutAccessRights - Found files', [
-            'total_files' => count($files),
-        ]);
 
         $accessibleFiles = [];
         foreach ($files as $fileInfo) {
-            $this->logger->debug('FileDuplicateService::stripFilesWithoutAccessRights - Checking file', [
-                'path' => $fileInfo->getPath(),
-                'owner' => $fileInfo->getOwner(),
-            ]);
-
             if ($this->fileInfoService->hasAccessRight($fileInfo, $user)) {
                 $accessibleFiles[] = $fileInfo;
             }
         }
-
-        $this->logger->debug('FileDuplicateService::stripFilesWithoutAccessRights - Results', [
-            'accessible_count' => count($accessibleFiles),
-            'total_count' => count($files),
-        ]);
 
         $duplicate->setFiles($accessibleFiles);
 
@@ -273,20 +213,9 @@ class FileDuplicateService
 
     public function delete(string $hash, string $type = 'file_hash'): ?FileDuplicate
     {
-        $this->logger->debug('Starting deletion of duplicate', [
-            'hash' => $hash,
-            'type' => $type,
-        ]);
-
         try {
             // Try to find the duplicate first
             $fileDuplicate = $this->mapper->find($hash, $type);
-
-            $this->logger->debug('Found duplicate to delete', [
-                'hash' => $hash,
-                'type' => $type,
-                'fileCount' => count($fileDuplicate->getFiles()),
-            ]);
 
             // Try to delete associated files first
             $files = $fileDuplicate->getFiles();
@@ -294,17 +223,9 @@ class FileDuplicateService
 
             foreach ($files as $fileInfo) {
                 try {
-                    $this->logger->debug('Attempting to delete file info', [
-                        'path' => $fileInfo->getPath(),
-                        'hash' => $fileInfo->getFileHash(),
-                    ]);
-
                     // Try to release any locks first
                     try {
                         $this->lockingProvider->releaseAll($fileInfo->getPath(), ILockingProvider::LOCK_SHARED);
-                        $this->logger->debug('Released locks for file', [
-                            'path' => $fileInfo->getPath(),
-                        ]);
                     } catch (\Exception $e) {
                         $this->logger->warning('Failed to release locks, continuing anyway', [
                             'path' => $fileInfo->getPath(),
@@ -330,28 +251,11 @@ class FileDuplicateService
             }
 
             // Now delete the duplicate entry
-            $this->logger->debug('Deleting duplicate entry', [
-                'hash' => $hash,
-                'type' => $type,
-            ]);
-
             $this->mapper->delete($fileDuplicate);
-
-            $this->logger->debug('Successfully deleted duplicate', [
-                'hash' => $hash,
-                'type' => $type,
-                'failedFiles' => count($failedFiles),
-            ]);
 
             return $fileDuplicate;
 
         } catch (DoesNotExistException $e) {
-            $this->logger->debug('Duplicate not found for deletion', [
-                'hash' => $hash,
-                'type' => $type,
-                'error' => $e->getMessage(),
-            ]);
-
             return null;
         } catch (\Exception $e) {
             $this->logger->error('Failed to delete duplicate', [

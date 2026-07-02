@@ -58,11 +58,6 @@ class FileInfoListenerTest extends TestCase
         // Créer un événement UpdatedFileInfoEvent
         $event = new UpdatedFileInfoEvent($fileInfo, 'testuser');
 
-        // Configurer le logger
-        $this->logger->expects($this->once())
-            ->method('debug')
-            ->with('Handling file info event', $this->anything());
-
         // Configurer le service FileInfoService pour lancer une exception
         $this->fileInfoService->expects($this->once())
             ->method('countBySize')
@@ -75,6 +70,29 @@ class FileInfoListenerTest extends TestCase
             ->with('Failed to handle file info event', $this->anything());
 
         // Appeler la méthode handle
+        $this->listener->handle($event);
+    }
+
+    public function testHandleWithNotFoundExceptionLogsDebugOnly()
+    {
+        $fileInfo = new FileInfo();
+        $fileInfo->setId(1);
+        $fileInfo->setPath('/testuser/files/test.jpg');
+        $fileInfo->setOwner('testuser');
+        $fileInfo->setSize(1024);
+
+        $event = new UpdatedFileInfoEvent($fileInfo, 'testuser');
+
+        $this->fileInfoService->expects($this->once())
+            ->method('countBySize')
+            ->willThrowException(new \OCP\Files\NotFoundException('gone'));
+
+        // Un fichier disparu ne doit PAS générer d'erreur dans les logs (#154, #158)
+        $this->logger->expects($this->never())
+            ->method('error');
+        $this->logger->expects($this->once())
+            ->method('debug');
+
         $this->listener->handle($event);
     }
 }

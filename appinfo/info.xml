@@ -33,7 +33,7 @@
 * 📊 **Aperçu & Simulation** - Visualisez ce qui serait supprimé avant d'agir
 * 💼 **Traitement en Arrière-plan** - Tâches automatisées de recherche de doublons
 ]]></description>
-    <version>1.7.5</version>
+    <version>1.8.0</version>
     <author>André Théo LAURET</author>
 
     <namespace>DuplicateFinder</namespace>
@@ -56,7 +56,7 @@
     <donation>https://patreon.com/eldertek</donation>
       
     <dependencies>
-        <nextcloud min-version="28" max-version="33"/>
+        <nextcloud min-version="28" max-version="34"/>
     </dependencies>
 
     <background-jobs>

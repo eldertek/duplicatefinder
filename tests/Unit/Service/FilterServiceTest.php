@@ -57,10 +57,6 @@ class FilterServiceTest extends TestCase
         // Configurer le FileInfo pour qu'il n'ait pas de propriétaire
         $this->fileInfo->method('getOwner')->willReturn(null);
 
-        // Le logger devrait enregistrer plusieurs messages
-        $this->logger->expects($this->atLeastOnce())
-            ->method('debug');
-
         // L'ExcludedFolderService ne devrait pas être appelé
         $this->excludedFolderService->expects($this->never())
             ->method('isPathExcluded');
@@ -117,10 +113,6 @@ class FilterServiceTest extends TestCase
             ->method('isPathExcluded')
             ->with('/path/to/file.txt')
             ->willThrowException(new \RuntimeException('Test exception'));
-
-        // Le logger devrait enregistrer plusieurs messages
-        $this->logger->expects($this->atLeastOnce())
-            ->method('debug');
 
         // Configurer le FilterMapper pour qu'il retourne des filtres vides
         $this->filterMapper->method('findByType')->willReturn([]);
