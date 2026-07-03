@@ -87,7 +87,7 @@ class ExcludedFolderMapper extends QBMapper
            ->andWhere($qb->expr()->eq('folder_path', $qb->createNamedParameter($path)));
 
         $result = $qb->executeQuery();
-        $exists = $result->fetchAssociative();
+        $exists = $result->fetch();
         $result->closeCursor();
 
         return $exists !== false;

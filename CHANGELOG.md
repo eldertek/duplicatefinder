@@ -1,3 +1,11 @@
+## 1.8.1 - 2026-07-03
+### Fixed
+- **Critical**: Fixed duplicate detection being completely broken on Nextcloud 28-32. Version 1.8.0 used `fetchAssociative()`/`fetchAllAssociative()` on query results, but these methods only exist in the `OCP\DB\IResult` interface since Nextcloud 33, so every file event failed with "Call to undefined method OC\DB\ResultAdapter::fetchAllAssociative()" and no duplicates were found. Reverted to `fetch()`/`fetchAll()` which are available on all supported versions. Verified against real Nextcloud 30.0.14, 31.0.7, 32.0.0 (PostgreSQL), 33.0.6 and 34.0.1 instances
+- Fixed `duplicates:find-all` crashing on PHP installations without the pcntl extension (signal handler is now only registered when pcntl is available)
+- The scanner now sets up the scanned user's filesystem mounts explicitly, like the old storage scanner did. This makes background scans over several users reliable (user mounts no longer depend on lazy initialization order)
+- Stopped calling `getUserFolder()` for file owners that do not exist as regular users (group folders, deleted accounts): Nextcloud core logged "Backends provided no user object" errors on every such file even though the app handled the failure (#158)
+- The `.nodupefinder` ancestor lookup now stops at the virtual root instead of doing one extra mount lookup per scanned file
+
 ## 1.8.0 - 2026-07-03
 ### Fixed
 - Stopped rescanning the file storage during duplicate scans. The app now walks the already indexed file tree instead of `OC\Files\Utils\Scanner`, which used to rewrite `mtime`/`etag` for the whole `oc_filecache` table and caused massive database load, lock wait timeouts and deadlocks on large instances (Fix [#160](https://github.com/eldertek/duplicatefinder/issues/160), [#164](https://github.com/eldertek/duplicatefinder/issues/164))

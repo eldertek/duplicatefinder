@@ -148,11 +148,13 @@ class FindDuplicates extends Command
             return 1;
         }
 
-        // Set up signal handler for SIGINT (Ctrl+C)
-        pcntl_signal(SIGINT, function () {
-            $this->output->writeln("\n<comment>Scan aborted by user.</comment>");
-            exit(1);
-        });
+        // Set up signal handler for SIGINT (Ctrl+C); pcntl is not available everywhere
+        if (function_exists('pcntl_signal')) {
+            pcntl_signal(SIGINT, function () {
+                $this->output->writeln("\n<comment>Scan aborted by user.</comment>");
+                exit(1);
+            });
+        }
 
         // If project ID is specified, scan only that project
         if ($projectId !== null) {
@@ -304,7 +306,9 @@ class FindDuplicates extends Command
         $this->originFolderService->setUserId($user);
 
         $callback = function () {
-            pcntl_signal_dispatch();
+            if (function_exists('pcntl_signal_dispatch')) {
+                pcntl_signal_dispatch();
+            }
 
             return false; // Continue scanning
         };

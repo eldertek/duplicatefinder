@@ -67,7 +67,7 @@ abstract class EQBMapper extends QBMapper
 
             $values = [];
             if (!is_int($qb)) {
-                foreach ($qb->fetchAllAssociative() as $row) {
+                foreach ($qb->fetchAll() as $row) {
                     $values[$row['rid']] = $row['value'];
                 }
                 unset($row);
@@ -166,7 +166,7 @@ abstract class EQBMapper extends QBMapper
             ) {
                 $count = $qb->rowCount();
             } else {
-                $count = count($qb->fetchAllAssociative());
+                $count = count($qb->fetchAll());
             }
             $qb->closeCursor();
 

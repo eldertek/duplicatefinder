@@ -68,6 +68,13 @@ class ScannerUtil
         }
 
         try {
+            if (!$isShared) {
+                // Make sure the scanned user's mounts are set up: the previous
+                // OC\Files\Utils\Scanner did this internally, and background jobs
+                // scan several users in the same process
+                \OC_Util::tearDownFS();
+                \OC_Util::setupFS($user);
+            }
             $userFolder = $this->folderService->getUserFolder($user);
             $relativePath = trim(str_replace($userFolder->getPath(), '', $path), '/');
 

@@ -18,7 +18,7 @@
               {{ t('duplicatefinder', 'Acknowledge it') }}
             </a>
             <button @click="deleteSelectedDuplicates" :disabled="selectedFiles.length === 0">
-              {{ t('duplicatefinder', 'Merge Selected') }}
+              {{ t('duplicatefinder', 'Delete Selected') }}
             </button>
             <button @click="selectAllFiles">{{ t('duplicatefinder', 'Select All') }}</button>
             <button @click="previewMerge" :disabled="selectedFiles.length === 0" class="preview-button">

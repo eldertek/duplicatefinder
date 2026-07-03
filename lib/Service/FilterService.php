@@ -68,10 +68,13 @@ class FilterService
         while ($currentNode !== null) {
             try {
                 $parent = $currentNode->getParent();
-                if ($parent !== null) {
-                    if ($parent->nodeExists('.nodupefinder')) {
-                        return true;
-                    }
+                if ($parent === null || $parent->getPath() === '/') {
+                    // Virtual root reached: it cannot hold a user .nodupefinder,
+                    // stop instead of paying a mount lookup per scanned file
+                    break;
+                }
+                if ($parent->nodeExists('.nodupefinder')) {
+                    return true;
                 }
                 $currentNode = $parent;
             } catch (NotFoundException $e) {
