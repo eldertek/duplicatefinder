@@ -9,6 +9,7 @@ OC.L10N.register(
     "Default order" : "Ordenamiento predeterminado",
     "Unselect all" : "Desmarcar todo.",
     "Select all" : "Seleccionar todo",
+    "Delete selected files" : "Eliminar archivos seleccionados",
     "Back" : "Regresar",
     "Duplicate group" : "Grupo duplicado",
     "Preview" : "Previsualizar",

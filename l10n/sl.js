@@ -15,6 +15,7 @@ OC.L10N.register(
     "Size (smallest first)" : "Velikost (najmanjše na vrhu)",
     "Unselect all" : "Odstrani izbor",
     "Select all" : "Izberi vse",
+    "Delete selected files" : "Izbriši izbrane datoteke",
     "Back" : "Nazaj",
     "Preview" : "Predogled",
     "Show Preview" : "Pokaži predogled",

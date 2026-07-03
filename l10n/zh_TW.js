@@ -35,6 +35,8 @@ OC.L10N.register(
     "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "這些設定僅適用於進階使用者。若您不確定自己在做什麼，請不要變更這些設定。",
     "Clear all duplicates" : "清除所有重複項目",
     "Find all duplicates" : "尋找所有重複項目",
+    "Are you sure you want to delete all selected duplicates? This action cannot be undone." : "您確定要刪除所有選定的重複檔案嗎？此動作無法還原。",
+    "Preview and delete multiple duplicates at once while preserving files in protected folders." : "預覽並一次刪除刪除多個重複項目，同時保留受保護資料夾中的檔案。",
     "Total files to delete: {count}, Space that will be freed: {size}" : "要刪除的檔案總數：{count}，將釋放的空間：{size}",
     "Default order" : "預設順序",
     "Unselect all" : "取消全選",

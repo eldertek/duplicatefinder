@@ -35,6 +35,7 @@ OC.L10N.register(
     "Default order" : "Порядок по умолчанию",
     "Unselect all" : "Отменить выделение для всех",
     "Select all" : "Выбрать всё",
+    "Delete selected files" : "Удалить выбранные файлы",
     "Back" : "Назад",
     "Files to be deleted" : "Файлы для удаления",
     "Duplicate group" : "Группа дубликатов",

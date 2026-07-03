@@ -17,6 +17,7 @@
     "The interval in seconds for the find duplicates background job." : "A duplikációkeresés háttérfeladat intervalluma másodpercben.",
     "Default order" : "Alapértelmezett sorrend",
     "Unselect all" : "Kijelölés megszüntetése",
+    "Delete selected files" : "Kijelölt fájlok törlése",
     "Back" : "Vissza",
     "Duplicate group" : "Duplikált csoport",
     "Preview" : "Előnézet",

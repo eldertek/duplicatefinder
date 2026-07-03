@@ -32,6 +32,7 @@ OC.L10N.register(
     "Default order" : "Forvalgt rekkefølge",
     "Unselect all" : "Fravelg alle",
     "Select all" : "Velg alle",
+    "Delete selected files" : "Slett valgte filer",
     "Back" : "Tilbake",
     "Duplicate group" : "Duplikatgruppe",
     "Preview" : "Forhåndsvis",

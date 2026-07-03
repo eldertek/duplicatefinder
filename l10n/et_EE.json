@@ -32,7 +32,6 @@
     "Size (smallest first)" : "Suurus (esmalt väiksemad)",
     "Unselect all" : "Eemalda kogu valik",
     "Select all" : "Vali kõik",
-    "Merge selected files" : "Mesti valitud failid",
     "No duplicates found" : "Topeltobjekte ei leidu",
     "No duplicate files were found that can be deleted. This could be because there are no duplicates, or all duplicates are in protected folders." : "Ei leidunud kustutamiseks sobivaid faile. Nii võis juhtuda seetõttu et topeltfaile lihtsalt pole või nad asuvad kaitstud kaustades.",
     "Back" : "Tagasi",

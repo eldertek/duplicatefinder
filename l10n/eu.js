@@ -10,6 +10,7 @@ OC.L10N.register(
     "Default order" : "Lehenetsitako ordena",
     "Unselect all" : "Desautatu dena",
     "Select all" : "Hautatu dena",
+    "Delete selected files" : "Ezabatu hautatutako fitxategiak",
     "Back" : "Itzuli",
     "Duplicate group" : "Bikoiztu taldea",
     "Preview" : "Aurrebista",
