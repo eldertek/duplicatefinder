@@ -8,26 +8,48 @@ use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
 class FolderService
 {
     /** @var IRootFolder */
     private $rootFolder;
+    /** @var IUserManager */
+    private $userManager;
     /** @var LoggerInterface */
     private $logger;
 
     public function __construct(
         IRootFolder $rootFolder,
+        IUserManager $userManager,
         LoggerInterface $logger
     ) {
         $this->rootFolder = $rootFolder;
+        $this->userManager = $userManager;
         $this->logger = $logger;
     }
 
     public function getUserFolder(string $user): Folder
     {
         return $this->rootFolder->getUserFolder($user);
+    }
+
+    /**
+     * getUserFolder without triggering the core "Backends provided no user object"
+     * error log when the uid does not exist (group folders, deleted accounts, #158)
+     */
+    private function getUserFolderIfUserExists(string $uid): ?Folder
+    {
+        if (!$this->userManager->userExists($uid)) {
+            return null;
+        }
+
+        try {
+            return $this->rootFolder->getUserFolder($uid);
+        } catch (\OC\User\NoUserException $e) {
+            return null;
+        }
     }
 
 
@@ -42,26 +64,12 @@ class FolderService
     {
         $userFolder = null;
         if ($fileInfo->getOwner()) {
-            try {
-                $userFolder = $this->rootFolder->getUserFolder($fileInfo->getOwner());
-            } catch (\OC\User\NoUserException $e) {
-                // Handle Team Folders or system files where owner doesn't exist as regular user
-                // Log silently and continue - not a blocking error (following Nextcloud core approach)
-                // Try with fallback UID or use root folder directly
-                if (!is_null($fallbackUID)) {
-                    try {
-                        $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
-                    } catch (\OC\User\NoUserException $e2) {
-                        // Fallback UID also doesn't exist, will use root folder - this is expected for Team Folders
-                    }
-                }
-            }
-        } elseif (!is_null($fallbackUID)) {
-            try {
-                $userFolder = $this->rootFolder->getUserFolder($fallbackUID);
-            } catch (\OC\User\NoUserException $e) {
-                // Fallback UID doesn't exist, will use root folder - this is expected for Team Folders
-            }
+            // Owner may not exist as a regular user (Team/group folders, deleted accounts):
+            // fall back without touching the core error log (#158)
+            $userFolder = $this->getUserFolderIfUserExists($fileInfo->getOwner());
+        }
+        if (is_null($userFolder) && !is_null($fallbackUID)) {
+            $userFolder = $this->getUserFolderIfUserExists($fallbackUID);
         }
         if (!is_null($userFolder)) {
             try {
