@@ -67,7 +67,6 @@ OC.L10N.register(
     "Show Preview" : "نمایش پیش‌نمایش",
     "Unacknowledge it" : "عدم تأیید آن",
     "Acknowledge it" : "تأیید آن",
-    "Merge Selected" : "ادغام انتخاب‌شده",
     "Select All" : "انتخاب همه",
     "Copy File Hash" : "کپی هش فایل",
     "No duplicates found or no duplicate selected." : "هیچ تکراری یافت نشد یا تکراری انتخاب نشده است.",

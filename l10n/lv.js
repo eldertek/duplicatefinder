@@ -7,7 +7,6 @@ OC.L10N.register(
     "Settings saved" : "Iestatījumi saglabāti",
     "Select all" : "Atzīmēt visu",
     "Preview" : "Priekšskatīt",
-    "Merge Selected" : "Apvienot atlasītās",
     "Open Settings" : "Atvērt iestatījumus",
     "File" : "Datne",
     "Open File" : "Atvērt datni",

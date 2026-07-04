@@ -67,7 +67,6 @@ OC.L10N.register(
     "Show Preview" : "Показати попередній перегляд",
     "Unacknowledge it" : "Не визнавати його",
     "Acknowledge it" : "Визнайте це",
-    "Merge Selected" : "Об'єднати вибране",
     "Select All" : "Вибрати все",
     "Copy File Hash" : "Копіювати хеш файлу",
     "No duplicates found or no duplicate selected." : "Дублікатів не знайдено або не вибрано.",

@@ -70,7 +70,7 @@ OC.L10N.register(
     "Show Preview" : "Amosar a vista previa",
     "Unacknowledge it" : "Non recoñecelo",
     "Acknowledge it" : "Recoñéceo",
-    "Merge Selected" : "Fusionar os seleccionados",
+    "Delete Selected" : "Eliminar a selección",
     "Select All" : "Seleccionar todo",
     "Copy File Hash" : "Copiar o resumo criptográfico do ficheiro",
     "No duplicates found or no duplicate selected." : "Non se atopou ningún duplicado ou non foi seleccionado ningún duplicado.",

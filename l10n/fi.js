@@ -58,7 +58,7 @@ OC.L10N.register(
     "Show Preview" : "Näytä esikatselu",
     "Unacknowledge it" : "Peru kuittaus",
     "Acknowledge it" : "Kuittaa huomioiduksi",
-    "Merge Selected" : "Yhdistä valitut",
+    "Delete Selected" : "Poista valitut",
     "Select All" : "Valitse kaikki",
     "No duplicates found or no duplicate selected." : "Kaksoiskappaleita ei löytynyt tai kaksoiskappaletta ei ole valittu.",
     "You can adjust settings or run a new scan to find duplicates." : "Voit säätää asetuksia tai suorittaa uuden tarkistuksen kaksoiskappaleiden löytämiseksi.",

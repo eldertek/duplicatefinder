@@ -45,6 +45,7 @@ OC.L10N.register(
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Добро пожаловать, текущий дубликат содержит файлы: {numberOfFiles}, общий размер: {formattedSize}.",
     "Unacknowledge it" : "Не признавать это",
     "Acknowledge it" : "Признать это",
+    "Delete Selected" : "Удалить выбранные",
     "Select All" : "Выбрать все",
     "No duplicates found or no duplicate selected." : "Дубликаты не найдены или дубликаты не выбраны.",
     "File" : "Файл",

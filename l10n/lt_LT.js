@@ -67,7 +67,6 @@ OC.L10N.register(
     "Show Preview" : "Rodyti peržiūrą",
     "Unacknowledge it" : "Nepripažinti",
     "Acknowledge it" : "Pripažinti",
-    "Merge Selected" : "Sujungti pasirinktus",
     "Select All" : "Pažymėti viską",
     "Copy File Hash" : "Kopijuoti failo maišą",
     "No duplicates found or no duplicate selected." : "Nerasta dublikatų arba nepasirinkta dublikatų.",

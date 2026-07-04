@@ -66,7 +66,7 @@ OC.L10N.register(
     "Show Preview" : "ئالدىن كۆرۈش",
     "Unacknowledge it" : "بىلمەيدۇ",
     "Acknowledge it" : "ئېتىراپ قىلىڭ",
-    "Merge Selected" : "تاللانغانلارنى بىرلەشتۈرۈش",
+    "Delete Selected" : "تاللانغاننى ئۆچۈرۈڭ",
     "Select All" : "ھەممىنى تاللاڭ",
     "Copy File Hash" : "ھۆججەتنىڭ ھەشلىشىشىنى كۆچۈرۈش",
     "No duplicates found or no duplicate selected." : "كۆپەيتىلگەن نۇسخىسى تېپىلمىدى ياكى كۆپەيتىلمىدى.",

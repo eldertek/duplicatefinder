@@ -66,7 +66,6 @@ OC.L10N.register(
     "Show Preview" : "Pokaż podgląd",
     "Unacknowledge it" : "Cofnij potwierdzenie",
     "Acknowledge it" : "Potwierdź",
-    "Merge Selected" : "Scal zaznaczone",
     "Select All" : "Wybierz wszystko",
     "Copy File Hash" : "Kopiuj sumę kontrolną pliku",
     "No duplicates found or no duplicate selected." : "Nie znaleziono duplikatów ani nie wybrano duplikatu.",

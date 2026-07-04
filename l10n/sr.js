@@ -70,7 +70,7 @@ OC.L10N.register(
     "Show Preview" : "Прикажи преглед",
     "Unacknowledge it" : "Уклони потврду",
     "Acknowledge it" : "Потврди",
-    "Merge Selected" : "Споји изабрано",
+    "Delete Selected" : "Брисање изабраног",
     "Select All" : "Изабери све",
     "Copy File Hash" : "Копирај хеш фајла",
     "No duplicates found or no duplicate selected." : "Није пронађен ниједан дупликат, или није изабран ниједан.",

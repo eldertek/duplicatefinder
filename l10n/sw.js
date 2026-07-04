@@ -66,7 +66,6 @@ OC.L10N.register(
     "Show Preview" : "Onyesha Hakiki",
     "Unacknowledge it" : "Usiikubali",
     "Acknowledge it" : "Ikubali",
-    "Merge Selected" : "Unganisha zilizochaguliwa",
     "Select All" : "Chagua Zote",
     "Copy File Hash" : "Nakili Hash ya Faili",
     "No duplicates found or no duplicate selected." : "Hakuna nakala zilizopatikana au hakuna nakala iliyochaguliwa.",

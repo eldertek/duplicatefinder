@@ -70,7 +70,7 @@ OC.L10N.register(
     "Show Preview" : "顯示預覽",
     "Unacknowledge it" : "不確認它",
     "Acknowledge it" : "承認它",
-    "Merge Selected" : "合併選中的項目",
+    "Delete Selected" : "刪除所選",
     "Select All" : "全選",
     "Copy File Hash" : "複製檔案哈希值（Hash）",
     "No duplicates found or no duplicate selected." : "未找到重複項或未選擇重複項。",

@@ -69,7 +69,7 @@ OC.L10N.register(
     "Show Preview" : "Afficher l'aperçu",
     "Unacknowledge it" : "Marquer comme non traité",
     "Acknowledge it" : "Marquer comme traité",
-    "Merge Selected" : "Fusionner les éléments sélectionnés",
+    "Delete Selected" : "Supprimer la sélection",
     "Select All" : "Tout sélectionner",
     "Copy File Hash" : "Copier le hachage du fichier",
     "No duplicates found or no duplicate selected." : "Aucun doublon n'a été trouvé ou aucun doublon n'a été sélectionné.",

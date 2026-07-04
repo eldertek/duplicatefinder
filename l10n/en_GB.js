@@ -70,7 +70,7 @@ OC.L10N.register(
     "Show Preview" : "Show Preview",
     "Unacknowledge it" : "Unacknowledge it",
     "Acknowledge it" : "Acknowledge it",
-    "Merge Selected" : "Merge Selected",
+    "Delete Selected" : "Delete Selected",
     "Select All" : "Select All",
     "Copy File Hash" : "Copy File Hash",
     "No duplicates found or no duplicate selected." : "No duplicates found or no duplicate selected.",
