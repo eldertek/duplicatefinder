@@ -58,6 +58,7 @@ OC.L10N.register(
     "Show Preview" : "Mostra la previsualització",
     "Unacknowledge it" : "No reconèixer-ho",
     "Acknowledge it" : "Reconeix-ho",
+    "Delete Selected" : "Suprimeix la selecció",
     "Select All" : "Selecciona-ho tot",
     "Copy File Hash" : "Copia el fitxer resum",
     "No duplicates found or no duplicate selected." : "No s'han trobat duplicats o no s'ha seleccionat cap duplicat.",

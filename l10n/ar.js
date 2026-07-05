@@ -58,6 +58,7 @@ OC.L10N.register(
     "Show Preview" : "عرض المعاينة",
     "Unacknowledge it" : "إنكاره",
     "Acknowledge it" : "الاعتراف به",
+    "Delete Selected" : "حذف ما تمّ تحديده",
     "Select All" : "اختيار الكُل",
     "Copy File Hash" : "نسخ اختزال الملف File Hash",
     "No duplicates found or no duplicate selected." : "لم يتم اكتشاف أي تكررات و لم يتم تحديد أي تكرار.",

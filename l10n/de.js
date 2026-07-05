@@ -73,6 +73,7 @@ OC.L10N.register(
     "Show Preview" : "Vorschau anzeigen",
     "Unacknowledge it" : "Nicht bestätigen",
     "Acknowledge it" : "Bestätigen",
+    "Delete Selected" : "Ausgewählte löschen",
     "Select All" : "Alle auswählen",
     "Copy File Hash" : "Datei-Hash kopieren",
     "No duplicates found or no duplicate selected." : "Keine Duplikate gefunden oder keine Duplikate ausgewählt.",
