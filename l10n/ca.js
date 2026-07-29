@@ -104,6 +104,7 @@ OC.L10N.register(
     "View Results" : "Mostra els resultats",
     "Remove folder" : "Suprimeix la carpeta",
     "Cancel" : "Cancel·la",
+    "This action cannot be undone." : "Aquesta acció no es pot desfer.",
     "Search with wildcards (e.g., IMG*.jpg)" : "Cerca amb comodins (p. ex., IMG*.jpg)",
     "Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)" : "Cerca amb regex (p. ex., ^IMG_\\d{4}\\.jpg$)",
     "Search duplicates…" : "Cerca duplicats…",
