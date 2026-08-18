@@ -381,6 +381,7 @@ OC.L10N.register(
     "Cannot delete file as it is in an origin folder" : "Impossible de supprimer le fichier car il se trouve dans un dossier d'origine",
     "File not found" : "Fichier non trouvé",
     "Permission denied to delete file" : "Autorisation refusée pour supprimer le fichier",
+    "File is currently locked. Please try again later." : "Le fichier est actuellement verrouillé. Veuillez réessayer plus tard.",
     "Error deleting file" : "Erreur de suppression du fichier",
     "{count} files deleted successfully." : "{count} fichiers supprimés avec succès.",
     "Failed to delete {count} files." : "Impossible de supprimer {count} fichier(s).",
