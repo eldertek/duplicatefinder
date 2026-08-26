@@ -19,6 +19,7 @@ OC.L10N.register(
     "No folders selected" : "Nav atlasīta neviena mape",
     "Cancel" : "Atcelt",
     "Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator." : "Jā, visas datnes, kas ir izdzēstas ar dublējumu meklētāju var atkopt no savas Nextcloud atkritnes pārvaldītāja iestatītajā paturēšanas laika posmā.",
+    "Project & Support" : "Projekts un atbalsts",
     "Previous" : "Iepriekšējā",
     "Organize cleanup tasks by creating separate projects for different areas" : "Uzkopšanas uzdevumus var apkopot ar atsevišķu projektu izveidošanu dažādām jomām",
     "Advanced Settings" : "Paplašināti iestatījumi",
