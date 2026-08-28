@@ -28,7 +28,7 @@
     "Background Job Cleanup Interval (seconds)" : "Temizleme arka plan görevi sıklığı (saniye)",
     "The interval in seconds between database cleanup operations. This job only maintains the database and does not delete any files from your storage. It helps keep the app running smoothly by removing outdated database entries." : "Saniye olarak veri tabanı temizleme işlemleri arasındaki aralık. Bu iş yalnızca veri tabanını korur ve depolama alanınızdan herhangi bir dosyayı silmez. Güncel olmayan veri tabanı kayıtlarını kaldırarak uygulamanın sorunsuz bir şekilde çalışmasını sağlar.",
     "Background Job Find Duplicates Interval (seconds)" : "Çiftleri bulma arka plan görevi sıklığı (saniye)",
-    "The interval in seconds for the find duplicates background job." : "Çiftleri bulma arka plan görevinin saniye cinsinden çalışma sıklığı.",
+    "The interval in seconds for the find duplicates background job." : "Saniye olarak, çiftleri bulma arka plan görevinin çalışma sıklığı.",
     "Advanced settings (be cautious)" : "Gelişmiş ayarlar (dikkatli olun)",
     "These settings are for advanced users only. If you are not sure what you are doing, please do not change them." : "Bu ayarlar yalnızca uzman kullanıcılar içindir. Ne yaptığınızdan emin değilseniz lütfen bunları değiştirmeyin.",
     "Clear all duplicates" : "Tüm çiftleri temizle",
