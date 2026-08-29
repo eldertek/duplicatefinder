@@ -65,6 +65,7 @@ OC.L10N.register(
     "Project & Support" : "プロジェクトとサポート",
     "Can I contribute to the project?" : "このプロジェクトに貢献できますか？",
     "No results found" : "結果が見つかりません",
+    "Step {step} of {total}" : "{total}のうち{step}番目のステップ",
     "Previous" : "前へ",
     "Next" : "次へ",
     "Advanced Settings" : "詳細設定",
