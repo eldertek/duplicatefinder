@@ -35,6 +35,26 @@ class FileDuplicateMapper extends EQBMapper
     }
 
     /**
+     * Like find(), but tolerant of pre-existing hash/type collisions:
+     * caps the query at one row db-side so it never throws
+     * MultipleObjectsReturnedException.
+     */
+    public function findFirst(string $hash, string $type = 'file_hash'): FileDuplicate
+    {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')
+            ->from($this->getTableName())
+            ->where(
+                $qb->expr()->eq('hash', $qb->createNamedParameter($hash)),
+                $qb->expr()->eq('type', $qb->createNamedParameter($type))
+            )
+            ->orderBy('id', 'ASC')
+            ->setMaxResults(1);
+
+        return $this->findEntity($qb);
+    }
+
+    /**
      * @param string|null $user
      * @param int|null $limit
      * @param int|null $offset
