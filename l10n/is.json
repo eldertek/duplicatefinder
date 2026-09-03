@@ -1,0 +1,27 @@
+{ "translations": {
+    "FAQ" : "FAQ / Algengar spurningar",
+    "Help" : "Hjálp",
+    "Filters" : "Síur",
+    "Projects" : "Verkefni",
+    "Settings saved" : "Stillingar vistaðar",
+    "Default order" : "Sjálfgefin röðun",
+    "Unselect all" : "Afvelja allt",
+    "Select all" : "Velja allt",
+    "Back" : "Til baka",
+    "Preview" : "Forskoðun",
+    "File" : "Skrá",
+    "Delete" : "Eyða",
+    "Default" : "Sjálfgefið",
+    "Settings" : "Stillingar",
+    "Close" : "Loka",
+    "Edit" : "Breyta",
+    "Remove folder" : "Fjarlægja möppu",
+    "Cancel" : "Hætta við",
+    "Step {step} of {total}" : "Skref {step} af {total}",
+    "Previous" : "Fyrra",
+    "Next" : "Næst",
+    "Advanced Settings" : "Ítarlegar stillingar",
+    "Note:" : "Athugaðu:",
+    "File not found" : "Skrá finnst ekki"
+},"pluralForm" :"nplurals=2; plural=(n % 10 != 1 || n % 100 == 11);"
+}
