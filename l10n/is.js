@@ -16,6 +16,7 @@ OC.L10N.register(
     "Default" : "Sjálfgefið",
     "Settings" : "Stillingar",
     "Close" : "Loka",
+    "Project" : "Áætla",
     "Edit" : "Breyta",
     "Remove folder" : "Fjarlægja möppu",
     "Cancel" : "Hætta við",
