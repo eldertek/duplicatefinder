@@ -8,6 +8,7 @@ use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\Entity;
+use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\Lock\ILockingProvider;
 use Psr\Log\LoggerInterface;
 
@@ -198,6 +199,12 @@ class FileDuplicateService
     {
         try {
             $fileDuplicate = $this->mapper->find($hash, $type);
+        } catch (MultipleObjectsReturnedException $e) {
+            // Several rows already exist for this hash/type (e.g. many
+            // empty files sharing the same hash) — reuse the oldest one
+            // instead of inserting yet another row, which would only grow
+            // the collision and make this exception recur on every scan.
+            $fileDuplicate = $this->mapper->findFirst($hash, $type);
         } catch (\Exception $e) {
             if (!($e instanceof DoesNotExistException)) {
                 $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
