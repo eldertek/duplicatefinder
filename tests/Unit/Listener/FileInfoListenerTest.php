@@ -46,6 +46,78 @@ class FileInfoListenerTest extends TestCase
 
     // Suppression du test testHandleNewFileInfoEventWithMultipleFilesOfSameSize car il est difficile à simuler correctement
 
+    public function testHandleUpdatedHashedFileWithNoPendingCandidates()
+    {
+        $fileInfo = new FileInfo('/testuser/files/updated.txt', 'testuser');
+        $fileInfo->setId(1);
+        $fileInfo->setSize(1024);
+        $fileInfo->setFileHash(str_repeat('a', 64));
+
+        $this->fileInfoService->expects($this->once())
+            ->method('countBySize')
+            ->with(1024)
+            ->willReturn(2);
+        $this->fileInfoService->expects($this->once())
+            ->method('findBySize')
+            ->with(1024, true)
+            ->willReturn([]);
+        $this->fileInfoService->expects($this->once())
+            ->method('calculateHashes')
+            ->with($this->identicalTo($fileInfo), 'testuser', true)
+            ->willReturn($fileInfo);
+
+        $this->listener->handle(new UpdatedFileInfoEvent($fileInfo, 'testuser'));
+    }
+
+    /**
+     * @dataProvider sameSizeCandidateProvider
+     */
+    public function testHandleUpdatedFileAndPendingSiblingOnce(bool $eventInCandidates)
+    {
+        $fileInfo = new FileInfo('/testuser/files/updated.txt', 'testuser');
+        $fileInfo->setId(1);
+        $fileInfo->setSize(1024);
+        $fileInfo->setFileHash($eventInCandidates ? null : str_repeat('a', 64));
+
+        $sibling = new FileInfo('/otheruser/files/pending.txt', 'otheruser');
+        $sibling->setId(2);
+        $sibling->setSize(1024);
+        $sibling->setFileHash(null);
+
+        // A database lookup returns a separate entity for the same file.
+        $candidates = $eventInCandidates ? [clone $fileInfo, $sibling] : [$sibling];
+        $this->fileInfoService->expects($this->once())
+            ->method('countBySize')
+            ->with(1024)
+            ->willReturn(2);
+        $this->fileInfoService->expects($this->once())
+            ->method('findBySize')
+            ->with(1024, true)
+            ->willReturn($candidates);
+
+        $hashedIds = [];
+        $this->fileInfoService->expects($this->exactly(2))
+            ->method('calculateHashes')
+            ->with($this->isInstanceOf(FileInfo::class), 'testuser', true)
+            ->willReturnCallback(function (FileInfo $candidate) use (&$hashedIds): FileInfo {
+                $hashedIds[] = $candidate->getId();
+
+                return $candidate;
+            });
+
+        $this->listener->handle(new UpdatedFileInfoEvent($fileInfo, 'testuser'));
+
+        $this->assertEqualsCanonicalizing([1, 2], $hashedIds);
+    }
+
+    public function sameSizeCandidateProvider(): array
+    {
+        return [
+            'hashed event excluded from candidates' => [false],
+            'unhashed event included in candidates' => [true],
+        ];
+    }
+
     public function testHandleWithException()
     {
         // Créer un FileInfo de test

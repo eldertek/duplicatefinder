@@ -37,7 +37,12 @@ class FileInfoListener implements IEventListener
 
                 if ($count > 1) {
                     $files = $this->fileInfoService->findBySize($fileInfo->getSize());
+                    // The event file may already have a hash and be excluded from the lookup.
+                    $this->fileInfoService->calculateHashes($fileInfo, $event->getUserID());
                     foreach ($files as $finfo) {
+                        if ($finfo === $fileInfo || ($fileInfo->getId() !== null && $finfo->getId() === $fileInfo->getId())) {
+                            continue;
+                        }
                         $this->fileInfoService->calculateHashes($finfo, $event->getUserID());
                     }
                     unset($finfo);
