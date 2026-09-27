@@ -130,6 +130,10 @@ class FileDuplicateService
             $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy);
 
             foreach ($entities as $entity) {
+                if (($type === 'acknowledged' && !$entity->isAcknowledged())
+                    || ($type === 'unacknowledged' && $entity->isAcknowledged())) {
+                    continue;
+                }
                 if ($user !== null) {
                     $entity = $this->stripFilesWithoutAccessRights($entity, $user);
                 }

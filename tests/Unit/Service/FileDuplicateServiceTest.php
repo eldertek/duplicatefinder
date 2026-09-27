@@ -182,6 +182,126 @@ class FileDuplicateServiceTest extends TestCase
         $this->assertEquals('hash2', $result['entities'][2]->getHash());
     }
 
+    /** @dataProvider excludedStatusProvider */
+    public function testFindAllSkipsExcludedStatusBeforeFileLookups(string $type, bool $acknowledged, ?string $user): void
+    {
+        $duplicate = $this->createStatusDuplicate('excluded', $acknowledged);
+        $this->mapper->expects($this->once())->method('findAll')
+            ->with($user, 20, 0, [['hash'], ['type']])
+            ->willReturn([$duplicate]);
+        $this->fileInfoService->expects($this->never())->method('findByHash');
+        $this->fileInfoService->expects($this->never())->method('hasAccessRight');
+        $this->fileInfoService->expects($this->never())->method('enrich');
+        $this->originFolderService->expects($this->never())->method('isPathProtected');
+
+        $result = $this->service->findAll($type, $user, 1, 20, true);
+
+        $this->assertSame([], $result['entities']);
+        $this->assertSame(0, $result['pageKey']);
+        $this->assertTrue($result['isLastFetched']);
+    }
+
+    public static function excludedStatusProvider(): array
+    {
+        return [
+            'unacknowledged with user' => ['unacknowledged', true, 'user1'],
+            'acknowledged with user' => ['acknowledged', false, 'user1'],
+            'unacknowledged without user' => ['unacknowledged', true, null],
+            'acknowledged without user' => ['acknowledged', false, null],
+        ];
+    }
+
+    /** @dataProvider matchingStatusProvider */
+    public function testFindAllRetainsMatchingGroups(string $type, array $expectedHashes): void
+    {
+        $acknowledged = $this->createStatusDuplicate('acknowledged-hash', true);
+        $unacknowledged = $this->createStatusDuplicate('unacknowledged-hash', false);
+        $groups = [$acknowledged, $unacknowledged];
+        $this->mapper->expects($this->once())->method('findAll')
+            ->with('user1', 20, 0, [['hash'], ['type']])->willReturn($groups);
+        $this->expectStatusFileLookups($groups, $expectedHashes);
+
+        $result = $this->service->findAll($type, 'user1', 1, 20, true);
+
+        $this->assertSame($expectedHashes, array_map(function (FileDuplicate $group): string {
+            return $group->getHash();
+        }, $result['entities']));
+        foreach ($result['entities'] as $group) {
+            $this->assertCount(2, $group->getFiles());
+        }
+        $this->assertSame(0, $result['pageKey']);
+        $this->assertTrue($result['isLastFetched']);
+    }
+
+    public static function matchingStatusProvider(): array
+    {
+        return [
+            'acknowledged' => ['acknowledged', ['acknowledged-hash']],
+            'unacknowledged' => ['unacknowledged', ['unacknowledged-hash']],
+            'all' => ['all', ['acknowledged-hash', 'unacknowledged-hash']],
+        ];
+    }
+
+    /** @dataProvider filteredPageProvider */
+    public function testFindAllContinuesPastExcludedPage(string $type, bool $acknowledged): void
+    {
+        $excluded1 = $this->createStatusDuplicate('excluded-1', !$acknowledged);
+        $excluded2 = $this->createStatusDuplicate('excluded-2', !$acknowledged);
+        $matching = $this->createStatusDuplicate('matching', $acknowledged);
+        $orderBy = [['size', 'DESC']];
+        $this->mapper->expects($this->exactly(2))->method('findAll')
+            ->withConsecutive(
+                ['user1', 2, 2, $orderBy],
+                ['user1', 2, 4, $orderBy]
+            )->willReturnOnConsecutiveCalls([$excluded1, $excluded2], [$matching]);
+        $this->expectStatusFileLookups([$matching], ['matching']);
+
+        $result = $this->service->findAll($type, 'user1', 2, 2, true, $orderBy);
+
+        $this->assertSame([$matching], $result['entities']);
+        $this->assertSame(4, $result['pageKey']);
+        $this->assertTrue($result['isLastFetched']);
+    }
+
+    public static function filteredPageProvider(): array
+    {
+        return [
+            'acknowledged' => ['acknowledged', true],
+            'unacknowledged' => ['unacknowledged', false],
+        ];
+    }
+
+    private function createStatusDuplicate(string $hash, bool $acknowledged): FileDuplicate
+    {
+        $duplicate = new FileDuplicate($hash, 'file_hash');
+        $duplicate->setAcknowledged($acknowledged);
+        $duplicate->setFiles([
+            new FileInfo('/user1/files/' . $hash . '-1.txt', 'user1'),
+            new FileInfo('/user1/files/' . $hash . '-2.txt', 'user1'),
+        ]);
+
+        return $duplicate;
+    }
+
+    private function expectStatusFileLookups(array $groups, array $expectedHashes): void
+    {
+        $filesByHash = [];
+        foreach ($groups as $group) {
+            $filesByHash[$group->getHash()] = $group->getFiles();
+        }
+        $this->fileInfoService->expects($this->exactly(count($expectedHashes)))->method('findByHash')
+            ->willReturnCallback(function (string $hash, string $type) use ($filesByHash, $expectedHashes): array {
+                $this->assertContains($hash, $expectedHashes);
+                $this->assertSame('file_hash', $type);
+                return $filesByHash[$hash];
+            });
+        $this->fileInfoService->expects($this->exactly(2 * count($expectedHashes)))->method('hasAccessRight')
+            ->with($this->isInstanceOf(FileInfo::class), 'user1')->willReturn(true);
+        $this->fileInfoService->expects($this->exactly(2 * count($expectedHashes)))->method('enrich')
+            ->willReturnArgument(0);
+        $this->originFolderService->method('isPathProtected')->willReturn(['isProtected' => false]);
+    }
+
     /**
      * Helper method to create a mock FileInfo with a specific size
      */
