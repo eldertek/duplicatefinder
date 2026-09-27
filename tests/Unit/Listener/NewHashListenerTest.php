@@ -66,32 +66,82 @@ class NewHashListenerTest extends TestCase
         $this->listener->handle($event);
     }
 
-    public function testHandleWithChangedHash()
+    /**
+     * @dataProvider changedHashProvider
+     */
+    public function testHandleWithChangedHash(?string $oldHash, ?string $newHash, array $counts, array $retained, array $deleted): void
     {
-        // Créer un FileInfo de test
         $fileInfo = new FileInfo();
-        $fileInfo->setId(1);
-        $fileInfo->setPath('/testuser/files/test.jpg');
-        $fileInfo->setOwner('testuser');
-        $fileInfo->setFileHash('newhash');
+        $fileInfo->setFileHash($newHash);
+        $event = new CalculatedHashEvent($fileInfo, $oldHash);
 
-        // Créer un événement CalculatedHashEvent avec un hash différent
-        $event = new CalculatedHashEvent($fileInfo, 'oldhash');
+        $countedHashes = [];
+        $retainedHashes = [];
+        $deletedHashes = [];
+        $this->fileInfoService->method('countByHash')
+            ->willReturnCallback(function (string $hash, string $type) use ($counts, &$countedHashes): int {
+                $countedHashes[] = [$hash, $type];
+                return $counts[$hash] ?? 0;
+            });
+        $this->fileDuplicateService->method('getOrCreate')
+            ->willReturnCallback(function (string $hash, string $type) use (&$retainedHashes) {
+                $retainedHashes[] = [$hash, $type];
+                return new \OCA\DuplicateFinder\Db\FileDuplicate();
+            });
+        $this->fileDuplicateService->method('delete')
+            ->willReturnCallback(function (string $hash, string $type = 'file_hash') use (&$deletedHashes) {
+                $deletedHashes[] = [$hash, $type];
+                return null;
+            });
+        $this->logger->expects($this->never())->method('error');
 
-        // Configurer le service FileInfoService pour indiquer qu'il y a plusieurs fichiers avec le même hash
-        $this->fileInfoService->expects($this->once())
-            ->method('countByHash')
-            ->with('newhash', 'file_hash')
-            ->willReturn(2);
-
-        // Le service FileDuplicateService devrait être appelé pour mettre à jour les duplications
-        $this->fileDuplicateService->expects($this->once())
-            ->method('getOrCreate')
-            ->with('newhash', 'file_hash');
-
-        // Appeler la méthode handle
         $this->listener->handle($event);
+
+        $expectedCounts = array_map(function (string $hash): array {
+            return [$hash, 'file_hash'];
+        }, array_keys($counts));
+        $this->assertEqualsCanonicalizing($expectedCounts, $countedHashes);
+        $this->assertEqualsCanonicalizing($retained, $retainedHashes);
+        $this->assertEqualsCanonicalizing($deleted, $deletedHashes);
     }
 
-    // Suppression du test testHandleWithException car il est difficile à simuler correctement
+    public static function changedHashProvider(): array
+    {
+        return [
+            'old group becomes a singleton, new group has duplicates' => [
+                'oldhash', 'newhash', ['oldhash' => 1, 'newhash' => 2],
+                [['newhash', 'file_hash']], [['oldhash', 'file_hash']],
+            ],
+            'old group retains duplicates, new group is a singleton' => [
+                'oldhash', 'newhash', ['oldhash' => 2, 'newhash' => 1],
+                [['oldhash', 'file_hash']], [['newhash', 'file_hash']],
+            ],
+            'both groups retain duplicates' => [
+                'oldhash', 'newhash', ['oldhash' => 3, 'newhash' => 3],
+                [['oldhash', 'file_hash'], ['newhash', 'file_hash']], [],
+            ],
+            'old group becomes empty, new group is a singleton' => [
+                'oldhash', 'newhash', ['oldhash' => 0, 'newhash' => 1],
+                [], [['oldhash', 'file_hash'], ['newhash', 'file_hash']],
+            ],
+            'first hash creates a duplicate group' => [
+                null, 'newhash', ['newhash' => 2], [['newhash', 'file_hash']], [],
+            ],
+            'first hash is unique' => [
+                null, 'newhash', ['newhash' => 1], [], [['newhash', 'file_hash']],
+            ],
+            'cleared hash leaves a singleton' => [
+                'oldhash', null, ['oldhash' => 1], [], [['oldhash', 'file_hash']],
+            ],
+            'cleared hash leaves duplicates' => [
+                'oldhash', null, ['oldhash' => 2], [['oldhash', 'file_hash']], [],
+            ],
+            'unchanged hash leaves groups alone' => [
+                'samehash', 'samehash', [], [], [],
+            ],
+            'absent hash leaves groups alone' => [
+                null, null, [], [], [],
+            ],
+        ];
+    }
 }
