@@ -71,7 +71,12 @@ export default {
   },
   data() {
     return {
-      settings: {}
+      settings: {
+        ignore_mounted_files: false,
+        disable_filesystem_events: false,
+        backgroundjob_interval_cleanup: '',
+        backgroundjob_interval_find: ''
+      }
     }
   },
   methods: {
