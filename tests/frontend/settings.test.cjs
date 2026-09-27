@@ -94,5 +94,3 @@ test('a failed settings request reports the error without crashing the page', as
 		vm.$destroy()
 	}
 })
-
-
