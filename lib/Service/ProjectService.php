@@ -461,6 +461,7 @@ class ProjectService
             $files = [];
             foreach ($fileData as $data) {
                 $fileInfo = new FileInfo();
+                $fileInfo->setId((int)$data['id']);
                 $fileInfo->setPath($data['path']);
                 $fileInfo->setFileHash($duplicate->getHash());
                 $fileInfo->setOwner($this->userId);
