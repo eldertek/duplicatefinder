@@ -1,5 +1,5 @@
 <template>
-  <div id="app-content">
+  <div id="duplicatefinder-admin-settings">
     <NcSettingsSection :name="t('duplicatefinder', 'Duplicate Finder Settings')"
       :description="t('duplicatefinder', 'All general settings to modify Duplicate Finder behaviors.')"
       :limit-width="true">
@@ -57,7 +57,8 @@ export default {
   async mounted() {
     try {
       const response = await axios.get(generateUrl('/apps/duplicatefinder/api/settings'))
-      this.settings = response.data.data;
+      // Merge into the defaults so every key the template reads stays defined
+      this.settings = { ...this.settings, ...response.data.data };
     } catch (e) {
       console.error(e)
       showError(t('duplicatefinder', 'Could not fetch settings'))
@@ -71,7 +72,15 @@ export default {
   },
   data() {
     return {
-      settings: {}
+      // The template renders before the settings are fetched. NcTextField requires a
+      // defined value (it calls value.toString()), so start with defined placeholders
+      // instead of an empty object, otherwise the whole settings page stays blank.
+      settings: {
+        backgroundjob_interval_find: '',
+        backgroundjob_interval_cleanup: '',
+        ignore_mounted_files: false,
+        disable_filesystem_events: false
+      }
     }
   },
   methods: {

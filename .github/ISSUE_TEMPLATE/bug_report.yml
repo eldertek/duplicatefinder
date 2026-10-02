@@ -35,6 +35,10 @@ body:
       label: Version
       description: What version of Nextcloud are you running?
       options:
+        - 35.x
+        - 34.x
+        - 33.x
+        - 32.x
         - 31.x
         - 30.x
         - 29.x

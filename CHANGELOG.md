@@ -1,3 +1,8 @@
+## 1.8.2 - 2026-10-02
+### Fixed
+- Added support for Nextcloud 35. The supported range is now Nextcloud 28 to 35, so the app can be installed from the App Store and enabled again after upgrading to Nextcloud 35 (Fix [#189](https://github.com/eldertek/duplicatefinder/issues/189)). The backend needed no change: verified on real Nextcloud 35.0.1 (PHP 8.5, PostgreSQL 18 and MariaDB 12.3) and on Nextcloud 28.0.14 (PHP 8.2, MariaDB 10.11), with a fresh install, an upgrade from Nextcloud 34 to 35 that kept the app's data, duplicate scans, the REST API and the background jobs
+- Fixed the blank admin settings page on Nextcloud 34 and 35 (Fix [#176](https://github.com/eldertek/duplicatefinder/issues/176), [#181](https://github.com/eldertek/duplicatefinder/issues/181)). Two causes: the page threw `Cannot read properties of undefined (reading 'toString')` because the text fields were rendered before the settings had been fetched, and the settings page of recent Nextcloud versions no longer provides the `#app-content` element that the app used as its mount point, so the app now mounts on an element of its own. Checked on Nextcloud 28 (old page layout), 34 and 35
+
 ## 1.8.1 - 2026-07-03
 ### Fixed
 - **Critical**: Fixed duplicate detection being completely broken on Nextcloud 28-32. Version 1.8.0 used `fetchAssociative()`/`fetchAllAssociative()` on query results, but these methods only exist in the `OCP\DB\IResult` interface since Nextcloud 33, so every file event failed with "Call to undefined method OC\DB\ResultAdapter::fetchAllAssociative()" and no duplicates were found. Reverted to `fetch()`/`fetchAll()` which are available on all supported versions. Verified against real Nextcloud 30.0.14, 31.0.7, 32.0.0 (PostgreSQL), 33.0.6 and 34.0.1 instances
