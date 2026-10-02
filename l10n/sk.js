@@ -304,7 +304,7 @@ OC.L10N.register(
     "Excludes files starting with \"backup_\"" : "Vylúčiť súbory začínajúce na \"backup_\"",
     "Excludes files containing \"cache\"" : "Vylúčiť súbory obsahujúce \"cache\"",
     "Managing Your Filters" : "Spravujte vaše Filtre",
-    "View all your active filters in the list" : "Zobrazenie všetkých vašich aktívnych filtrov v zozname",
+    "View all your active filters in the list" : "Zobraziť všetky vaše aktívne filtre v zozname",
     "Remove unwanted filters using the delete button" : "Odstránenie nepotrebných filtrov použitím tlačítka Zmazať",
     "Add new filters at any time" : "Pridanie nových filtrov kedykoľvek",
     "Note: Changes take effect on the next scan" : "Poznámka: Zmeny sa prejavia pri ďalšom skenovaní",
