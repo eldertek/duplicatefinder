@@ -117,7 +117,7 @@ OC.L10N.register(
     "Please enter a value" : "Bitte einen Wert eingeben",
     "Configure filtering rules to ignore files during scan based on file hash or file name pattern." : "Filterregeln konfigurieren, um Dateien während des Scans basierend auf dem Datei-Hash oder dem Dateinamenmuster zu ignorieren.",
     "Add Filter" : "Filter hinzufügen",
-    "You can use * as wildcard, e.g., *.tmp or backup_*." : "Sie können * als Platzhalter verwenden, z.B. *.tmp oder backup_*.",
+    "You can use * as wildcard, e.g., *.tmp or backup_*." : "Sie können * als Platzhalter verwenden, z. B. *.tmp oder backup_*.",
     "Select Origin Folder" : "Ursprungsordner auswählen",
     "This folder is already an origin folder" : "Dieser Ordner ist bereits ein Ursprungsordner",
     "Folder added to origin folders" : "Ordner zu Ursprungsordnern hinzugefügt",
