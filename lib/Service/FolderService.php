@@ -109,6 +109,29 @@ class FolderService
         }
     }
 
+    /**
+     * getNodeByFileInfo() answers null both for a file that is gone and for a node that cannot be
+     * resolved right now (group folder owned by a user that does not exist, deleted account...).
+     * Only the first case means that the database entry of the file is stale.
+     *
+     * Call it after getNodeByFileInfo() returned null: that method has already tried the user
+     * folder, which finds files that are not in the file cache yet.
+     *
+     * @return bool True when Nextcloud answers "not found" for the path of the file
+     */
+    public function isNodeGone(FileInfo $fileInfo): bool
+    {
+        try {
+            $this->rootFolder->get($fileInfo->getPath());
+
+            return false;
+        } catch (NotFoundException $e) {
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     private function isPathInsideFolder(string $path, string $folderPath): bool
     {
         $folderPath = rtrim($folderPath, '/');

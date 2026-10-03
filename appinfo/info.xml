@@ -68,6 +68,7 @@
         <post-migration>
             <step>OCA\DuplicateFinder\Migration\RepairFileInfos</step>
             <step>OCA\DuplicateFinder\Migration\RepairNullTypes</step>
+            <step>OCA\DuplicateFinder\Migration\RepairDuplicateGroups</step>
         </post-migration>
     </repair-steps>
 

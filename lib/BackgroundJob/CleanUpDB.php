@@ -2,8 +2,10 @@
 
 namespace OCA\DuplicateFinder\BackgroundJob;
 
+use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -28,6 +30,9 @@ class CleanUpDB extends TimedJob
     /** @var ExcludedFolderService */
     private $excludedFolderService;
 
+    /** @var FileDuplicateService */
+    private $fileDuplicateService;
+
     /**
      * Constructs a new instance of the CleanUpDB class.
      *
@@ -37,6 +42,7 @@ class CleanUpDB extends TimedJob
      * @param ConfigService $config The config service.
      * @param ITimeFactory $timeFactory The time factory instance.
      * @param ExcludedFolderService $excludedFolderService The excluded folder service.
+     * @param FileDuplicateService $fileDuplicateService The duplicate group service.
      */
     public function __construct(
         FileInfoService $fileInfoService,
@@ -44,13 +50,15 @@ class CleanUpDB extends TimedJob
         LoggerInterface $logger,
         ConfigService $config,
         ITimeFactory $timeFactory,
-        ExcludedFolderService $excludedFolderService
+        ExcludedFolderService $excludedFolderService,
+        FileDuplicateService $fileDuplicateService
     ) {
         $this->fileInfoService = $fileInfoService;
         $this->folderService = $folderService;
         $this->logger = $logger;
         $this->timeFactory = $timeFactory;
         $this->excludedFolderService = $excludedFolderService;
+        $this->fileDuplicateService = $fileDuplicateService;
 
         // Ensure the interval is set using the configuration service
         $this->setInterval($config->getCleanupJobInterval());
@@ -89,13 +97,14 @@ class CleanUpDB extends TimedJob
             }
 
             try {
-                $this->folderService->getNodeByFileInfo($fileInfo);
+                // getNodeByFileInfo() does not throw for a deleted file, it returns null (issue 183):
+                // null alone is not proof, group folders of a missing user give null as well
+                $node = $this->folderService->getNodeByFileInfo($fileInfo);
+                if ($node === null && $this->folderService->isNodeGone($fileInfo)) {
+                    $this->removeStaleFileInfo($fileInfo, 'file is gone');
+                }
             } catch (NotFoundException $e) {
-                $this->logger->info('CleanUpDB: FileInfo {path} will be deleted (not found)', [
-                    'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage(),
-                ]);
-                $this->fileInfoService->delete($fileInfo);
+                $this->removeStaleFileInfo($fileInfo, $e->getMessage());
             } catch (\Exception $e) {
                 $this->logger->error('CleanUpDB: Error checking file: {path}', [
                     'path' => $fileInfo->getPath(),
@@ -108,5 +117,26 @@ class CleanUpDB extends TimedJob
 
         $this->logger->debug('CleanUpDB: Cleanup job completed');
         unset($fileInfo);
+    }
+
+    /**
+     * Forget a file that does not exist any more, and its duplicate group if nothing is left to compare with.
+     */
+    private function removeStaleFileInfo(FileInfo $fileInfo, string $reason): void
+    {
+        $this->logger->info('CleanUpDB: FileInfo {path} will be deleted (not found)', [
+            'path' => $fileInfo->getPath(),
+            'error' => $reason,
+        ]);
+        $this->fileInfoService->delete($fileInfo);
+
+        try {
+            $this->fileDuplicateService->removeIfOrphaned($fileInfo->getFileHash());
+        } catch (\Exception $e) {
+            $this->logger->warning('CleanUpDB: Could not refresh the duplicate group of {path}', [
+                'path' => $fileInfo->getPath(),
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

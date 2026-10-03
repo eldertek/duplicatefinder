@@ -6,6 +6,7 @@ use OCA\DuplicateFinder\BackgroundJob\CleanUpDB;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -21,6 +22,7 @@ class CleanUpDBTest extends TestCase
     private $config;
     private $timeFactory;
     private $excludedFolderService;
+    private $fileDuplicateService;
     private $job;
 
     protected function setUp(): void
@@ -33,6 +35,7 @@ class CleanUpDBTest extends TestCase
         $this->config = $this->createMock(ConfigService::class);
         $this->timeFactory = $this->createMock(ITimeFactory::class);
         $this->excludedFolderService = $this->createMock(ExcludedFolderService::class);
+        $this->fileDuplicateService = $this->createMock(FileDuplicateService::class);
 
         $this->job = new CleanUpDB(
             $this->fileInfoService,
@@ -40,7 +43,8 @@ class CleanUpDBTest extends TestCase
             $this->logger,
             $this->config,
             $this->timeFactory,
-            $this->excludedFolderService
+            $this->excludedFolderService,
+            $this->fileDuplicateService
         );
     }
 
@@ -85,19 +89,75 @@ class CleanUpDBTest extends TestCase
             ->method('getNodeByFileInfo')
             ->willReturn($node);
 
+        // Des fichiers qui existent ne sont jamais oubliés
+        $this->fileInfoService->expects($this->never())->method('delete');
+
         // Appeler la méthode run
         $this->invokePrivateMethod($this->job, 'run', [null]);
     }
 
-    public function testRunHandlesNotFoundException()
+    /**
+     * Issue 183: FolderService::getNodeByFileInfo() does not throw for a file that was deleted, it
+     * returns null. The job used to wait for an exception that never came, so the entries of deleted
+     * files stayed in the database for ever and were still listed as duplicates.
+     */
+    public function testRunDeletesEntriesOfFilesThatAreGone()
     {
-        // Créer un mock pour FileInfo
-        $fileInfo = $this->getMockBuilder(FileInfo::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getPath', 'getOwner'])
-            ->getMock();
-        $fileInfo->method('getPath')->willReturn('/path/to/file.txt');
-        $fileInfo->method('getOwner')->willReturn('user1');
+        $fileInfo = $this->createFileInfo('/user1/files/Instant Upload/gone.jpg', 'user1', 'hash-of-gone');
+
+        $this->fileInfoService->expects($this->once())
+            ->method('findAll')
+            ->willReturn([$fileInfo]);
+
+        $this->folderService->expects($this->once())
+            ->method('getNodeByFileInfo')
+            ->with($fileInfo)
+            ->willReturn(null);
+        $this->folderService->expects($this->once())
+            ->method('isNodeGone')
+            ->with($fileInfo)
+            ->willReturn(true);
+
+        $this->fileInfoService->expects($this->once())
+            ->method('delete')
+            ->with($fileInfo);
+        // Once its last entry is gone, the group has nothing left to compare with
+        $this->fileDuplicateService->expects($this->once())
+            ->method('removeIfOrphaned')
+            ->with('hash-of-gone');
+
+        $this->invokePrivateMethod($this->job, 'run', [null]);
+    }
+
+    /**
+     * A node that cannot be resolved (group folder of a user that does not exist, deleted
+     * account) is not a deleted file: its entry must stay.
+     */
+    public function testRunKeepsEntriesOfNodesThatCannotBeResolved()
+    {
+        $fileInfo = $this->createFileInfo('/__groupfolders/3/report.pdf', 'user1', 'hash-of-report');
+
+        $this->fileInfoService->expects($this->once())
+            ->method('findAll')
+            ->willReturn([$fileInfo]);
+
+        $this->folderService->expects($this->once())
+            ->method('getNodeByFileInfo')
+            ->willReturn(null);
+        $this->folderService->expects($this->once())
+            ->method('isNodeGone')
+            ->with($fileInfo)
+            ->willReturn(false);
+
+        $this->fileInfoService->expects($this->never())->method('delete');
+        $this->fileDuplicateService->expects($this->never())->method('removeIfOrphaned');
+
+        $this->invokePrivateMethod($this->job, 'run', [null]);
+    }
+
+    public function testRunStillHandlesNotFoundException()
+    {
+        $fileInfo = $this->createFileInfo('/path/to/file.txt', 'user1', null);
 
         // Le FileInfoService retourne un fichier
         $this->fileInfoService->expects($this->once())
@@ -124,15 +184,32 @@ class CleanUpDBTest extends TestCase
         $this->invokePrivateMethod($this->job, 'run', [null]);
     }
 
+    public function testRunGoesOnWhenTheDuplicateGroupCannotBeRefreshed()
+    {
+        $fileInfo1 = $this->createFileInfo('/user1/files/a.jpg', 'user1', 'hash-a');
+        $fileInfo2 = $this->createFileInfo('/user1/files/b.jpg', 'user1', 'hash-b');
+
+        $this->fileInfoService->method('findAll')->willReturn([$fileInfo1, $fileInfo2]);
+        $this->folderService->method('getNodeByFileInfo')->willReturn(null);
+        $this->folderService->method('isNodeGone')->willReturn(true);
+
+        // Both stale entries are removed even if the group of the first one cannot be refreshed
+        $this->fileInfoService->expects($this->exactly(2))->method('delete');
+        $this->fileDuplicateService->expects($this->exactly(2))
+            ->method('removeIfOrphaned')
+            ->willReturnCallback(function (?string $hash): void {
+                if ($hash === 'hash-a') {
+                    throw new \RuntimeException('group is locked');
+                }
+            });
+        $this->logger->expects($this->atLeastOnce())->method('warning');
+
+        $this->invokePrivateMethod($this->job, 'run', [null]);
+    }
+
     public function testRunHandlesGenericException()
     {
-        // Créer un mock pour FileInfo
-        $fileInfo = $this->getMockBuilder(FileInfo::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getPath', 'getOwner'])
-            ->getMock();
-        $fileInfo->method('getPath')->willReturn('/path/to/file.txt');
-        $fileInfo->method('getOwner')->willReturn('user1');
+        $fileInfo = $this->createFileInfo('/path/to/file.txt', 'user1', null);
 
         // Le FileInfoService retourne un fichier
         $this->fileInfoService->expects($this->once())
@@ -160,6 +237,19 @@ class CleanUpDBTest extends TestCase
 
         // Appeler la méthode run
         $this->invokePrivateMethod($this->job, 'run', [null]);
+    }
+
+    private function createFileInfo(string $path, ?string $owner, ?string $hash)
+    {
+        $fileInfo = $this->getMockBuilder(FileInfo::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['getPath', 'getOwner', 'getFileHash'])
+            ->getMock();
+        $fileInfo->method('getPath')->willReturn($path);
+        $fileInfo->method('getOwner')->willReturn($owner);
+        $fileInfo->method('getFileHash')->willReturn($hash);
+
+        return $fileInfo;
     }
 
     /**

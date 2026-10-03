@@ -65,14 +65,23 @@ class FileDuplicateService
             // Enrich the FileInfo object
             $files[$key] = $this->fileInfoService->enrich($fileInfo);
 
-            // Skip if we've already seen this node ID (same physical file)
-            if ($files[$key]->getNodeId() && isset($seenNodeIds[$files[$key]->getNodeId()])) {
+            // A file Nextcloud cannot find any more is no copy to offer: it is listed as a duplicate
+            // of files that are still there but deleting it can only fail (issue 183). The entry
+            // stays in the database, the clean up job removes it once the file is known to be gone.
+            if (!$files[$key]->getNodeId()) {
+                $this->logger->debug('Skipping a duplicate entry whose file cannot be found: {path}', [
+                    'path' => $fileInfo->getPath(),
+                ]);
+
                 continue;
             }
 
-            if ($files[$key]->getNodeId()) {
-                $seenNodeIds[$files[$key]->getNodeId()] = true;
+            // Skip if we've already seen this node ID (same physical file)
+            if (isset($seenNodeIds[$files[$key]->getNodeId()])) {
+                continue;
             }
+
+            $seenNodeIds[$files[$key]->getNodeId()] = true;
 
             // Normalize the path for the origin folder check
             $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $fileInfo->getPath());
@@ -222,6 +231,19 @@ class FileDuplicateService
         return $fileDuplicate;
     }
 
+    /**
+     * Drop the duplicate group of a hash once fewer than two file entries are left in it.
+     */
+    public function removeIfOrphaned(?string $hash, string $type = 'file_hash'): void
+    {
+        if ($hash === null || $hash === '') {
+            return;
+        }
+        if ($this->fileInfoService->countByHash($hash, $type) < 2) {
+            $this->delete($hash, $type);
+        }
+    }
+
     public function delete(string $hash, string $type = 'file_hash'): ?FileDuplicate
     {
         try {
@@ -267,6 +289,11 @@ class FileDuplicateService
             return $fileDuplicate;
 
         } catch (DoesNotExistException $e) {
+            return null;
+        } catch (MultipleObjectsReturnedException $e) {
+            // Several rows for one hash (issue 178) are the same group several times: drop them all
+            $this->mapper->deleteByHash($hash, $type);
+
             return null;
         } catch (\Exception $e) {
             $this->logger->error('Failed to delete duplicate', [

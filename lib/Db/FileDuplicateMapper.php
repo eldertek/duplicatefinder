@@ -55,6 +55,21 @@ class FileDuplicateMapper extends EQBMapper
     }
 
     /**
+     * Delete every row of a hash/type pair, whatever their number.
+     *
+     * @return int The number of rows deleted
+     */
+    public function deleteByHash(string $hash, string $type = 'file_hash'): int
+    {
+        $qb = $this->db->getQueryBuilder();
+        $qb->delete($this->getTableName())
+            ->where($qb->expr()->eq('hash', $qb->createNamedParameter($hash)))
+            ->andWhere($qb->expr()->eq('type', $qb->createNamedParameter($type)));
+
+        return $qb->executeStatement();
+    }
+
+    /**
      * @param string|null $user
      * @param int|null $limit
      * @param int|null $offset
