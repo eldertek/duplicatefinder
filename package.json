@@ -10,7 +10,7 @@
   "license": "agpl",
   "private": true,
   "scripts": {
-    "test:frontend": "node --test tests/frontend/settings.test.cjs",
+    "test:frontend": "node --test --test-reporter=spec tests/frontend/*.test.cjs",
     "build": "webpack --node-env production --progress",
     "dev": "webpack --node-env development --progress",
     "watch": "webpack --node-env development --progress --watch",
