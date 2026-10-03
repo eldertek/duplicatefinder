@@ -180,6 +180,29 @@ class FileInfoService
     }
 
     /**
+     * Whether a file other than the given one still holds this content and can be reached by the user.
+     *
+     * Rows of deleted files and rows that point to the same node (a file reachable through
+     * several paths) do not count: they are no copy to fall back on.
+     *
+     * @param int|null $nodeId The node that is about to be deleted
+     */
+    public function hasOtherLiveCopy(string $hash, ?int $nodeId, string $user, string $type = 'file_hash'): bool
+    {
+        foreach ($this->mapper->findByHash($hash, $type) as $candidate) {
+            $candidateNodeId = $this->enrich($candidate)->getNodeId();
+            if (!$candidateNodeId || (int)$candidateNodeId === $nodeId) {
+                continue;
+            }
+            if ($this->hasAccessRight($candidate, $user)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return array<FileInfo>
      */
     public function findBySize(int $size, bool $onlyEmptyHash = true): array

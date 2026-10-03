@@ -3,6 +3,7 @@
 namespace OCA\DuplicateFinder\Tests\Unit\Controller;
 
 use OCA\DuplicateFinder\Controller\FileApiController;
+use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
 use OCA\DuplicateFinder\Service\FileService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -179,6 +180,69 @@ class FileApiControllerTest extends TestCase
                 'message' => 'File is locked: ' . $lockedPath,
             ]],
         ], $response->getData());
+    }
+
+    /**
+     * The web interface names the file by node id and says which group it is deleted from (issues 177, 180).
+     */
+    public function testDeleteForwardsNodeIdAndGroupHash()
+    {
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, '/Photos/a.jpg'], ['paths', null, null]]);
+        $this->request->method('getParams')
+            ->willReturn(['path' => '/Photos/a.jpg', 'nodeId' => '77', 'hash' => 'abc123', 'allowLastCopy' => 'false']);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, '/Photos/a.jpg', 77, 'abc123', false);
+
+        $response = $this->controller->delete();
+
+        $this->assertEquals(['status' => 'success'], $response->getData());
+    }
+
+    public function testDeleteForwardsTheOptInToDeleteTheLastCopy()
+    {
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, '/Photos/a.jpg'], ['paths', null, null]]);
+        $this->request->method('getParams')
+            ->willReturn(['nodeId' => 5, 'hash' => 'abc123', 'allowLastCopy' => true]);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, '/Photos/a.jpg', 5, 'abc123', true);
+
+        $this->controller->delete();
+    }
+
+    public function testDeleteAcceptsANodeIdWithoutPath()
+    {
+        $this->request->method('getParam')->willReturn(null);
+        $this->request->method('getParams')->willReturn(['nodeId' => 9]);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, '', 9, null, false);
+
+        $response = $this->controller->delete();
+
+        $this->assertEquals(['status' => 'success'], $response->getData());
+    }
+
+    public function testDeleteRefusesTheLastCopyWithAConflict()
+    {
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, '/Photos/a.jpg'], ['paths', null, null]]);
+        $this->request->method('getParams')->willReturn(['hash' => 'abc123']);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->willThrowException(new LastCopyProtectionException('last copy of its content'));
+
+        $response = $this->controller->delete();
+
+        $this->assertEquals(Http::STATUS_CONFLICT, $response->getStatus());
+        $this->assertEquals('LAST_COPY_PROTECTED', $response->getData()['error']);
     }
 
     // Suppression des tests testInfo, testInfoWithNotFoundException et testInfoWithGenericException

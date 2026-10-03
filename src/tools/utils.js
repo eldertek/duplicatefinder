@@ -43,13 +43,50 @@ export function getPreviewImage(item) {
 }
 
 /**
+ * Tell whether two entries of a duplicate describe the same file.
+ *
+ * Entries are matched on the id of their database row. Two missing ids never match each
+ * other: a result without ids (project views before 1.8.3) used to make every file match
+ * the first one, so deleting a file removed the wrong row from the screen (issue 180).
+ * Without ids the path, which is unique per file, is compared instead.
+ *
+ * @param {Object} a - First file entry.
+ * @param {Object} b - Second file entry.
+ * @returns {boolean} True when both entries are the same file.
+ */
+export function isSameFile(a, b) {
+    if (a === b) {
+        return true;
+    }
+    if (!a || !b) {
+        return false;
+    }
+    const hasIdA = a.id !== null && a.id !== undefined;
+    const hasIdB = b.id !== null && b.id !== undefined;
+    if (hasIdA && hasIdB) {
+        return a.id === b.id;
+    }
+    return Boolean(a.path) && a.path === b.path;
+}
+
+/**
+ * Stable key of a file entry for v-for loops (its id, or its path when it has none).
+ *
+ * @param {Object} file - The file entry.
+ * @returns {string|number} The key.
+ */
+export function fileKey(file) {
+    return file.id !== null && file.id !== undefined ? file.id : file.path;
+}
+
+/**
  * Remove a file from a list of files.
  *
  * @param {Object} file - The file to remove from the list.
  * @param {Array} list - The list from which to remove the file.
  */
 export function removeFileFromList(file, list) {
-    const index = list.findIndex(f => f.id === file.id);
+    const index = list.findIndex(f => isSameFile(f, file));
     if (index !== -1) {
         list.splice(index, 1);
     }
@@ -63,7 +100,7 @@ export function removeFileFromList(file, list) {
  */
 export function removeFilesFromList(files, list) {
     files.forEach(file => {
-        const index = list.findIndex(f => f.id === file.id);
+        const index = list.findIndex(f => isSameFile(f, file));
         if (index !== -1) {
             list.splice(index, 1);
         }

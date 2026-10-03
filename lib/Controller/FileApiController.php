@@ -46,8 +46,13 @@ class FileApiController extends Controller
     {
         $path = $this->request->getParam('path');
         $paths = $this->request->getParam('paths');
+        // Optional, sent by the web interface: which node it is and which duplicate group it belongs to
+        $extra = $this->request->getParams();
+        $nodeId = isset($extra['nodeId']) && is_numeric($extra['nodeId']) ? (int)$extra['nodeId'] : null;
+        $hash = isset($extra['hash']) && is_string($extra['hash']) && $extra['hash'] !== '' ? $extra['hash'] : null;
+        $allowLastCopy = filter_var($extra['allowLastCopy'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
-        if (empty($path) && empty($paths)) {
+        if (empty($path) && empty($paths) && $nodeId === null) {
             return new JSONResponse(
                 ['error' => 'Path or paths parameter is required'],
                 Http::STATUS_BAD_REQUEST
@@ -78,16 +83,20 @@ class FileApiController extends Controller
                 return new JSONResponse($results);
             } else {
                 $this->logger->debug('Attempting to delete single file: {path}', ['path' => $path]);
-                $this->service->deleteFile($this->userId, $path);
+                if ($nodeId === null && $hash === null && !$allowLastCopy) {
+                    $this->service->deleteFile($this->userId, (string)$path);
+                } else {
+                    $this->service->deleteFile($this->userId, (string)$path, $nodeId, $hash, $allowLastCopy);
+                }
                 $this->logger->info('Successfully deleted file: {path}', ['path' => $path]);
 
                 return new JSONResponse(['status' => 'success']);
             }
         } catch (Exception $e) {
-            $this->logDeletionFailure($e, $path, true);
+            $this->logDeletionFailure($e, (string)$path, true);
 
             return new JSONResponse(
-                $this->getDeletionError($e, $path),
+                $this->getDeletionError($e, (string)$path),
                 $this->getDeletionErrorStatus($e)
             );
         }
@@ -97,6 +106,7 @@ class FileApiController extends Controller
     {
         return match (true) {
             $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => Http::STATUS_FORBIDDEN,
+            $e instanceof \OCA\DuplicateFinder\Exception\LastCopyProtectionException => Http::STATUS_CONFLICT,
             $e instanceof \OCP\Files\NotFoundException => Http::STATUS_NOT_FOUND,
             $e instanceof \OCP\Files\NotPermittedException => Http::STATUS_FORBIDDEN,
             $e instanceof LockedException => Http::STATUS_LOCKED,
@@ -109,6 +119,10 @@ class FileApiController extends Controller
         return match (true) {
             $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => [
                 'error' => 'ORIGIN_FOLDER_PROTECTED',
+                'message' => $e->getMessage(),
+            ],
+            $e instanceof \OCA\DuplicateFinder\Exception\LastCopyProtectionException => [
+                'error' => 'LAST_COPY_PROTECTED',
                 'message' => $e->getMessage(),
             ],
             $e instanceof \OCP\Files\NotFoundException => [

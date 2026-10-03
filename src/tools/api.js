@@ -68,14 +68,30 @@ export const unacknowledgeDuplicate = async (hash) => {
 
 /**
  * Deletes a file from a duplicate.
+ *
+ * The node id identifies the file exactly (a shared file has no path of the current user),
+ * and the hash of the group lets the server refuse to delete the last remaining copy.
+ *
  * @param {Object} file The file to delete.
+ * @param {Object} [options]
+ * @param {boolean} [options.allowLastCopy] Delete the file even if it is the last copy of its group.
  * @returns {Promise<void>}
  */
-export const deleteFile = async (file) => {
+export const deleteFile = async (file, options = {}) => {
     try {
         const url = generateApiBaseUrl('/files/delete');
         const filePath = normalizeItemPath(file.path);
-        await axios.post(url, { path: filePath });
+        const body = { path: filePath };
+        if (file.nodeId) {
+            body.nodeId = file.nodeId;
+        }
+        if (file.fileHash) {
+            body.hash = file.fileHash;
+        }
+        if (options.allowLastCopy) {
+            body.allowLastCopy = true;
+        }
+        await axios.post(url, body);
         showSuccessNotification(t('duplicatefinder', 'File deleted successfully.'));
         return true;
     } catch (error) {
@@ -85,6 +101,9 @@ export const deleteFile = async (file) => {
         switch(errorData?.error) {
             case 'ORIGIN_FOLDER_PROTECTED':
                 showErrorNotification(t('duplicatefinder', 'Cannot delete file as it is in an origin folder'));
+                break;
+            case 'LAST_COPY_PROTECTED':
+                showErrorNotification(t('duplicatefinder', 'This is the last remaining copy of this file, it was not deleted'));
                 break;
             case 'FILE_NOT_FOUND':
                 showErrorNotification(t('duplicatefinder', 'File not found'));
@@ -105,15 +124,16 @@ export const deleteFile = async (file) => {
 /**
  * Deletes multiple files.
  * @param {Array} files The files to delete.
+ * @param {Object} [options] Same options as deleteFile.
  * @returns {Promise<void>}
  */
-export const deleteFiles = async (files) => {
+export const deleteFiles = async (files, options = {}) => {
     const results = [];
     const errors = [];
 
     for (const file of files) {
         try {
-            const success = await deleteFile(file);
+            const success = await deleteFile(file, options);
             if (success) {
                 results.push(file);
             }

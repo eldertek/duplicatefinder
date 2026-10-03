@@ -422,7 +422,10 @@ export default {
         const group = this.previewResults.duplicateGroups[hash]
         return selectedIndexes.map(index => ({
           path: group.filesToDelete[index].path,
-          size: group.filesToDelete[index].size
+          size: group.filesToDelete[index].size,
+          // The server uses them to find the exact file and to keep the last copy of the group
+          nodeId: group.filesToDelete[index].nodeId,
+          fileHash: hash
         }))
       })
 

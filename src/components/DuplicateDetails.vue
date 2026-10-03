@@ -33,13 +33,12 @@
               </div>
             </div>
           </div>
-          <div v-for="(file, index) in duplicate.files" :key="file.id" class="file-display">
+          <div v-for="(file, index) in duplicate.files" :key="fileKey(file)" class="file-display">
             <input
               type="checkbox"
               v-model="selectedFiles"
               :value="file"
               :disabled="file.isInOriginFolder"
-              @change="handleFileSelection(file)"
             />
             <DuplicateFileDisplay
               :file="file"
@@ -72,7 +71,7 @@
 
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates } from '@/tools/api';
-import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, normalizeItemPath } from '@/tools/utils';
+import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, normalizeItemPath, fileKey, isSameFile } from '@/tools/utils';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -90,7 +89,14 @@ export default {
       showDropdown: false
     };
   },
+  watch: {
+    // A selection belongs to the duplicate it was made on: never carry it over to another one
+    duplicate() {
+      this.selectedFiles = [];
+    }
+  },
   methods: {
+    fileKey,
     async unOrAcknowledgeDuplicate(duplicate) {
       try {
         // Créer une copie du doublon pour viter les mutations directes
@@ -117,6 +123,8 @@ export default {
     removeFileFromListAndUpdate(file) {
       console.log('DuplicateDetails: Removing file from list:', file);
       removeFileFromList(file, this.duplicate.files);
+      // A file that is gone cannot stay selected for the next "Delete Selected"
+      this.selectedFiles = this.selectedFiles.filter(selected => !isSameFile(selected, file));
       console.log('DuplicateDetails: Files remaining:', this.duplicate.files.length);
 
       if (this.duplicate.files.length <= 1) {
@@ -152,12 +160,15 @@ export default {
 
         // Check if at least one file will remain after deletion
         const remainingFiles = this.duplicate.files.filter(file => !this.selectedFiles.includes(file));
+        let allowLastCopy = false;
         if (remainingFiles.length === 0) {
           const confirmDelete = confirm(this.t('duplicatefinder', 'This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?'));
           if (!confirmDelete) return;
+          // Only an explicit confirmation lets the server delete the last copy
+          allowLastCopy = true;
         }
 
-        const { success, errors } = await deleteFiles(this.selectedFiles);
+        const { success, errors } = await deleteFiles(this.selectedFiles, { allowLastCopy });
         if (success.length > 0) {
           removeFilesFromList(success, this.duplicate.files);
           this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
@@ -184,22 +195,6 @@ export default {
         this.selectedFiles = filesToSelect.slice(1);
       } else {
         this.selectedFiles = filesToSelect;
-      }
-    },
-    // Ajouter une méthode pour vérifier si un fichier peut être sélectionné
-    canSelectFile(file) {
-      return !file.isInOriginFolder;
-    },
-    // Ajouter une méthode pour gérer la sélection d'un fichier
-    handleFileSelection(file) {
-      if (!this.canSelectFile(file)) {
-        return;
-      }
-      const index = this.selectedFiles.indexOf(file);
-      if (index === -1) {
-        this.selectedFiles.push(file);
-      } else {
-        this.selectedFiles.splice(index, 1);
       }
     },
     removeDuplicateFromList(duplicate) {
