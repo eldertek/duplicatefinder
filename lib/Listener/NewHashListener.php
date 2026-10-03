@@ -3,7 +3,6 @@
 namespace OCA\DuplicateFinder\Listener;
 
 use OCA\DuplicateFinder\AppInfo\Application;
-use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Event\CalculatedHashEvent;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
@@ -39,21 +38,18 @@ class NewHashListener implements IEventListener
         try {
             if ($event instanceof CalculatedHashEvent && $event->isChanged()) {
                 $fileInfo = $event->getFileInfo();
-                $this->updateDuplicates($fileInfo, $event->getOldHash());
+                $this->updateDuplicates($fileInfo->getFileHash());
+                $this->updateDuplicates($event->getOldHash());
             }
         } catch (\Throwable $e) {
             $this->logger->error('Failed to handle new hash event .', ['exception' => $e]);
         }
     }
 
-    private function updateDuplicates(FileInfo $fileInfo, ?string $oldHash, string $type = 'file_hash'): void
+    private function updateDuplicates(?string $hash, string $type = 'file_hash'): void
     {
-        $hash = $fileInfo->getFileHash();
         if (is_null($hash)) {
-            if (is_null($oldHash)) {
-                return;
-            }
-            $hash = $oldHash;
+            return;
         }
         $count = $this->fileInfoService->countByHash($hash, $type);
         if ($count > 1) {
