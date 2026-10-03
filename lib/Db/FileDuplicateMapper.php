@@ -277,7 +277,7 @@ class FileDuplicateMapper extends EQBMapper
     public function findFilesByHash(string $hash, string $userId): array
     {
         $qb = $this->db->getQueryBuilder();
-        $qb->select('f.path', 'f.size', 'f.updated_at')
+        $qb->select('f.id', 'f.path', 'f.size', 'f.updated_at')
            ->from('duplicatefinder_finfo', 'f')
            ->where(
                $qb->expr()->eq('f.file_hash', $qb->createNamedParameter($hash, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR))
@@ -291,6 +291,7 @@ class FileDuplicateMapper extends EQBMapper
 
         while ($row = $result->fetch()) {
             $files[] = [
+                'id' => (int)$row['id'],
                 'path' => $row['path'],
                 'size' => $row['size'] ?? 0,
                 'updated_at' => $row['updated_at'] ?? time(),
