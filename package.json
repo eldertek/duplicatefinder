@@ -10,6 +10,7 @@
   "license": "agpl",
   "private": true,
   "scripts": {
+    "test:frontend": "node --test tests/frontend/settings.test.cjs",
     "build": "webpack --node-env production --progress",
     "dev": "webpack --node-env development --progress",
     "watch": "webpack --node-env development --progress --watch",
@@ -37,6 +38,7 @@
     "@nextcloud/vue": "^8.14.0",
     "@nextcloud/webpack-vue-config": "^6.0.1",
     "eslint": "^7.32.0",
+    "jsdom": "24.1.3",
     "stylelint": "^17.9.1",
     "stylelint-config-recommended-scss": "^17.0.0",
     "stylelint-config-recommended-vue": "^1.6.1",
