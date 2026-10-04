@@ -361,6 +361,12 @@ class FileInfoService
     public function calculateHashes(FileInfo $fileInfo, ?string $fallbackUID = null, bool $requiresHash = true): FileInfo
     {
         $oldHash = $fileInfo->getFileHash();
+        if (!$requiresHash && empty($oldHash)) {
+            // No other file has this size and there is no hash to clear: nothing to do.
+            // Without this check every unique-size file was looked up and written again
+            // on each scan, as an empty hash always counts as "recalculation required".
+            return $fileInfo;
+        }
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
         if ($file === null) {
             // Node unreachable (deleted, group folder without user, unmounted storage):
@@ -390,7 +396,9 @@ class FileInfoService
                     $fileInfo->setFileHash(null);
                 }
             } else {
+                // The content changed and no other file has this size any more: drop the stale hash
                 $fileInfo->setFileHash(null);
+                $fileInfo->setUpdatedAt(new \DateTime());
             }
 
             $this->update($fileInfo, $fallbackUID);
