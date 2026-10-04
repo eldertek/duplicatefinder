@@ -210,6 +210,47 @@ class FileInfoService
         return $this->mapper->findBySize($size, $onlyEmptyHash);
     }
 
+    /**
+     * @param array<string> $paths
+     * @return array<string, FileInfo> indexed by path
+     */
+    public function findByPaths(array $paths, string $userID): array
+    {
+        return $this->mapper->findByPaths($paths, $userID);
+    }
+
+    /**
+     * Whether saving the file again would leave its row as it is: the row holds a hash that is newer
+     * than the last change of the file, and its size, type and ignore status are still current.
+     * Rows without a hash are never up to date, so that a pending or failed hash is retried.
+     */
+    public function isUpToDate(FileInfo $fileInfo, Node $file): bool
+    {
+        if (!($file instanceof \OCP\Files\File)
+            || empty($fileInfo->getFileHash())
+            || $fileInfo->isIgnored()
+            || $file->isMounted()
+        ) {
+            return false;
+        }
+
+        $updatedAt = $fileInfo->getUpdatedAt()->getTimestamp();
+        if ((int)$fileInfo->getSize() !== (int)$file->getSize()
+            || $fileInfo->getMimetype() !== $file->getMimetype()
+            || $file->getMtime() > $updatedAt
+            || $file->getUploadTime() > $updatedAt
+        ) {
+            return false;
+        }
+
+        try {
+            // Filters, excluded folders or a .nodupefinder file may have been added since
+            return !$this->filterService->isIgnored($fileInfo, $file);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     public function countByHash(string $hash, string $type = 'file_hash'): int
     {
         return $this->mapper->countByHash($hash, $type);

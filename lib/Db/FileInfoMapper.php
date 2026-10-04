@@ -53,6 +53,34 @@ class FileInfoMapper extends EQBMapper
     }
 
     /**
+     * Rows of the given owner for several paths at once, e.g. the files of one folder
+     *
+     * @param array<string> $paths
+     * @return array<string, FileInfo> indexed by path
+     */
+    public function findByPaths(array $paths, string $userID): array
+    {
+        $result = [];
+        foreach (array_chunk(array_values(array_unique($paths)), 500) as $chunk) {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('*')
+            ->from($this->getTableName())
+            ->where(
+                $qb->expr()->in('path_hash', $qb->createNamedParameter(array_map('sha1', $chunk), IQueryBuilder::PARAM_STR_ARRAY)),
+                $qb->expr()->eq('owner', $qb->createNamedParameter($userID))
+            );
+            foreach ($this->findEntities($qb) as $entity) {
+                // Same pick as find(): the first row of a path wins
+                if (!isset($result[$entity->getPath()])) {
+                    $result[$entity->getPath()] = $entity;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * @return array<FileInfo>
      */
     public function findByHash(string $hash, string $type = 'file_hash'): array

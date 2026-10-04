@@ -374,4 +374,69 @@ class FileInfoServiceTest extends TestCase
 
         $this->assertSame(str_repeat('c', 64), $result->getFileHash());
     }
+
+    private function indexedFile(array $overrides = []): \OCP\Files\File
+    {
+        $values = array_merge([
+            'mtime' => 1000,
+            'uploadTime' => 0,
+            'size' => 4096,
+            'mimetype' => 'image/jpeg',
+            'mounted' => false,
+        ], $overrides);
+        $file = $this->createMock(\OCP\Files\File::class);
+        $file->method('getMtime')->willReturn($values['mtime']);
+        $file->method('getUploadTime')->willReturn($values['uploadTime']);
+        $file->method('getSize')->willReturn($values['size']);
+        $file->method('getMimetype')->willReturn($values['mimetype']);
+        $file->method('isMounted')->willReturn($values['mounted']);
+
+        return $file;
+    }
+
+    private function hashedRow(): FileInfo
+    {
+        $fileInfo = new FileInfo('/testuser/files/photo.jpg', 'testuser');
+        $fileInfo->setFileHash(str_repeat('d', 64));
+        $fileInfo->setSize(4096);
+        $fileInfo->setMimetype('image/jpeg');
+        $fileInfo->setUpdatedAt(2000);
+        $fileInfo->setIgnored(false);
+
+        return $fileInfo;
+    }
+
+    public function testIsUpToDateForUnchangedHashedFile()
+    {
+        $this->filterService->method('isIgnored')->willReturn(false);
+
+        $this->assertTrue($this->service->isUpToDate($this->hashedRow(), $this->indexedFile()));
+    }
+
+    /**
+     * @dataProvider outdatedFileProvider
+     */
+    public function testIsUpToDateDetectsChanges(array $fileOverrides, ?string $hash, bool $nowIgnored)
+    {
+        $this->filterService->method('isIgnored')->willReturn($nowIgnored);
+        $fileInfo = $this->hashedRow();
+        $fileInfo->setFileHash($hash);
+
+        $this->assertFalse($this->service->isUpToDate($fileInfo, $this->indexedFile($fileOverrides)));
+    }
+
+    public static function outdatedFileProvider(): array
+    {
+        $hash = str_repeat('d', 64);
+
+        return [
+            'modified after hashing' => [['mtime' => 3000], $hash, false],
+            'uploaded after hashing' => [['uploadTime' => 3000], $hash, false],
+            'size changed' => [['size' => 1], $hash, false],
+            'type changed' => [['mimetype' => 'image/png'], $hash, false],
+            'mount point' => [['mounted' => true], $hash, false],
+            'no hash yet' => [[], null, false],
+            'ignored since' => [[], $hash, true],
+        ];
+    }
 }
