@@ -19,6 +19,13 @@ class ExcludedFolderService
     private IRootFolder $rootFolder;
     private string $userId;
     private LoggerInterface $logger;
+    /**
+     * Excluded folders per user, kept for the lifetime of the request or until reset: a scan checks
+     * every file against them and used to query the table once per file
+     *
+     * @var array<string, ExcludedFolder[]>
+     */
+    private array $excludedFoldersCache = [];
 
     public function __construct(
         ExcludedFolderMapper $mapper,
@@ -88,6 +95,7 @@ class ExcludedFolderService
 
         try {
             $result = $this->mapper->insert($excludedFolder);
+            unset($this->excludedFoldersCache[$this->userId]);
             $this->logger->debug('Successfully created excluded folder', [
                 'id' => $result->getId(),
                 'path' => $result->getFolderPath(),
@@ -117,6 +125,7 @@ class ExcludedFolderService
             ]);
             $excludedFolder = $this->mapper->findByIdAndUser($id, $this->userId);
             $this->mapper->delete($excludedFolder);
+            unset($this->excludedFoldersCache[$this->userId]);
             $this->logger->debug('Successfully deleted excluded folder: {path}', [
                 'path' => $excludedFolder->getFolderPath(),
                 'id' => $id,
@@ -141,7 +150,10 @@ class ExcludedFolderService
         $normalizedPath = '/' . trim($normalizedPath, '/');
 
         // Get all excluded folders
-        $excludedFolders = $this->findAll();
+        if (!isset($this->excludedFoldersCache[$this->userId])) {
+            $this->excludedFoldersCache[$this->userId] = $this->findAll();
+        }
+        $excludedFolders = $this->excludedFoldersCache[$this->userId];
 
         foreach ($excludedFolders as $folder) {
             $excludedPath = '/' . trim($folder->getFolderPath(), '/');
@@ -153,6 +165,14 @@ class ExcludedFolderService
         }
 
         return false;
+    }
+
+    /**
+     * Forget the cached excluded folders, e.g. before a new scan
+     */
+    public function resetCache(): void
+    {
+        $this->excludedFoldersCache = [];
     }
 
     /**

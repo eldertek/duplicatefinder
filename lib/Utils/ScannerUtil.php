@@ -69,6 +69,8 @@ class ScannerUtil
 
         try {
             if (!$isShared) {
+                // Start each scan with fresh filters, excluded folders and .nodupefinder lookups
+                $this->filterService->resetCache();
                 // Make sure the scanned user's mounts are set up: the previous
                 // OC\Files\Utils\Scanner did this internally, and background jobs
                 // scan several users in the same process

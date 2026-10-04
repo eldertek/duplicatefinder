@@ -20,6 +20,20 @@ class FilterService
     private $excludedFolderService;
     /** @var FilterMapper */
     private $filterMapper;
+    /**
+     * Custom filters per user and type. A scan checks every file against them,
+     * which used to cost two queries per file.
+     *
+     * @var array<string, array<string, Filter[]>>
+     */
+    private $filterCache = [];
+    /**
+     * Whether a folder or one of its ancestors holds a .nodupefinder file, by folder path.
+     * Without it every file probed each of its ancestors again.
+     *
+     * @var array<string, bool>
+     */
+    private $noDupeFinderCache = [];
 
     public function __construct(
         LoggerInterface $logger,
@@ -63,26 +77,78 @@ class FilterService
         }
 
         // Ignore files when any ancestor folder contains a .nodupefinder file
-        $currentNode = $node;
+        try {
+            $parent = $node->getParent();
+        } catch (NotFoundException $e) {
+            return false;
+        }
 
-        while ($currentNode !== null) {
+        return $this->isInNoDupeFinderFolder($parent);
+    }
+
+    /**
+     * Whether the folder or one of its ancestors contains a .nodupefinder file.
+     * Each folder is probed once: the answer is cached for every folder on the way up.
+     */
+    private function isInNoDupeFinderFolder(?Node $folder): bool
+    {
+        $visited = [];
+        $result = false;
+        $current = $folder;
+
+        while ($current !== null) {
             try {
-                $parent = $currentNode->getParent();
-                if ($parent === null || $parent->getPath() === '/') {
+                $path = $current->getPath();
+                if ($path === '/') {
                     // Virtual root reached: it cannot hold a user .nodupefinder,
                     // stop instead of paying a mount lookup per scanned file
                     break;
                 }
-                if ($parent->nodeExists('.nodupefinder')) {
-                    return true;
+                if (isset($this->noDupeFinderCache[$path])) {
+                    $result = $this->noDupeFinderCache[$path];
+
+                    break;
                 }
-                $currentNode = $parent;
+                $visited[] = $path;
+                if ($current->nodeExists('.nodupefinder')) {
+                    $result = true;
+
+                    break;
+                }
+                $current = $current->getParent();
             } catch (NotFoundException $e) {
                 break;
             }
         }
 
-        return false;
+        foreach ($visited as $path) {
+            $this->noDupeFinderCache[$path] = $result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Forget the cached filters, excluded folders and .nodupefinder lookups.
+     * Called at the start of each scan so that it sees the current settings.
+     */
+    public function resetCache(): void
+    {
+        $this->filterCache = [];
+        $this->noDupeFinderCache = [];
+        $this->excludedFolderService->resetCache();
+    }
+
+    /**
+     * @return Filter[]
+     */
+    private function getFiltersByType(string $type, string $userId): array
+    {
+        if (!isset($this->filterCache[$userId][$type])) {
+            $this->filterCache[$userId][$type] = $this->filterMapper->findByType($type, $userId);
+        }
+
+        return $this->filterCache[$userId][$type];
     }
 
     private function matchesCustomFilters(FileInfo $fileInfo): bool
@@ -94,7 +160,7 @@ class FilterService
             }
 
             // Check hash filters
-            $hashFilters = $this->filterMapper->findByType('hash', $fileInfo->getOwner());
+            $hashFilters = $this->getFiltersByType('hash', $fileInfo->getOwner());
             foreach ($hashFilters as $filter) {
                 if ($fileInfo->getFileHash() === $filter->getValue()) {
                     return true;
@@ -102,7 +168,7 @@ class FilterService
             }
 
             // Check name pattern filters
-            $nameFilters = $this->filterMapper->findByType('name', $fileInfo->getOwner());
+            $nameFilters = $this->getFiltersByType('name', $fileInfo->getOwner());
             foreach ($nameFilters as $filter) {
                 // Échapper les caractères spéciaux de regex sauf *
                 $pattern = preg_quote($filter->getValue(), '/');
@@ -132,6 +198,7 @@ class FilterService
         $filter->setValue($value);
         $filter->setUserId($userId);
         $filter->setCreatedAt(time());
+        unset($this->filterCache[$userId]);
 
         return $this->filterMapper->insert($filter);
     }
@@ -140,6 +207,7 @@ class FilterService
     {
         $filter = $this->filterMapper->find($id, $userId);
         $this->filterMapper->delete($filter);
+        unset($this->filterCache[$userId]);
     }
 
     public function getFilters(string $userId): array
