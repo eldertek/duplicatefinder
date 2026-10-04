@@ -2,7 +2,9 @@
 
 namespace OCA\DuplicateFinder\Db;
 
+use OCP\DB\QueryBuilder\ICompositeExpression;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\Files\FileInfo as NodeInfo;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 
@@ -73,9 +75,23 @@ class FileInfoMapper extends EQBMapper
         return $this->countBy($type, $hash);
     }
 
+    /**
+     * Number of files of the given size. Folder rows stored by earlier versions are left out.
+     */
     public function countBySize(int $size): int
     {
-        return $this->countBy('size', $size, IQueryBuilder::PARAM_INT);
+        $qb = $this->db->getQueryBuilder();
+        $qb->select($qb->func()->count('id'))
+        ->from($this->getTableName())
+        ->where(
+            $qb->expr()->eq('size', $qb->createNamedParameter($size, IQueryBuilder::PARAM_INT)),
+            $this->isNotFolder($qb)
+        );
+        $result = $qb->executeQuery();
+        $count = (int)$result->fetchOne();
+        $result->closeCursor();
+
+        return $count;
     }
 
     /**
@@ -87,7 +103,8 @@ class FileInfoMapper extends EQBMapper
         $qb->select('*')
         ->from($this->getTableName())
         ->where(
-            $qb->expr()->eq('size', $qb->createNamedParameter($size, IQueryBuilder::PARAM_INT))
+            $qb->expr()->eq('size', $qb->createNamedParameter($size, IQueryBuilder::PARAM_INT)),
+            $this->isNotFolder($qb)
         );
         if ($onlyEmptyHash) {
             $qb->andWhere($qb->expr()->isNull('file_hash'));
@@ -127,6 +144,17 @@ class FileInfoMapper extends EQBMapper
         ]);
 
         return $entities;
+    }
+
+    /**
+     * Folders cannot be duplicates and are never hashed: keep them out of the size lookups
+     */
+    private function isNotFolder(IQueryBuilder $qb): ICompositeExpression
+    {
+        return $qb->expr()->orX(
+            $qb->expr()->isNull('mimetype'),
+            $qb->expr()->neq('mimetype', $qb->createNamedParameter(NodeInfo::MIMETYPE_FOLDER))
+        );
     }
 
     /**
