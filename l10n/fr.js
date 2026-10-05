@@ -426,6 +426,7 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Erreur lors de la non-reconnaissance du doublon.",
     "File deleted successfully." : "Fichier supprimé avec succès.",
     "Cannot delete file as it is in an origin folder" : "Impossible de supprimer le fichier car il se trouve dans un dossier d'origine",
+    "This is the last remaining copy of this file, it was not deleted" : "Il s'agit de la dernière copie restante de ce fichier, elle n'a pas été supprimée",
     "File not found" : "Fichier non trouvé",
     "Permission denied to delete file" : "Autorisation refusée pour supprimer le fichier",
     "File is currently locked. Please try again later." : "Le fichier est actuellement verrouillé. Veuillez réessayer plus tard.",

@@ -424,6 +424,7 @@
     "Error unacknowledging duplicate." : "Erro ao cancelar o reconhecimento da duplicata.",
     "File deleted successfully." : "Arquivo excluído com sucesso.",
     "Cannot delete file as it is in an origin folder" : "Não é possível excluir o arquivo porque ele está em uma pasta de origem",
+    "This is the last remaining copy of this file, it was not deleted" : "Esta é a última cópia restante deste arquivo; ela não foi excluída",
     "File not found" : "Arquivo não encontrado",
     "Permission denied to delete file" : "Permissão negada para excluir arquivo",
     "File is currently locked. Please try again later." : "O arquivo está trancado no momento. Tente novamente mais tarde.",

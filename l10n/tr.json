@@ -424,6 +424,7 @@
     "Error unacknowledging duplicate." : "Çift onayı kaldırılırken sorun çıktı.",
     "File deleted successfully." : "Dosya silindi",
     "Cannot delete file as it is in an origin folder" : "Dosya bir kaynak klasörde bulunduğundan silinemez",
+    "This is the last remaining copy of this file, it was not deleted" : "Bu kopya, bu dosyanın kalan son kopyası olduğundan silinmedi",
     "File not found" : "Dosya bulunamadı",
     "Permission denied to delete file" : "Dosyanın silinmesine izin verilmedi",
     "File is currently locked. Please try again later." : "Dosya kilitli. Lütfen bir süre sonra yeniden deneyin.",
