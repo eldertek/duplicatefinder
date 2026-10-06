@@ -69,6 +69,8 @@ class ScannerUtil
 
         try {
             if (!$isShared) {
+                // Start each scan with fresh filters, excluded folders and .nodupefinder lookups
+                $this->filterService->resetCache();
                 // Make sure the scanned user's mounts are set up: the previous
                 // OC\Files\Utils\Scanner did this internally, and background jobs
                 // scan several users in the same process
@@ -115,7 +117,17 @@ class ScannerUtil
 
                 return;
             }
-            foreach ($node->getDirectoryListing() as $child) {
+            $children = $node->getDirectoryListing();
+            $known = $isShared ? [] : $this->findKnownFiles($children, $user);
+            foreach ($children as $child) {
+                $fileInfo = $known[$child->getPath()] ?? null;
+                if ($fileInfo !== null && $this->fileInfoService->isUpToDate($fileInfo, $child)) {
+                    // Saving it again would not change anything: skip the lookups and events
+                    $this->showOutput('Unchanged '.$child->getPath(), true);
+                    $this->abortIfRequested();
+
+                    continue;
+                }
                 $this->walkNode($child, $user, $isShared);
             }
         } elseif ($node instanceof File) {
@@ -140,11 +152,47 @@ class ScannerUtil
             $this->logger->info($e->getMessage(), ['exception' => $e]);
             $this->showOutput('Skipped '.$path, true);
         }
+        $this->abortIfRequested();
+    }
+
+    private function abortIfRequested(): void
+    {
         if ($this->abortIfInterrupted) {
             $abort = $this->abortIfInterrupted;
             if ($abort()) {
                 throw new \Exception('Scan aborted by user');
             }
+        }
+    }
+
+    /**
+     * Loads the rows of the files of one folder with a single query
+     *
+     * @param array<Node> $children
+     * @return array<string, \OCA\DuplicateFinder\Db\FileInfo> indexed by path
+     */
+    private function findKnownFiles(array $children, string $user): array
+    {
+        $paths = [];
+        foreach ($children as $child) {
+            if ($child instanceof File) {
+                $paths[] = $child->getPath();
+            }
+        }
+        if ($paths === []) {
+            return [];
+        }
+
+        try {
+            return $this->fileInfoService->findByPaths($paths, $user);
+        } catch (\Exception $e) {
+            // Fall back to saving every file
+            $this->logger->warning('Could not load the file infos of a folder: {error}', [
+                'app' => Application::ID,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
         }
     }
 

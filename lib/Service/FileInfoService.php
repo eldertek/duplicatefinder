@@ -210,6 +210,47 @@ class FileInfoService
         return $this->mapper->findBySize($size, $onlyEmptyHash);
     }
 
+    /**
+     * @param array<string> $paths
+     * @return array<string, FileInfo> indexed by path
+     */
+    public function findByPaths(array $paths, string $userID): array
+    {
+        return $this->mapper->findByPaths($paths, $userID);
+    }
+
+    /**
+     * Whether saving the file again would leave its row as it is: the row holds a hash that is newer
+     * than the last change of the file, and its size, type and ignore status are still current.
+     * Rows without a hash are never up to date, so that a pending or failed hash is retried.
+     */
+    public function isUpToDate(FileInfo $fileInfo, Node $file): bool
+    {
+        if (!($file instanceof \OCP\Files\File)
+            || empty($fileInfo->getFileHash())
+            || $fileInfo->isIgnored()
+            || $file->isMounted()
+        ) {
+            return false;
+        }
+
+        $updatedAt = $fileInfo->getUpdatedAt()->getTimestamp();
+        if ((int)$fileInfo->getSize() !== (int)$file->getSize()
+            || $fileInfo->getMimetype() !== $file->getMimetype()
+            || $file->getMtime() > $updatedAt
+            || $file->getUploadTime() > $updatedAt
+        ) {
+            return false;
+        }
+
+        try {
+            // Filters, excluded folders or a .nodupefinder file may have been added since
+            return !$this->filterService->isIgnored($fileInfo, $file);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     public function countByHash(string $hash, string $type = 'file_hash'): int
     {
         return $this->mapper->countByHash($hash, $type);
@@ -361,6 +402,12 @@ class FileInfoService
     public function calculateHashes(FileInfo $fileInfo, ?string $fallbackUID = null, bool $requiresHash = true): FileInfo
     {
         $oldHash = $fileInfo->getFileHash();
+        if (!$requiresHash && empty($oldHash)) {
+            // No other file has this size and there is no hash to clear: nothing to do.
+            // Without this check every unique-size file was looked up and written again
+            // on each scan, as an empty hash always counts as "recalculation required".
+            return $fileInfo;
+        }
         $file = $this->folderService->getNodeByFileInfo($fileInfo, $fallbackUID);
         if ($file === null) {
             // Node unreachable (deleted, group folder without user, unmounted storage):
@@ -390,7 +437,9 @@ class FileInfoService
                     $fileInfo->setFileHash(null);
                 }
             } else {
+                // The content changed and no other file has this size any more: drop the stale hash
                 $fileInfo->setFileHash(null);
+                $fileInfo->setUpdatedAt(new \DateTime());
             }
 
             $this->update($fileInfo, $fallbackUID);
