@@ -6,6 +6,7 @@ use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoRepairer;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -15,6 +16,15 @@ use Psr\Log\LoggerInterface;
 
 class CleanUpDB extends TimedJob
 {
+    /**
+     * Seconds the repair of the file info table may take in one run of the job. The repair step of the upgrade only
+     * gives it a few seconds, the job is where the rest is done, so it can take longer here.
+     */
+    private const REPAIR_TIME_BUDGET = 120.0;
+
+    /** Rows of the file info table read at a time by the clean-up. */
+    private const BATCH_SIZE = 1000;
+
     /** @var FileInfoService */
     private $fileInfoService;
 
@@ -33,6 +43,9 @@ class CleanUpDB extends TimedJob
     /** @var FileDuplicateService */
     private $fileDuplicateService;
 
+    /** @var ?FileInfoRepairer */
+    private $fileInfoRepairer;
+
     /**
      * Constructs a new instance of the CleanUpDB class.
      *
@@ -43,6 +56,7 @@ class CleanUpDB extends TimedJob
      * @param ITimeFactory $timeFactory The time factory instance.
      * @param ExcludedFolderService $excludedFolderService The excluded folder service.
      * @param FileDuplicateService $fileDuplicateService The duplicate group service.
+     * @param FileInfoRepairer|null $fileInfoRepairer Finishes the repair of the file info table that the upgrade started.
      */
     public function __construct(
         FileInfoService $fileInfoService,
@@ -51,7 +65,8 @@ class CleanUpDB extends TimedJob
         ConfigService $config,
         ITimeFactory $timeFactory,
         ExcludedFolderService $excludedFolderService,
-        FileDuplicateService $fileDuplicateService
+        FileDuplicateService $fileDuplicateService,
+        ?FileInfoRepairer $fileInfoRepairer = null
     ) {
         $this->fileInfoService = $fileInfoService;
         $this->folderService = $folderService;
@@ -59,6 +74,7 @@ class CleanUpDB extends TimedJob
         $this->timeFactory = $timeFactory;
         $this->excludedFolderService = $excludedFolderService;
         $this->fileDuplicateService = $fileDuplicateService;
+        $this->fileInfoRepairer = $fileInfoRepairer;
 
         // Ensure the interval is set using the configuration service
         $this->setInterval($config->getCleanupJobInterval());
@@ -80,14 +96,14 @@ class CleanUpDB extends TimedJob
         if ($merged > 0) {
             $this->logger->info('CleanUpDB: removed {count} surplus duplicate group rows', ['count' => $merged]);
         }
+        $this->repairFileInfos();
 
         // Clean up any unhandled delete or rename events
-        $fileInfos = $this->fileInfoService->findAll();
-        $this->logger->debug('CleanUpDB: Starting cleanup job with {count} file infos', [
-            'count' => count($fileInfos),
-        ]);
+        $this->logger->debug('CleanUpDB: Starting cleanup job');
+        $checked = 0;
 
-        foreach ($fileInfos as $fileInfo) {
+        foreach ($this->readFileInfos() as $fileInfo) {
+            $checked++;
             // Set the user context for the excluded folder service if we have an owner
             if ($fileInfo->getOwner()) {
                 $this->logger->debug('CleanUpDB: Setting user context for file: {path}', [
@@ -122,8 +138,55 @@ class CleanUpDB extends TimedJob
             }
         }
 
-        $this->logger->debug('CleanUpDB: Cleanup job completed');
+        $this->logger->debug('CleanUpDB: Cleanup job completed, {count} file infos checked', ['count' => $checked]);
         unset($fileInfo);
+    }
+
+    /**
+     * Every row of the file info table, read by batches of rows in id order: the table can hold millions of rows and
+     * must not be loaded in memory at once (issue 182). A row that is deleted while it is handled does not disturb
+     * the walk, the next batch starts after the last id that was read.
+     *
+     * @return \Generator<FileInfo>
+     */
+    private function readFileInfos(): \Generator
+    {
+        $lastId = 0;
+        do {
+            $previousLastId = $lastId;
+            $fileInfos = $this->fileInfoService->findBatch($lastId, self::BATCH_SIZE);
+            foreach ($fileInfos as $fileInfo) {
+                $lastId = max($lastId, (int)$fileInfo->getId());
+
+                yield $fileInfo;
+            }
+        } while (count($fileInfos) >= self::BATCH_SIZE && $lastId > $previousLastId);
+    }
+
+    /**
+     * Go on with the repair of the file info table (path hashes, surplus rows) that the repair step of the upgrade
+     * started within its time budget. It never throws: the rest of the job has its own work to do.
+     */
+    private function repairFileInfos(): void
+    {
+        if ($this->fileInfoRepairer === null) {
+            return;
+        }
+
+        try {
+            $result = $this->fileInfoRepairer->run(self::REPAIR_TIME_BUDGET);
+            if ($result['pathHashes'] > 0 || $result['removed'] > 0) {
+                $this->logger->info('CleanUpDB: recalculated {hashes} path hashes and removed {removed} surplus file info rows', [
+                    'hashes' => $result['pathHashes'],
+                    'removed' => $result['removed'],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            $this->logger->warning('CleanUpDB: Could not repair the file info rows: {message}', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+        }
     }
 
     /**

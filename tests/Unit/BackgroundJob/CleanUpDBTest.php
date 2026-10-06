@@ -7,6 +7,7 @@ use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoRepairer;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -67,7 +68,7 @@ class CleanUpDBTest extends TestCase
 
         // Le FileInfoService retourne deux fichiers
         $this->fileInfoService->expects($this->once())
-            ->method('findAll')
+            ->method('findBatch')
             ->willReturn([$fileInfo1, $fileInfo2]);
 
         // Le logger devrait enregistrer le début et la fin du job
@@ -106,7 +107,7 @@ class CleanUpDBTest extends TestCase
         $fileInfo = $this->createFileInfo('/user1/files/Instant Upload/gone.jpg', 'user1', 'hash-of-gone');
 
         $this->fileInfoService->expects($this->once())
-            ->method('findAll')
+            ->method('findBatch')
             ->willReturn([$fileInfo]);
 
         $this->folderService->expects($this->once())
@@ -138,7 +139,7 @@ class CleanUpDBTest extends TestCase
         $fileInfo = $this->createFileInfo('/__groupfolders/3/report.pdf', 'user1', 'hash-of-report');
 
         $this->fileInfoService->expects($this->once())
-            ->method('findAll')
+            ->method('findBatch')
             ->willReturn([$fileInfo]);
 
         $this->folderService->expects($this->once())
@@ -161,7 +162,7 @@ class CleanUpDBTest extends TestCase
 
         // Le FileInfoService retourne un fichier
         $this->fileInfoService->expects($this->once())
-            ->method('findAll')
+            ->method('findBatch')
             ->willReturn([$fileInfo]);
 
         // L'ExcludedFolderService devrait être appelé pour définir le contexte utilisateur
@@ -189,7 +190,7 @@ class CleanUpDBTest extends TestCase
         $fileInfo1 = $this->createFileInfo('/user1/files/a.jpg', 'user1', 'hash-a');
         $fileInfo2 = $this->createFileInfo('/user1/files/b.jpg', 'user1', 'hash-b');
 
-        $this->fileInfoService->method('findAll')->willReturn([$fileInfo1, $fileInfo2]);
+        $this->fileInfoService->method('findBatch')->willReturn([$fileInfo1, $fileInfo2]);
         $this->folderService->method('getNodeByFileInfo')->willReturn(null);
         $this->folderService->method('isNodeGone')->willReturn(true);
 
@@ -213,7 +214,7 @@ class CleanUpDBTest extends TestCase
 
         // Le FileInfoService retourne un fichier
         $this->fileInfoService->expects($this->once())
-            ->method('findAll')
+            ->method('findBatch')
             ->willReturn([$fileInfo]);
 
         // L'ExcludedFolderService devrait être appelé pour définir le contexte utilisateur
@@ -237,6 +238,111 @@ class CleanUpDBTest extends TestCase
 
         // Appeler la méthode run
         $this->invokePrivateMethod($this->job, 'run', [null]);
+    }
+
+    /**
+     * Issue 182: the repair step of the upgrade only has a few seconds for the file info table, the job finishes the
+     * repair. It comes first, so that the rest of the job (which has a lot to do) cannot keep it from running.
+     */
+    public function testRunGoesOnWithTheRepairOfTheFileInfoTableBeforeTheCleanUp()
+    {
+        $repairer = $this->createMock(FileInfoRepairer::class);
+        $job = $this->createJobWithRepairer($repairer);
+        $calls = [];
+        $repairer->expects($this->once())
+            ->method('run')
+            ->with($this->callback(function ($budget) {
+                // more than the repair step of the upgrade, but not for ever
+                return is_float($budget) && $budget > 20 && $budget <= 600;
+            }))
+            ->willReturnCallback(function () use (&$calls) {
+                $calls[] = 'repair';
+
+                return ['pathHashes' => 3, 'removed' => 7, 'done' => false];
+            });
+        $this->fileInfoService->method('findBatch')->willReturnCallback(function () use (&$calls) {
+            $calls[] = 'findBatch';
+
+            return [];
+        });
+
+        $this->invokePrivateMethod($job, 'run', [null]);
+
+        $this->assertSame(['repair', 'findBatch'], $calls);
+    }
+
+    public function testRunGoesOnWhenTheRepairOfTheFileInfoTableFails()
+    {
+        $repairer = $this->createMock(FileInfoRepairer::class);
+        $job = $this->createJobWithRepairer($repairer);
+        $repairer->method('run')->willThrowException(new \RuntimeException('deadlock'));
+
+        // the clean-up itself still runs, and the failure is told
+        $this->fileInfoService->expects($this->once())->method('findBatch')->willReturn([]);
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with($this->stringContains('Could not repair the file info rows'));
+
+        $this->invokePrivateMethod($job, 'run', [null]);
+    }
+
+    /**
+     * Issue 182: the table is read by batches of rows in id order, never loaded in memory at once. Every row is
+     * checked once, and the batch that follows starts after the last id of the one before, even if rows were deleted.
+     */
+    public function testRunReadsTheTableByBatchesOfRows()
+    {
+        $first = [];
+        for ($id = 1; $id <= 1000; $id++) {
+            $first[] = $this->createFileInfoWithId($id);
+        }
+        $second = [$this->createFileInfoWithId(1500), $this->createFileInfoWithId(1501), $this->createFileInfoWithId(1502)];
+
+        $this->fileInfoService->expects($this->exactly(2))
+            ->method('findBatch')
+            ->withConsecutive([0, 1000], [1000, 1000])
+            ->willReturnOnConsecutiveCalls($first, $second);
+        $this->fileInfoService->expects($this->never())->method('findAll');
+
+        $node = $this->createMock(\OCP\Files\Node::class);
+        $this->folderService->expects($this->exactly(1003))->method('getNodeByFileInfo')->willReturn($node);
+
+        $this->invokePrivateMethod($this->job, 'run', [null]);
+    }
+
+    public function testRunDoesNotLoopForEverWhenTheBatchesDoNotMoveOn()
+    {
+        // a table that keeps answering with the same full batch must not make the job run for ever
+        $batch = [];
+        for ($i = 0; $i < 1000; $i++) {
+            $batch[] = $this->createFileInfoWithId(7);
+        }
+        $this->fileInfoService->expects($this->exactly(2))->method('findBatch')->willReturn($batch);
+        $this->folderService->method('getNodeByFileInfo')->willReturn($this->createMock(\OCP\Files\Node::class));
+
+        $this->invokePrivateMethod($this->job, 'run', [null]);
+    }
+
+    private function createFileInfoWithId(int $id): FileInfo
+    {
+        $fileInfo = new FileInfo('/user1/files/file-' . $id . '.txt', 'user1');
+        $fileInfo->setId($id);
+
+        return $fileInfo;
+    }
+
+    private function createJobWithRepairer(FileInfoRepairer $repairer): CleanUpDB
+    {
+        return new CleanUpDB(
+            $this->fileInfoService,
+            $this->folderService,
+            $this->logger,
+            $this->config,
+            $this->timeFactory,
+            $this->excludedFolderService,
+            $this->fileDuplicateService,
+            $repairer
+        );
     }
 
     private function createFileInfo(string $path, ?string $owner, ?string $hash)
