@@ -426,6 +426,7 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Nepodarilo sa označit duplikát ako nepotvrdený.",
     "File deleted successfully." : "Súbor bol úspešne zmazaný.",
     "Cannot delete file as it is in an origin folder" : "Nemôžem vymazať súbor, keďže sa nachádza v originálnom adresári",
+    "This is the last remaining copy of this file, it was not deleted" : "Toto je posledná zostávajúca kópia tohto súboru, nebola odstránená",
     "File not found" : "Súbor nenájdený",
     "Permission denied to delete file" : "Prístup odmietnutý pri mazaní súboru",
     "File is currently locked. Please try again later." : "Súbor je momentálne uzamknutý. Skúste to znova neskôr.",
