@@ -22,6 +22,9 @@ class CleanUpDB extends TimedJob
      */
     private const REPAIR_TIME_BUDGET = 120.0;
 
+    /** Rows of the file info table read at a time by the clean-up. */
+    private const BATCH_SIZE = 1000;
+
     /** @var FileInfoService */
     private $fileInfoService;
 
@@ -96,12 +99,11 @@ class CleanUpDB extends TimedJob
         $this->repairFileInfos();
 
         // Clean up any unhandled delete or rename events
-        $fileInfos = $this->fileInfoService->findAll();
-        $this->logger->debug('CleanUpDB: Starting cleanup job with {count} file infos', [
-            'count' => count($fileInfos),
-        ]);
+        $this->logger->debug('CleanUpDB: Starting cleanup job');
+        $checked = 0;
 
-        foreach ($fileInfos as $fileInfo) {
+        foreach ($this->readFileInfos() as $fileInfo) {
+            $checked++;
             // Set the user context for the excluded folder service if we have an owner
             if ($fileInfo->getOwner()) {
                 $this->logger->debug('CleanUpDB: Setting user context for file: {path}', [
@@ -136,8 +138,29 @@ class CleanUpDB extends TimedJob
             }
         }
 
-        $this->logger->debug('CleanUpDB: Cleanup job completed');
+        $this->logger->debug('CleanUpDB: Cleanup job completed, {count} file infos checked', ['count' => $checked]);
         unset($fileInfo);
+    }
+
+    /**
+     * Every row of the file info table, read by batches of rows in id order: the table can hold millions of rows and
+     * must not be loaded in memory at once (issue 182). A row that is deleted while it is handled does not disturb
+     * the walk, the next batch starts after the last id that was read.
+     *
+     * @return \Generator<FileInfo>
+     */
+    private function readFileInfos(): \Generator
+    {
+        $lastId = 0;
+        do {
+            $previousLastId = $lastId;
+            $fileInfos = $this->fileInfoService->findBatch($lastId, self::BATCH_SIZE);
+            foreach ($fileInfos as $fileInfo) {
+                $lastId = max($lastId, (int)$fileInfo->getId());
+
+                yield $fileInfo;
+            }
+        } while (count($fileInfos) >= self::BATCH_SIZE && $lastId > $previousLastId);
     }
 
     /**

@@ -130,6 +130,24 @@ class FileInfoMapper extends EQBMapper
     }
 
     /**
+     * The next rows of the table in id order, after a given id: lets a caller walk the whole table without ever
+     * holding it in memory (issue 182).
+     *
+     * @return array<FileInfo>
+     */
+    public function findBatch(int $afterId, int $limit): array
+    {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')
+            ->from($this->getTableName())
+            ->where($qb->expr()->gt('id', $qb->createNamedParameter($afterId, IQueryBuilder::PARAM_INT)))
+            ->orderBy('id', 'ASC')
+            ->setMaxResults(max(1, $limit));
+
+        return $this->findEntities($qb);
+    }
+
+    /**
      * Highest id of the table, 0 when it is empty.
      */
     public function getMaxId(): int

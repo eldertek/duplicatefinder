@@ -131,6 +131,17 @@ class FileInfoService
         return $entities;
     }
 
+    /**
+     * The next rows of the table in id order, after a given id, to walk a table of millions of rows without
+     * loading it in memory like findAll() does.
+     *
+     * @return array<FileInfo>
+     */
+    public function findBatch(int $afterId, int $limit = 1000): array
+    {
+        return $this->mapper->findBatch($afterId, $limit);
+    }
+
     public function find(string $path, ?string $fallbackUID = null, bool $enrich = false): FileInfo
     {
         $entity = $this->mapper->find($path, $fallbackUID);
