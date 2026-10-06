@@ -7,6 +7,7 @@ use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoRepairer;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -237,6 +238,66 @@ class CleanUpDBTest extends TestCase
 
         // Appeler la méthode run
         $this->invokePrivateMethod($this->job, 'run', [null]);
+    }
+
+    /**
+     * Issue 182: the repair step of the upgrade only has a few seconds for the file info table, the job finishes the
+     * repair. It comes first, so that the rest of the job (which has a lot to do) cannot keep it from running.
+     */
+    public function testRunGoesOnWithTheRepairOfTheFileInfoTableBeforeTheCleanUp()
+    {
+        $repairer = $this->createMock(FileInfoRepairer::class);
+        $job = $this->createJobWithRepairer($repairer);
+        $calls = [];
+        $repairer->expects($this->once())
+            ->method('run')
+            ->with($this->callback(function ($budget) {
+                // more than the repair step of the upgrade, but not for ever
+                return is_float($budget) && $budget > 20 && $budget <= 600;
+            }))
+            ->willReturnCallback(function () use (&$calls) {
+                $calls[] = 'repair';
+
+                return ['pathHashes' => 3, 'removed' => 7, 'done' => false];
+            });
+        $this->fileInfoService->method('findAll')->willReturnCallback(function () use (&$calls) {
+            $calls[] = 'findAll';
+
+            return [];
+        });
+
+        $this->invokePrivateMethod($job, 'run', [null]);
+
+        $this->assertSame(['repair', 'findAll'], $calls);
+    }
+
+    public function testRunGoesOnWhenTheRepairOfTheFileInfoTableFails()
+    {
+        $repairer = $this->createMock(FileInfoRepairer::class);
+        $job = $this->createJobWithRepairer($repairer);
+        $repairer->method('run')->willThrowException(new \RuntimeException('deadlock'));
+
+        // the clean-up itself still runs, and the failure is told
+        $this->fileInfoService->expects($this->once())->method('findAll')->willReturn([]);
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with($this->stringContains('Could not repair the file info rows'));
+
+        $this->invokePrivateMethod($job, 'run', [null]);
+    }
+
+    private function createJobWithRepairer(FileInfoRepairer $repairer): CleanUpDB
+    {
+        return new CleanUpDB(
+            $this->fileInfoService,
+            $this->folderService,
+            $this->logger,
+            $this->config,
+            $this->timeFactory,
+            $this->excludedFolderService,
+            $this->fileDuplicateService,
+            $repairer
+        );
     }
 
     private function createFileInfo(string $path, ?string $owner, ?string $hash)
