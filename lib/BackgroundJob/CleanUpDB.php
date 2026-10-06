@@ -74,6 +74,13 @@ class CleanUpDB extends TimedJob
      */
     protected function run($argument): void
     {
+        // Finish what the repair step of the upgrade had no time to do (issue 182): bounded, and first so that
+        // the rest of the job cannot keep it from running.
+        $merged = $this->fileDuplicateService->mergeSurplusRows();
+        if ($merged > 0) {
+            $this->logger->info('CleanUpDB: removed {count} surplus duplicate group rows', ['count' => $merged]);
+        }
+
         // Clean up any unhandled delete or rename events
         $fileInfos = $this->fileInfoService->findAll();
         $this->logger->debug('CleanUpDB: Starting cleanup job with {count} file infos', [

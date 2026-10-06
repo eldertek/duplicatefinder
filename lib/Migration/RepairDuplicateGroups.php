@@ -3,8 +3,7 @@
 namespace OCA\DuplicateFinder\Migration;
 
 use OCA\DuplicateFinder\AppInfo\Application;
-use OCP\DB\QueryBuilder\IQueryBuilder;
-use OCP\IDBConnection;
+use OCA\DuplicateFinder\Service\SurplusRowsMerger;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -13,17 +12,25 @@ use Psr\Log\LoggerInterface;
  * Before 1.8.3 a second row was inserted for a hash each time the group of that hash could not be
  * read back, so the rows of a group kept multiplying and every scan logged an exception (issue 178).
  * The rows of a group hold nothing but the hash, the type and the acknowledged flag: keep the oldest.
+ *
+ * 1.8.3 deleted the surplus rows one group at a time and loaded every group in memory: on a table with
+ * hundreds of thousands of groups the upgrade ran for many minutes or was killed (issue 182). The surplus
+ * rows are now deleted by batches of ids within a time budget, and the clean-up background job finishes
+ * what the budget left.
  */
 class RepairDuplicateGroups implements IRepairStep
 {
-    /** @var IDBConnection */
-    private $connection;
+    /** Seconds the upgrade may spend here: a repair step must not hold the upgrade of the server. */
+    private const TIME_BUDGET = 20.0;
+
+    /** @var SurplusRowsMerger */
+    private $merger;
     /** @var LoggerInterface */
     private $logger;
 
-    public function __construct(IDBConnection $connection, LoggerInterface $logger)
+    public function __construct(SurplusRowsMerger $merger, LoggerInterface $logger)
     {
-        $this->connection = $connection;
+        $this->merger = $merger;
         $this->logger = $logger;
     }
 
@@ -43,34 +50,19 @@ class RepairDuplicateGroups implements IRepairStep
      */
     public function run(IOutput $output)
     {
-        $qb = $this->connection->getQueryBuilder();
-        $qb->select('hash', 'type')
-            ->selectAlias($qb->func()->min('id'), 'keep_id')
-            ->from('duplicatefinder_dups')
-            ->groupBy('hash', 'type')
-            ->having($qb->expr()->gt($qb->func()->count('*'), $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)));
-        $result = $qb->executeQuery();
-        $collisions = $result->fetchAll();
-        $result->closeCursor();
+        $result = $this->merger->run(self::TIME_BUDGET);
 
-        $removed = 0;
-        foreach ($collisions as $row) {
-            if ($row['type'] === null) {
-                continue;
-            }
-            $delete = $this->connection->getQueryBuilder();
-            $delete->delete('duplicatefinder_dups')
-                ->where($delete->expr()->eq('hash', $delete->createNamedParameter($row['hash'])))
-                ->andWhere($delete->expr()->eq('type', $delete->createNamedParameter($row['type'])))
-                ->andWhere($delete->expr()->neq('id', $delete->createNamedParameter((int)$row['keep_id'], IQueryBuilder::PARAM_INT)));
-            $removed += $delete->executeStatement();
-        }
-
-        if ($removed > 0) {
-            $output->info(sprintf('Removed %d surplus duplicate group rows', $removed));
+        if ($result['removed'] > 0) {
+            $output->info(sprintf('Removed %d surplus duplicate group rows', $result['removed']));
             $this->logger->info('Removed {count} surplus duplicate group rows', [
                 'app' => Application::ID,
-                'count' => $removed,
+                'count' => $result['removed'],
+            ]);
+        }
+        if (!$result['done']) {
+            $output->info('Surplus duplicate group rows are left, the clean-up background job removes them');
+            $this->logger->info('Surplus duplicate group rows are left after the time budget of the repair step, the clean-up job removes them', [
+                'app' => Application::ID,
             ]);
         }
     }
