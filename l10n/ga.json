@@ -424,6 +424,7 @@
     "Error unacknowledging duplicate." : "Earráid agus an dúblach á aithint.",
     "File deleted successfully." : "Scriosadh an comhad go rathúil.",
     "Cannot delete file as it is in an origin folder" : "Ní féidir an comhad a scriosadh mar go bhfuil sé i bhfillteán tionscnaimh",
+    "This is the last remaining copy of this file, it was not deleted" : "Seo an chóip dheireanach den chomhad seo atá fágtha; níor scriosadh é",
     "File not found" : "Comhad gan aimsiú",
     "Permission denied to delete file" : "Diúltaíodh cead an comhad a scriosadh",
     "File is currently locked. Please try again later." : "Tá an comhad faoi ghlas faoi láthair. Déan iarracht arís ar ball.",
