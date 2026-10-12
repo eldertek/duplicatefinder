@@ -33,7 +33,7 @@
 * 📊 **Aperçu & Simulation** - Visualisez ce qui serait supprimé avant d'agir
 * 💼 **Traitement en Arrière-plan** - Tâches automatisées de recherche de doublons
 ]]></description>
-    <version>1.8.5</version>
+    <version>1.9.0</version>
     <author>André Théo LAURET</author>
 
     <namespace>DuplicateFinder</namespace>
@@ -75,6 +75,7 @@
     <commands>
         <command>OCA\DuplicateFinder\Command\FindDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ListDuplicates</command>
+        <command>OCA\DuplicateFinder\Command\ListAllDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ClearDuplicates</command>
     </commands>
 

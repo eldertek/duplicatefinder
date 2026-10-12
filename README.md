@@ -73,6 +73,12 @@ If you increase the verbosity of the occ command, the output shows a little bit 
     list        The command lists all duplicates that have been found yet. If no option is given duplicates across users are shown.
       options
         -u, --user list only duplicates of the specified user (-u admin)
+    list-all    Read only report of the duplicates of ALL users, for the server administrator. Files are grouped by content hash whoever owns them,
+                the biggest waste first, with the owner and path of every copy. Nothing is deleted, written or scanned: it only reads what the app has already indexed.
+      options
+        --min-size only files of at least this size, in bytes or with a unit (--min-size=500M, 10K, 1G)
+        --limit number of groups to show (default 100, 0 for all of them)
+        --output table (default) or json
     clear       The command will clear all information that has been stored in the database
       options
         -f, --force the flag forces to do the cleanup. _attention_ you will not be asked any questions
@@ -97,6 +103,12 @@ occ duplicates:list
 
 # List duplicates for a specific user
 occ duplicates:list --user="admin"
+
+# Admin report across all users: the 20 biggest wastes of files of at least 100 MB
+occ duplicates:list-all --min-size=100M --limit=20
+
+# The same report as JSON, for a script
+occ duplicates:list-all --output=json --limit=0 > duplicates.json
 ```
 
 ## Config

@@ -262,6 +262,101 @@ class FileInfoMapper extends EQBMapper
     }
 
     /**
+     * Groups of files that share a content hash, whoever owns them, biggest waste first (read only). Only the
+     * indexed rows are used: nothing is scanned or hashed here. Ignored files and files without a hash are left
+     * out, and so are empty files (they all share one hash and waste no space).
+     *
+     * @param int $minSize Only the files of at least this size (bytes) are grouped
+     * @param int $limit How many groups at most, 0 for no limit
+     * @return \Generator<array{hash: string, size: int, copies: int, wasted: int}>
+     */
+    public function findDuplicateGroupsAcrossUsers(int $minSize = 0, int $limit = 0): \Generator
+    {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('file_hash')
+            ->selectAlias($qb->createFunction('MAX(size)'), 'group_size')
+            ->selectAlias($qb->createFunction('COUNT(*)'), 'copies')
+            ->selectAlias($qb->createFunction('(COUNT(*) - 1) * MAX(size)'), 'wasted')
+            ->from($this->getTableName())
+            ->where($qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)))
+            ->andWhere($qb->expr()->isNotNull('file_hash'))
+            ->andWhere($qb->expr()->neq('file_hash', $qb->createNamedParameter('')))
+            ->andWhere($qb->expr()->gte('size', $qb->createNamedParameter(max(1, $minSize), IQueryBuilder::PARAM_INT)))
+            ->groupBy('file_hash')
+            ->having($qb->createFunction('COUNT(*) > 1'))
+            ->orderBy('wasted', 'DESC')
+            ->addOrderBy('file_hash', 'ASC');
+        if ($limit > 0) {
+            $qb->setMaxResults($limit);
+        }
+
+        // one query read row by row: paging with an offset would run the whole grouping again for every page
+        $result = $qb->executeQuery();
+
+        try {
+            while ($row = $result->fetch()) {
+                yield [
+                    'hash' => (string)$row['file_hash'],
+                    'size' => (int)$row['group_size'],
+                    'copies' => (int)$row['copies'],
+                    'wasted' => (int)$row['wasted'],
+                ];
+            }
+        } finally {
+            $result->closeCursor();
+        }
+    }
+
+    /**
+     * Owner and path of every indexed copy of the given hashes (read only), grouped by hash.
+     *
+     * @param array<string> $hashes
+     * @return array<string, array<array{owner: string, path: string}>>
+     */
+    public function findCopiesOfHashes(array $hashes): array
+    {
+        $copies = [];
+        foreach (array_chunk(array_values(array_unique($hashes)), 500) as $chunk) {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('file_hash', 'owner', 'path')
+                ->from($this->getTableName())
+                ->where($qb->expr()->in('file_hash', $qb->createNamedParameter($chunk, IQueryBuilder::PARAM_STR_ARRAY)))
+                ->andWhere($qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)))
+                ->orderBy('file_hash', 'ASC')
+                ->addOrderBy('owner', 'ASC')
+                ->addOrderBy('path', 'ASC');
+            $result = $qb->executeQuery();
+            while ($row = $result->fetch()) {
+                $copies[(string)$row['file_hash']][] = [
+                    'owner' => (string)($row['owner'] ?? ''),
+                    'path' => (string)$row['path'],
+                ];
+            }
+            $result->closeCursor();
+        }
+
+        return $copies;
+    }
+
+    /**
+     * The users that own at least one indexed file (read only).
+     *
+     * @return array<string>
+     */
+    public function findOwners(): array
+    {
+        $qb = $this->db->getQueryBuilder();
+        $qb->selectDistinct('owner')
+            ->from($this->getTableName())
+            ->where($qb->expr()->isNotNull('owner'));
+        $result = $qb->executeQuery();
+        $owners = array_map('strval', $result->fetchAll(\PDO::FETCH_COLUMN));
+        $result->closeCursor();
+
+        return $owners;
+    }
+
+    /**
      * @param array<FileInfo> $entities
      * @return array<FileInfo>
      */
