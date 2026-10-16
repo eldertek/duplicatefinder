@@ -90,7 +90,7 @@ OC.L10N.register(
     "Settings" : "Параметры",
     "Manage Projects" : "Управление проектами",
     "Your Projects" : "Ваши проекты",
-    "No projects yet" : "Проектов пока нет",
+    "No projects yet" : "Пока нет ни одного проекта",
     "Create your first project" : "Создайте первый проект",
     "Close" : "Закрыть",
     "Learn the basics of using the app" : "Основы работы с приложением",
