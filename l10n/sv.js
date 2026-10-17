@@ -426,6 +426,7 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Det gick inte att markera dubbletten som obekräftad.",
     "File deleted successfully." : "Filen togs bort.",
     "Cannot delete file as it is in an origin folder" : "Filen kan inte tas bort eftersom den finns i en ursprungsmapp",
+    "This is the last remaining copy of this file, it was not deleted" : "Det här är den sista återstående kopian av filen. Den togs inte bort.",
     "File not found" : "Filen hittades inte",
     "Permission denied to delete file" : "Behörighet att ta bort filen saknas",
     "File is currently locked. Please try again later." : "Filen är för närvarande låst. Försök igen senare.",
