@@ -35,6 +35,7 @@ OC.L10N.register(
     "Edit" : "Editează",
     "Remove folder" : "Șterge dosarul",
     "Cancel" : "Anulare",
+    "This action cannot be undone." : "Această acțiune nu poate fi anulată.",
     "No results found" : "Nu s-a găsit nimic",
     "Previous" : "Precedentul",
     "Next" : "Următorul",
