@@ -216,7 +216,7 @@ OC.L10N.register(
     "Step {step} of {total}" : "Krok {step} ze {total}",
     "Previous" : "Předchozí",
     "Get Started" : "Začněte",
-    "Next" : "Next",
+    "Next" : "Další",
     "Detecting Duplicates" : "Zjišťování duplicit",
     "There are three main ways to detect duplicate files in your Nextcloud:" : "Jsou tři hlavní způsoby jak zjišťovat duplicitní soubory na vámi využívaném Nextcloud:",
     "1. Event-based Detection" : "1. Zjišťování na základě události",
