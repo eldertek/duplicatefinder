@@ -12,6 +12,7 @@ use OCP\EventDispatcher\IEventListener;
 use OCP\Files\Events\Node\AbstractNodeEvent;
 use OCP\Files\Events\Node\NodeDeletedEvent;
 use OCP\Files\Events\Node\NodeRenamedEvent;
+use OCP\Files\Folder;
 use OCP\Files\Node;
 use Psr\Log\LoggerInterface;
 
@@ -52,6 +53,10 @@ class FilesystemListener implements IEventListener
             $this->handleDeleteEvent($node);
         } elseif ($event instanceof NodeRenamedEvent) {
             $source = $event->getSource();
+            if ($event->getTarget() instanceof Folder) {
+                // Only files are tracked: a folder has no file info to move
+                return;
+            }
 
             try {
                 $fileInfo = $this->fileInfoService->find($source->getPath(), $source->getOwner()->getUID());
@@ -64,7 +69,11 @@ class FilesystemListener implements IEventListener
             $this->fileInfoService->update($fileInfo);
         } elseif ($event instanceof AbstractNodeEvent) {
             $node = $event->getNode();
-            $path = $node->getPath();
+            if ($node instanceof Folder) {
+                // Only files can be duplicates. Saving folders created rows with the
+                // directory mimetype that every same-size lookup had to go through.
+                return;
+            }
 
             try {
                 $fileInfo = $this->fileInfoService->save($node->getPath(), $node->getOwner()->getUID());

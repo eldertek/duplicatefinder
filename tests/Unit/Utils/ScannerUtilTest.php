@@ -154,4 +154,72 @@ class ScannerUtilTest extends TestCase
 
         $this->scannerUtil->scan('testuser', '/testuser/files');
     }
+
+    public function testScanSkipsFilesWhoseRowIsUpToDate()
+    {
+        $unchanged = $this->createMock(File::class);
+        $unchanged->method('getPath')->willReturn('/testuser/files/unchanged.jpg');
+        $changed = $this->createMock(File::class);
+        $changed->method('getPath')->willReturn('/testuser/files/changed.jpg');
+        $new = $this->createMock(File::class);
+        $new->method('getPath')->willReturn('/testuser/files/new.jpg');
+
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->method('getPath')->willReturn('/testuser/files');
+        $userFolder->method('getDirectoryListing')->willReturn([$unchanged, $changed, $new]);
+
+        $this->folderService->method('getUserFolder')->willReturn($userFolder);
+        $this->filterService->method('shouldSkipDirectory')->willReturn(false);
+        $this->shareService->method('getShares')->willReturn([]);
+
+        $unchangedInfo = new \OCA\DuplicateFinder\Db\FileInfo('/testuser/files/unchanged.jpg', 'testuser');
+        $changedInfo = new \OCA\DuplicateFinder\Db\FileInfo('/testuser/files/changed.jpg', 'testuser');
+
+        // One query for the whole folder
+        $this->fileInfoService->expects($this->once())
+            ->method('findByPaths')
+            ->with(['/testuser/files/unchanged.jpg', '/testuser/files/changed.jpg', '/testuser/files/new.jpg'], 'testuser')
+            ->willReturn([
+                '/testuser/files/unchanged.jpg' => $unchangedInfo,
+                '/testuser/files/changed.jpg' => $changedInfo,
+            ]);
+        $this->fileInfoService->method('isUpToDate')
+            ->willReturnCallback(function ($fileInfo, $node) use ($unchangedInfo, $unchanged) {
+                return $fileInfo === $unchangedInfo && $node === $unchanged;
+            });
+
+        $savedPaths = [];
+        $this->fileInfoService->expects($this->exactly(2))
+            ->method('save')
+            ->willReturnCallback(function ($path) use (&$savedPaths) {
+                $savedPaths[] = $path;
+
+                return new \OCA\DuplicateFinder\Db\FileInfo($path);
+            });
+
+        $this->scannerUtil->scan('testuser', '/testuser/files');
+
+        $this->assertEquals(['/testuser/files/changed.jpg', '/testuser/files/new.jpg'], $savedPaths);
+    }
+
+    public function testScanSavesEveryFileWhenRowsCannotBeLoaded()
+    {
+        $file = $this->createMock(File::class);
+        $file->method('getPath')->willReturn('/testuser/files/a.jpg');
+
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->method('getPath')->willReturn('/testuser/files');
+        $userFolder->method('getDirectoryListing')->willReturn([$file]);
+
+        $this->folderService->method('getUserFolder')->willReturn($userFolder);
+        $this->filterService->method('shouldSkipDirectory')->willReturn(false);
+        $this->shareService->method('getShares')->willReturn([]);
+        $this->fileInfoService->method('findByPaths')->willThrowException(new \RuntimeException('db gone'));
+
+        $this->fileInfoService->expects($this->once())
+            ->method('save')
+            ->with('/testuser/files/a.jpg', 'testuser');
+
+        $this->scannerUtil->scan('testuser', '/testuser/files');
+    }
 }

@@ -7,6 +7,8 @@ use OCA\DuplicateFinder\Db\FilterMapper;
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
 use OCA\DuplicateFinder\Service\FilterService;
+use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\Files\Node;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -123,5 +125,158 @@ class FilterServiceTest extends TestCase
         // Appeler isIgnored() et vérifier qu'il ne lance pas d'exception
         $result = $this->service->isIgnored($this->fileInfo, $this->node);
         $this->assertFalse($result);
+    }
+
+    /**
+     * Builds /testuser/files/<names...> as folder mocks and returns them by path.
+     * nodeExists('.nodupefinder') is answered from $markers and counted in $probes.
+     *
+     * @return array<string, Folder>
+     */
+    private function buildFolderTree(array $paths, array $markers, array &$probes): array
+    {
+        $root = $this->createMock(Folder::class);
+        $root->method('getPath')->willReturn('/');
+        $folders = ['/' => $root];
+        sort($paths);
+        foreach ($paths as $path) {
+            $parentPath = dirname($path);
+            $folder = $this->createMock(Folder::class);
+            $folder->method('getPath')->willReturn($path);
+            $folder->method('getParent')->willReturn($folders[$parentPath]);
+            $folder->method('nodeExists')->willReturnCallback(function ($name) use ($path, $markers, &$probes) {
+                $probes[$path] = ($probes[$path] ?? 0) + 1;
+
+                return $name === '.nodupefinder' && in_array($path, $markers, true);
+            });
+            $folders[$path] = $folder;
+        }
+
+        return $folders;
+    }
+
+    private function fileIn(Folder $parent, string $name): File
+    {
+        $file = $this->createMock(File::class);
+        $file->method('getPath')->willReturn($parent->getPath() . '/' . $name);
+        $file->method('getParent')->willReturn($parent);
+        $file->method('isMounted')->willReturn(false);
+
+        return $file;
+    }
+
+    private function fileInfoFor(File $file): FileInfo
+    {
+        return new FileInfo($file->getPath(), 'testuser');
+    }
+
+    public function testNoDupeFinderLookupIsDoneOncePerFolder()
+    {
+        $probes = [];
+        $folders = $this->buildFolderTree(
+            ['/testuser', '/testuser/files', '/testuser/files/A', '/testuser/files/A/B', '/testuser/files/A/C'],
+            [],
+            $probes
+        );
+        $this->excludedFolderService->method('isPathExcluded')->willReturn(false);
+        $this->filterMapper->method('findByType')->willReturn([]);
+
+        foreach (['/testuser/files/A/B', '/testuser/files/A/C', '/testuser/files/A'] as $folderPath) {
+            foreach (['1.jpg', '2.jpg', '3.jpg'] as $name) {
+                $file = $this->fileIn($folders[$folderPath], $name);
+                $this->assertFalse($this->service->isIgnored($this->fileInfoFor($file), $file));
+            }
+        }
+
+        // Every folder up to the user root is probed exactly once for nine files
+        $this->assertSame([
+            '/testuser/files/A/B' => 1,
+            '/testuser/files/A' => 1,
+            '/testuser/files' => 1,
+            '/testuser' => 1,
+            '/testuser/files/A/C' => 1,
+        ], $probes);
+    }
+
+    public function testNoDupeFinderInAncestorIgnoresFilesOfAllSubfolders()
+    {
+        $probes = [];
+        $folders = $this->buildFolderTree(
+            ['/testuser', '/testuser/files', '/testuser/files/A', '/testuser/files/A/B', '/testuser/files/A/C', '/testuser/files/D'],
+            ['/testuser/files/A'],
+            $probes
+        );
+        $this->excludedFolderService->method('isPathExcluded')->willReturn(false);
+        $this->filterMapper->method('findByType')->willReturn([]);
+
+        $inB = $this->fileIn($folders['/testuser/files/A/B'], 'x.jpg');
+        $inC = $this->fileIn($folders['/testuser/files/A/C'], 'y.jpg');
+        $inD = $this->fileIn($folders['/testuser/files/D'], 'z.jpg');
+
+        $this->assertTrue($this->service->isIgnored($this->fileInfoFor($inB), $inB));
+        $this->assertTrue($this->service->isIgnored($this->fileInfoFor($inC), $inC));
+        $this->assertFalse($this->service->isIgnored($this->fileInfoFor($inD), $inD));
+        $this->assertSame(1, $probes['/testuser/files/A']);
+    }
+
+    public function testResetCacheProbesAgain()
+    {
+        $probes = [];
+        $folders = $this->buildFolderTree(['/testuser', '/testuser/files'], [], $probes);
+        $this->excludedFolderService->method('isPathExcluded')->willReturn(false);
+        $this->filterMapper->method('findByType')->willReturn([]);
+        $this->excludedFolderService->expects($this->once())->method('resetCache');
+
+        $file = $this->fileIn($folders['/testuser/files'], 'a.txt');
+        $this->service->isIgnored($this->fileInfoFor($file), $file);
+        $this->service->resetCache();
+        $this->service->isIgnored($this->fileInfoFor($file), $file);
+
+        $this->assertSame(2, $probes['/testuser/files']);
+    }
+
+    public function testCustomFiltersAreLoadedOncePerUserAndType()
+    {
+        $this->fileInfo->method('getOwner')->willReturn('testuser');
+        $this->node->method('getParent')->willReturn(null);
+        $this->excludedFolderService->method('isPathExcluded')->willReturn(false);
+
+        $this->filterMapper->expects($this->exactly(2))
+            ->method('findByType')
+            ->willReturnCallback(function ($type, $userId) {
+                $this->assertSame('testuser', $userId);
+
+                return [];
+            });
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertFalse($this->service->isIgnored($this->fileInfo, $this->node));
+        }
+    }
+
+    public function testCreatingAFilterIsSeenByTheNextCheck()
+    {
+        $file = $this->createMock(File::class);
+        $file->method('getParent')->willReturn(null);
+        $file->method('isMounted')->willReturn(false);
+        $fileInfo = new FileInfo('/testuser/files/notes.tmp', 'testuser');
+        $this->excludedFolderService->method('isPathExcluded')->willReturn(false);
+
+        $filter = new \OCA\DuplicateFinder\Db\Filter();
+        $filter->setType('name');
+        $filter->setValue('*.tmp');
+        $nameFilters = [];
+        $this->filterMapper->method('findByType')->willReturnCallback(function ($type) use (&$nameFilters) {
+            return $type === 'name' ? $nameFilters : [];
+        });
+        $this->filterMapper->method('insert')->willReturnCallback(function ($newFilter) use (&$nameFilters, $filter) {
+            $nameFilters = [$filter];
+
+            return $newFilter;
+        });
+
+        $this->assertFalse($this->service->isIgnored($fileInfo, $file));
+        $this->service->createFilter('name', '*.tmp', 'testuser');
+        $this->assertTrue($this->service->isIgnored($fileInfo, $file));
     }
 }

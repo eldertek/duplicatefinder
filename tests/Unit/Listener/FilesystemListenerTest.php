@@ -10,7 +10,10 @@ use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\Files\Events\Node\NodeCreatedEvent;
 use OCP\Files\Events\Node\NodeDeletedEvent;
 use OCP\Files\Events\Node\NodeRenamedEvent;
+use OCP\Files\Events\Node\NodeTouchedEvent;
+use OCP\Files\Events\Node\NodeWrittenEvent;
 use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -177,4 +180,63 @@ class FilesystemListenerTest extends TestCase
     // Suppression du test testHandleCreateEventWithIgnoreException car il est difficile à simuler correctement
 
     // Suppression du test testHandleCreateEventWithGenericException car il est difficile à simuler correctement
+
+    public function testHandleCreateEventSavesFile()
+    {
+        $this->config->method('areFilesytemEventsDisabled')->willReturn(false);
+
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('testuser');
+        $node = $this->createMock(File::class);
+        $node->method('getPath')->willReturn('/testuser/files/new.jpg');
+        $node->method('getOwner')->willReturn($user);
+
+        $this->fileInfoService->expects($this->once())
+            ->method('save')
+            ->with('/testuser/files/new.jpg', 'testuser')
+            ->willReturn(new FileInfo('/testuser/files/new.jpg', 'testuser'));
+
+        $this->listener->handle(new NodeCreatedEvent($node));
+    }
+
+    /**
+     * @dataProvider folderEventProvider
+     */
+    public function testHandleFolderEventsAreIgnored(string $eventClass)
+    {
+        $this->config->method('areFilesytemEventsDisabled')->willReturn(false);
+
+        $folder = $this->createMock(Folder::class);
+        $folder->method('getPath')->willReturn('/testuser/files/Photos');
+
+        $this->fileInfoService->expects($this->never())->method('save');
+        $this->fileInfoService->expects($this->never())->method('update');
+
+        $this->listener->handle(new $eventClass($folder));
+    }
+
+    public static function folderEventProvider(): array
+    {
+        return [
+            'created' => [NodeCreatedEvent::class],
+            'written' => [NodeWrittenEvent::class],
+            'touched' => [NodeTouchedEvent::class],
+        ];
+    }
+
+    public function testHandleFolderRenameIsIgnored()
+    {
+        $this->config->method('areFilesytemEventsDisabled')->willReturn(false);
+
+        $source = $this->createMock(Folder::class);
+        $source->method('getPath')->willReturn('/testuser/files/Old');
+        $target = $this->createMock(Folder::class);
+        $target->method('getPath')->willReturn('/testuser/files/New');
+
+        // Folders have no file info: looking one up would throw DoesNotExistException
+        $this->fileInfoService->expects($this->never())->method('find');
+        $this->fileInfoService->expects($this->never())->method('update');
+
+        $this->listener->handle(new NodeRenamedEvent($source, $target));
+    }
 }

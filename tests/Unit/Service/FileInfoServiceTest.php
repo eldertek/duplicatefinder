@@ -296,4 +296,147 @@ class FileInfoServiceTest extends TestCase
         // We can't directly test that files from other users are excluded,
         // but we can verify that the scan is performed with the correct user context
     }
+
+    public function testCalculateHashesSkipsUniqueSizeFileWithoutHash()
+    {
+        $fileInfo = new FileInfo('/testuser/files/unique.bin', 'testuser');
+        $fileInfo->setId(7);
+        $fileInfo->setSize(123456);
+
+        // Nothing to hash and nothing to clear: no node lookup, no write, no event
+        $this->folderService->expects($this->never())->method('getNodeByFileInfo');
+        $this->mapper->expects($this->never())->method('update');
+        $this->eventDispatcher->expects($this->never())->method('dispatchTyped');
+
+        $result = $this->service->calculateHashes($fileInfo, 'testuser', false);
+
+        $this->assertSame($fileInfo, $result);
+        $this->assertNull($result->getFileHash());
+    }
+
+    public function testCalculateHashesClearsStaleHashOfChangedUniqueSizeFile()
+    {
+        $fileInfo = new FileInfo('/testuser/files/changed.bin', 'testuser');
+        $fileInfo->setId(8);
+        $fileInfo->setSize(2048);
+        $fileInfo->setFileHash(str_repeat('b', 64));
+        $fileInfo->setUpdatedAt(1000);
+
+        $file = $this->createMock(\OCP\Files\File::class);
+        $file->method('getType')->willReturn(\OCP\Files\FileInfo::TYPE_FILE);
+        $file->method('getMtime')->willReturn(2000);
+        $file->method('getUploadTime')->willReturn(0);
+        $file->method('isMounted')->willReturn(false);
+        $file->method('getInternalPath')->willReturn('files/changed.bin');
+        $file->method('getSize')->willReturn(2048);
+        $file->method('getMimetype')->willReturn('application/octet-stream');
+        $owner = $this->createMock(\OCP\IUser::class);
+        $owner->method('getUID')->willReturn('testuser');
+        $file->method('getOwner')->willReturn($owner);
+
+        $this->folderService->method('getNodeByFileInfo')->willReturn($file);
+        $this->filterService->method('isIgnored')->willReturn(false);
+        $this->mapper->expects($this->once())->method('update')->willReturnArgument(0);
+        $this->eventDispatcher->expects($this->once())->method('dispatchTyped');
+
+        $result = $this->service->calculateHashes($fileInfo, 'testuser', false);
+
+        $this->assertNull($result->getFileHash());
+        $this->assertGreaterThanOrEqual(2000, $result->getUpdatedAt()->getTimestamp());
+    }
+
+    public function testCalculateHashesStillHashesFileWithoutHashWhenRequired()
+    {
+        $fileInfo = new FileInfo('/testuser/files/pair.bin', 'testuser');
+        $fileInfo->setId(9);
+        $fileInfo->setSize(4096);
+
+        $storage = $this->createMock(\OCP\Files\Storage\IStorage::class);
+        $storage->method('hash')->willReturn(str_repeat('c', 64));
+        $file = $this->createMock(\OCP\Files\File::class);
+        $file->method('getType')->willReturn(\OCP\Files\FileInfo::TYPE_FILE);
+        $file->method('getMtime')->willReturn(1000);
+        $file->method('getUploadTime')->willReturn(0);
+        $file->method('isMounted')->willReturn(false);
+        $file->method('getInternalPath')->willReturn('files/pair.bin');
+        $file->method('getStorage')->willReturn($storage);
+        $file->method('getSize')->willReturn(4096);
+        $file->method('getMimetype')->willReturn('application/octet-stream');
+        $owner = $this->createMock(\OCP\IUser::class);
+        $owner->method('getUID')->willReturn('testuser');
+        $file->method('getOwner')->willReturn($owner);
+
+        $this->folderService->method('getNodeByFileInfo')->willReturn($file);
+        $this->filterService->method('isIgnored')->willReturn(false);
+        $this->mapper->expects($this->once())->method('update')->willReturnArgument(0);
+
+        $result = $this->service->calculateHashes($fileInfo, 'testuser', true);
+
+        $this->assertSame(str_repeat('c', 64), $result->getFileHash());
+    }
+
+    private function indexedFile(array $overrides = []): \OCP\Files\File
+    {
+        $values = array_merge([
+            'mtime' => 1000,
+            'uploadTime' => 0,
+            'size' => 4096,
+            'mimetype' => 'image/jpeg',
+            'mounted' => false,
+        ], $overrides);
+        $file = $this->createMock(\OCP\Files\File::class);
+        $file->method('getMtime')->willReturn($values['mtime']);
+        $file->method('getUploadTime')->willReturn($values['uploadTime']);
+        $file->method('getSize')->willReturn($values['size']);
+        $file->method('getMimetype')->willReturn($values['mimetype']);
+        $file->method('isMounted')->willReturn($values['mounted']);
+
+        return $file;
+    }
+
+    private function hashedRow(): FileInfo
+    {
+        $fileInfo = new FileInfo('/testuser/files/photo.jpg', 'testuser');
+        $fileInfo->setFileHash(str_repeat('d', 64));
+        $fileInfo->setSize(4096);
+        $fileInfo->setMimetype('image/jpeg');
+        $fileInfo->setUpdatedAt(2000);
+        $fileInfo->setIgnored(false);
+
+        return $fileInfo;
+    }
+
+    public function testIsUpToDateForUnchangedHashedFile()
+    {
+        $this->filterService->method('isIgnored')->willReturn(false);
+
+        $this->assertTrue($this->service->isUpToDate($this->hashedRow(), $this->indexedFile()));
+    }
+
+    /**
+     * @dataProvider outdatedFileProvider
+     */
+    public function testIsUpToDateDetectsChanges(array $fileOverrides, ?string $hash, bool $nowIgnored)
+    {
+        $this->filterService->method('isIgnored')->willReturn($nowIgnored);
+        $fileInfo = $this->hashedRow();
+        $fileInfo->setFileHash($hash);
+
+        $this->assertFalse($this->service->isUpToDate($fileInfo, $this->indexedFile($fileOverrides)));
+    }
+
+    public static function outdatedFileProvider(): array
+    {
+        $hash = str_repeat('d', 64);
+
+        return [
+            'modified after hashing' => [['mtime' => 3000], $hash, false],
+            'uploaded after hashing' => [['uploadTime' => 3000], $hash, false],
+            'size changed' => [['size' => 1], $hash, false],
+            'type changed' => [['mimetype' => 'image/png'], $hash, false],
+            'mount point' => [['mounted' => true], $hash, false],
+            'no hash yet' => [[], null, false],
+            'ignored since' => [[], $hash, true],
+        ];
+    }
 }

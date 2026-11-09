@@ -69,6 +69,7 @@
             <step>OCA\DuplicateFinder\Migration\RepairFileInfos</step>
             <step>OCA\DuplicateFinder\Migration\RepairNullTypes</step>
             <step>OCA\DuplicateFinder\Migration\RepairDuplicateGroups</step>
+            <step>OCA\DuplicateFinder\Migration\RemoveFolderFileInfos</step>
         </post-migration>
     </repair-steps>
 

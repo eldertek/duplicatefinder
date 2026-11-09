@@ -2,7 +2,9 @@
 
 namespace OCA\DuplicateFinder\Db;
 
+use OCP\DB\QueryBuilder\ICompositeExpression;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\Files\FileInfo as NodeInfo;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 
@@ -51,6 +53,36 @@ class FileInfoMapper extends EQBMapper
     }
 
     /**
+     * Rows for several paths at once, e.g. the files of one folder. Like find(), the row of the given user is preferred,
+     * but any row of the path is returned when that user has none: the owner stored in a row is the owner of the file,
+     * which is not the scanning user for a file reached through a share (#198).
+     *
+     * @param array<string> $paths
+     * @return array<string, FileInfo> indexed by path
+     */
+    public function findByPaths(array $paths, string $userID): array
+    {
+        $result = [];
+        foreach (array_chunk(array_values(array_unique($paths)), 500) as $chunk) {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('*')
+            ->from($this->getTableName())
+            ->where(
+                $qb->expr()->in('path_hash', $qb->createNamedParameter(array_map('sha1', $chunk), IQueryBuilder::PARAM_STR_ARRAY))
+            );
+            foreach ($this->findEntities($qb) as $entity) {
+                $path = $entity->getPath();
+                // Same pick as find(): the row of the user first, then the first row of the path
+                if (!isset($result[$path]) || ($entity->getOwner() === $userID && $result[$path]->getOwner() !== $userID)) {
+                    $result[$path] = $entity;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * @return array<FileInfo>
      */
     public function findByHash(string $hash, string $type = 'file_hash'): array
@@ -73,9 +105,23 @@ class FileInfoMapper extends EQBMapper
         return $this->countBy($type, $hash);
     }
 
+    /**
+     * Number of files of the given size. Folder rows stored by earlier versions are left out.
+     */
     public function countBySize(int $size): int
     {
-        return $this->countBy('size', $size, IQueryBuilder::PARAM_INT);
+        $qb = $this->db->getQueryBuilder();
+        $qb->select($qb->func()->count('id'))
+        ->from($this->getTableName())
+        ->where(
+            $qb->expr()->eq('size', $qb->createNamedParameter($size, IQueryBuilder::PARAM_INT)),
+            $this->isNotFolder($qb)
+        );
+        $result = $qb->executeQuery();
+        $count = (int)$result->fetchOne();
+        $result->closeCursor();
+
+        return $count;
     }
 
     /**
@@ -87,7 +133,8 @@ class FileInfoMapper extends EQBMapper
         $qb->select('*')
         ->from($this->getTableName())
         ->where(
-            $qb->expr()->eq('size', $qb->createNamedParameter($size, IQueryBuilder::PARAM_INT))
+            $qb->expr()->eq('size', $qb->createNamedParameter($size, IQueryBuilder::PARAM_INT)),
+            $this->isNotFolder($qb)
         );
         if ($onlyEmptyHash) {
             $qb->andWhere($qb->expr()->isNull('file_hash'));
@@ -127,6 +174,17 @@ class FileInfoMapper extends EQBMapper
         ]);
 
         return $entities;
+    }
+
+    /**
+     * Folders cannot be duplicates and are never hashed: keep them out of the size lookups
+     */
+    private function isNotFolder(IQueryBuilder $qb): ICompositeExpression
+    {
+        return $qb->expr()->orX(
+            $qb->expr()->isNull('mimetype'),
+            $qb->expr()->neq('mimetype', $qb->createNamedParameter(NodeInfo::MIMETYPE_FOLDER))
+        );
     }
 
     /**
