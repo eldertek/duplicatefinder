@@ -2,7 +2,9 @@
 
 namespace OCA\DuplicateFinder\Listener;
 
+use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Event\AbstractFileInfoEvent;
+use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -28,6 +30,20 @@ class FileInfoListener implements IEventListener
         $this->logger = $logger;
     }
 
+    /**
+     * A file skipped on purpose by an app setting (ignore_mounted_files) is not an error (#199).
+     * It is caught per file so that it does not stop the hashing of the other files of the same size.
+     * Not logged: this runs for every such file of every scan.
+     */
+    private function hashIfNotSkipped(FileInfo $fileInfo, ?string $userId): void
+    {
+        try {
+            $this->fileInfoService->calculateHashes($fileInfo, $userId);
+        } catch (ForcedToIgnoreFileException $e) {
+            // intentionally ignored
+        }
+    }
+
     public function handle(Event $event): void
     {
         try {
@@ -38,18 +54,21 @@ class FileInfoListener implements IEventListener
                 if ($count > 1) {
                     $files = $this->fileInfoService->findBySize($fileInfo->getSize());
                     // The event file may already have a hash and be excluded from the lookup.
-                    $this->fileInfoService->calculateHashes($fileInfo, $event->getUserID());
+                    $this->hashIfNotSkipped($fileInfo, $event->getUserID());
                     foreach ($files as $finfo) {
                         if ($finfo === $fileInfo || ($fileInfo->getId() !== null && $finfo->getId() === $fileInfo->getId())) {
                             continue;
                         }
-                        $this->fileInfoService->calculateHashes($finfo, $event->getUserID());
+                        $this->hashIfNotSkipped($finfo, $event->getUserID());
                     }
                     unset($finfo);
                 } else {
                     $this->fileInfoService->calculateHashes($fileInfo, $event->getUserID(), false);
                 }
             }
+        } catch (ForcedToIgnoreFileException $e) {
+            // Skipped on purpose by an app setting, see hashIfNotSkipped()
+            return;
         } catch (\Throwable $e) {
             $context = [
                 'path' => isset($fileInfo) ? $fileInfo->getPath() : 'unknown',
