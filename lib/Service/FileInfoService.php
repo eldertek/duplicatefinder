@@ -77,6 +77,10 @@ class FileInfoService
      */
     public function enrich(FileInfo $fileInfo): FileInfo
     {
+        if ($fileInfo->getNodeId() !== null) {
+            return $fileInfo;
+        }
+
         try {
             $node = $this->folderService->getNodeByFileInfo($fileInfo);
             if ($node) {

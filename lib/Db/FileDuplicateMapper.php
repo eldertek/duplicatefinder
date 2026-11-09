@@ -127,17 +127,21 @@ class FileDuplicateMapper extends EQBMapper
      * @param int|null $limit
      * @param int|null $offset
      * @param array<array<string>> $orderBy
+     * @param string|null $type
      * @return array<FileDuplicate>
      */
     public function findAll(
         ?string $user = null,
         ?int $limit = null,
         ?int $offset = null,
-        ?array $orderBy = [['hash'], ['type']]
+        ?array $orderBy = [['hash'], ['type']],
+        ?string $type = null
     ): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('d.id as id', 'd.type', 'd.hash', 'd.acknowledged')
             ->from($this->getTableName(), 'd');
+
+        $this->applyFilters($qb, $type, $user);
 
         if ($limit !== null) {
             $qb->setMaxResults($limit);
@@ -214,22 +218,18 @@ class FileDuplicateMapper extends EQBMapper
      * Gets the total count of duplicates based on the type.
      *
      * @param string $type The type of duplicates to count.
+     * @param string|null $user Optional user ID to filter duplicates by.
      * @return int The total count of duplicates.
      */
-    public function getTotalCount(string $type = 'unacknowledged'): int
+    public function getTotalCount(string $type = 'unacknowledged', ?string $user = null): int
     {
         $qb = $this->db->getQueryBuilder();
 
         // Start with a basic SELECT COUNT query
         $qb->select($qb->func()->count('*', 'total_count'))
-            ->from($this->getTableName());
+            ->from($this->getTableName(), 'd');
 
-        // Add conditions based on the type
-        if ($type === 'acknowledged') {
-            $qb->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
-        } elseif ($type === 'unacknowledged') {
-            $qb->where($qb->expr()->eq('acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)));
-        } // No condition needed for 'all', as we want to count all rows
+        $this->applyFilters($qb, $type, $user);
 
         // Execute the query and fetch the result
         $result = $qb->executeQuery();
@@ -238,6 +238,45 @@ class FileDuplicateMapper extends EQBMapper
 
         // Return the count result as an integer
         return (int) ($row ? $row['total_count'] : 0);
+    }
+
+    private function applyFilters(IQueryBuilder $qb, ?string $type, ?string $user): void
+    {
+        if ($type === 'acknowledged') {
+            $qb->andWhere($qb->expr()->eq('d.acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
+        } elseif ($type === 'unacknowledged') {
+            $qb->andWhere($qb->expr()->eq('d.acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)));
+        }
+
+        if ($user !== null && $user !== '') {
+            $escapedUser = $this->db->escapeLikeParameter($user);
+            if ($escapedUser === '') {
+                $escapedUser = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $user);
+            }
+
+            $subQuery = $this->db->getQueryBuilder();
+            $subQuery->select($subQuery->createFunction('1'))
+                ->from('duplicatefinder_finfo', 'f')
+                ->where($subQuery->expr()->eq('f.file_hash', 'd.hash'))
+                ->andWhere($subQuery->expr()->eq('f.ignored', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)))
+                ->andWhere($subQuery->expr()->orX(
+                    $subQuery->expr()->like(
+                        'f.path',
+                        $qb->createNamedParameter('/' . $escapedUser . '/%')
+                    ),
+                    $subQuery->expr()->andX(
+                        $subQuery->expr()->eq('f.owner', $qb->createNamedParameter($user)),
+                        $subQuery->expr()->notLike(
+                            'f.path',
+                            $qb->createNamedParameter('/%/files/%')
+                        )
+                    )
+                ))
+                ->groupBy('f.file_hash')
+                ->having($subQuery->createFunction('COUNT(*) > 1'));
+
+            $qb->andWhere($qb->createFunction('EXISTS (' . $subQuery->getSQL() . ')'));
+        }
     }
 
     public function insert(Entity $entity): Entity

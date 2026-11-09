@@ -57,7 +57,7 @@ class DuplicateApiController extends AbstractAPIController
     {
         try {
             $duplicates = $this->fileDuplicateService->findAll($type, $this->getUserId(), $page, $limit, true);
-            $totalItems = $this->fileDuplicateService->getTotalCount($type);
+            $totalItems = $this->fileDuplicateService->getTotalCount($type, $this->getUserId());
             $totalPages = ceil($totalItems / $limit);
 
             if ($onlyNonProtected) {

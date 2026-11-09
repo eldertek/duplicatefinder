@@ -319,15 +319,16 @@ export default {
 		async refreshDuplicates() {
 			this.isLoading = true;
 			try {
-				const allData = await fetchDuplicates('all', this.limit, this.page);
+				const [acknowledgedResponse, unacknowledgedResponse] = await Promise.all([
+					fetchDuplicates('acknowledged', 50, 1),
+					fetchDuplicates('unacknowledged', 50, 1)
+				]);
 
-				// Mettre à jour les doublons reconnus
-				this.acknowledgedDuplicates = allData.entities.filter(duplicate => duplicate.acknowledged);
+				this.acknowledgedDuplicates = acknowledgedResponse.entities;
+				this.unacknowledgedDuplicates = unacknowledgedResponse.entities;
+				this.acknowledgedPagination = acknowledgedResponse.pagination;
+				this.unacknowledgedPagination = unacknowledgedResponse.pagination;
 
-				// Mettre à jour les doublons non reconnus
-				this.unacknowledgedDuplicates = allData.entities.filter(duplicate => !duplicate.acknowledged);
-
-				// Maintenir le duplicata courant si possible
 				if (this.currentDuplicate) {
 					const existsAcknowledged = this.acknowledgedDuplicates.find(d => d.id === this.currentDuplicate.id);
 					const existsUnacknowledged = this.unacknowledgedDuplicates.find(d => d.id === this.currentDuplicate.id);
@@ -336,7 +337,7 @@ export default {
 					} else if (existsUnacknowledged) {
 						this.currentDuplicate = existsUnacknowledged;
 					} else {
-						this.currentDuplicate = this.acknowledgedDuplicates[0] || this.unacknowledgedDuplicates[0] || null;
+						this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null;
 					}
 				}
 			} finally {
@@ -344,6 +345,7 @@ export default {
 			}
 		},
 		async loadInitialData() {
+			this.isLoading = true
 			try {
 				const [acknowledgedResponse, unacknowledgedResponse, projectsResponse] = await Promise.all([
 					fetchDuplicates('acknowledged', 50, 1),
@@ -359,6 +361,8 @@ export default {
 			} catch (error) {
 				console.error('Error loading initial data:', error)
 				showError(t('duplicatefinder', 'Could not load duplicates'))
+			} finally {
+				this.isLoading = false
 			}
 		},
 		updateAcknowledgedDuplicates(newDuplicates) {
@@ -418,10 +422,6 @@ export default {
 		escapeRegex(string) {
 			return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 		}
-	},
-	mounted() {
-		// Fetch initial duplicates
-		this.refreshDuplicates();
 	}
 }
 </script>

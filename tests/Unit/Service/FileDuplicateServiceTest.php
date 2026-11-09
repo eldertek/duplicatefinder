@@ -101,7 +101,7 @@ class FileDuplicateServiceTest extends TestCase
         // Configure the mapper to return the duplicates in unsorted order
         $this->mapper->expects($this->once())
             ->method('findAll')
-            ->with('user1', 20, 0, [['size', 'DESC']])
+            ->with('user1', 20, 0, [['size', 'DESC']], 'all')
             ->willReturn([$smallDuplicate, $largeDuplicate, $mediumDuplicate]);
 
         // Configure fileInfoService to return the correct files for each hash
@@ -152,7 +152,7 @@ class FileDuplicateServiceTest extends TestCase
         // Configure the mapper to return the duplicates in unsorted order
         $this->mapper->expects($this->once())
             ->method('findAll')
-            ->with('user1', 20, 0, [['size', 'ASC']])
+            ->with('user1', 20, 0, [['size', 'ASC']], 'all')
             ->willReturn([$largeDuplicate, $smallDuplicate, $mediumDuplicate]);
 
         // Configure fileInfoService to return the correct files for each hash
@@ -187,7 +187,7 @@ class FileDuplicateServiceTest extends TestCase
     {
         $duplicate = $this->createStatusDuplicate('excluded', $acknowledged);
         $this->mapper->expects($this->once())->method('findAll')
-            ->with($user, 20, 0, [['hash'], ['type']])
+            ->with($user, 20, 0, [['hash'], ['type']], $type)
             ->willReturn([$duplicate]);
         $this->fileInfoService->expects($this->never())->method('findByHash');
         $this->fileInfoService->expects($this->never())->method('hasAccessRight');
@@ -218,7 +218,7 @@ class FileDuplicateServiceTest extends TestCase
         $unacknowledged = $this->createStatusDuplicate('unacknowledged-hash', false);
         $groups = [$acknowledged, $unacknowledged];
         $this->mapper->expects($this->once())->method('findAll')
-            ->with('user1', 20, 0, [['hash'], ['type']])->willReturn($groups);
+            ->with('user1', 20, 0, [['hash'], ['type']], $type)->willReturn($groups);
         $this->expectStatusFileLookups($groups, $expectedHashes);
 
         $result = $this->service->findAll($type, 'user1', 1, 20, true);
@@ -251,8 +251,8 @@ class FileDuplicateServiceTest extends TestCase
         $orderBy = [['size', 'DESC']];
         $this->mapper->expects($this->exactly(2))->method('findAll')
             ->withConsecutive(
-                ['user1', 2, 2, $orderBy],
-                ['user1', 2, 4, $orderBy]
+                ['user1', 2, 2, $orderBy, $type],
+                ['user1', 2, 4, $orderBy, $type]
             )->willReturnOnConsecutiveCalls([$excluded1, $excluded2], [$matching]);
         $this->expectStatusFileLookups([$matching], ['matching']);
 
@@ -261,6 +261,16 @@ class FileDuplicateServiceTest extends TestCase
         $this->assertSame([$matching], $result['entities']);
         $this->assertSame(4, $result['pageKey']);
         $this->assertTrue($result['isLastFetched']);
+    }
+
+    public function testGetTotalCountForwardsUserToMapper(): void
+    {
+        $this->mapper->expects($this->once())
+            ->method('getTotalCount')
+            ->with('unacknowledged', 'user1')
+            ->willReturn(42);
+
+        $this->assertSame(42, $this->service->getTotalCount('unacknowledged', 'user1'));
     }
 
     public static function filteredPageProvider(): array
