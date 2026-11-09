@@ -4,36 +4,42 @@ namespace OCA\DuplicateFinder\Migration;
 
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\ConfigService;
-use OCA\DuplicateFinder\Service\FileInfoService;
-use OCP\Files\NotFoundException;
-use OCP\IDBConnection;
+use OCA\DuplicateFinder\Service\FileInfoRepairer;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Gives a path hash to the file infos that have none and removes the surplus file infos (several rows for one path and
+ * one owner, only the oldest stays). Nextcloud runs the post-migration steps of an app each time it is updated and each
+ * time it is enabled while a version of it is recorded as installed.
+ *
+ * Up to 1.8.4 this step loaded every row of the table in memory (FileInfoService::findAll() builds an object per row,
+ * about 2.5 KB each): on a server that had scanned a million files or more, `occ app:enable duplicatefinder` and
+ * `occ upgrade` were killed for lack of memory and left the server in maintenance mode (issue 182). The work is now
+ * done by FileInfoRepairer, a window of ids at a time, within a time budget, and the clean-up background job finishes
+ * what the budget left. A table that is already clean costs a fraction of a second, once.
+ */
 class RepairFileInfos implements IRepairStep
 {
+    /** Seconds the upgrade may spend here: a repair step must not hold the upgrade of the server. */
+    private const TIME_BUDGET = 20.0;
+
     /** @var ConfigService */
     private $config;
-    /** @var IDBConnection */
-    private $connection;
+    /** @var FileInfoRepairer */
+    private $repairer;
     /** @var LoggerInterface */
     private $logger;
-    /** @var FileInfoService */
-    private $fileInfoService;
-
-
 
     public function __construct(
         ConfigService $config,
-        IDBConnection $connection,
-        FileInfoService $fileInfoService,
+        FileInfoRepairer $repairer,
         LoggerInterface $logger
     ) {
         $this->config = $config;
-        $this->connection = $connection;
+        $this->repairer = $repairer;
         $this->logger = $logger;
-        $this->fileInfoService = $fileInfoService;
     }
 
     /**
@@ -57,86 +63,38 @@ class RepairFileInfos implements IRepairStep
             return;
         }
 
-        $output->info('Recalculating Path Hashes');
-        $this->updatePathHashes($output);
-        $output->info('Clearing duplicated records');
-        $this->clearDuplicateObjects($output);
-    }
+        $result = $this->repairer->run(self::TIME_BUDGET);
 
-    protected function shouldRun(): bool
-    {
-        return version_compare($this->config->getInstalledVersion(), '0.0.9', '>');
-    }
-
-    private function updatePathHashes(IOutput $output): void
-    {
-        $invalidObjects = $this->getInvalidPathHashObjects();
-        $output->startProgress(count($invalidObjects));
-        foreach ($invalidObjects as $row) {
-            $fileInfo = null;
-
-            try {
-                $fileInfo = $this->fileInfoService->findById($row['id']);
-                $fileInfo->setPath($fileInfo->getPath());
-                $this->fileInfoService->update($fileInfo);
-            } catch (NotFoundException $e) {
-                if (!is_null($fileInfo)) {
-                    $this->fileInfoService->delete($fileInfo);
-                }
-            } catch (\Exception $e) {
-                $this->logger->error($e->getMessage(), ['exception' => $e]);
-            }
-            $output->advance();
+        if ($result['pathHashes'] > 0) {
+            $output->info(sprintf('Recalculated %d path hashes', $result['pathHashes']));
         }
-        unset($row);
-        $output->finishProgress();
+        if ($result['removed'] > 0) {
+            $output->info(sprintf('Removed %d surplus file info rows', $result['removed']));
+        }
+        if ($result['pathHashes'] > 0 || $result['removed'] > 0) {
+            $this->logger->info('Repaired the file infos: {hashes} path hashes recalculated, {removed} surplus rows removed', [
+                'app' => Application::ID,
+                'hashes' => $result['pathHashes'],
+                'removed' => $result['removed'],
+            ]);
+        }
+        if (!$result['done']) {
+            $output->info('File info rows are left to look at, the clean-up background job goes on with them');
+            $this->logger->info('File info rows are left to repair after the time budget of the repair step, the clean-up job goes on with them', [
+                'app' => Application::ID,
+            ]);
+        }
     }
 
     /**
-     * @return array<string,mixed>
+     * The installed version is the version the server is updating FROM (Nextcloud records the new one once the
+     * repair steps are done), and a repair step only runs for an app that has a recorded version. So this is false
+     * only for an app recorded as 0.0.x up to 0.0.9: the condition comes unchanged from the first version of this app
+     * (PaulLereverend/NextcloudDuplicateFinder) and nothing says why that threshold was chosen. For every real
+     * installation it is true and the done flag of FileInfoRepairer decides whether there is anything left to do.
      */
-    private function getInvalidPathHashObjects(): array
+    protected function shouldRun(): bool
     {
-        $qb = $this->connection->getQueryBuilder();
-        $qb->select('*')
-            ->from('duplicatefinder_finfo')
-            ->where($qb->expr()->isNull('path_hash'))
-            ->orWhere($qb->expr()->eq('path_hash', $qb->createNamedParameter('')));
-        $result = $qb->executeQuery();
-        if (!$result) {
-            return [];
-        }
-        $rows = $result->fetchAll();
-        $result->closeCursor();
-
-        return $rows;
-    }
-
-    private function clearDuplicateObjects(IOutput $output): void
-    {
-        $entities = $this->fileInfoService->findAll(false);
-        $paths = [];
-        $output->startProgress(count($entities));
-        foreach ($entities as $entity) {
-            try {
-                $hash = $entity->getPathHash();
-                $owner = $entity->getOwner();
-                if (isset($paths[$hash])) {
-                    if (isset($paths[$hash][$owner])) {
-                        $this->fileInfoService->delete($entity);
-                    } else {
-                        $paths[$hash][$owner] = true;
-                    }
-                } else {
-                    $paths[$hash] = [];
-                    $paths[$hash][$owner] = true;
-                }
-            } catch (\Exception $e) {
-                $this->logger->error($e->getMessage(), ['exception' => $e]);
-            }
-            $output->advance();
-        }
-        unset($entity);
-        $output->finishProgress();
+        return version_compare($this->config->getInstalledVersion(), '0.0.9', '>');
     }
 }

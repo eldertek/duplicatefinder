@@ -426,6 +426,7 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "Error unacknowledging duplicate.",
     "File deleted successfully." : "File deleted successfully.",
     "Cannot delete file as it is in an origin folder" : "Cannot delete file as it is in an origin folder",
+    "This is the last remaining copy of this file, it was not deleted" : "This is the last remaining copy of this file, it was not deleted",
     "File not found" : "File not found",
     "Permission denied to delete file" : "Permission denied to delete file",
     "File is currently locked. Please try again later." : "File is currently locked. Please try again later.",

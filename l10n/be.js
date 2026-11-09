@@ -22,6 +22,7 @@ OC.L10N.register(
     "Search & Navigation" : "Пошук і навігацыя",
     "No results found" : "Вынікаў не знойдзена",
     "Previous" : "Папярэдняя",
+    "Next" : "Далей",
     "Advanced Settings" : "Пашыраныя налады",
     "Note:" : "Заўвага:",
     "Finding Duplicates" : "Пошук дублікатаў",

@@ -426,6 +426,7 @@ OC.L10N.register(
     "Error unacknowledging duplicate." : "取消確認重複項目時發生錯誤。",
     "File deleted successfully." : "檔案成功刪除。",
     "Cannot delete file as it is in an origin folder" : "因為檔案位於原始資料夾中，因此無法刪除檔案",
+    "This is the last remaining copy of this file, it was not deleted" : "這是此檔案僅存的副本，因此未有刪除。",
     "File not found" : "找不到檔案",
     "Permission denied to delete file" : "無權刪除檔案",
     "File is currently locked. Please try again later." : "檔案目前被上鎖，請稍候再試",

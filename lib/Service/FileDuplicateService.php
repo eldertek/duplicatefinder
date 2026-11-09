@@ -26,19 +26,23 @@ class FileDuplicateService
     private $currentUserId = null;
     /** @var ILockingProvider */
     private $lockingProvider;
+    /** @var ?SurplusRowsMerger */
+    private $surplusRowsMerger;
 
     public function __construct(
         LoggerInterface $logger,
         FileDuplicateMapper $mapper,
         FileInfoService $fileInfoService,
         OriginFolderService $originFolderService,
-        ILockingProvider $lockingProvider
+        ILockingProvider $lockingProvider,
+        ?SurplusRowsMerger $surplusRowsMerger = null
     ) {
         $this->mapper = $mapper;
         $this->logger = $logger;
         $this->fileInfoService = $fileInfoService;
         $this->originFolderService = $originFolderService;
         $this->lockingProvider = $lockingProvider;
+        $this->surplusRowsMerger = $surplusRowsMerger;
     }
 
     public function setCurrentUserId(?string $userId): void
@@ -310,6 +314,32 @@ class FileDuplicateService
     public function clear(): void
     {
         $this->mapper->clear();
+    }
+
+    /**
+     * Delete the surplus rows of the groups that share a hash and a type, within a time budget
+     * (see SurplusRowsMerger). Never throws: it is called at the start of a background job that has
+     * its own work to do.
+     *
+     * @return int The number of rows deleted
+     */
+    public function mergeSurplusRows(float $timeBudget = 20.0): int
+    {
+        if ($this->surplusRowsMerger === null) {
+            return 0;
+        }
+
+        try {
+            return $this->surplusRowsMerger->run($timeBudget)['removed'];
+        } catch (\Throwable $e) {
+            $this->logger->warning('Could not merge the surplus duplicate group rows: {message}', [
+                'app' => 'duplicatefinder',
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+
+            return 0;
+        }
     }
 
     public function getTotalCount(string $type = 'unacknowledged'): int

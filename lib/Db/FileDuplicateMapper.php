@@ -70,6 +70,59 @@ class FileDuplicateMapper extends EQBMapper
     }
 
     /**
+     * Delete the surplus rows of every hash/type pair that has several rows, keeping the oldest row of each pair
+     * (issue 178 left several rows for one hash). The rows are walked in id order from $afterId, by small batches:
+     * the table is never loaded in memory, there is neither one statement per pair nor one transaction for the
+     * whole table, and every row is looked at once. It stops once the time budget is spent and says where it
+     * stopped, so that the next call goes on from there. Rows without a type are left alone.
+     *
+     * @param float $timeBudget Seconds after which no further batch is started
+     * @param int $afterId Only the rows with a greater id are looked at
+     * @param int $batchSize Rows deleted by one statement
+     * @return array{removed: int, lastId: int, finished: bool} How many rows were deleted, the last id deleted
+     *         (the place to go on from) and whether the end of the table was reached
+     */
+    public function mergeSurplusRows(float $timeBudget = 20.0, int $afterId = 0, int $batchSize = 1000): array
+    {
+        $deadline = microtime(true) + $timeBudget;
+        $removed = 0;
+        $lastId = $afterId;
+
+        while (true) {
+            $older = $this->db->getQueryBuilder();
+            $older->select('k.id')
+                ->from($this->getTableName(), 'k')
+                ->where($older->expr()->eq('k.hash', 'd.hash'))
+                ->andWhere($older->expr()->eq('k.type', 'd.type'))
+                ->andWhere($older->expr()->lt('k.id', 'd.id'));
+
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('d.id')
+                ->from($this->getTableName(), 'd')
+                ->where($qb->expr()->gt('d.id', $qb->createNamedParameter($lastId, IQueryBuilder::PARAM_INT)))
+                ->andWhere($qb->createFunction('EXISTS (' . $older->getSQL() . ')'))
+                ->orderBy('d.id', 'ASC')
+                ->setMaxResults($batchSize);
+            $result = $qb->executeQuery();
+            $ids = array_map('intval', $result->fetchAll(\PDO::FETCH_COLUMN));
+            $result->closeCursor();
+            if ($ids === []) {
+                return ['removed' => $removed, 'lastId' => $lastId, 'finished' => true];
+            }
+
+            $delete = $this->db->getQueryBuilder();
+            $delete->delete($this->getTableName())
+                ->where($delete->expr()->in('id', $delete->createNamedParameter($ids, IQueryBuilder::PARAM_INT_ARRAY)));
+            $removed += $delete->executeStatement();
+            $lastId = max($ids);
+
+            if (microtime(true) >= $deadline) {
+                return ['removed' => $removed, 'lastId' => $lastId, 'finished' => false];
+            }
+        }
+    }
+
+    /**
      * @param string|null $user
      * @param int|null $limit
      * @param int|null $offset

@@ -131,6 +131,17 @@ class FileInfoService
         return $entities;
     }
 
+    /**
+     * The next rows of the table in id order, after a given id, to walk a table of millions of rows without
+     * loading it in memory like findAll() does.
+     *
+     * @return array<FileInfo>
+     */
+    public function findBatch(int $afterId, int $limit = 1000): array
+    {
+        return $this->mapper->findBatch($afterId, $limit);
+    }
+
     public function find(string $path, ?string $fallbackUID = null, bool $enrich = false): FileInfo
     {
         $entity = $this->mapper->find($path, $fallbackUID);
@@ -271,10 +282,31 @@ class FileInfoService
         return $fileInfo;
     }
 
+    /**
+     * The row of a path, whoever scans it. The owner stored in the row is the owner of the file, which is not the user
+     * who scans when the file is reached through a share (a received share, or the shared folder of another user):
+     * looking for the row of the scanning user alone found nothing and every scan inserted one more row for the same
+     * path (#198). A path is unique in the file tree, so falling back to the path alone cannot pick another file.
+     *
+     * @throws \OCP\AppFramework\Db\DoesNotExistException
+     */
+    private function findForSave(string $path, ?string $fallbackUID): FileInfo
+    {
+        try {
+            return $this->mapper->find($path, $fallbackUID);
+        } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+            if ($fallbackUID === null) {
+                throw $e;
+            }
+
+            return $this->mapper->find($path, null);
+        }
+    }
+
     public function save(string $path, ?string $fallbackUID = null): FileInfo
     {
         try {
-            $fileInfo = $this->mapper->find($path, $fallbackUID);
+            $fileInfo = $this->findForSave($path, $fallbackUID);
             $fileInfo = $this->update($fileInfo, $fallbackUID);
             $this->eventDispatcher->dispatchTyped(new UpdatedFileInfoEvent($fileInfo, $fallbackUID));
         } catch (\Exception $e) {

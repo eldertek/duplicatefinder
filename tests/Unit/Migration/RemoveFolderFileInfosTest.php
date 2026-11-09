@@ -4,7 +4,10 @@ namespace OCA\DuplicateFinder\Tests\Unit\Migration;
 
 use OCA\DuplicateFinder\Migration\RemoveFolderFileInfos;
 use OCP\DB\QueryBuilder\IExpressionBuilder;
+use OCP\DB\QueryBuilder\IFunctionBuilder;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\DB\QueryBuilder\IQueryFunction;
+use OCP\DB\IResult;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
@@ -31,6 +34,8 @@ class RemoveFolderFileInfosTest extends TestCase
         $expr->method('eq')->willReturnCallback(function ($column, $value) {
             return $column . ' = ' . $value;
         });
+        $expr->method('gt')->willReturn('gt');
+        $expr->method('lte')->willReturn('lte');
         $this->queryBuilder->method('expr')->willReturn($expr);
         $this->queryBuilder->method('createNamedParameter')->willReturnCallback(function ($value) {
             return "'" . $value . "'";
@@ -40,19 +45,28 @@ class RemoveFolderFileInfosTest extends TestCase
         $this->repair = new RemoveFolderFileInfos($this->connection, $this->logger);
     }
 
-    public function testDeletesOnlyFolderRows(): void
+    private function mockMaxId(int $maxId): void
     {
-        $this->queryBuilder->expects($this->once())
-            ->method('delete')
-            ->with('duplicatefinder_finfo')
-            ->willReturnSelf();
-        $this->queryBuilder->expects($this->once())
-            ->method('where')
-            ->with("mimetype = 'httpd/unix-directory'")
-            ->willReturnSelf();
-        $this->queryBuilder->expects($this->once())
+        $func = $this->createMock(IFunctionBuilder::class);
+        $func->method('max')->willReturn($this->createMock(IQueryFunction::class));
+        $this->queryBuilder->method('func')->willReturn($func);
+        $this->queryBuilder->method('select')->willReturnSelf();
+        $this->queryBuilder->method('from')->willReturnSelf();
+        $result = $this->createMock(IResult::class);
+        $result->method('fetchOne')->willReturn((string)$maxId);
+        $this->queryBuilder->method('executeQuery')->willReturn($result);
+    }
+
+    public function testDeletesFolderRowsByWindowsOfIds(): void
+    {
+        $this->mockMaxId(12000);
+        $this->queryBuilder->method('delete')->with('duplicatefinder_finfo')->willReturnSelf();
+        $this->queryBuilder->method('where')->willReturnSelf();
+        $this->queryBuilder->method('andWhere')->willReturnSelf();
+        // 12000 ids with a window of 5000: three DELETE statements
+        $this->queryBuilder->expects($this->exactly(3))
             ->method('executeStatement')
-            ->willReturn(988);
+            ->willReturnOnConsecutiveCalls(500, 300, 188);
         $this->output->expects($this->once())
             ->method('info')
             ->with($this->stringContains('988'));
@@ -62,9 +76,20 @@ class RemoveFolderFileInfosTest extends TestCase
 
     public function testSilentWhenNothingToRemove(): void
     {
+        $this->mockMaxId(3000);
         $this->queryBuilder->method('delete')->willReturnSelf();
         $this->queryBuilder->method('where')->willReturnSelf();
+        $this->queryBuilder->method('andWhere')->willReturnSelf();
         $this->queryBuilder->method('executeStatement')->willReturn(0);
+        $this->output->expects($this->never())->method('info');
+
+        $this->repair->run($this->output);
+    }
+
+    public function testNoStatementOnEmptyTable(): void
+    {
+        $this->mockMaxId(0);
+        $this->queryBuilder->expects($this->never())->method('executeStatement');
         $this->output->expects($this->never())->method('info');
 
         $this->repair->run($this->output);
