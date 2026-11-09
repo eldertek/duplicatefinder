@@ -51,8 +51,8 @@ class FileInfoRepairerTest extends TestCase
             ->willReturnOnConsecutiveCalls(10, 0, 4);
 
         $this->assertSame(['pathHashes' => 3, 'removed' => 14, 'done' => true], $this->repairer->run(60.0, 5000));
-        $this->assertSame('1', $this->values['repair_file_infos_done']);
-        $this->assertArrayNotHasKey('repair_file_infos_cursor', $this->values);
+        $this->assertSame('1', $this->values['repair_file_infos_done_v2']);
+        $this->assertArrayNotHasKey('repair_file_infos_cursor_v2', $this->values);
 
         // from then on the table is not looked at again: getMaxId() and the repairs were expected once above
         $this->assertSame(['pathHashes' => 0, 'removed' => 0, 'done' => true], $this->repairer->run(60.0, 5000));
@@ -93,16 +93,16 @@ class FileInfoRepairerTest extends TestCase
             ->willReturnOnConsecutiveCalls(7, 5, 3);
 
         $this->assertSame(['pathHashes' => 0, 'removed' => 7, 'done' => false], $this->repairer->run(0.0, 5000));
-        $this->assertSame('5000', $this->values['repair_file_infos_cursor']);
-        $this->assertArrayNotHasKey('repair_file_infos_done', $this->values);
+        $this->assertSame('5000', $this->values['repair_file_infos_cursor_v2']);
+        $this->assertArrayNotHasKey('repair_file_infos_done_v2', $this->values);
 
         // the next call goes on from where the first one stopped, not from the start of the table
         $this->assertSame(['pathHashes' => 0, 'removed' => 5, 'done' => false], $this->repairer->run(0.0, 5000));
-        $this->assertSame('10000', $this->values['repair_file_infos_cursor']);
+        $this->assertSame('10000', $this->values['repair_file_infos_cursor_v2']);
 
         $this->assertSame(['pathHashes' => 0, 'removed' => 3, 'done' => true], $this->repairer->run(0.0, 5000));
-        $this->assertSame('1', $this->values['repair_file_infos_done']);
-        $this->assertArrayNotHasKey('repair_file_infos_cursor', $this->values);
+        $this->assertSame('1', $this->values['repair_file_infos_done_v2']);
+        $this->assertArrayNotHasKey('repair_file_infos_cursor_v2', $this->values);
     }
 
     public function testAnEmptyTableIsDoneWithoutLookingAtAnyRow(): void
@@ -112,7 +112,7 @@ class FileInfoRepairerTest extends TestCase
         $this->mapper->expects($this->never())->method('removeSurplusRows');
 
         $this->assertSame(['pathHashes' => 0, 'removed' => 0, 'done' => true], $this->repairer->run());
-        $this->assertSame('1', $this->values['repair_file_infos_done']);
+        $this->assertSame('1', $this->values['repair_file_infos_done_v2']);
     }
 
     public function testACleanTableCostsOnePassOnlyOnce(): void
@@ -146,18 +146,18 @@ class FileInfoRepairerTest extends TestCase
         }
 
         // the first window is done: the next call starts after it, and the pass is not declared done
-        $this->assertSame('5000', $this->values['repair_file_infos_cursor']);
-        $this->assertArrayNotHasKey('repair_file_infos_done', $this->values);
+        $this->assertSame('5000', $this->values['repair_file_infos_cursor_v2']);
+        $this->assertArrayNotHasKey('repair_file_infos_done_v2', $this->values);
     }
 
     public function testAPassWhoseCursorIsBeyondTheLastIdIsOver(): void
     {
         // the table has shrunk since the pass started: nothing is left to look at
-        $this->values['repair_file_infos_cursor'] = '20000';
+        $this->values['repair_file_infos_cursor_v2'] = '20000';
         $this->mapper->method('getMaxId')->willReturn(15000);
         $this->mapper->expects($this->never())->method('repairPathHashes');
 
         $this->assertSame(['pathHashes' => 0, 'removed' => 0, 'done' => true], $this->repairer->run());
-        $this->assertSame('1', $this->values['repair_file_infos_done']);
+        $this->assertSame('1', $this->values['repair_file_infos_done_v2']);
     }
 }

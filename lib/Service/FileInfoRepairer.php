@@ -24,8 +24,9 @@ use OCP\IConfig;
  */
 class FileInfoRepairer
 {
-    private const CURSOR_KEY = 'repair_file_infos_cursor';
-    private const DONE_KEY = 'repair_file_infos_done';
+    // _v2: the repair is run once more after 1.9.x, which left rows for the same path inserted by every scan of a shared file (#198)
+    private const CURSOR_KEY = 'repair_file_infos_cursor_v2';
+    private const DONE_KEY = 'repair_file_infos_done_v2';
 
     /** Ids looked at by one query: it bounds the work of a query and how far the time budget can be overrun. */
     private const WINDOW = 5000;
