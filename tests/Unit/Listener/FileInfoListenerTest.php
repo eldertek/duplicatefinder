@@ -4,6 +4,7 @@ namespace OCA\DuplicateFinder\Tests\Unit\Listener;
 
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Event\UpdatedFileInfoEvent;
+use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
 use OCA\DuplicateFinder\Listener\FileInfoListener;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\EventDispatcher\Event;
@@ -166,5 +167,46 @@ class FileInfoListenerTest extends TestCase
             ->method('debug');
 
         $this->listener->handle($event);
+    }
+
+    public function testIgnoredMountedFileIsNotLoggedAndSiblingsAreStillHashed()
+    {
+        $fileInfo = new FileInfo('/testuser/files/new.txt', 'testuser');
+        $fileInfo->setId(1);
+        $fileInfo->setSize(1024);
+        $mounted = new FileInfo('/testuser/files/mount/a.txt', 'testuser');
+        $mounted->setId(2);
+        $other = new FileInfo('/testuser/files/b.txt', 'testuser');
+        $other->setId(3);
+
+        $this->fileInfoService->method('countBySize')->willReturn(3);
+        $this->fileInfoService->method('findBySize')->willReturn([$mounted, $other]);
+        $hashed = [];
+        $this->fileInfoService->method('calculateHashes')
+            ->willReturnCallback(function (FileInfo $f) use (&$hashed, $mounted) {
+                if ($f === $mounted) {
+                    throw new ForcedToIgnoreFileException($f, 'app:ignore_mounted_files');
+                }
+                $hashed[] = $f->getId();
+
+                return $f;
+            });
+        $this->logger->expects($this->never())->method('error');
+
+        $this->listener->handle(new UpdatedFileInfoEvent($fileInfo, 'testuser'));
+
+        $this->assertSame([1, 3], $hashed);
+    }
+
+    public function testIgnoredMountedFileOfUniqueSizeIsNotLogged()
+    {
+        $fileInfo = new FileInfo('/testuser/files/mount/a.txt', 'testuser');
+        $fileInfo->setSize(10);
+        $this->fileInfoService->method('countBySize')->willReturn(1);
+        $this->fileInfoService->method('calculateHashes')
+            ->willThrowException(new ForcedToIgnoreFileException($fileInfo, 'app:ignore_mounted_files'));
+        $this->logger->expects($this->never())->method('error');
+
+        $this->listener->handle(new UpdatedFileInfoEvent($fileInfo, 'testuser'));
     }
 }
