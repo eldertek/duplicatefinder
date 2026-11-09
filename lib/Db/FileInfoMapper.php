@@ -320,15 +320,37 @@ class FileInfoMapper extends EQBMapper
     }
 
     /**
+     * A file seen through a share has a row whose path is in the recipient's tree (/bob/files/...) while its owner
+     * is the user who shared it (alice). That view does not use extra disk space, so list-all leaves it out unless
+     * asked to include it (issue 197). Rows without an owner (group folders, legacy rows) are kept.
+     */
+    private function isNotSharedView(IQueryBuilder $qb): ICompositeExpression
+    {
+        return $qb->expr()->orX(
+            $qb->expr()->isNull('owner'),
+            $qb->expr()->eq('owner', $qb->createNamedParameter('')),
+            $qb->expr()->like(
+                'path',
+                $qb->func()->concat(
+                    $qb->createNamedParameter('/'),
+                    'owner',
+                    $qb->createNamedParameter('/%')
+                )
+            )
+        );
+    }
+
+    /**
      * Groups of files that share a content hash, whoever owns them, biggest waste first (read only). Only the
      * indexed rows are used: nothing is scanned or hashed here. Ignored files and files without a hash are left
      * out, and so are empty files (they all share one hash and waste no space).
      *
      * @param int $minSize Only the files of at least this size (bytes) are grouped
      * @param int $limit How many groups at most, 0 for no limit
+     * @param bool $includeShared Whether to include shared views of files in other users' trees (issue 197)
      * @return \Generator<array{hash: string, size: int, copies: int, wasted: int}>
      */
-    public function findDuplicateGroupsAcrossUsers(int $minSize = 0, int $limit = 0): \Generator
+    public function findDuplicateGroupsAcrossUsers(int $minSize = 0, int $limit = 0, bool $includeShared = false): \Generator
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select('file_hash')
@@ -339,8 +361,11 @@ class FileInfoMapper extends EQBMapper
             ->where($qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)))
             ->andWhere($qb->expr()->isNotNull('file_hash'))
             ->andWhere($qb->expr()->neq('file_hash', $qb->createNamedParameter('')))
-            ->andWhere($qb->expr()->gte('size', $qb->createNamedParameter(max(1, $minSize), IQueryBuilder::PARAM_INT)))
-            ->groupBy('file_hash')
+            ->andWhere($qb->expr()->gte('size', $qb->createNamedParameter(max(1, $minSize), IQueryBuilder::PARAM_INT)));
+        if (!$includeShared) {
+            $qb->andWhere($this->isNotSharedView($qb));
+        }
+        $qb->groupBy('file_hash')
             ->having($qb->createFunction('COUNT(*) > 1'))
             ->orderBy('wasted', 'DESC')
             ->addOrderBy('file_hash', 'ASC');
@@ -369,9 +394,10 @@ class FileInfoMapper extends EQBMapper
      * Owner and path of every indexed copy of the given hashes (read only), grouped by hash.
      *
      * @param array<string> $hashes
+     * @param bool $includeShared Whether to include shared views of files in other users' trees (issue 197)
      * @return array<string, array<array{owner: string, path: string}>>
      */
-    public function findCopiesOfHashes(array $hashes): array
+    public function findCopiesOfHashes(array $hashes, bool $includeShared = false): array
     {
         $copies = [];
         foreach (array_chunk(array_values(array_unique($hashes)), 500) as $chunk) {
@@ -379,8 +405,11 @@ class FileInfoMapper extends EQBMapper
             $qb->select('file_hash', 'owner', 'path')
                 ->from($this->getTableName())
                 ->where($qb->expr()->in('file_hash', $qb->createNamedParameter($chunk, IQueryBuilder::PARAM_STR_ARRAY)))
-                ->andWhere($qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)))
-                ->orderBy('file_hash', 'ASC')
+                ->andWhere($qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)));
+            if (!$includeShared) {
+                $qb->andWhere($this->isNotSharedView($qb));
+            }
+            $qb->orderBy('file_hash', 'ASC')
                 ->addOrderBy('owner', 'ASC')
                 ->addOrderBy('path', 'ASC');
             $result = $qb->executeQuery();

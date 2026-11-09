@@ -43,7 +43,8 @@ class ListAllDuplicates extends Command
             ->setDescription('Read only report of the duplicates of all users: for each content hash, the size, the number of copies, and the owner and path of each copy')
             ->addOption('min-size', null, InputOption::VALUE_REQUIRED, 'Only files of at least this size, in bytes or with a unit (500K, 10M, 1G)', '1')
             ->addOption('limit', 'l', InputOption::VALUE_REQUIRED, 'Number of groups to show, the biggest waste first (0 for all of them)', (string)self::DEFAULT_LIMIT)
-            ->addOption('output', null, InputOption::VALUE_REQUIRED, 'Output format: table or json', 'table');
+            ->addOption('output', null, InputOption::VALUE_REQUIRED, 'Output format: table or json', 'table')
+            ->addOption('include-shared', null, InputOption::VALUE_NONE, 'Include shared views of files in other users\' trees (excluded by default)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -68,25 +69,26 @@ class ListAllDuplicates extends Command
             return Command::FAILURE;
         }
         $limit = (int)$limitOption;
+        $includeShared = (bool)$input->getOption('include-shared');
 
         $unindexed = $this->usersWithoutIndex();
 
         return $format === 'json'
-            ? $this->writeJson($output, $minSize, $limit, $unindexed)
-            : $this->writeTable($output, $minSize, $limit, $unindexed);
+            ? $this->writeJson($output, $minSize, $limit, $includeShared, $unindexed)
+            : $this->writeTable($output, $minSize, $limit, $includeShared, $unindexed);
     }
 
     /**
      * @param array<string> $unindexed
      */
-    private function writeTable(OutputInterface $output, int $minSize, int $limit, array $unindexed): int
+    private function writeTable(OutputInterface $output, int $minSize, int $limit, bool $includeShared, array $unindexed): int
     {
         $shown = 0;
         $copies = 0;
         $wasted = 0;
         $truncated = false;
 
-        foreach ($this->groups($minSize, $limit, $truncated) as $group) {
+        foreach ($this->groups($minSize, $limit, $includeShared, $truncated) as $group) {
             $shown++;
             $copies += $group['copies'];
             $wasted += $group['wasted'];
@@ -132,7 +134,7 @@ class ListAllDuplicates extends Command
     /**
      * @param array<string> $unindexed
      */
-    private function writeJson(OutputInterface $output, int $minSize, int $limit, array $unindexed): int
+    private function writeJson(OutputInterface $output, int $minSize, int $limit, bool $includeShared, array $unindexed): int
     {
         $flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
         $shown = 0;
@@ -141,7 +143,7 @@ class ListAllDuplicates extends Command
         $truncated = false;
 
         $output->write('{"groups":[', false, OutputInterface::OUTPUT_RAW);
-        foreach ($this->groups($minSize, $limit, $truncated) as $group) {
+        foreach ($this->groups($minSize, $limit, $includeShared, $truncated) as $group) {
             $output->write(($shown > 0 ? ',' : '') . json_encode($group, $flags), false, OutputInterface::OUTPUT_RAW);
             $shown++;
             $copies += $group['copies'];
@@ -163,13 +165,13 @@ class ListAllDuplicates extends Command
      * @param bool $truncated Set to true when more groups exist than the limit allows
      * @return \Generator<array{hash: string, size: int, copies: int, wasted: int, files: array<array{owner: string, path: string}>}>
      */
-    private function groups(int $minSize, int $limit, bool &$truncated): \Generator
+    private function groups(int $minSize, int $limit, bool $includeShared, bool &$truncated): \Generator
     {
         $served = 0;
         $batch = [];
 
         // one more than the limit tells whether the list was cut
-        foreach ($this->fileInfoMapper->findDuplicateGroupsAcrossUsers($minSize, $limit > 0 ? $limit + 1 : 0) as $group) {
+        foreach ($this->fileInfoMapper->findDuplicateGroupsAcrossUsers($minSize, $limit > 0 ? $limit + 1 : 0, $includeShared) as $group) {
             if ($limit > 0 && $served + count($batch) >= $limit) {
                 $truncated = true;
 
@@ -177,24 +179,24 @@ class ListAllDuplicates extends Command
             }
             $batch[] = $group;
             if (count($batch) >= self::BATCH_SIZE) {
-                yield from $this->withCopies($batch);
+                yield from $this->withCopies($batch, $includeShared);
                 $served += count($batch);
                 $batch = [];
             }
         }
-        yield from $this->withCopies($batch);
+        yield from $this->withCopies($batch, $includeShared);
     }
 
     /**
      * @param array<array{hash: string, size: int, copies: int, wasted: int}> $batch
      * @return \Generator<array{hash: string, size: int, copies: int, wasted: int, files: array<array{owner: string, path: string}>}>
      */
-    private function withCopies(array $batch): \Generator
+    private function withCopies(array $batch, bool $includeShared): \Generator
     {
         if ($batch === []) {
             return;
         }
-        $copies = $this->fileInfoMapper->findCopiesOfHashes(array_column($batch, 'hash'));
+        $copies = $this->fileInfoMapper->findCopiesOfHashes(array_column($batch, 'hash'), $includeShared);
         foreach ($batch as $group) {
             $group['files'] = $copies[$group['hash']] ?? [];
             yield $group;
