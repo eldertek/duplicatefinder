@@ -113,7 +113,7 @@ class DuplicateApiControllerTest extends TestCase
 
         $this->fileDuplicateService->expects($this->once())
             ->method('getTotalCount')
-            ->with('unacknowledged')
+            ->with('unacknowledged', 'testuser')
             ->willReturn(1);
 
         // Call the list method

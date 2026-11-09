@@ -141,7 +141,7 @@ class FileDuplicateService
 
         while (count($result) < $pageSize && !$isLastFetched) {
             $offset = ($page - 1) * $pageSize;
-            $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy);
+            $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy, $type);
 
             foreach ($entities as $entity) {
                 if (($type === 'acknowledged' && !$entity->isAcknowledged())
@@ -150,6 +150,9 @@ class FileDuplicateService
                 }
                 if ($user !== null) {
                     $entity = $this->stripFilesWithoutAccessRights($entity, $user);
+                    if (count($entity->getFiles()) <= 1) {
+                        continue;
+                    }
                 }
                 if ($enrich) {
                     $entity = $this->enrich($entity);
@@ -342,8 +345,8 @@ class FileDuplicateService
         }
     }
 
-    public function getTotalCount(string $type = 'unacknowledged'): int
+    public function getTotalCount(string $type = 'unacknowledged', ?string $user = null): int
     {
-        return $this->mapper->getTotalCount($type);
+        return $this->mapper->getTotalCount($type, $user);
     }
 }
