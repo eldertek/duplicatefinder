@@ -83,7 +83,7 @@ class ListAllDuplicatesTest extends TestCase
         $this->usersAre(['alice', 'bob']);
         $this->mapper->method('findOwners')->willReturn(['alice', 'bob']);
         $this->mapper->method('findDuplicateGroupsAcrossUsers')->willReturn(self::rows([$this->group('abc123', 3 * 1024 * 1024, 2)]));
-        $this->mapper->method('findCopiesOfHashes')->with(['abc123'])->willReturn(['abc123' => [
+        $this->mapper->method('findCopiesOfHashes')->with(['abc123'], false)->willReturn(['abc123' => [
             ['owner' => 'alice', 'path' => '/alice/files/ISO/debian.iso'],
             ['owner' => 'bob', 'path' => '/bob/files/Downloads/debian.iso'],
         ]]);
@@ -162,7 +162,7 @@ class ListAllDuplicatesTest extends TestCase
         // limit 2 asks for 3 groups: the third only tells that the list was cut
         $this->mapper->expects($this->once())
             ->method('findDuplicateGroupsAcrossUsers')
-            ->with(1, 3)
+            ->with(1, 3, false)
             ->willReturn(self::rows([$this->group('g1', 300, 2), $this->group('g2', 200, 2), $this->group('g3', 100, 2)]));
         $this->mapper->method('findCopiesOfHashes')->willReturn([]);
 
@@ -184,7 +184,7 @@ class ListAllDuplicatesTest extends TestCase
         // a single grouping query (an offset would run it again for every page), three batches of copies
         $this->mapper->expects($this->once())
             ->method('findDuplicateGroupsAcrossUsers')
-            ->with(1, 0)
+            ->with(1, 0, false)
             ->willReturn(self::rows($groups));
         $this->mapper->expects($this->exactly(3))->method('findCopiesOfHashes')->willReturn([]);
 
@@ -202,10 +202,33 @@ class ListAllDuplicatesTest extends TestCase
         $this->mapper->method('findOwners')->willReturn([]);
         $this->mapper->expects($this->once())
             ->method('findDuplicateGroupsAcrossUsers')
-            ->with(10 * 1024 * 1024, 101)
+            ->with(10 * 1024 * 1024, 101, false)
             ->willReturn(self::rows([]));
 
         $this->assertSame(0, $this->tester->execute(['--min-size' => '10M']));
+    }
+
+    public function testIncludeSharedOptionPassesTrueToBothMapperQueries(): void
+    {
+        $this->usersAre(['alice', 'bob']);
+        $this->mapper->method('findOwners')->willReturn(['alice', 'bob']);
+        $this->mapper->expects($this->once())
+            ->method('findDuplicateGroupsAcrossUsers')
+            ->with(1, 101, true)
+            ->willReturn(self::rows([$this->group('shared1', 2000, 2)]));
+        $this->mapper->expects($this->once())
+            ->method('findCopiesOfHashes')
+            ->with(['shared1'], true)
+            ->willReturn(['shared1' => [
+                ['owner' => 'alice', 'path' => '/alice/files/Docs/uniq.bin'],
+                ['owner' => 'alice', 'path' => '/bob/files/Docs/uniq.bin'],
+            ]]);
+
+        $this->assertSame(0, $this->tester->execute(['--include-shared' => true, '--output' => 'json']));
+        $data = json_decode($this->tester->getDisplay(), true);
+
+        $this->assertSame(1, $data['totals']['groups']);
+        $this->assertCount(2, $data['groups'][0]['files']);
     }
 
     public function testBadOptionsAreRefusedBeforeTouchingTheDatabase(): void
