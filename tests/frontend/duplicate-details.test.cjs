@@ -236,3 +236,55 @@ test('files are matched by id, or by path when an id is missing', () => {
 	utils.removeFilesFromList([{ id: null, path: '/u/files/c' }, { id: null, path: '/u/files/a' }], list)
 	assert.deepEqual(list, [])
 })
+
+test('Keep Folder selects non-protected copies in other folders and preserves all copies in the kept folder (issue 193)', async () => {
+	const dup = {
+		id: 42,
+		hash: 'hash-folder-keep',
+		acknowledged: false,
+		files: [
+			file('a', 'photo-1.jpg', 201, 21),
+			file('a', 'photo-1-alt.jpg', 202, 22),
+			file('b', 'photo-1.jpg', 203, 23),
+			{ ...file('origin', 'photo-1.jpg', 204, 24), isInOriginFolder: true },
+		],
+	}
+	const { vm, calls } = mount(dup)
+
+	const keepButtons = rows(vm).map(row => row.querySelector('.keep-folder-button'))
+	assert.ok(keepButtons[0], 'Keep Folder button is rendered when copies exist in other folders')
+
+	// Keep folder /Projects/a: both copies in /Projects/a and the protected copy in /Projects/origin stay unselected,
+	// while /Projects/b/photo-1.jpg is selected for deletion
+	keepButtons[0].click()
+	await settle()
+
+	assert.deepEqual(selectedPaths(vm), [path('b', 'photo-1.jpg')])
+
+	button(vm, 'Delete Selected').click()
+	await settle()
+
+	assert.deepEqual(calls.deleteFiles.map(c => c.paths), [[path('b', 'photo-1.jpg')]])
+	assert.deepEqual(shownPaths(vm), [
+		'/Projects/a/photo-1.jpg',
+		'/Projects/a/photo-1-alt.jpg',
+		'/Projects/origin/photo-1.jpg',
+	])
+})
+
+test('Keep Folder button is hidden when all deletable copies share the same folder (issue 193)', async () => {
+	const sameFolderGroup = {
+		id: 43,
+		hash: 'hash-same-folder',
+		acknowledged: false,
+		files: [
+			file('a', 'one.jpg', 301, 31),
+			file('a', 'two.jpg', 302, 32),
+		],
+	}
+	const { vm } = mount(sameFolderGroup)
+	await settle()
+
+	const keepButtons = vm.$el.querySelectorAll('.keep-folder-button')
+	assert.equal(keepButtons.length, 0)
+})

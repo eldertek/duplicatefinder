@@ -12,6 +12,13 @@
       <button @click="openFolderInNewWindow" class="action-button">
         {{ t('duplicatefinder', 'Open Folder') }}
       </button>
+      <button
+        v-if="hasOtherFolders"
+        @click="$emit('keepFolder', file)"
+        class="action-button keep-folder-button"
+        :title="t('duplicatefinder', 'Select duplicates in other folders for deletion')">
+        {{ t('duplicatefinder', 'Keep Folder') }}
+      </button>
       <button v-if="!file.isInOriginFolder" @click="deleteFile" class="delete-button">
         {{ t('duplicatefinder', 'Delete') }}
       </button>
@@ -23,7 +30,7 @@
 </template>
 <script>
 import { deleteFile } from '@/tools/api';
-import { getPreviewImage, normalizeItemPath } from '@/tools/utils';
+import { getPreviewImage, normalizeItemPath, getParentFolderPath } from '@/tools/utils';
 import { generateUrl } from '@nextcloud/router';
 
 export default {
@@ -33,6 +40,10 @@ export default {
     duplicateAcknowledged: {
       type: Boolean,
       required: true
+    },
+    hasOtherFolders: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
@@ -51,10 +62,7 @@ export default {
       window.open(url, '_blank');
     },
     getParentPath() {
-      const path = this.file.path.replace(/^\/[^/]+\/files/, '');
-      const lastSlashIndex = path.lastIndexOf('/');
-      const parentPath = path.substring(0, lastSlashIndex);
-      return parentPath || '/';
+      return getParentFolderPath(this.file.path);
     },
     async deleteFile() {
       try {
