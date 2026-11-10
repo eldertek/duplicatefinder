@@ -44,6 +44,8 @@
               :file="file"
               :index="index"
               :duplicate-acknowledged="duplicate.acknowledged"
+              :has-other-folders="hasFilesInOtherFolders(file)"
+              @keepFolder="selectDuplicatesOutsideFolder(file)"
               @fileDeleted="removeFileFromListAndUpdate(file)">
             </DuplicateFileDisplay>
           </div>
@@ -71,7 +73,7 @@
 
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates } from '@/tools/api';
-import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, normalizeItemPath, fileKey, isSameFile } from '@/tools/utils';
+import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, normalizeItemPath, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -196,6 +198,24 @@ export default {
       } else {
         this.selectedFiles = filesToSelect;
       }
+    },
+    hasFilesInOtherFolders(targetFile) {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files) || !targetFile) {
+        return false;
+      }
+      const keptFolder = getParentFolderPath(targetFile.path);
+      return this.duplicate.files.some(
+        file => !file.isInOriginFolder && getParentFolderPath(file.path) !== keptFolder
+      );
+    },
+    selectDuplicatesOutsideFolder(targetFile) {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files) || !targetFile) {
+        return;
+      }
+      const keptFolder = getParentFolderPath(targetFile.path);
+      this.selectedFiles = this.duplicate.files.filter(
+        file => !file.isInOriginFolder && getParentFolderPath(file.path) !== keptFolder
+      );
     },
     removeDuplicateFromList(duplicate) {
       this.$emit('removeDuplicate', duplicate);

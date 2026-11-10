@@ -62,6 +62,20 @@
                 {{ t('duplicatefinder', 'Select all except last file of each group') }}
               </NcActionButton>
             </NcActions>
+            <NcActions
+              v-if="availableKeepFolders.length > 0"
+              :menu-title="t('duplicatefinder', 'Keep folder')"
+              :disabled="isLoading">
+              <template #icon>
+                <ChevronDown :size="20" />
+              </template>
+              <NcActionButton
+                v-for="item in availableKeepFolders"
+                :key="item.folder"
+                @click="keepFolderAcrossGroups(item.folder)">
+                {{ t('duplicatefinder', 'Keep {folder} ({count} groups)', { folder: item.folder, count: item.groupCount }) }}
+              </NcActionButton>
+            </NcActions>
             <NcButton type="error" @click="confirmBulkDelete"
               :disabled="isLoading || !hasSelectedFiles">
               <template #icon>
@@ -156,7 +170,7 @@
 <script>
 import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon, NcActions, NcActionButton } from '@nextcloud/vue'
 import { fetchDuplicatesForBulk, deleteFiles } from '@/tools/api'
-import { openFileInViewer, getTotalSizeOfDuplicate } from '@/tools/utils'
+import { openFileInViewer, getTotalSizeOfDuplicate, getParentFolderPath } from '@/tools/utils'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import { translate as t } from '@nextcloud/l10n'
 
@@ -224,6 +238,25 @@ export default {
         default:
           return t('duplicatefinder', 'Sort: Default')
       }
+    },
+    availableKeepFolders() {
+      if (!this.previewResults || !this.previewResults.duplicateGroups) {
+        return []
+      }
+      const countsByFolder = new Map()
+      Object.values(this.previewResults.duplicateGroups).forEach(group => {
+        const files = group.filesToDelete || []
+        const foldersInGroup = new Set(files.map(file => getParentFolderPath(file.path)))
+        if (foldersInGroup.size < 2) {
+          return
+        }
+        foldersInGroup.forEach(folder => {
+          countsByFolder.set(folder, (countsByFolder.get(folder) || 0) + 1)
+        })
+      })
+      return Array.from(countsByFolder.entries())
+        .map(([folder, groupCount]) => ({ folder, groupCount }))
+        .sort((a, b) => b.groupCount - a.groupCount || a.folder.localeCompare(b.folder))
     },
     sortedDuplicateGroups() {
       if (!this.previewResults) return {}
@@ -474,6 +507,26 @@ export default {
         this.$set(this.selectedFiles, hash,
           position === 'first' ? indexes.slice(1) : indexes.slice(0, -1)
         )
+      })
+    },
+    keepFolderAcrossGroups(keptFolder) {
+      if (!this.previewResults || !this.previewResults.duplicateGroups) {
+        return
+      }
+      Object.entries(this.previewResults.duplicateGroups).forEach(([hash, group]) => {
+        const files = group.filesToDelete || []
+        const hasCopyInKeptFolder = files.some(file => getParentFolderPath(file.path) === keptFolder)
+        if (!hasCopyInKeptFolder) {
+          this.$set(this.selectedFiles, hash, [])
+          return
+        }
+        const indexesOutsideFolder = []
+        files.forEach((file, index) => {
+          if (getParentFolderPath(file.path) !== keptFolder) {
+            indexesOutsideFolder.push(index)
+          }
+        })
+        this.$set(this.selectedFiles, hash, indexesOutsideFolder)
       })
     }
   }
