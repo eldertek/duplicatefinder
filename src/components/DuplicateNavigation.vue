@@ -5,7 +5,11 @@
             <div class="search-sort-container">
                 <SearchBar @search="handleSearch" />
                 <div class="sort-dropdown">
-                    <button class="icon-only-button" @click="toggleSortMenu">
+                    <button
+                        class="icon-only-button"
+                        :class="{ 'has-active-filter': hasActiveSortOrFilter }"
+                        :title="t('duplicatefinder', 'Sort and filter by size')"
+                        @click="toggleSortMenu">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 9h9"></path>
                             <path d="M6 9h2"></path>
@@ -13,16 +17,54 @@
                             <path d="M4 14h10"></path>
                             <path d="M17 14h2"></path>
                         </svg>
+                        <span v-if="hasActiveSortOrFilter" class="active-filter-dot"></span>
                     </button>
                     <div v-if="showSortMenu" class="sort-menu">
-                        <div class="sort-option" @click="setSortOption('none'); toggleSortMenu()">
+                        <div class="sort-menu-section-title">
+                            {{ t('duplicatefinder', 'Sort order') }}
+                        </div>
+                        <div
+                            class="sort-option"
+                            :class="{ 'active': sortOption === 'none' }"
+                            @click="setSortOption('none'); toggleSortMenu()">
                             {{ t('duplicatefinder', 'Default') }}
                         </div>
-                        <div class="sort-option" @click="setSortOption('size-desc'); toggleSortMenu()">
+                        <div
+                            class="sort-option"
+                            :class="{ 'active': sortOption === 'size-desc' }"
+                            @click="setSortOption('size-desc'); toggleSortMenu()">
                             {{ t('duplicatefinder', 'Size (largest first)') }}
                         </div>
-                        <div class="sort-option" @click="setSortOption('size-asc'); toggleSortMenu()">
+                        <div
+                            class="sort-option"
+                            :class="{ 'active': sortOption === 'size-asc' }"
+                            @click="setSortOption('size-asc'); toggleSortMenu()">
                             {{ t('duplicatefinder', 'Size (smallest first)') }}
+                        </div>
+                        <div class="sort-menu-divider"></div>
+                        <div class="sort-menu-section-title">
+                            {{ t('duplicatefinder', 'Minimum file size') }}
+                        </div>
+                        <div
+                            v-for="preset in minSizePresets"
+                            :key="preset.bytes"
+                            class="sort-option"
+                            :class="{ 'active': minSizeBytes === preset.bytes }"
+                            @click="setMinSizeBytes(preset.bytes); toggleSortMenu()">
+                            {{ preset.label }}
+                        </div>
+                        <div class="custom-size-row" @click.stop>
+                            <input
+                                v-model="customMinSizeMb"
+                                type="number"
+                                min="0"
+                                step="any"
+                                class="custom-size-input"
+                                :placeholder="t('duplicatefinder', 'Min MB')"
+                                @keyup.enter="applyCustomMinSize" />
+                            <button type="button" class="custom-size-apply" @click="applyCustomMinSize">
+                                {{ t('duplicatefinder', 'Apply') }}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -259,6 +301,14 @@ export default {
         'has-duplicates': {
             type: Boolean,
             default: false
+        },
+        initialSortOption: {
+            type: String,
+            default: 'none'
+        },
+        initialMinSizeBytes: {
+            type: Number,
+            default: 0
         }
     },
     data() {
@@ -268,13 +318,37 @@ export default {
             acknowledgedPage: 1,
             unacknowledgedPage: 1,
             limit: 50,
-            sortOption: 'none',
+            sortOption: this.initialSortOption || 'none',
+            minSizeBytes: Number(this.initialMinSizeBytes) > 0 ? Number(this.initialMinSizeBytes) : 0,
+            customMinSizeMb: Number(this.initialMinSizeBytes) > 0
+                ? String(Math.round((Number(this.initialMinSizeBytes) / (1024 * 1024)) * 100) / 100)
+                : '',
             showSortMenu: false,
             showProjectsMenu: false,
             showHelpMenu: false,
         };
     },
+    watch: {
+        initialSortOption(newValue) {
+            this.sortOption = newValue || 'none';
+        },
+        initialMinSizeBytes(newValue) {
+            this.minSizeBytes = Number(newValue) > 0 ? Number(newValue) : 0;
+        }
+    },
     computed: {
+        hasActiveSortOrFilter() {
+            return this.sortOption !== 'none' || this.minSizeBytes > 0;
+        },
+        minSizePresets() {
+            return [
+                { bytes: 0, label: t('duplicatefinder', 'All sizes') },
+                { bytes: 1024 * 1024, label: '>= 1 MB' },
+                { bytes: 10 * 1024 * 1024, label: '>= 10 MB' },
+                { bytes: 100 * 1024 * 1024, label: '>= 100 MB' },
+                { bytes: 1024 * 1024 * 1024, label: '>= 1 GB' },
+            ];
+        },
         hasMoreAcknowledged() {
             return this.acknowledgedPagination.currentPage < this.acknowledgedPagination.totalPages;
         },
@@ -327,7 +401,40 @@ export default {
             }
         },
         setSortOption(option) {
+            if (this.sortOption === option) {
+                return;
+            }
             this.sortOption = option;
+            this.acknowledgedPage = 1;
+            this.unacknowledgedPage = 1;
+            this.$emit('query-options-changed', {
+                sortBy: this.sortOption,
+                minSize: this.minSizeBytes,
+            });
+        },
+        setMinSizeBytes(bytes) {
+            const normalized = Number(bytes) > 0 ? Math.floor(Number(bytes)) : 0;
+            if (this.minSizeBytes === normalized) {
+                return;
+            }
+            this.minSizeBytes = normalized;
+            this.customMinSizeMb = normalized > 0
+                ? String(Math.round((normalized / (1024 * 1024)) * 100) / 100)
+                : '';
+            this.acknowledgedPage = 1;
+            this.unacknowledgedPage = 1;
+            this.$emit('query-options-changed', {
+                sortBy: this.sortOption,
+                minSize: this.minSizeBytes,
+            });
+        },
+        applyCustomMinSize() {
+            const parsedMb = parseFloat(String(this.customMinSizeMb).trim());
+            const bytes = Number.isFinite(parsedMb) && parsedMb > 0
+                ? Math.round(parsedMb * 1024 * 1024)
+                : 0;
+            this.setMinSizeBytes(bytes);
+            this.showSortMenu = false;
         },
         handleSortChange() {
             // This method is called when the sort option changes
@@ -361,6 +468,14 @@ export default {
             return sortedDuplicates;
         },
         filterDuplicate(duplicate) {
+            if (this.minSizeBytes > 0) {
+                const hasLargeEnoughCopy = Array.isArray(duplicate.files)
+                    && duplicate.files.some(file => Number(file.size) >= this.minSizeBytes);
+                if (!hasLargeEnoughCopy) {
+                    return false;
+                }
+            }
+
             if (!this.searchPattern) {
                 return true;
             }
@@ -386,12 +501,18 @@ export default {
         },
         async loadMoreUnacknowledgedDuplicates() {
             this.unacknowledgedPage++;
-            const newDuplicates = await fetchDuplicates('unacknowledged', this.limit, this.unacknowledgedPage);
+            const newDuplicates = await fetchDuplicates('unacknowledged', this.limit, this.unacknowledgedPage, {
+                sortBy: this.sortOption,
+                minSize: this.minSizeBytes,
+            });
             this.$emit('update-unacknowledged-duplicates', newDuplicates.entities);
         },
         async loadMoreAcknowledgedDuplicates() {
             this.acknowledgedPage++;
-            const newDuplicates = await fetchDuplicates('acknowledged', this.limit, this.acknowledgedPage);
+            const newDuplicates = await fetchDuplicates('acknowledged', this.limit, this.acknowledgedPage, {
+                sortBy: this.sortOption,
+                minSize: this.minSizeBytes,
+            });
             this.$emit('update-acknowledged-duplicates', newDuplicates.entities);
         },
         handleDuplicateResolved({ duplicate, type }) {
@@ -597,6 +718,7 @@ export default {
 }
 
 .icon-only-button {
+    position: relative;
     background: transparent;
     border: none;
     border-radius: 50%;
@@ -609,8 +731,19 @@ export default {
     transition: background-color 0.2s;
 }
 
-.icon-only-button:hover {
+.icon-only-button:hover,
+.icon-only-button.has-active-filter {
     background-color: var(--color-background-hover);
+}
+
+.active-filter-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--color-primary-element);
 }
 
 .sort-menu {
@@ -619,20 +752,71 @@ export default {
     top: 100%;
     background: var(--color-main-background);
     border: 1px solid var(--color-border);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
     z-index: 100;
-    min-width: 180px;
+    min-width: 215px;
+    padding: 4px 0;
+}
+
+.sort-menu-section-title {
+    padding: 6px 12px 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-maxcontrast);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.sort-menu-divider {
+    height: 1px;
+    margin: 4px 0;
+    background-color: var(--color-border);
 }
 
 .sort-option {
-    padding: 8px 12px;
+    padding: 7px 12px;
     cursor: pointer;
     transition: background-color 0.2s;
+    font-size: 0.9rem;
 }
 
 .sort-option:hover {
     background-color: var(--color-background-hover);
+}
+
+.sort-option.active {
+    font-weight: 600;
+    color: var(--color-primary-element);
+    background-color: var(--color-primary-element-light);
+}
+
+.custom-size-row {
+    display: flex;
+    gap: 6px;
+    padding: 6px 10px 8px;
+}
+
+.custom-size-input {
+    width: 100%;
+    min-width: 0;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-main-background);
+    color: var(--color-main-text);
+}
+
+.custom-size-apply {
+    padding: 4px 10px;
+    font-size: 0.82rem;
+    border: none;
+    border-radius: 4px;
+    background: var(--color-primary-element);
+    color: var(--color-primary-text);
+    cursor: pointer;
+    white-space: nowrap;
 }
 
 /* Icon Navigation */

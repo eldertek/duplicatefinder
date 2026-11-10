@@ -8,6 +8,17 @@
           :icon="'icon-delete'">
           <template #action>
             <div class="summary-actions">
+              <NcActions :menu-title="minSizeButtonLabel" :disabled="isLoading">
+                <template #icon>
+                  <ChevronDown :size="20" />
+                </template>
+                <NcActionButton
+                  v-for="preset in minSizePresets"
+                  :key="preset.bytes"
+                  @click="setMinSizeBytes(preset.bytes, false)">
+                  {{ preset.label }}
+                </NcActionButton>
+              </NcActions>
               <NcButton type="primary" @click="performDryRun" :disabled="isLoading">
                 <template #icon>
                   <NcLoadingIcon v-if="isLoading" />
@@ -46,6 +57,17 @@
               <NcActionButton @click="setSortOption('size-asc')"
                 :model-value="sortOption === 'size-asc'">
                 {{ t('duplicatefinder', 'Size (smallest first)') }}
+              </NcActionButton>
+            </NcActions>
+            <NcActions :menu-title="minSizeButtonLabel" :disabled="isLoading">
+              <template #icon>
+                <ChevronDown :size="20" />
+              </template>
+              <NcActionButton
+                v-for="preset in minSizePresets"
+                :key="preset.bytes"
+                @click="setMinSizeBytes(preset.bytes, true)">
+                {{ preset.label }}
               </NcActionButton>
             </NcActions>
             <NcButton type="tertiary" @click="toggleSelectAll">
@@ -179,7 +201,8 @@ export default {
       hasMorePages: false,
       limit: 100,
       selectedFiles: {},
-      sortOption: 'none'
+      sortOption: 'none',
+      minSizeBytes: 0
     }
   },
   computed: {
@@ -224,6 +247,22 @@ export default {
         default:
           return t('duplicatefinder', 'Sort: Default')
       }
+    },
+    minSizePresets() {
+      return [
+        { bytes: 0, label: t('duplicatefinder', 'All sizes') },
+        { bytes: 1024 * 1024, label: '>= 1 MB' },
+        { bytes: 10 * 1024 * 1024, label: '>= 10 MB' },
+        { bytes: 100 * 1024 * 1024, label: '>= 100 MB' },
+        { bytes: 1024 * 1024 * 1024, label: '>= 1 GB' }
+      ]
+    },
+    minSizeButtonLabel() {
+      const active = this.minSizePresets.find(preset => preset.bytes === this.minSizeBytes)
+      if (!active || active.bytes === 0) {
+        return t('duplicatefinder', 'Min size: All sizes')
+      }
+      return t('duplicatefinder', 'Min size: {size}', { size: active.label })
     },
     sortedDuplicateGroups() {
       if (!this.previewResults) return {}
@@ -284,7 +323,10 @@ export default {
     },
     async loadPage(page) {
       try {
-        const response = await fetchDuplicatesForBulk(this.limit, page)
+        const response = await fetchDuplicatesForBulk(this.limit, page, {
+          sortBy: this.sortOption,
+          minSize: this.minSizeBytes
+        })
 
         // Transform entities into expected interface format
         const duplicateGroups = { ...(this.previewResults?.duplicateGroups || {}) }
@@ -466,6 +508,18 @@ export default {
     },
     setSortOption(option) {
       this.sortOption = option
+    },
+    async setMinSizeBytes(bytes, reloadPreview = false) {
+      const normalized = Number(bytes) > 0 ? Math.floor(Number(bytes)) : 0
+      if (this.minSizeBytes === normalized) {
+        return
+      }
+      this.minSizeBytes = normalized
+      if (reloadPreview) {
+        this.previewResults = null
+        this.selectedFiles = {}
+        await this.performDryRun()
+      }
     },
     selectAllExcept(position) {
       Object.keys(this.previewResults.duplicateGroups).forEach(hash => {

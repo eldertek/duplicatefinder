@@ -3,6 +3,7 @@
 namespace OCA\DuplicateFinder\Db;
 
 use OCP\AppFramework\Db\Entity;
+use OCP\DB\QueryBuilder\ICompositeExpression;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
@@ -128,6 +129,7 @@ class FileDuplicateMapper extends EQBMapper
      * @param int|null $offset
      * @param array<array<string>> $orderBy
      * @param string|null $type
+     * @param int $minSize Minimum file size in bytes (0 disables filtering)
      * @return array<FileDuplicate>
      */
     public function findAll(
@@ -135,13 +137,45 @@ class FileDuplicateMapper extends EQBMapper
         ?int $limit = null,
         ?int $offset = null,
         ?array $orderBy = [['hash'], ['type']],
-        ?string $type = null
+        ?string $type = null,
+        int $minSize = 0
     ): array {
+        $sortsBySize = false;
+        if ($orderBy !== null) {
+            foreach ($orderBy as $order) {
+                if (($order[0] ?? '') === 'size') {
+                    $sortsBySize = true;
+
+                    break;
+                }
+            }
+            unset($order);
+        }
+
         $qb = $this->db->getQueryBuilder();
         $qb->select('d.id as id', 'd.type', 'd.hash', 'd.acknowledged')
             ->from($this->getTableName(), 'd');
 
-        $this->applyFilters($qb, $type, $user);
+        if ($sortsBySize) {
+            $qb->innerJoin(
+                'd',
+                'duplicatefinder_finfo',
+                'f',
+                $qb->expr()->eq('f.file_hash', 'd.hash')
+            );
+            $this->applyTypeFilter($qb, $type);
+            $qb->andWhere($qb->expr()->eq('f.ignored', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)));
+            if ($minSize > 0) {
+                $qb->andWhere($qb->expr()->gte('f.size', $qb->createNamedParameter($minSize, IQueryBuilder::PARAM_INT)));
+            }
+            if ($user !== null && $user !== '') {
+                $qb->andWhere($this->buildUserFileAccessPredicate($qb, $qb, $user));
+            }
+            $qb->groupBy('d.id', 'd.type', 'd.hash', 'd.acknowledged')
+                ->having($qb->createFunction('COUNT(*) > 1'));
+        } else {
+            $this->applyFilters($qb, $type, $user, $minSize);
+        }
 
         if ($limit !== null) {
             $qb->setMaxResults($limit);
@@ -152,9 +186,20 @@ class FileDuplicateMapper extends EQBMapper
 
         if ($orderBy !== null) {
             foreach ($orderBy as $order) {
-                $qb->addOrderBy($order[0], isset($order[1]) ? $order[1] : null);
+                $column = $order[0];
+                $direction = isset($order[1]) ? $order[1] : null;
+                if ($column === 'size') {
+                    $normalizedDir = $direction !== null && strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
+                    $qb->addOrderBy($qb->func()->sum('f.size'), $normalizedDir);
+                } else {
+                    $qualifiedColumn = $sortsBySize && strpos($column, '.') === false ? 'd.' . $column : $column;
+                    $qb->addOrderBy($qualifiedColumn, $direction);
+                }
             }
             unset($order);
+            if ($sortsBySize) {
+                $qb->addOrderBy('d.id', 'ASC');
+            }
         }
 
         return $this->findEntities($qb);
@@ -219,9 +264,10 @@ class FileDuplicateMapper extends EQBMapper
      *
      * @param string $type The type of duplicates to count.
      * @param string|null $user Optional user ID to filter duplicates by.
+     * @param int $minSize Minimum file size in bytes (0 disables filtering).
      * @return int The total count of duplicates.
      */
-    public function getTotalCount(string $type = 'unacknowledged', ?string $user = null): int
+    public function getTotalCount(string $type = 'unacknowledged', ?string $user = null, int $minSize = 0): int
     {
         $qb = $this->db->getQueryBuilder();
 
@@ -229,7 +275,7 @@ class FileDuplicateMapper extends EQBMapper
         $qb->select($qb->func()->count('*', 'total_count'))
             ->from($this->getTableName(), 'd');
 
-        $this->applyFilters($qb, $type, $user);
+        $this->applyFilters($qb, $type, $user, $minSize);
 
         // Execute the query and fetch the result
         $result = $qb->executeQuery();
@@ -240,39 +286,58 @@ class FileDuplicateMapper extends EQBMapper
         return (int) ($row ? $row['total_count'] : 0);
     }
 
-    private function applyFilters(IQueryBuilder $qb, ?string $type, ?string $user): void
+    private function applyTypeFilter(IQueryBuilder $qb, ?string $type): void
     {
         if ($type === 'acknowledged') {
             $qb->andWhere($qb->expr()->eq('d.acknowledged', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)));
         } elseif ($type === 'unacknowledged') {
             $qb->andWhere($qb->expr()->eq('d.acknowledged', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)));
         }
+    }
 
-        if ($user !== null && $user !== '') {
-            $escapedUser = $this->db->escapeLikeParameter($user);
-            if ($escapedUser === '') {
-                $escapedUser = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $user);
-            }
+    private function buildUserFileAccessPredicate(
+        IQueryBuilder $exprOwner,
+        IQueryBuilder $paramOwner,
+        string $user
+    ): ICompositeExpression {
+        $escapedUser = $this->db->escapeLikeParameter($user);
+        if ($escapedUser === '') {
+            $escapedUser = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $user);
+        }
 
+        return $exprOwner->expr()->orX(
+            $exprOwner->expr()->like(
+                'f.path',
+                $paramOwner->createNamedParameter('/' . $escapedUser . '/%')
+            ),
+            $exprOwner->expr()->andX(
+                $exprOwner->expr()->eq('f.owner', $paramOwner->createNamedParameter($user)),
+                $exprOwner->expr()->notLike(
+                    'f.path',
+                    $paramOwner->createNamedParameter('/%/files/%')
+                )
+            )
+        );
+    }
+
+    private function applyFilters(IQueryBuilder $qb, ?string $type, ?string $user, int $minSize = 0): void
+    {
+        $this->applyTypeFilter($qb, $type);
+
+        $hasUserFilter = $user !== null && $user !== '';
+        if ($hasUserFilter || $minSize > 0) {
             $subQuery = $this->db->getQueryBuilder();
             $subQuery->select($subQuery->createFunction('1'))
                 ->from('duplicatefinder_finfo', 'f')
                 ->where($subQuery->expr()->eq('f.file_hash', 'd.hash'))
-                ->andWhere($subQuery->expr()->eq('f.ignored', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)))
-                ->andWhere($subQuery->expr()->orX(
-                    $subQuery->expr()->like(
-                        'f.path',
-                        $qb->createNamedParameter('/' . $escapedUser . '/%')
-                    ),
-                    $subQuery->expr()->andX(
-                        $subQuery->expr()->eq('f.owner', $qb->createNamedParameter($user)),
-                        $subQuery->expr()->notLike(
-                            'f.path',
-                            $qb->createNamedParameter('/%/files/%')
-                        )
-                    )
-                ))
-                ->groupBy('f.file_hash')
+                ->andWhere($subQuery->expr()->eq('f.ignored', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)));
+            if ($minSize > 0) {
+                $subQuery->andWhere($subQuery->expr()->gte('f.size', $qb->createNamedParameter($minSize, IQueryBuilder::PARAM_INT)));
+            }
+            if ($hasUserFilter) {
+                $subQuery->andWhere($this->buildUserFileAccessPredicate($subQuery, $qb, (string)$user));
+            }
+            $subQuery->groupBy('f.file_hash')
                 ->having($subQuery->createFunction('COUNT(*) > 1'));
 
             $qb->andWhere($qb->createFunction('EXISTS (' . $subQuery->getSQL() . ')'));

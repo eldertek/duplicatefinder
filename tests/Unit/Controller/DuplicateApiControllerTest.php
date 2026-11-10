@@ -129,6 +129,52 @@ class DuplicateApiControllerTest extends TestCase
         $this->assertEquals(1, $data['pagination']['totalPages']);
     }
 
+    public function testListForwardsServerSortAndMinSizeToService(): void
+    {
+        $duplicate = new FileDuplicate('largehash', 'file_hash');
+        $duplicate->setAcknowledged(false);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('findAll')
+            ->with('unacknowledged', 'testuser', 2, 50, true, [['size', 'DESC']], 1048576)
+            ->willReturn([
+                'entities' => [$duplicate],
+                'isLastFetched' => true,
+            ]);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('getTotalCount')
+            ->with('unacknowledged', 'testuser', 1048576)
+            ->willReturn(65);
+
+        $response = $this->controller->list(2, 50, 'unacknowledged', false, 'size-desc', 1048576);
+        $data = $response->getData();
+
+        $this->assertSame('success', $data['status']);
+        $this->assertSame(2, $data['pagination']['currentPage']);
+        $this->assertSame(2, (int)$data['pagination']['totalPages']);
+        $this->assertSame(65, $data['pagination']['totalItems']);
+    }
+
+    public function testListForwardsSizeAscWithoutMinSize(): void
+    {
+        $this->fileDuplicateService->expects($this->once())
+            ->method('findAll')
+            ->with('acknowledged', 'testuser', 1, 25, true, [['size', 'ASC']])
+            ->willReturn([
+                'entities' => [],
+                'isLastFetched' => true,
+            ]);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('getTotalCount')
+            ->with('acknowledged', 'testuser')
+            ->willReturn(0);
+
+        $response = $this->controller->list(1, 25, 'acknowledged', false, 'size-asc', 0);
+        $this->assertSame('success', $response->getData()['status']);
+    }
+
     public function testAcknowledge()
     {
         // Mock the markAsAcknowledged method

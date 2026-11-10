@@ -13,6 +13,8 @@
 					:activeView="activeView"
 					:activeProject="activeProject"
 					:projects="projects"
+					:initial-sort-option="sortOption"
+					:initial-min-size-bytes="minSizeBytes"
 					:has-duplicates="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
 					@open-duplicate="openDuplicate"
 					@open-settings="settingsOpen = true"
@@ -20,6 +22,7 @@
 					@view-project="viewProject"
 					@show-help="showHelp"
 					@open-bulk-delete="openBulkDelete"
+					@query-options-changed="handleQueryOptionsChanged"
 					@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
 					@update-unacknowledged-duplicates="updateUnacknowledgedDuplicates" />
 			</div>
@@ -168,6 +171,8 @@ export default {
 			isLoading: false,
 			page: 1,
 			limit: 50,
+			sortOption: 'none',
+			minSizeBytes: 0,
 			settingsOpen: false,
 			activeView: 'details',
 			acknowledgedPagination: {
@@ -316,12 +321,21 @@ export default {
 			this.activeView = 'details'
 			this.currentDuplicate = duplicate
 		},
+		async handleQueryOptionsChanged({ sortBy, minSize }) {
+			this.sortOption = sortBy || 'none';
+			this.minSizeBytes = Number(minSize) > 0 ? Number(minSize) : 0;
+			await this.refreshDuplicates();
+		},
 		async refreshDuplicates() {
 			this.isLoading = true;
 			try {
+				const queryOptions = {
+					sortBy: this.sortOption,
+					minSize: this.minSizeBytes
+				};
 				const [acknowledgedResponse, unacknowledgedResponse] = await Promise.all([
-					fetchDuplicates('acknowledged', 50, 1),
-					fetchDuplicates('unacknowledged', 50, 1)
+					fetchDuplicates('acknowledged', 50, 1, queryOptions),
+					fetchDuplicates('unacknowledged', 50, 1, queryOptions)
 				]);
 
 				this.acknowledgedDuplicates = acknowledgedResponse.entities;
@@ -347,9 +361,13 @@ export default {
 		async loadInitialData() {
 			this.isLoading = true
 			try {
+				const queryOptions = {
+					sortBy: this.sortOption,
+					minSize: this.minSizeBytes
+				}
 				const [acknowledgedResponse, unacknowledgedResponse, projectsResponse] = await Promise.all([
-					fetchDuplicates('acknowledged', 50, 1),
-					fetchDuplicates('unacknowledged', 50, 1),
+					fetchDuplicates('acknowledged', 50, 1, queryOptions),
+					fetchDuplicates('unacknowledged', 50, 1, queryOptions),
 					fetchProjects()
 				])
 

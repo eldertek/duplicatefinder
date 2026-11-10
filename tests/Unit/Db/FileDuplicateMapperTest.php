@@ -102,6 +102,66 @@ class FileDuplicateMapperTest extends TestCase
         $this->assertSame('bob_user', $this->params[':param_3']);
     }
 
+    public function testFindAllSortsBySizeDescendingInSqlWithUserAndTieBreaker(): void
+    {
+        $this->mapper->findAll('alice', 50, 0, [['size', 'DESC']], 'unacknowledged');
+
+        $mainQuery = $this->queries[0];
+        $this->assertSame(['d duplicatefinder_finfo f ON f.file_hash = d.hash'], $mainQuery['joins']);
+        $this->assertContains('d.acknowledged = :param_0', $mainQuery['wheres']);
+        $this->assertContains('f.ignored = :param_1', $mainQuery['wheres']);
+        $this->assertSame(['d.id', 'd.type', 'd.hash', 'd.acknowledged'], $mainQuery['groupBy']);
+        $this->assertSame('COUNT(*) > 1', $mainQuery['having']);
+        $this->assertSame([['SUM(f.size)', 'DESC'], ['d.id', 'ASC']], $mainQuery['orderBy']);
+    }
+
+    public function testFindAllSortsBySizeAscendingAndAppliesMinSizeInSql(): void
+    {
+        $this->mapper->findAll('alice', 25, 25, [['size', 'ASC']], 'all', 10485760);
+
+        $mainQuery = $this->queries[0];
+        $this->assertSame(['d duplicatefinder_finfo f ON f.file_hash = d.hash'], $mainQuery['joins']);
+        $this->assertContains('f.ignored = :param_0', $mainQuery['wheres']);
+        $this->assertContains('f.size >= :param_1', $mainQuery['wheres']);
+        $this->assertSame(10485760, $this->params[':param_1']);
+        $this->assertSame([['SUM(f.size)', 'ASC'], ['d.id', 'ASC']], $mainQuery['orderBy']);
+    }
+
+    public function testFindAllAppliesMinSizeFilterInExistsSubqueryWhenDefaultOrder(): void
+    {
+        $this->mapper->findAll('alice', 50, 0, [['hash'], ['type']], 'unacknowledged', 1048576);
+
+        $mainQuery = $this->queries[0];
+        $this->assertSame([], $mainQuery['joins']);
+        $existsFound = false;
+        foreach ($mainQuery['wheres'] as $where) {
+            if (strpos($where, 'EXISTS (SELECT 1 FROM duplicatefinder_finfo f') !== false) {
+                $existsFound = true;
+                $this->assertStringContainsString('f.size >= :param_2', $where);
+            }
+        }
+        $this->assertTrue($existsFound, 'Expected EXISTS subquery with f.size >= :minSize');
+        $this->assertSame(1048576, $this->params[':param_2']);
+    }
+
+    public function testGetTotalCountAppliesMinSizeFilterInSql(): void
+    {
+        $this->fetchQueue = [['total_count' => 3], false];
+        $count = $this->mapper->getTotalCount('unacknowledged', 'alice', 5242880);
+
+        $this->assertSame(3, $count);
+        $mainQuery = $this->queries[0];
+        $existsFound = false;
+        foreach ($mainQuery['wheres'] as $where) {
+            if (strpos($where, 'EXISTS (SELECT 1 FROM duplicatefinder_finfo f') !== false) {
+                $existsFound = true;
+                $this->assertStringContainsString('f.size >= :param_2', $where);
+            }
+        }
+        $this->assertTrue($existsFound);
+        $this->assertSame(5242880, $this->params[':param_2']);
+    }
+
     private function createRecordingQueryBuilder(): IQueryBuilder
     {
         $qb = $this->createMock(IQueryBuilder::class);
@@ -109,9 +169,11 @@ class FileDuplicateMapperTest extends TestCase
         $this->queries[$index] = [
             'select' => [],
             'from' => '',
+            'joins' => [],
             'wheres' => [],
             'groupBy' => [],
             'having' => '',
+            'orderBy' => [],
         ];
         $queriesRef = &$this->queries;
         $paramsRef = &$this->params;
@@ -120,6 +182,9 @@ class FileDuplicateMapperTest extends TestCase
         $expr = $this->createMock(IExpressionBuilder::class);
         $expr->method('eq')->willReturnCallback(function ($x, $y): string {
             return (string)$x . ' = ' . (string)$y;
+        });
+        $expr->method('gte')->willReturnCallback(function ($x, $y): string {
+            return (string)$x . ' >= ' . (string)$y;
         });
         $expr->method('like')->willReturnCallback(function ($x, $y): string {
             return (string)$x . ' LIKE ' . (string)$y;
@@ -153,6 +218,12 @@ class FileDuplicateMapperTest extends TestCase
 
             return $qf;
         });
+        $func->method('sum')->willReturnCallback(function ($col): IQueryFunction {
+            $qf = $this->createMock(IQueryFunction::class);
+            $qf->method('__toString')->willReturn('SUM(' . $col . ')');
+
+            return $qf;
+        });
 
         $qb->method('expr')->willReturn($expr);
         $qb->method('func')->willReturn($func);
@@ -180,6 +251,11 @@ class FileDuplicateMapperTest extends TestCase
 
             return $qb;
         });
+        $qb->method('innerJoin')->willReturnCallback(function ($fromAlias, $join, $alias, $condition = null) use ($qb, $index, &$queriesRef): IQueryBuilder {
+            $queriesRef[$index]['joins'][] = $fromAlias . ' ' . $join . ' ' . $alias . ($condition ? ' ON ' . (string)$condition : '');
+
+            return $qb;
+        });
         $qb->method('where')->willReturnCallback(function (...$predicates) use ($qb, $index, &$queriesRef): IQueryBuilder {
             foreach ($predicates as $p) {
                 $queriesRef[$index]['wheres'][] = (string)$p;
@@ -196,8 +272,16 @@ class FileDuplicateMapperTest extends TestCase
         });
         $qb->method('setMaxResults')->willReturn($qb);
         $qb->method('setFirstResult')->willReturn($qb);
-        $qb->method('orderBy')->willReturn($qb);
-        $qb->method('addOrderBy')->willReturn($qb);
+        $qb->method('orderBy')->willReturnCallback(function ($sort, $order = null) use ($qb, $index, &$queriesRef): IQueryBuilder {
+            $queriesRef[$index]['orderBy'] = [[(string)$sort, $order]];
+
+            return $qb;
+        });
+        $qb->method('addOrderBy')->willReturnCallback(function ($sort, $order = null) use ($qb, $index, &$queriesRef): IQueryBuilder {
+            $queriesRef[$index]['orderBy'][] = [(string)$sort, $order];
+
+            return $qb;
+        });
         $qb->method('groupBy')->willReturnCallback(function (...$groups) use ($qb, $index, &$queriesRef): IQueryBuilder {
             $queriesRef[$index]['groupBy'] = array_map('strval', $groups);
 
