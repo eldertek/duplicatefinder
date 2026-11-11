@@ -162,6 +162,23 @@ class FileDuplicateMapperTest extends TestCase
         $this->assertSame(5242880, $this->params[':param_2']);
     }
 
+    public function testFindDuplicatesWithFilesSelectsAllColumnsAndExcludesIgnoredRows(): void
+    {
+        $this->fetchQueue = [
+            ['id' => 11, 'hash' => 'hash-a', 'type' => 'file_hash'],
+        ];
+
+        $rows = $this->mapper->findDuplicatesWithFiles('qa-test');
+
+        $this->assertSame([['id' => 11, 'hash' => 'hash-a', 'type' => 'file_hash']], $rows);
+        $q = $this->queries[0];
+        $this->assertSame(['d.id', 'd.hash', 'd.type'], $q['select']);
+        $this->assertSame(['d.id', 'd.hash', 'd.type'], $q['groupBy']);
+        $this->assertSame('COUNT(*) > 1', $q['having']);
+        $this->assertStringContainsString('f.ignored = :param_1', $q['joins'][0]);
+        $this->assertFalse($this->params[':param_1']);
+    }
+
     private function createRecordingQueryBuilder(): IQueryBuilder
     {
         $qb = $this->createMock(IQueryBuilder::class);
