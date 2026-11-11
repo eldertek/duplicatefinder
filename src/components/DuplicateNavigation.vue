@@ -6,11 +6,12 @@
                 <SearchBar @search="handleSearch" />
                 <div class="sort-dropdown">
                     <button
+                        type="button"
                         class="icon-only-button"
                         :class="{ 'has-active-filter': hasActiveSortOrFilter }"
                         :title="t('duplicatefinder', 'Sort and filter by size')"
                         @click="toggleSortMenu">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 9h9"></path>
                             <path d="M6 9h2"></path>
                             <path d="M4 19h16"></path>
@@ -168,9 +169,14 @@
             </div>
 
             <!-- Navigation for Acknowledged Duplicates -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Acknowledged')"
+            <NcAppNavigationItem
+                class="duplicate-section-nav duplicate-section-acknowledged"
+                :name="t('duplicatefinder', 'Acknowledged')"
                 :allowCollapse="true"
-                :open="true">
+                :open="acknowledgedOpen"
+                :active="activeView === 'details' && activeSection === 'acknowledged'"
+                @click="toggleSection('acknowledged', $event)"
+                @update:open="onSectionOpenChange('acknowledged', $event)">
                 <template #icon>
                     <CheckCircle :size="20" />
                 </template>
@@ -194,10 +200,14 @@
             </NcAppNavigationItem>
 
             <!-- Navigation for Unacknowledged Duplicates -->
-            <NcAppNavigationItem :name="t('duplicatefinder', 'Unacknowledged')"
+            <NcAppNavigationItem
+                class="duplicate-section-nav duplicate-section-unacknowledged"
+                :name="t('duplicatefinder', 'Unacknowledged')"
                 :allowCollapse="true"
-                :open="true"
-                :active="activeView === 'details'">
+                :open="unacknowledgedOpen"
+                :active="activeView === 'details' && activeSection === 'unacknowledged'"
+                @click="toggleSection('unacknowledged', $event)"
+                @update:open="onSectionOpenChange('unacknowledged', $event)">
                 <template #icon>
                     <CloseCircle :size="20" />
                 </template>
@@ -326,7 +336,13 @@ export default {
             showSortMenu: false,
             showProjectsMenu: false,
             showHelpMenu: false,
+            acknowledgedOpen: true,
+            unacknowledgedOpen: true,
+            activeSection: 'unacknowledged',
         };
+    },
+    created() {
+        this.syncActiveSectionWithDuplicate(this.currentDuplicateId);
     },
     watch: {
         initialSortOption(newValue) {
@@ -334,6 +350,15 @@ export default {
         },
         initialMinSizeBytes(newValue) {
             this.minSizeBytes = Number(newValue) > 0 ? Number(newValue) : 0;
+        },
+        currentDuplicateId(newId) {
+            this.syncActiveSectionWithDuplicate(newId);
+        },
+        acknowledgedDuplicates() {
+            this.syncActiveSectionWithDuplicate(this.currentDuplicateId);
+        },
+        unacknowledgedDuplicates() {
+            this.syncActiveSectionWithDuplicate(this.currentDuplicateId);
         }
     },
     computed: {
@@ -496,7 +521,41 @@ export default {
 
             return duplicate.files.some(matchFile);
         },
+        syncActiveSectionWithDuplicate(duplicateId) {
+            if (duplicateId === null || duplicateId === undefined) {
+                return;
+            }
+            if (Array.isArray(this.acknowledgedDuplicates) && this.acknowledgedDuplicates.some(d => d.id === duplicateId)) {
+                this.activeSection = 'acknowledged';
+            } else if (Array.isArray(this.unacknowledgedDuplicates) && this.unacknowledgedDuplicates.some(d => d.id === duplicateId)) {
+                this.activeSection = 'unacknowledged';
+            }
+        },
+        toggleSection(section, event) {
+            if (event && typeof event.preventDefault === 'function') {
+                event.preventDefault();
+            }
+            this.activeSection = section;
+            if (section === 'acknowledged') {
+                this.acknowledgedOpen = !this.acknowledgedOpen;
+            } else {
+                this.unacknowledgedOpen = !this.unacknowledgedOpen;
+            }
+        },
+        onSectionOpenChange(section, isOpen) {
+            this.activeSection = section;
+            if (section === 'acknowledged') {
+                this.acknowledgedOpen = Boolean(isOpen);
+            } else {
+                this.unacknowledgedOpen = Boolean(isOpen);
+            }
+        },
         openDuplicate(duplicate) {
+            if (duplicate && typeof duplicate.acknowledged === 'boolean') {
+                this.activeSection = duplicate.acknowledged ? 'acknowledged' : 'unacknowledged';
+            } else if (duplicate && duplicate.id !== undefined) {
+                this.syncActiveSectionWithDuplicate(duplicate.id);
+            }
             this.$emit('open-duplicate', duplicate);
         },
         async loadMoreUnacknowledgedDuplicates() {
@@ -722,13 +781,22 @@ export default {
     background: transparent;
     border: none;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    flex-shrink: 0;
+    color: var(--color-main-text);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: background-color 0.2s;
+}
+
+.icon-only-button svg {
+    flex-shrink: 0;
 }
 
 .icon-only-button:hover,
@@ -1016,5 +1084,22 @@ export default {
 
 .load-more-button:hover {
     background-color: var(--color-primary-element-hover);
+}
+
+/* Consistent highlighting and full-row clickability for Acknowledged / Unacknowledged sections */
+.duplicate-section-nav :deep(.app-navigation-entry.active .button-vue.icon-collapse) {
+    color: var(--color-primary-element-text);
+}
+
+.duplicate-section-nav :deep(.app-navigation-entry.active .button-vue.icon-collapse:hover),
+.duplicate-section-nav :deep(.app-navigation-entry.active .button-vue.icon-collapse:focus-visible) {
+    background-color: var(--color-primary-element-hover);
+    color: var(--color-primary-element-text);
+}
+
+.duplicate-section-nav :deep(.app-navigation-entry:not(.active) .button-vue.icon-collapse:hover),
+.duplicate-section-nav :deep(.app-navigation-entry:not(.active) .button-vue.icon-collapse:focus-visible) {
+    background-color: var(--color-primary-element-light);
+    color: var(--color-primary-element);
 }
 </style>

@@ -94,6 +94,7 @@
               <NcActionButton
                 v-for="item in availableKeepFolders"
                 :key="item.folder"
+                :title="item.folder"
                 @click="keepFolderAcrossGroups(item.folder)">
                 {{ t('duplicatefinder', 'Keep {folder} ({count} groups)', { folder: item.folder, count: item.groupCount }) }}
               </NcActionButton>
@@ -168,8 +169,8 @@
                       :checked="isFileSelected(hash, index)"
                       @update:checked="toggleFile(hash, index)"
                       type="checkbox">
-                      <div class="file-info">
-                        <span v-html="file.humanizedPath"></span>
+                      <div class="file-info" :title="cleanFilePath(file.path)">
+                        <span class="file-path-label" v-html="file.humanizedPath"></span>
                         <span class="file-size">{{ formatBytes(file.size) }}</span>
                       </div>
                     </NcCheckboxRadioSwitch>
@@ -337,6 +338,9 @@ export default {
       const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
       const i = Math.floor(Math.log(bytes) / Math.log(k))
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    },
+    cleanFilePath(path) {
+      return String(path || '').replace(/^\/[^/]+\/files\//, '/')
     },
     humanizePath(path) {
       // Remove /admin/files/ prefix
@@ -698,7 +702,14 @@ export default {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  min-width: 0;
   gap: 10px;
+}
+
+.file-path-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .file-size {

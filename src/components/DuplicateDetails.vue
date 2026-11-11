@@ -263,21 +263,17 @@ export default {
 
 .file-display {
   width: calc(100% - 20px);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
+  gap: 12px;
   margin-bottom: 10px;
   margin-left: 10px;
   margin-right: 10px;
-  border: 1px solid #e0e0e0;
-  padding: 10px;
+  border: 1px solid var(--color-border, #e0e0e0);
+  padding: 10px 12px;
   border-radius: 5px;
   position: relative;
-}
-
-.file-display p {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
 }
 
 .acknowledge-link {

@@ -1,5 +1,9 @@
 <template>
-    <NcAppNavigationItem :name="getDisplayName" :class="{ 'is-active': isActive }" @click="handleClick">
+    <NcAppNavigationItem
+        :name="getDisplayName"
+        :title="getFullPathsTitle"
+        :class="{ 'is-active': isActive }"
+        @click="handleClick">
         <template #icon>
             <div class="nav-thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }">
             </div>
@@ -12,7 +16,7 @@
 
 <script>
 import { NcAppNavigationItem } from '@nextcloud/vue';
-import { getFormattedSizeOfCurrentDuplicate } from '@/tools/utils';
+import { getFormattedSizeOfCurrentDuplicate, normalizeItemPath } from '@/tools/utils';
 
 export default {
     components: { NcAppNavigationItem },
@@ -35,12 +39,24 @@ export default {
             // Otherwise return a shortened version of the hash
             return allSameFilename ? filenames[0] : this.duplicate.hash.substring(0, 8);
         },
+        getFullPathsTitle() {
+            if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length === 0) {
+                return this.getDisplayName;
+            }
+            const paths = this.duplicate.files
+                .map(file => (typeof normalizeItemPath === 'function' ? normalizeItemPath(file.path) : file.path) || file.path)
+                .filter(Boolean);
+            return paths.length > 0 ? paths.join('\n') : this.getDisplayName;
+        },
         getFormattedSize() {
             return getFormattedSizeOfCurrentDuplicate(this.duplicate);
         }
     },
     methods: {
-        handleClick() {
+        handleClick(event) {
+            if (event && typeof event.preventDefault === 'function') {
+                event.preventDefault();
+            }
             this.$emit('duplicate-selected', this.duplicate);
         },
         getPreviewImage(item) {
@@ -75,7 +91,26 @@ export default {
 
 <style scoped>
 .is-active {
-    background-color: #f0f0f0;
+    border-radius: var(--border-radius-element, var(--border-radius-pill));
+}
+
+.is-active :deep(.app-navigation-entry) {
+    background-color: var(--color-primary-element-light) !important;
+}
+
+.is-active :deep(.app-navigation-entry:hover),
+.is-active :deep(.app-navigation-entry:focus-within) {
+    background-color: var(--color-primary-element-light-hover, var(--color-background-hover)) !important;
+}
+
+.is-active :deep(.app-navigation-entry .app-navigation-entry-link) {
+    color: var(--color-primary-element-light-text, var(--color-main-text)) !important;
+    font-weight: 600;
+}
+
+.is-active .file-size {
+    color: var(--color-primary-element-light-text, var(--color-text-maxcontrast));
+    font-weight: 600;
 }
 
 .nav-thumbnail {
