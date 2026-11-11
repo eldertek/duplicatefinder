@@ -17,6 +17,10 @@ return [
        ['name' => 'duplicate_api#acknowledge', 'url' => '/api/duplicates/acknowledge/{hash}', 'verb' => 'POST'],
        ['name' => 'duplicate_api#unacknowledge', 'url' => '/api/duplicates/unacknowledge/{hash}', 'verb' => 'POST'],
 
+       // Scan progress and user scan routes
+       ['name' => 'scan_api#status', 'url' => '/api/scan/status', 'verb' => 'GET'],
+       ['name' => 'scan_api#start', 'url' => '/api/scan/start', 'verb' => 'POST'],
+
        // Settings routes
        ['name' => 'settings_api#list', 'url' => '/api/settings', 'verb' => 'GET'],
        ['name' => 'settings_api#save', 'url' => '/api/settings/{key}/{value}', 'verb' => 'POST'],

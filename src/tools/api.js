@@ -357,6 +357,38 @@ export async function findDuplicates() {
     }
 }
 
+/**
+ * Fetches live scan status and progress for the current user without showing error notifications on transient polls.
+ * @returns {Promise<Object|null>} Normalized scan state object or null.
+ */
+export async function fetchScanStatus() {
+    const url = generateApiBaseUrl('/scan/status');
+    const response = await axios.get(url);
+    return response.data?.scan || null;
+}
+
+/**
+ * Starts a duplicate scan for the current user's storage.
+ * @returns {Promise<Object|null>} Final scan state object when the HTTP request finishes.
+ */
+export async function startUserScan() {
+    const url = generateApiBaseUrl('/scan/start');
+    const response = await axios.post(url);
+    return response.data?.scan || null;
+}
+
+export function notifyScanStarted() {
+    showSuccessNotification(t('duplicatefinder', 'Duplicate scan started'));
+}
+
+export function notifyScanCompleted() {
+    showSuccessNotification(t('duplicatefinder', 'Duplicate scan completed'));
+}
+
+export function notifyScanFailed() {
+    showErrorNotification(t('duplicatefinder', 'Failed to initiate duplicate search'));
+}
+
 export async function deleteFilter(id) {
     try {
         const url = generateApiBaseUrl(`/filters/${id}`)

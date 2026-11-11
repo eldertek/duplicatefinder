@@ -265,7 +265,7 @@ import FolderMultiple from 'vue-material-design-icons/FolderMultiple';
 import FolderCog from 'vue-material-design-icons/FolderCog';
 import Folder from 'vue-material-design-icons/Folder';
 import { fetchDuplicates } from '@/tools/api';
-import { getTotalSizeOfDuplicate } from '@/tools/utils';
+import { getTotalSizeOfDuplicate, loadUiPreferences, saveUiPreferences } from '@/tools/utils';
 
 export default {
     components: {
@@ -330,6 +330,7 @@ export default {
         }
     },
     data() {
+        const savedPreferences = loadUiPreferences();
         return {
             searchPattern: '',
             searchType: 'simple',
@@ -344,8 +345,8 @@ export default {
             showSortMenu: false,
             showProjectsMenu: false,
             showHelpMenu: false,
-            acknowledgedOpen: true,
-            unacknowledgedOpen: true,
+            acknowledgedOpen: savedPreferences.acknowledgedOpen,
+            unacknowledgedOpen: savedPreferences.unacknowledgedOpen,
             activeSection: 'unacknowledged',
         };
     },
@@ -553,16 +554,20 @@ export default {
             this.activeSection = section;
             if (section === 'acknowledged') {
                 this.acknowledgedOpen = !this.acknowledgedOpen;
+                saveUiPreferences({ acknowledgedOpen: this.acknowledgedOpen });
             } else {
                 this.unacknowledgedOpen = !this.unacknowledgedOpen;
+                saveUiPreferences({ unacknowledgedOpen: this.unacknowledgedOpen });
             }
         },
         onSectionOpenChange(section, isOpen) {
             this.activeSection = section;
             if (section === 'acknowledged') {
                 this.acknowledgedOpen = Boolean(isOpen);
+                saveUiPreferences({ acknowledgedOpen: this.acknowledgedOpen });
             } else {
                 this.unacknowledgedOpen = Boolean(isOpen);
+                saveUiPreferences({ unacknowledgedOpen: this.unacknowledgedOpen });
             }
         },
         openDuplicate(duplicate) {

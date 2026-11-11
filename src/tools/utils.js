@@ -218,3 +218,132 @@ export function openFileInViewer(file) {
         console.error('Viewer is not available');
     }
 }
+
+const UI_PREFERENCES_DEFAULTS = {
+    acknowledgedOpen: true,
+    unacknowledgedOpen: true,
+    sortOption: 'none',
+    minSizeBytes: 0,
+};
+
+/**
+ * Compute the per-user localStorage key for persisted UI preferences.
+ *
+ * @returns {string} Storage key scoped to the active Nextcloud user.
+ */
+export function getUiPreferencesStorageKey() {
+    let uid = 'default';
+    try {
+        if (typeof window !== 'undefined' && window.OC) {
+            if (typeof window.OC.getCurrentUser === 'function') {
+                const user = window.OC.getCurrentUser();
+                if (user && user.uid) {
+                    uid = String(user.uid);
+                }
+            } else if (window.OC.currentUser) {
+                uid = String(window.OC.currentUser);
+            }
+        }
+    } catch (e) {
+        // Ignore user lookup errors in test or restricted environments
+    }
+    return `duplicatefinder:ui-state:${uid}`;
+}
+
+/**
+ * Load persisted sidebar dropdown and sort preferences from localStorage.
+ *
+ * @returns {Object} Normalized UI preferences object.
+ */
+export function loadUiPreferences() {
+    try {
+        if (typeof window === 'undefined' || !window.localStorage) {
+            return { ...UI_PREFERENCES_DEFAULTS };
+        }
+        const raw = window.localStorage.getItem(getUiPreferencesStorageKey());
+        if (!raw) {
+            return { ...UI_PREFERENCES_DEFAULTS };
+        }
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') {
+            return { ...UI_PREFERENCES_DEFAULTS };
+        }
+        const validSorts = ['none', 'size-desc', 'size-asc'];
+        const parsedMinSize = Number(parsed.minSizeBytes);
+        return {
+            acknowledgedOpen: typeof parsed.acknowledgedOpen === 'boolean'
+                ? parsed.acknowledgedOpen
+                : UI_PREFERENCES_DEFAULTS.acknowledgedOpen,
+            unacknowledgedOpen: typeof parsed.unacknowledgedOpen === 'boolean'
+                ? parsed.unacknowledgedOpen
+                : UI_PREFERENCES_DEFAULTS.unacknowledgedOpen,
+            sortOption: validSorts.includes(parsed.sortOption)
+                ? parsed.sortOption
+                : UI_PREFERENCES_DEFAULTS.sortOption,
+            minSizeBytes: Number.isFinite(parsedMinSize) && parsedMinSize >= 0
+                ? Math.floor(parsedMinSize)
+                : UI_PREFERENCES_DEFAULTS.minSizeBytes,
+        };
+    } catch (e) {
+        return { ...UI_PREFERENCES_DEFAULTS };
+    }
+}
+
+/**
+ * Persist updated UI preferences into localStorage, merging with existing values.
+ *
+ * @param {Object} partial - Partial preferences update.
+ */
+export function saveUiPreferences(partial) {
+    try {
+        if (!partial || typeof partial !== 'object' || typeof window === 'undefined' || !window.localStorage) {
+            return;
+        }
+        const next = {
+            ...loadUiPreferences(),
+        };
+        if (typeof partial.acknowledgedOpen === 'boolean') {
+            next.acknowledgedOpen = partial.acknowledgedOpen;
+        }
+        if (typeof partial.unacknowledgedOpen === 'boolean') {
+            next.unacknowledgedOpen = partial.unacknowledgedOpen;
+        }
+        if (['none', 'size-desc', 'size-asc'].includes(partial.sortOption)) {
+            next.sortOption = partial.sortOption;
+        }
+        if (partial.minSizeBytes !== undefined) {
+            const parsedMinSize = Number(partial.minSizeBytes);
+            next.minSizeBytes = Number.isFinite(parsedMinSize) && parsedMinSize >= 0
+                ? Math.floor(parsedMinSize)
+                : 0;
+        }
+        window.localStorage.setItem(getUiPreferencesStorageKey(), JSON.stringify(next));
+    } catch (e) {
+        // Storage quota or private-mode restrictions must never break navigation
+    }
+}
+
+/**
+ * Format an estimated remaining scan duration in seconds into a concise human string.
+ *
+ * @param {number|null|undefined} seconds - Remaining seconds.
+ * @returns {string} Formatted duration (e.g. '45s', '2m 15s', '1h 10m') or empty string.
+ */
+export function formatScanEta(seconds) {
+    const num = Number(seconds);
+    if (!Number.isFinite(num) || num <= 0) {
+        return '';
+    }
+    const totalSec = Math.max(1, Math.round(num));
+    if (totalSec < 60) {
+        return `${totalSec}s`;
+    }
+    if (totalSec < 3600) {
+        const mins = Math.floor(totalSec / 60);
+        const secs = totalSec % 60;
+        return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+    }
+    const hours = Math.floor(totalSec / 3600);
+    const mins = Math.round((totalSec % 3600) / 60);
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+}

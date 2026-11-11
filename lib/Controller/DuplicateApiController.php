@@ -7,8 +7,10 @@ use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
+use OCA\DuplicateFinder\Service\ScanStatusService;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
+use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -28,6 +30,10 @@ class DuplicateApiController extends AbstractAPIController
     protected $logger;
     /** @var OriginFolderService */
     private $originFolderService;
+    /** @var ?ISession */
+    private $session;
+    /** @var ?ScanStatusService */
+    private $scanStatusService;
 
     public function __construct(
         $appName,
@@ -38,7 +44,9 @@ class DuplicateApiController extends AbstractAPIController
         FileDuplicateMapper $fileDuplidateMapper,
         IUserManager $userManager,
         LoggerInterface $logger,
-        OriginFolderService $originFolderService
+        OriginFolderService $originFolderService,
+        ?ISession $session = null,
+        ?ScanStatusService $scanStatusService = null
     ) {
         parent::__construct($appName, $request, $userSession, $logger);
         $this->fileInfoService = $fileInfoService;
@@ -47,6 +55,8 @@ class DuplicateApiController extends AbstractAPIController
         $this->logger = $logger;
         $this->fileDuplicateMapper = $fileDuplidateMapper;
         $this->originFolderService = $originFolderService;
+        $this->session = $session;
+        $this->scanStatusService = $scanStatusService;
     }
 
     /**
@@ -206,9 +216,24 @@ class DuplicateApiController extends AbstractAPIController
     public function find(): DataResponse
     {
         try {
-            $this->userManager->callForAllUsers(function (IUser $user): void {
-                $this->fileInfoService->scanFiles($user->getUID());
-            });
+            if ($this->session !== null) {
+                $this->session->close();
+            }
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(0);
+            }
+            if ($this->scanStatusService !== null) {
+                $this->scanStatusService->startGlobalScan();
+            }
+            try {
+                $this->userManager->callForAllUsers(function (IUser $user): void {
+                    $this->fileInfoService->scanFiles($user->getUID());
+                });
+            } finally {
+                if ($this->scanStatusService !== null) {
+                    $this->scanStatusService->finishGlobalScan();
+                }
+            }
 
             return new DataResponse(['status' => 'success']);
         } catch (\Exception $e) {

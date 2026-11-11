@@ -57,7 +57,9 @@
             <p>{{ t('duplicatefinder', 'You can adjust settings or run a new scan to find duplicates.') }}</p>
             <div class="action-buttons">
               <button @click="openSettings" class="primary">{{ t('duplicatefinder', 'Open Settings') }}</button>
-              <button @click="findDuplicates">{{ t('duplicatefinder', 'Find Duplicates') }}</button>
+              <button @click="findDuplicates" :disabled="isScanning">
+                {{ isScanning ? t('duplicatefinder', 'Scanning...') : t('duplicatefinder', 'Find Duplicates') }}
+              </button>
             </div>
           </div>
         </div>
@@ -82,7 +84,11 @@ export default {
     DuplicateFileDisplay
   },
   props: {
-    duplicate: Object
+    duplicate: Object,
+    isScanning: {
+      type: Boolean,
+      default: false
+    }
   },
   data() {
     return {
@@ -236,6 +242,10 @@ export default {
       this.$emit('openSettings');
     },
     async findDuplicates() {
+      if (this.$listeners && this.$listeners.startScan) {
+        this.$emit('startScan');
+        return;
+      }
       try {
         showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while)'));
         await apiFindDuplicates();
