@@ -416,7 +416,7 @@ class FileDuplicateMapper extends EQBMapper
     public function findDuplicatesWithFiles(string $userId): array
     {
         $qb = $this->db->getQueryBuilder();
-        $qb->selectDistinct('d.id', 'd.hash', 'd.type')
+        $qb->select('d.id', 'd.hash', 'd.type')
            ->from($this->getTableName(), 'd')
            ->innerJoin(
                'd',
@@ -427,7 +427,9 @@ class FileDuplicateMapper extends EQBMapper
                    $qb->expr()->eq('f.owner', $qb->createNamedParameter($userId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_STR)),
                    $qb->expr()->eq('f.ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
                )
-           );
+           )
+           ->groupBy('d.id', 'd.hash', 'd.type')
+           ->having($qb->createFunction('COUNT(*) > 1'));
 
         $result = $qb->executeQuery();
         $duplicates = [];
