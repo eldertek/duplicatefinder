@@ -92,6 +92,22 @@
                 </button>
             </div>
 
+            <!-- Bulk Delete Action - Placed prominently above lists so it is never hidden below long duplicate lists -->
+            <div class="sidebar-bulk-action">
+                <button
+                    type="button"
+                    class="bulk-delete-button"
+                    :class="{ 'is-active': activeView === 'bulk-delete' }"
+                    :disabled="!hasAnyDuplicates"
+                    :title="hasAnyDuplicates
+                        ? t('duplicatefinder', 'Preview and delete multiple duplicates at once')
+                        : t('duplicatefinder', 'No duplicates available for bulk deletion')"
+                    @click="$emit('open-bulk-delete')">
+                    <Delete :size="18" />
+                    <span>{{ t('duplicatefinder', 'Bulk Delete') }}</span>
+                </button>
+            </div>
+
             <!-- Projects Menu (only shown when toggleProjectsMenu is clicked) -->
             <div v-if="showProjectsMenu" class="fixed-menu projects-menu">
                 <div class="menu-header">
@@ -229,14 +245,6 @@
                     </button>
                 </template>
             </NcAppNavigationItem>
-
-            <!-- Bulk Delete Button - Now at the bottom -->
-            <div class="footer-actions">
-                <button class="action-button bulk-delete-button" @click="$emit('open-bulk-delete')">
-                    <Delete :size="16" />
-                    <span>{{ t('duplicatefinder', 'Bulk Delete') }}</span>
-                </button>
-            </div>
         </template>
     </NcAppNavigation>
 </template>
@@ -308,7 +316,7 @@ export default {
                 totalPages: 1
             })
         },
-        'has-duplicates': {
+        hasDuplicates: {
             type: Boolean,
             default: false
         },
@@ -362,6 +370,13 @@ export default {
         }
     },
     computed: {
+        hasAnyDuplicates() {
+            return Boolean(
+                this.hasDuplicates
+                || (Array.isArray(this.unacknowledgedDuplicates) && this.unacknowledgedDuplicates.length > 0)
+                || (Array.isArray(this.acknowledgedDuplicates) && this.acknowledgedDuplicates.length > 0)
+            );
+        },
         hasActiveSortOrFilter() {
             return this.sortOption !== 'none' || this.minSizeBytes > 0;
         },
@@ -1040,35 +1055,46 @@ export default {
     background-color: var(--color-background-hover);
 }
 
-/* Footer Actions */
-.footer-actions {
-    margin-top: auto;
-    padding: 8px;
-    border-top: 1px solid var(--color-border);
-}
-
-.action-button {
-    display: flex;
-    align-items: center;
-    background: transparent;
-    border: none;
-    padding: 8px;
-    border-radius: 4px;
-    width: 100%;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.action-button:hover {
-    background-color: var(--color-background-hover);
-}
-
-.action-button span {
-    margin-left: 8px;
+/* Prominent Sidebar Bulk Delete Action */
+.sidebar-bulk-action {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .bulk-delete-button {
-    color: var(--color-error);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-large, 8px);
+    border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+    background-color: var(--color-background-dark);
+    color: var(--color-main-text);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.bulk-delete-button:hover:not(:disabled),
+.bulk-delete-button:focus-visible:not(:disabled) {
+    background-color: var(--color-primary-element-light);
+    border-color: var(--color-primary-element);
+    color: var(--color-primary-element);
+}
+
+.bulk-delete-button.is-active:not(:disabled) {
+    background-color: var(--color-primary-element);
+    border-color: var(--color-primary-element);
+    color: var(--color-primary-element-text);
+}
+
+.bulk-delete-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .load-more-button {
