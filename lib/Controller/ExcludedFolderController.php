@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace OCA\DuplicateFinder\Controller;
 
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
+use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -15,16 +17,22 @@ class ExcludedFolderController extends Controller
 {
     private ExcludedFolderService $service;
     private LoggerInterface $logger;
+    private ?FileInfoService $fileInfoService;
+    private ?FileDuplicateService $fileDuplicateService;
 
     public function __construct(
         string $appName,
         IRequest $request,
         ExcludedFolderService $service,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ?FileInfoService $fileInfoService = null,
+        ?FileDuplicateService $fileDuplicateService = null
     ) {
         parent::__construct($appName, $request);
         $this->service = $service;
         $this->logger = $logger;
+        $this->fileInfoService = $fileInfoService;
+        $this->fileDuplicateService = $fileDuplicateService;
     }
 
     /**
@@ -51,6 +59,17 @@ class ExcludedFolderController extends Controller
     {
         try {
             $excludedFolder = $this->service->create($path);
+            if ($this->fileInfoService !== null && $excludedFolder->getUserId() !== '') {
+                $affectedHashes = $this->fileInfoService->ignoreFilesInFolder(
+                    $excludedFolder->getUserId(),
+                    $excludedFolder->getFolderPath()
+                );
+                if ($this->fileDuplicateService !== null) {
+                    foreach ($affectedHashes as $hash) {
+                        $this->fileDuplicateService->removeIfOrphaned($hash);
+                    }
+                }
+            }
 
             return new JSONResponse($excludedFolder);
         } catch (\RuntimeException $e) {

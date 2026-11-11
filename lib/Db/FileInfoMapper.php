@@ -102,7 +102,112 @@ class FileInfoMapper extends EQBMapper
 
     public function countByHash(string $hash, string $type = 'file_hash'): int
     {
-        return $this->countBy($type, $hash);
+        $qb = $this->db->getQueryBuilder();
+        $qb->select($qb->func()->count('id'))
+            ->from($this->getTableName())
+            ->where(
+                $qb->expr()->eq($type, $qb->createNamedParameter($hash)),
+                $qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
+            );
+        $result = $qb->executeQuery();
+        $count = (int)$result->fetchOne();
+        $result->closeCursor();
+
+        return $count;
+    }
+
+    /**
+     * Mark indexed file entries of a user inside an excluded folder (and its subfolders) as ignored
+     * and clear their file hash so they no longer keep acknowledged or unacknowledged duplicate groups alive.
+     *
+     * @return array<string> Distinct file hashes that were cleared
+     */
+    public function ignoreFilesInFolder(string $userId, string $folderPath): array
+    {
+        if ($userId === '' || trim($folderPath) === '') {
+            return [];
+        }
+
+        $relative = preg_replace('#^/[^/]+/files(?=/|$)#', '', $folderPath);
+        $normalizedFolder = '/' . trim((string)$relative, '/');
+
+        $escapedUser = $this->db->escapeLikeParameter($userId);
+        if ($escapedUser === '') {
+            $escapedUser = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $userId);
+        }
+        $escapedFolder = $this->db->escapeLikeParameter($normalizedFolder);
+        if ($escapedFolder === '' && $normalizedFolder !== '') {
+            $escapedFolder = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $normalizedFolder);
+        }
+
+        $affectedHashes = [];
+        $lastId = 0;
+
+        while (true) {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('id', 'path', 'file_hash')
+                ->from($this->getTableName())
+                ->where($qb->expr()->gt('id', $qb->createNamedParameter($lastId, IQueryBuilder::PARAM_INT)))
+                ->andWhere($qb->expr()->eq('owner', $qb->createNamedParameter($userId)))
+                ->andWhere($qb->expr()->orX(
+                    $qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)),
+                    $qb->expr()->isNotNull('file_hash')
+                ));
+
+            if ($normalizedFolder !== '/') {
+                $qb->andWhere($qb->expr()->orX(
+                    $qb->expr()->like('path', $qb->createNamedParameter('/' . $escapedUser . '/files' . $escapedFolder . '%')),
+                    $qb->expr()->like('path', $qb->createNamedParameter($escapedFolder . '%'))
+                ));
+            }
+
+            $qb->orderBy('id', 'ASC')
+                ->setMaxResults(500);
+
+            $result = $qb->executeQuery();
+            $rows = $result->fetchAll();
+            $result->closeCursor();
+
+            if ($rows === []) {
+                break;
+            }
+
+            $matchedIds = [];
+            foreach ($rows as $row) {
+                $rowId = (int)$row['id'];
+                $lastId = max($lastId, $rowId);
+
+                $rowRelative = preg_replace('#^/[^/]+/files(?=/|$)#', '', (string)$row['path']);
+                $rowNormalized = '/' . trim((string)$rowRelative, '/');
+                if ($normalizedFolder !== '/'
+                    && $rowNormalized !== $normalizedFolder
+                    && !str_starts_with($rowNormalized, $normalizedFolder . '/')
+                ) {
+                    continue;
+                }
+
+                $matchedIds[] = $rowId;
+                if (!empty($row['file_hash'])) {
+                    $affectedHashes[(string)$row['file_hash']] = true;
+                }
+            }
+
+            if ($matchedIds !== []) {
+                $update = $this->db->getQueryBuilder();
+                $update->update($this->getTableName())
+                    ->set('ignored', $update->createNamedParameter(true, IQueryBuilder::PARAM_BOOL))
+                    ->set('file_hash', $update->createNamedParameter(null))
+                    ->set('updated_at', $update->createNamedParameter(time(), IQueryBuilder::PARAM_INT))
+                    ->where($update->expr()->in('id', $update->createNamedParameter($matchedIds, IQueryBuilder::PARAM_INT_ARRAY)))
+                    ->executeStatement();
+            }
+
+            if (count($rows) < 500) {
+                break;
+            }
+        }
+
+        return array_keys($affectedHashes);
     }
 
     /**

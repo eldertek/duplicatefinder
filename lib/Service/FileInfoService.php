@@ -438,6 +438,18 @@ class FileInfoService
     public function calculateHashes(FileInfo $fileInfo, ?string $fallbackUID = null, bool $requiresHash = true): FileInfo
     {
         $oldHash = $fileInfo->getFileHash();
+        if ($fileInfo->isIgnored()) {
+            if (!empty($oldHash)) {
+                $fileInfo->setFileHash(null);
+                $fileInfo->setUpdatedAt(new \DateTime());
+                $fileInfo->setKeepAsPrimary(true);
+                $fileInfo = $this->mapper->update($fileInfo);
+                $fileInfo->setKeepAsPrimary(false);
+                $this->eventDispatcher->dispatchTyped(new CalculatedHashEvent($fileInfo, $oldHash));
+            }
+
+            return $fileInfo;
+        }
         if (!$requiresHash && empty($oldHash)) {
             // No other file has this size and there is no hash to clear: nothing to do.
             // Without this check every unique-size file was looked up and written again
@@ -485,6 +497,65 @@ class FileInfoService
         return $fileInfo;
     }
 
+    /**
+     * Mark indexed files of a user inside an excluded folder as ignored, clear their hashes,
+     * and notify duplicate listeners so orphaned acknowledged/unacknowledged groups are removed.
+     *
+     * @return array<string> Distinct file hashes that were cleared
+     */
+    public function ignoreFilesInFolder(string $user, string $folderPath): array
+    {
+        if ($user === '' || trim($folderPath) === '') {
+            return [];
+        }
+
+        $affectedHashes = $this->mapper->ignoreFilesInFolder($user, $folderPath);
+        foreach ($affectedHashes as $oldHash) {
+            $placeholder = new FileInfo();
+            $placeholder->setOwner($user);
+            $placeholder->setIgnored(true);
+            $this->eventDispatcher->dispatchTyped(new CalculatedHashEvent($placeholder, $oldHash));
+        }
+
+        return $affectedHashes;
+    }
+
+    /**
+     * Ensure any previously indexed entries under the user's excluded folders are marked ignored
+     * and removed from duplicate groups even if a scan only walks a subset of folders.
+     *
+     * @return array<string> Distinct file hashes that were cleared
+     */
+    public function pruneExcludedFoldersForUser(string $user): array
+    {
+        if ($user === '') {
+            return [];
+        }
+
+        $clearedHashes = [];
+        try {
+            $this->excludedFolderService->resetCache();
+            $this->excludedFolderService->setUserId($user);
+            foreach ($this->excludedFolderService->findAll() as $excludedFolder) {
+                $folderPath = $excludedFolder->getFolderPath();
+                if ($folderPath === '') {
+                    continue;
+                }
+                foreach ($this->ignoreFilesInFolder($user, $folderPath) as $hash) {
+                    $clearedHashes[$hash] = true;
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->logger->debug('Could not prune excluded folder entries for user {user}: {error}', [
+                'app' => Application::ID,
+                'user' => $user,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return array_keys($clearedHashes);
+    }
+
     public function scanFiles(
         string $user,
         ?string $path = null,
@@ -492,6 +563,10 @@ class FileInfoService
         ?OutputInterface $output = null,
         ?bool $isShared = false
     ): void {
+        if (!$isShared) {
+            $this->pruneExcludedFoldersForUser($user);
+        }
+
         $userFolder = $this->folderService->getUserFolder($user);
         $scanPath = $userFolder->getPath();
         if (!is_null($path) && !$isShared) {
