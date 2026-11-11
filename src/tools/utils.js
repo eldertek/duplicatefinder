@@ -12,6 +12,24 @@ export function normalizeItemPath(path) {
 }
 
 /**
+ * Extract the normalized parent folder path of a file (e.g. '/Projects/a' or '/').
+ *
+ * @param {string} path - Full Nextcloud path or relative path of the file.
+ * @returns {string} Parent folder path.
+ */
+export function getParentFolderPath(path) {
+    if (!path || typeof path !== 'string') {
+        return '/';
+    }
+    const relativePath = path.replace(/^\/[^/]+\/files(?=\/|$)/, '');
+    const lastSlashIndex = relativePath.lastIndexOf('/');
+    if (lastSlashIndex <= 0) {
+        return '/';
+    }
+    return relativePath.substring(0, lastSlashIndex) || '/';
+}
+
+/**
  * Generate a URL for a preview image if the item is an image or video,
  * otherwise return the URL for the item's mimetype icon.
  *

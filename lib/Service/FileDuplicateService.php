@@ -114,6 +114,7 @@ class FileDuplicateService
      * @param int|null $offset
      * @param bool $enrich
      * @param array<array<string>> $orderBy
+     * @param int $minSize Minimum file size in bytes (0 disables filtering)
      * @return array<string, FileDuplicate|int|mixed>
      */
     public function findAll(
@@ -122,7 +123,8 @@ class FileDuplicateService
         int $page = 1,
         int $pageSize = 20,
         bool $enrich = false,
-        ?array $orderBy = [['hash'], ['type']]
+        ?array $orderBy = [['hash'], ['type']],
+        int $minSize = 0
     ): array {
         if ($user !== null) {
             $this->setCurrentUserId($user);
@@ -141,7 +143,9 @@ class FileDuplicateService
 
         while (count($result) < $pageSize && !$isLastFetched) {
             $offset = ($page - 1) * $pageSize;
-            $entities = $this->mapper->findAll($user, $pageSize, $offset, $orderBy, $type);
+            $entities = $minSize > 0
+                ? $this->mapper->findAll($user, $pageSize, $offset, $orderBy, $type, $minSize)
+                : $this->mapper->findAll($user, $pageSize, $offset, $orderBy, $type);
 
             foreach ($entities as $entity) {
                 if (($type === 'acknowledged' && !$entity->isAcknowledged())
@@ -345,8 +349,10 @@ class FileDuplicateService
         }
     }
 
-    public function getTotalCount(string $type = 'unacknowledged', ?string $user = null): int
+    public function getTotalCount(string $type = 'unacknowledged', ?string $user = null, int $minSize = 0): int
     {
-        return $this->mapper->getTotalCount($type, $user);
+        return $minSize > 0
+            ? $this->mapper->getTotalCount($type, $user, $minSize)
+            : $this->mapper->getTotalCount($type, $user);
     }
 }

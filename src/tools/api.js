@@ -18,11 +18,24 @@ axios.defaults.headers.common.requesttoken = OC.requestToken;
  * @param {string} type The type of duplicates to fetch ('acknowledged' or 'unacknowledged').
  * @param {number} limit The maximum number of duplicates to return.
  * @param {number} page The page number for pagination.
+ * @param {Object} [options] Optional query options.
+ * @param {string} [options.sortBy] Server sort mode ('default', 'size-desc', 'size-asc').
+ * @param {number} [options.minSize] Minimum file size in bytes.
  * @returns {Promise<Object>} An object containing arrays of duplicates.
  */
-export const fetchDuplicates = async (type = 'all', limit = 5, page = 1) => {
+export const fetchDuplicates = async (type = 'all', limit = 5, page = 1, options = {}) => {
     try {
-        const url = generateApiBaseUrl(`/duplicates/${type}?limit=${limit}&page=${page}`);
+        const queryParams = new URLSearchParams({
+            limit: String(limit),
+            page: String(page),
+        });
+        if (options.sortBy && options.sortBy !== 'none' && options.sortBy !== 'default') {
+            queryParams.set('sortBy', options.sortBy);
+        }
+        if (Number(options.minSize) > 0) {
+            queryParams.set('minSize', String(Math.floor(Number(options.minSize))));
+        }
+        const url = generateApiBaseUrl(`/duplicates/${type}?${queryParams.toString()}`);
         const response = await axios.get(url);
         return response.data;
     } catch (error) {
@@ -224,18 +237,26 @@ export const deleteOriginFolder = async (folderId) => {
  * Fetches duplicates for bulk deletion preview.
  * @param {number} limit The maximum number of duplicates to return.
  * @param {number} page The page number for pagination.
+ * @param {Object} [options] Optional query options.
+ * @param {string} [options.sortBy] Server sort mode ('default', 'size-desc', 'size-asc').
+ * @param {number} [options.minSize] Minimum file size in bytes.
  * @returns {Promise<Object>} An object containing arrays of duplicates.
  */
-export const fetchDuplicatesForBulk = async (limit = 30, page = 1) => {
+export const fetchDuplicatesForBulk = async (limit = 30, page = 1, options = {}) => {
     try {
         const url = generateApiBaseUrl('/duplicates/all');
-        const response = await axios.get(url, {
-            params: {
-                onlyNonProtected: true,
-                page,
-                limit
-            }
-        });
+        const params = {
+            onlyNonProtected: true,
+            page,
+            limit,
+        };
+        if (options.sortBy && options.sortBy !== 'none' && options.sortBy !== 'default') {
+            params.sortBy = options.sortBy;
+        }
+        if (Number(options.minSize) > 0) {
+            params.minSize = Math.floor(Number(options.minSize));
+        }
+        const response = await axios.get(url, { params });
         return response.data;
     } catch (error) {
         showErrorNotification(t('duplicatefinder', 'Error fetching duplicates for preview.'));

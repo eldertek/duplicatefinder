@@ -8,6 +8,17 @@
           :icon="'icon-delete'">
           <template #action>
             <div class="summary-actions">
+              <NcActions :menu-title="minSizeButtonLabel" :disabled="isLoading">
+                <template #icon>
+                  <ChevronDown :size="20" />
+                </template>
+                <NcActionButton
+                  v-for="preset in minSizePresets"
+                  :key="preset.bytes"
+                  @click="setMinSizeBytes(preset.bytes, false)">
+                  {{ preset.label }}
+                </NcActionButton>
+              </NcActions>
               <NcButton type="primary" @click="performDryRun" :disabled="isLoading">
                 <template #icon>
                   <NcLoadingIcon v-if="isLoading" />
@@ -48,6 +59,17 @@
                 {{ t('duplicatefinder', 'Size (smallest first)') }}
               </NcActionButton>
             </NcActions>
+            <NcActions :menu-title="minSizeButtonLabel" :disabled="isLoading">
+              <template #icon>
+                <ChevronDown :size="20" />
+              </template>
+              <NcActionButton
+                v-for="preset in minSizePresets"
+                :key="preset.bytes"
+                @click="setMinSizeBytes(preset.bytes, true)">
+                {{ preset.label }}
+              </NcActionButton>
+            </NcActions>
             <NcButton type="tertiary" @click="toggleSelectAll">
               {{ isAllSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
             </NcButton>
@@ -60,6 +82,20 @@
               </NcActionButton>
               <NcActionButton @click="selectAllExcept('last')">
                 {{ t('duplicatefinder', 'Select all except last file of each group') }}
+              </NcActionButton>
+            </NcActions>
+            <NcActions
+              v-if="availableKeepFolders.length > 0"
+              :menu-title="t('duplicatefinder', 'Keep folder')"
+              :disabled="isLoading">
+              <template #icon>
+                <ChevronDown :size="20" />
+              </template>
+              <NcActionButton
+                v-for="item in availableKeepFolders"
+                :key="item.folder"
+                @click="keepFolderAcrossGroups(item.folder)">
+                {{ t('duplicatefinder', 'Keep {folder} ({count} groups)', { folder: item.folder, count: item.groupCount }) }}
               </NcActionButton>
             </NcActions>
             <NcButton type="error" @click="confirmBulkDelete"
@@ -156,7 +192,7 @@
 <script>
 import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon, NcActions, NcActionButton } from '@nextcloud/vue'
 import { fetchDuplicatesForBulk, deleteFiles } from '@/tools/api'
-import { openFileInViewer, getTotalSizeOfDuplicate } from '@/tools/utils'
+import { openFileInViewer, getTotalSizeOfDuplicate, getParentFolderPath } from '@/tools/utils'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import { translate as t } from '@nextcloud/l10n'
 
@@ -179,7 +215,8 @@ export default {
       hasMorePages: false,
       limit: 100,
       selectedFiles: {},
-      sortOption: 'none'
+      sortOption: 'none',
+      minSizeBytes: 0
     }
   },
   computed: {
@@ -224,6 +261,41 @@ export default {
         default:
           return t('duplicatefinder', 'Sort: Default')
       }
+    },
+    minSizePresets() {
+      return [
+        { bytes: 0, label: t('duplicatefinder', 'All sizes') },
+        { bytes: 1024 * 1024, label: '>= 1 MB' },
+        { bytes: 10 * 1024 * 1024, label: '>= 10 MB' },
+        { bytes: 100 * 1024 * 1024, label: '>= 100 MB' },
+        { bytes: 1024 * 1024 * 1024, label: '>= 1 GB' }
+      ]
+    },
+    minSizeButtonLabel() {
+      const active = this.minSizePresets.find(preset => preset.bytes === this.minSizeBytes)
+      if (!active || active.bytes === 0) {
+        return t('duplicatefinder', 'Min size: All sizes')
+      }
+      return t('duplicatefinder', 'Min size: {size}', { size: active.label })
+    },
+    availableKeepFolders() {
+      if (!this.previewResults || !this.previewResults.duplicateGroups) {
+        return []
+      }
+      const countsByFolder = new Map()
+      Object.values(this.previewResults.duplicateGroups).forEach(group => {
+        const files = group.filesToDelete || []
+        const foldersInGroup = new Set(files.map(file => getParentFolderPath(file.path)))
+        if (foldersInGroup.size < 2) {
+          return
+        }
+        foldersInGroup.forEach(folder => {
+          countsByFolder.set(folder, (countsByFolder.get(folder) || 0) + 1)
+        })
+      })
+      return Array.from(countsByFolder.entries())
+        .map(([folder, groupCount]) => ({ folder, groupCount }))
+        .sort((a, b) => b.groupCount - a.groupCount || a.folder.localeCompare(b.folder))
     },
     sortedDuplicateGroups() {
       if (!this.previewResults) return {}
@@ -284,7 +356,10 @@ export default {
     },
     async loadPage(page) {
       try {
-        const response = await fetchDuplicatesForBulk(this.limit, page)
+        const response = await fetchDuplicatesForBulk(this.limit, page, {
+          sortBy: this.sortOption,
+          minSize: this.minSizeBytes
+        })
 
         // Transform entities into expected interface format
         const duplicateGroups = { ...(this.previewResults?.duplicateGroups || {}) }
@@ -464,8 +539,28 @@ export default {
         })
       }
     },
-    setSortOption(option) {
+    async setSortOption(option) {
+      if (this.sortOption === option) {
+        return
+      }
       this.sortOption = option
+      if (this.previewResults && this.hasMorePages) {
+        this.previewResults = null
+        this.selectedFiles = {}
+        await this.performDryRun()
+      }
+    },
+    async setMinSizeBytes(bytes, reloadPreview = false) {
+      const normalized = Number(bytes) > 0 ? Math.floor(Number(bytes)) : 0
+      if (this.minSizeBytes === normalized) {
+        return
+      }
+      this.minSizeBytes = normalized
+      if (reloadPreview) {
+        this.previewResults = null
+        this.selectedFiles = {}
+        await this.performDryRun()
+      }
     },
     selectAllExcept(position) {
       Object.keys(this.previewResults.duplicateGroups).forEach(hash => {
@@ -474,6 +569,26 @@ export default {
         this.$set(this.selectedFiles, hash,
           position === 'first' ? indexes.slice(1) : indexes.slice(0, -1)
         )
+      })
+    },
+    keepFolderAcrossGroups(keptFolder) {
+      if (!this.previewResults || !this.previewResults.duplicateGroups) {
+        return
+      }
+      Object.entries(this.previewResults.duplicateGroups).forEach(([hash, group]) => {
+        const files = group.filesToDelete || []
+        const hasCopyInKeptFolder = files.some(file => getParentFolderPath(file.path) === keptFolder)
+        if (!hasCopyInKeptFolder) {
+          this.$set(this.selectedFiles, hash, [])
+          return
+        }
+        const indexesOutsideFolder = []
+        files.forEach((file, index) => {
+          if (getParentFolderPath(file.path) !== keptFolder) {
+            indexesOutsideFolder.push(index)
+          }
+        })
+        this.$set(this.selectedFiles, hash, indexesOutsideFolder)
       })
     }
   }

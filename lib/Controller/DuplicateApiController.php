@@ -53,12 +53,59 @@ class DuplicateApiController extends AbstractAPIController
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function list(int $page = 1, int $limit = 30, string $type = 'unacknowledged', bool $onlyNonProtected = false): DataResponse
-    {
+    public function list(
+        int $page = 1,
+        int $limit = 30,
+        string $type = 'unacknowledged',
+        bool $onlyNonProtected = false,
+        string $sortBy = 'default',
+        int $minSize = 0
+    ): DataResponse {
         try {
-            $duplicates = $this->fileDuplicateService->findAll($type, $this->getUserId(), $page, $limit, true);
-            $totalItems = $this->fileDuplicateService->getTotalCount($type, $this->getUserId());
-            $totalPages = ceil($totalItems / $limit);
+            $safePage = max(1, $page);
+            $safeLimit = max(1, $limit);
+            $safeMinSize = max(0, $minSize);
+
+            $isCustomOrder = $sortBy === 'size-desc' || $sortBy === 'size-asc';
+            $orderBy = [['hash'], ['type']];
+            if ($sortBy === 'size-desc') {
+                $orderBy = [['size', 'DESC']];
+            } elseif ($sortBy === 'size-asc') {
+                $orderBy = [['size', 'ASC']];
+            }
+
+            if ($safeMinSize > 0) {
+                $duplicates = $this->fileDuplicateService->findAll(
+                    $type,
+                    $this->getUserId(),
+                    $safePage,
+                    $safeLimit,
+                    true,
+                    $orderBy,
+                    $safeMinSize
+                );
+                $totalItems = $this->fileDuplicateService->getTotalCount($type, $this->getUserId(), $safeMinSize);
+            } elseif ($isCustomOrder) {
+                $duplicates = $this->fileDuplicateService->findAll(
+                    $type,
+                    $this->getUserId(),
+                    $safePage,
+                    $safeLimit,
+                    true,
+                    $orderBy
+                );
+                $totalItems = $this->fileDuplicateService->getTotalCount($type, $this->getUserId());
+            } else {
+                $duplicates = $this->fileDuplicateService->findAll(
+                    $type,
+                    $this->getUserId(),
+                    $safePage,
+                    $safeLimit,
+                    true
+                );
+                $totalItems = $this->fileDuplicateService->getTotalCount($type, $this->getUserId());
+            }
+            $totalPages = ceil($totalItems / $safeLimit);
 
             if ($onlyNonProtected) {
                 // For each duplicate group, keep only non-protected files
@@ -98,10 +145,10 @@ class DuplicateApiController extends AbstractAPIController
                 'status' => 'success',
                 'entities' => array_values($duplicates['entities']),
                 'pagination' => [
-                    'currentPage' => $page,
+                    'currentPage' => $safePage,
                     'totalPages' => $totalPages,
                     'totalItems' => $totalItems,
-                    'limit' => $limit,
+                    'limit' => $safeLimit,
                 ],
             ];
 

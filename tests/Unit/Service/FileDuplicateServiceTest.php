@@ -273,6 +273,26 @@ class FileDuplicateServiceTest extends TestCase
         $this->assertSame(42, $this->service->getTotalCount('unacknowledged', 'user1'));
     }
 
+    public function testFindAllAndGetTotalCountForwardMinSizeWhenPositive(): void
+    {
+        $matching = $this->createStatusDuplicate('big-hash', false);
+        $this->mapper->expects($this->once())
+            ->method('findAll')
+            ->with('user1', 20, 0, [['size', 'DESC']], 'unacknowledged', 1048576)
+            ->willReturn([$matching]);
+        $this->expectStatusFileLookups([$matching], ['big-hash']);
+
+        $result = $this->service->findAll('unacknowledged', 'user1', 1, 20, true, [['size', 'DESC']], 1048576);
+        $this->assertCount(1, $result['entities']);
+
+        $this->mapper->expects($this->once())
+            ->method('getTotalCount')
+            ->with('unacknowledged', 'user1', 1048576)
+            ->willReturn(9);
+
+        $this->assertSame(9, $this->service->getTotalCount('unacknowledged', 'user1', 1048576));
+    }
+
     public static function filteredPageProvider(): array
     {
         return [
