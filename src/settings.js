@@ -1,3 +1,4 @@
+import '@nextcloud/dialogs/style.css'
 import { generateFilePath } from '@nextcloud/router'
 
 import Vue from 'vue'

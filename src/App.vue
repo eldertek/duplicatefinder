@@ -67,7 +67,7 @@
 					<template #icon>
 						<FilterOutline :size="20" />
 					</template>
-					<FilterSettings />
+					<FilterSettings @filters-changed="refreshDuplicates" />
 				</NcAppSettingsSection>
 
 				<NcAppSettingsSection
@@ -76,7 +76,7 @@
 					<template #icon>
 						<Folder :size="20" />
 					</template>
-					<OriginFoldersSettings />
+					<OriginFoldersSettings @origin-folders-changed="refreshDuplicates" />
 				</NcAppSettingsSection>
 
 				<NcAppSettingsSection
@@ -85,7 +85,7 @@
 					<template #icon>
 						<FolderRemove :size="20" />
 					</template>
-					<ExcludedFoldersSettings />
+					<ExcludedFoldersSettings @excluded-folders-changed="refreshDuplicates" />
 				</NcAppSettingsSection>
 
 				<NcAppSettingsSection
@@ -492,5 +492,30 @@ export default {
 	padding: 0;
 	max-height: 80vh;
 	overflow-y: auto;
+}
+
+.file-picker .file-picker__main {
+	min-width: 0;
+}
+
+.file-picker .file-picker__files {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.file-picker .file-picker__files th.row-name {
+	width: auto;
+}
+
+.file-picker .file-picker__files th.row-size {
+	width: 110px;
+}
+
+.file-picker .file-picker__files th.row-modified {
+	width: 150px;
+}
+
+.file-picker .file-picker__name-container {
+	min-width: 0;
 }
 </style>

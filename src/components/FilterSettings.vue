@@ -124,6 +124,7 @@ export default {
                 })
                 await this.loadFilters()
                 this.newFilterValue = ''
+                this.$emit('filters-changed')
             } catch (error) {
                 console.error('Error adding filter:', error)
             }
@@ -132,6 +133,7 @@ export default {
             try {
                 await deleteFilter(filter.id)
                 await this.loadFilters()
+                this.$emit('filters-changed')
             } catch (error) {
                 console.error('Error removing filter:', error)
             }

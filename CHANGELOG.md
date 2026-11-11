@@ -1,3 +1,8 @@
+## 1.10.2 - 2026-11-11
+### Fixed
+- **Folder selection window cramped layout and horizontal overflow in subfolders** ([#208](https://github.com/eldertek/duplicatefinder/issues/208)). Bundled `@nextcloud/dialogs/style.css` across the main and settings entry points so the `FilePicker` modal and dialog toasts receive their Nextcloud layout styles (`table-layout: fixed`, full-width `.file-picker__main`, inline folder icons, and ellipsis truncation), and let the folder `Name` column absorb available modal width without overflowing when navigating into subfolders with long names
+- **Acknowledged and unacknowledged entries from excluded folders remained visible after excluding a folder or running a new scan** ([#208](https://github.com/eldertek/duplicatefinder/issues/208)). Adding an excluded folder (as well as starting a scan or encountering a `.nodupefinder` directory) now marks existing indexed entries in that folder as ignored, clears their file hashes, and removes orphaned duplicate groups (including acknowledged ones) whose remaining non-ignored copies drop below two; `FileInfoMapper::countByHash()` and project duplicate queries also exclude ignored rows consistently, and the web UI refreshes both sidebar lists immediately when excluded folders or filters change
+
 ## 1.10.1 - 2026-11-11
 ### Fixed
 - **Selected duplicate entry turned white and unreadable in dark mode after collapsing and reopening its sidebar section** ([#207](https://github.com/eldertek/duplicatefinder/issues/207)). Replaced the hardcoded `#f0f0f0` active background on `DuplicateListItem` with Nextcloud theme variables (`--color-primary-element-light` and `--color-primary-element-light-text`) so the selected item keeps proper contrast in both light and dark themes

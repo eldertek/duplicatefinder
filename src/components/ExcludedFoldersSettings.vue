@@ -70,6 +70,7 @@ export default {
                     
                     await saveExcludedFolder(path)
                     await this.loadFolders()
+                    this.$emit('excluded-folders-changed')
                 }
             } catch (error) {
                 console.error('Error picking folder:', error)
@@ -89,6 +90,7 @@ export default {
                 if (index !== -1) {
                     this.excludedFolders.splice(index, 1)
                 }
+                this.$emit('excluded-folders-changed')
                 
                 showSuccess(t('duplicatefinder', 'Folder {folder} removed from excluded folders', { folder: folder.folderPath }))
             } catch (error) {

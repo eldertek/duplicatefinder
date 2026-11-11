@@ -113,6 +113,9 @@ class ScannerUtil
     {
         if ($node instanceof Folder) {
             if ($this->filterService->shouldSkipDirectory($node)) {
+                if (!$isShared && $this->fileInfoService !== null && $node->getPath() !== '') {
+                    $this->fileInfoService->ignoreFilesInFolder($user, $node->getPath());
+                }
                 $this->showOutput('Skipping directory due to .nodupefinder file: ' . $node->getPath());
 
                 return;
