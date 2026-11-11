@@ -1,3 +1,7 @@
+## 1.10.3 - 2026-11-12
+### Changed
+- **Prominent Bulk Delete button in the top-right header bar and top of the sidebar, with automatic initial duplicate selection** ([#206](https://github.com/eldertek/duplicatefinder/issues/206)). Added a persistent top header bar in the main content area showing the total duplicate count alongside a clear top-right `Bulk Delete` button (and a `Back to duplicates` button while inside Bulk Delete) so bulk cleanup is immediately accessible without clicking an individual duplicate first; moved the sidebar `Bulk Delete` action above the collapsible duplicate lists with high-contrast Nextcloud button styling instead of dim borderless red text at the bottom; and auto-selected the first available duplicate group on initial load
+
 ## 1.10.2 - 2026-11-11
 ### Fixed
 - **Folder selection window cramped layout and horizontal overflow in subfolders** ([#208](https://github.com/eldertek/duplicatefinder/issues/208)). Bundled `@nextcloud/dialogs/style.css` across the main and settings entry points so the `FilePicker` modal and dialog toasts receive their Nextcloud layout styles (`table-layout: fixed`, full-width `.file-picker__main`, inline folder icons, and ellipsis truncation), and let the folder `Name` column absorb available modal width without overflowing when navigating into subfolders with long names
