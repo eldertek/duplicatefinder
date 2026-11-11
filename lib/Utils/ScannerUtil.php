@@ -7,6 +7,7 @@ use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FilterService;
 use OCA\DuplicateFinder\Service\FolderService;
+use OCA\DuplicateFinder\Service\ScanStatusService;
 use OCA\DuplicateFinder\Service\ShareService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -32,17 +33,35 @@ class ScannerUtil
     private $filterService;
     /** @var FolderService */
     private $folderService;
+    /** @var ?ScanStatusService */
+    private $scanStatusService;
+    /** @var int */
+    private $scannedFiles = 0;
+    /** @var int */
+    private $discoveredFiles = 0;
+    /** @var int */
+    private $totalFiles = 0;
+    /** @var int */
+    private $scanStartedAt = 0;
+    /** @var int */
+    private $prevCompletedSeq = 0;
+    /** @var ?int */
+    private $prevCompletedAt = null;
+    /** @var int */
+    private $lastProgressHrtime = 0;
 
     public function __construct(
         LoggerInterface $logger,
         ShareService $shareService,
         FilterService $filterService,
-        FolderService $folderService
+        FolderService $folderService,
+        ?ScanStatusService $scanStatusService = null
     ) {
         $this->logger = $logger;
         $this->shareService = $shareService;
         $this->filterService = $filterService;
         $this->folderService = $folderService;
+        $this->scanStatusService = $scanStatusService;
     }
 
     public function setHandles(
@@ -67,6 +86,8 @@ class ScannerUtil
             $this->showOutput('Start searching files for '.$user.' in path '.$path);
         }
 
+        $trackingActive = false;
+
         try {
             if (!$isShared) {
                 // Start each scan with fresh filters, excluded folders and .nodupefinder lookups
@@ -74,11 +95,33 @@ class ScannerUtil
                 // Make sure the scanned user's mounts are set up: the previous
                 // OC\Files\Utils\Scanner did this internally, and background jobs
                 // scan several users in the same process
-                \OC_Util::tearDownFS();
-                \OC_Util::setupFS($user);
+                if (class_exists(\OC_Util::class)) {
+                    \OC_Util::tearDownFS();
+                    \OC_Util::setupFS($user);
+                }
             }
             $userFolder = $this->folderService->getUserFolder($user);
             $relativePath = trim(str_replace($userFolder->getPath(), '', $path), '/');
+
+            if (!$isShared && $this->scanStatusService !== null) {
+                $existing = $this->scanStatusService->getStatus($user);
+                $this->prevCompletedSeq = (int)($existing['completedSeq'] ?? 0);
+                $this->prevCompletedAt = isset($existing['completedAt']) && $existing['completedAt'] !== null
+                    ? (int)$existing['completedAt']
+                    : null;
+                $this->scannedFiles = 0;
+                $this->discoveredFiles = 0;
+                $this->totalFiles = $this->scanStatusService->countUserFiles($user, $relativePath);
+                $this->scanStartedAt = time();
+                $this->lastProgressHrtime = hrtime(true);
+                $this->scanStatusService->startScan(
+                    $user,
+                    $this->totalFiles,
+                    $this->prevCompletedSeq,
+                    $this->prevCompletedAt
+                );
+                $trackingActive = true;
+            }
 
             try {
                 $node = ($relativePath === '') ? $userFolder : $userFolder->get($relativePath);
@@ -106,6 +149,16 @@ class ScannerUtil
             $errorMessage = 'An error occurred during scanning: ' . $e->getMessage();
             $this->logger->error($errorMessage, ['app' => Application::ID, 'exception' => $e]);
             $this->showOutput('<e>' . $errorMessage . '</e>');
+        } finally {
+            if ($trackingActive && $this->scanStatusService !== null) {
+                $this->scanStatusService->finishScan(
+                    $user,
+                    $this->scannedFiles,
+                    $this->totalFiles,
+                    $this->scanStartedAt,
+                    $this->prevCompletedSeq
+                );
+            }
         }
     }
 
@@ -113,20 +166,30 @@ class ScannerUtil
     {
         if ($node instanceof Folder) {
             if ($this->filterService->shouldSkipDirectory($node)) {
-                if (!$isShared && $this->fileInfoService !== null && $node->getPath() !== '') {
-                    $this->fileInfoService->ignoreFilesInFolder($user, $node->getPath());
+                $skippedPath = $node->getPath();
+                if (!$isShared && $this->fileInfoService !== null && is_string($skippedPath) && $skippedPath !== '') {
+                    $this->fileInfoService->ignoreFilesInFolder($user, $skippedPath);
                 }
                 $this->showOutput('Skipping directory due to .nodupefinder file: ' . $node->getPath());
 
                 return;
             }
             $children = $node->getDirectoryListing();
+            foreach ($children as $childNode) {
+                if ($childNode instanceof File) {
+                    $this->discoveredFiles++;
+                }
+            }
+            if ($this->discoveredFiles > $this->totalFiles) {
+                $this->totalFiles = $this->discoveredFiles;
+            }
             $known = $isShared ? [] : $this->findKnownFiles($children, $user);
             foreach ($children as $child) {
                 $fileInfo = $known[$child->getPath()] ?? null;
                 if ($fileInfo !== null && $this->fileInfoService->isUpToDate($fileInfo, $child)) {
                     // Saving it again would not change anything: skip the lookups and events
                     $this->showOutput('Unchanged '.$child->getPath(), true);
+                    $this->recordProcessedFile($user);
                     $this->abortIfRequested();
 
                     continue;
@@ -155,7 +218,31 @@ class ScannerUtil
             $this->logger->info($e->getMessage(), ['exception' => $e]);
             $this->showOutput('Skipped '.$path, true);
         }
+        $this->recordProcessedFile($user);
         $this->abortIfRequested();
+    }
+
+    private function recordProcessedFile(string $user): void
+    {
+        $this->scannedFiles++;
+        if ($this->scannedFiles > $this->totalFiles) {
+            $this->totalFiles = $this->scannedFiles;
+        }
+        if ($this->scanStatusService === null) {
+            return;
+        }
+        $nowHr = hrtime(true);
+        if (($nowHr - $this->lastProgressHrtime) >= 1000000000) {
+            $this->lastProgressHrtime = $nowHr;
+            $this->scanStatusService->updateProgress(
+                $user,
+                $this->scannedFiles,
+                $this->totalFiles,
+                $this->scanStartedAt,
+                $this->prevCompletedSeq,
+                $this->prevCompletedAt
+            );
+        }
     }
 
     private function abortIfRequested(): void

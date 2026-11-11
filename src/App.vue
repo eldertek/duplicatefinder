@@ -42,6 +42,31 @@
 					</div>
 					<div class="topbar-actions">
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-scan-button"
+							:disabled="isScanRunning"
+							:title="t('duplicatefinder', 'Scan storage for duplicate files')"
+							@click="triggerScan">
+							<svg
+								class="topbar-scan-icon"
+								:class="{ 'is-spinning': isScanRunning }"
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+								<polyline points="21 3 21 9 15 9"></polyline>
+							</svg>
+							<span>{{ isScanRunning ? t('duplicatefinder', 'Scanning...') : t('duplicatefinder', 'Scan') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete' && hasDuplicates"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -56,6 +81,46 @@
 							@click="closeBulkDelete">
 							{{ t('duplicatefinder', 'Back to duplicates') }}
 						</NcButton>
+					</div>
+				</div>
+
+				<div
+					v-if="isScanRunning"
+					class="scan-progress-banner"
+					role="status"
+					aria-live="polite">
+					<div class="scan-progress-header">
+						<div class="scan-progress-info">
+							<span class="scan-progress-title">{{ t('duplicatefinder', 'Scanning for duplicates...') }}</span>
+							<span
+								v-if="!scanStatus.indeterminate && scanStatus.totalFiles > 0"
+								class="scan-progress-counts">
+								{{ t('duplicatefinder', '{scanned} / {total} files ({percent}%)', {
+									scanned: scanStatus.scannedFiles,
+									total: scanStatus.totalFiles,
+									percent: scanStatus.percentage,
+								}) }}
+							</span>
+							<span
+								v-else-if="scanStatus.scannedFiles > 0"
+								class="scan-progress-counts">
+								{{ t('duplicatefinder', '{scanned} files scanned', { scanned: scanStatus.scannedFiles }) }}
+							</span>
+						</div>
+						<span v-if="formattedEta" class="scan-progress-eta">
+							{{ t('duplicatefinder', 'Estimated remaining {eta}', { eta: formattedEta }) }}
+						</span>
+					</div>
+					<div
+						class="scan-progress-track"
+						role="progressbar"
+						:aria-valuenow="scanStatus.indeterminate ? null : scanStatus.percentage"
+						aria-valuemin="0"
+						aria-valuemax="100">
+						<div
+							class="scan-progress-fill"
+							:class="{ 'is-indeterminate': scanStatus.indeterminate || scanStatus.totalFiles === 0 }"
+							:style="(scanStatus.indeterminate || scanStatus.totalFiles === 0) ? {} : { width: `${scanStatus.percentage}%` }" />
 					</div>
 				</div>
 
@@ -81,9 +146,11 @@
 					<DuplicateDetails
 						ref="duplicateDetails"
 						:duplicate="currentDuplicate"
+						:is-scanning="isScanRunning"
 						@duplicate-resolved="handleDuplicateResolved"
 						@duplicateUpdated="updateDuplicate"
 						@openSettings="settingsOpen = true"
+						@startScan="triggerScan"
 						@duplicatesSearchCompleted="refreshDuplicates" />
 				</template>
 			</NcAppContent>
@@ -156,8 +223,21 @@ import ProjectDuplicates from './components/ProjectDuplicates.vue';
 import OnboardingGuide from './components/help/OnboardingGuide.vue';
 import UsageExamples from './components/help/UsageExamples.vue';
 import FAQ from './components/help/FAQ.vue';
-import { fetchDuplicates, fetchProjects } from '@/tools/api';
-import { removeDuplicateFromList } from '@/tools/utils';
+import {
+	fetchDuplicates,
+	fetchProjects,
+	fetchScanStatus,
+	startUserScan,
+	notifyScanStarted,
+	notifyScanCompleted,
+	notifyScanFailed,
+} from '@/tools/api';
+import {
+	removeDuplicateFromList,
+	loadUiPreferences,
+	saveUiPreferences,
+	formatScanEta,
+} from '@/tools/utils';
 import Folder from 'vue-material-design-icons/Folder';
 import FolderRemove from 'vue-material-design-icons/FolderRemove';
 import FolderMultiple from 'vue-material-design-icons/FolderMultiple';
@@ -195,6 +275,7 @@ export default {
 		FilterSettings
 	},
 	data() {
+		const savedPreferences = loadUiPreferences();
 		return {
 			acknowledgedDuplicates: [],
 			unacknowledgedDuplicates: [],
@@ -202,8 +283,8 @@ export default {
 			isLoading: false,
 			page: 1,
 			limit: 50,
-			sortOption: 'none',
-			minSizeBytes: 0,
+			sortOption: savedPreferences.sortOption,
+			minSizeBytes: savedPreferences.minSizeBytes,
 			settingsOpen: false,
 			activeView: 'details',
 			acknowledgedPagination: {
@@ -219,11 +300,33 @@ export default {
 			activeProject: null,
 			projectDuplicate: null,
 			projects: [],
+			scanStatus: {
+				running: false,
+				indeterminate: false,
+				scannedFiles: 0,
+				totalFiles: 0,
+				percentage: 0,
+				startedAt: null,
+				updatedAt: null,
+				completedAt: null,
+				completedSeq: 0,
+				etaSeconds: null,
+			},
+			lastCompletedSeq: 0,
+			wasTrackingActiveScan: false,
+			scanPollTimer: null,
+			visibilityHandler: null,
 		};
 	},
 	computed: {
 		hasDuplicates() {
 			return this.acknowledgedDuplicates.length > 0 || this.unacknowledgedDuplicates.length > 0
+		},
+		isScanRunning() {
+			return Boolean(this.scanStatus && this.scanStatus.running)
+		},
+		formattedEta() {
+			return this.isScanRunning ? formatScanEta(this.scanStatus.etaSeconds) : ''
 		},
 		totalDuplicateCount() {
 			const unackCount = Number.isFinite(this.unacknowledgedPagination?.totalItems)
@@ -252,7 +355,22 @@ export default {
 		}
 	},
 	async created() {
+		this.visibilityHandler = () => {
+			if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+				this.pollScanStatus()
+			}
+		}
+		if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+			document.addEventListener('visibilitychange', this.visibilityHandler)
+		}
 		await this.loadInitialData()
+	},
+	beforeDestroy() {
+		this.clearScanPollTimer()
+		if (this.visibilityHandler && typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
+			document.removeEventListener('visibilitychange', this.visibilityHandler)
+			this.visibilityHandler = null
+		}
 	},
 	methods: {
 		handleDuplicateResolved({ duplicate, type }) {
@@ -367,10 +485,17 @@ export default {
 		async handleQueryOptionsChanged({ sortBy, minSize }) {
 			this.sortOption = sortBy || 'none';
 			this.minSizeBytes = Number(minSize) > 0 ? Number(minSize) : 0;
-			await this.refreshDuplicates();
+			saveUiPreferences({
+				sortOption: this.sortOption,
+				minSizeBytes: this.minSizeBytes,
+			});
+			await this.refreshDuplicates({ silent: true });
 		},
-		async refreshDuplicates() {
-			this.isLoading = true;
+		async refreshDuplicates(options = {}) {
+			const showSpinner = Boolean(options && options.fullScreen === true);
+			if (showSpinner) {
+				this.isLoading = true;
+			}
 			try {
 				const queryOptions = {
 					sortBy: this.sortOption,
@@ -400,7 +525,9 @@ export default {
 					this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null;
 				}
 			} finally {
-				this.isLoading = false;
+				if (showSpinner) {
+					this.isLoading = false;
+				}
 			}
 		},
 		async loadInitialData() {
@@ -410,10 +537,14 @@ export default {
 					sortBy: this.sortOption,
 					minSize: this.minSizeBytes
 				}
-				const [acknowledgedResponse, unacknowledgedResponse, projectsResponse] = await Promise.all([
+				const statusPromise = typeof fetchScanStatus === 'function'
+					? fetchScanStatus().catch(() => null)
+					: Promise.resolve(null)
+				const [acknowledgedResponse, unacknowledgedResponse, projectsResponse, initialScanStatus] = await Promise.all([
 					fetchDuplicates('acknowledged', 50, 1, queryOptions),
 					fetchDuplicates('unacknowledged', 50, 1, queryOptions),
-					fetchProjects()
+					fetchProjects(),
+					statusPromise
 				])
 
 				this.acknowledgedDuplicates = acknowledgedResponse.entities
@@ -424,11 +555,151 @@ export default {
 				if (!this.currentDuplicate && this.activeView === 'details') {
 					this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null
 				}
+				if (initialScanStatus) {
+					await this.applyScanStatus(initialScanStatus, { isInitial: true })
+				} else {
+					this.scheduleScanPoll(10000)
+				}
 			} catch (error) {
 				console.error('Error loading initial data:', error)
-				showError(t('duplicatefinder', 'Could not load duplicates'))
 			} finally {
 				this.isLoading = false
+			}
+		},
+		clearScanPollTimer() {
+			if (this.scanPollTimer) {
+				clearTimeout(this.scanPollTimer)
+				this.scanPollTimer = null
+			}
+		},
+		scheduleScanPoll(delayMs) {
+			this.clearScanPollTimer()
+			if (this._isDestroyed || typeof fetchScanStatus !== 'function') {
+				return
+			}
+			this.scanPollTimer = setTimeout(() => {
+				this.pollScanStatus()
+			}, delayMs)
+			if (this.scanPollTimer && typeof this.scanPollTimer.unref === 'function') {
+				this.scanPollTimer.unref()
+			}
+		},
+		async applyScanStatus(status, { isInitial = false } = {}) {
+			if (!status || typeof status !== 'object') {
+				return
+			}
+			const incomingSeq = Number.isFinite(Number(status.completedSeq)) ? Number(status.completedSeq) : 0
+			if (isInitial) {
+				this.lastCompletedSeq = incomingSeq
+				this.scanStatus = { ...this.scanStatus, ...status }
+				if (status.running) {
+					this.wasTrackingActiveScan = true
+					this.scheduleScanPoll(1500)
+				} else {
+					this.scheduleScanPoll(10000)
+				}
+				return
+			}
+
+			const wasRunning = this.wasTrackingActiveScan || Boolean(this.scanStatus && this.scanStatus.running)
+			this.scanStatus = { ...this.scanStatus, ...status }
+
+			if (status.running) {
+				this.wasTrackingActiveScan = true
+				this.scheduleScanPoll(1500)
+				return
+			}
+
+			const completedNewScan = incomingSeq > this.lastCompletedSeq || wasRunning
+			if (incomingSeq > this.lastCompletedSeq) {
+				this.lastCompletedSeq = incomingSeq
+			}
+			this.wasTrackingActiveScan = false
+			this.scheduleScanPoll(10000)
+
+			if (completedNewScan) {
+				await this.refreshDuplicates({ silent: true })
+				if (wasRunning && typeof notifyScanCompleted === 'function') {
+					notifyScanCompleted()
+				}
+			}
+		},
+		async pollScanStatus() {
+			if (this._isDestroyed || typeof fetchScanStatus !== 'function') {
+				return
+			}
+			if (!this.isScanRunning && typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+				this.scheduleScanPoll(10000)
+				return
+			}
+			try {
+				const status = await fetchScanStatus()
+				if (!this._isDestroyed && status) {
+					await this.applyScanStatus(status)
+				} else if (!this._isDestroyed) {
+					this.scheduleScanPoll(this.isScanRunning ? 2000 : 10000)
+				}
+			} catch (error) {
+				if (!this._isDestroyed) {
+					this.scheduleScanPoll(this.isScanRunning ? 3000 : 15000)
+				}
+			}
+		},
+		async triggerScan() {
+			if (this.isScanRunning || typeof startUserScan !== 'function') {
+				return
+			}
+			this.wasTrackingActiveScan = true
+			this.scanStatus = {
+				...this.scanStatus,
+				running: true,
+				indeterminate: true,
+				scannedFiles: 0,
+				totalFiles: 0,
+				percentage: 0,
+				etaSeconds: null,
+			}
+			if (typeof notifyScanStarted === 'function') {
+				notifyScanStarted()
+			}
+			this.scheduleScanPoll(1200)
+
+			try {
+				const finalStatus = await startUserScan()
+				if (!this._isDestroyed) {
+					if (finalStatus) {
+						await this.applyScanStatus(finalStatus)
+					} else {
+						this.scanStatus = { ...this.scanStatus, running: false, indeterminate: false, percentage: 100 }
+						this.wasTrackingActiveScan = false
+						await this.refreshDuplicates({ silent: true })
+						if (typeof notifyScanCompleted === 'function') {
+							notifyScanCompleted()
+						}
+						this.scheduleScanPoll(10000)
+					}
+				}
+			} catch (error) {
+				if (this._isDestroyed) {
+					return
+				}
+				try {
+					if (typeof fetchScanStatus === 'function') {
+						const liveStatus = await fetchScanStatus()
+						if (liveStatus && (liveStatus.running || Number(liveStatus.completedSeq) > this.lastCompletedSeq)) {
+							await this.applyScanStatus(liveStatus)
+							return
+						}
+					}
+				} catch (pollErr) {
+					// Ignore secondary status check error
+				}
+				this.wasTrackingActiveScan = false
+				this.scanStatus = { ...this.scanStatus, running: false, indeterminate: false }
+				this.scheduleScanPoll(10000)
+				if (typeof notifyScanFailed === 'function') {
+					notifyScanFailed()
+				}
 			}
 		},
 		updateAcknowledgedDuplicates(newDuplicates) {
@@ -530,6 +801,116 @@ export default {
 	align-items: center;
 	gap: 8px;
 	margin-left: auto;
+}
+
+.app-content-topbar .topbar-scan-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 34px;
+	padding: 6px 14px;
+	border-radius: var(--border-radius-large, 8px);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-color: var(--color-background-hover);
+	color: var(--color-main-text);
+	font-weight: 600;
+	font-size: 0.9rem;
+	line-height: 1.2;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.app-content-topbar .topbar-scan-button:hover:not(:disabled),
+.app-content-topbar .topbar-scan-button:focus-visible:not(:disabled) {
+	background-color: var(--color-background-dark);
+	border-color: var(--color-primary-element);
+}
+
+.app-content-topbar .topbar-scan-button:disabled {
+	opacity: 0.7;
+	cursor: wait;
+}
+
+.topbar-scan-icon.is-spinning {
+	animation: duplicatefinder-spin 1s linear infinite;
+}
+
+@keyframes duplicatefinder-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.scan-progress-banner {
+	padding: 12px 20px;
+	border-bottom: 1px solid var(--color-border);
+	background-color: var(--color-background-hover);
+}
+
+.scan-progress-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 8px;
+	font-size: 0.875rem;
+}
+
+.scan-progress-info {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.scan-progress-title {
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.scan-progress-counts {
+	color: var(--color-text-maxcontrast);
+	font-variant-numeric: tabular-nums;
+}
+
+.scan-progress-eta {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.82rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.scan-progress-track {
+	position: relative;
+	width: 100%;
+	height: 8px;
+	border-radius: 999px;
+	background-color: var(--color-background-dark);
+	overflow: hidden;
+}
+
+.scan-progress-fill {
+	height: 100%;
+	border-radius: 999px;
+	background-color: var(--color-primary-element, #0082c9);
+	transition: width 0.25s ease;
+}
+
+.scan-progress-fill.is-indeterminate {
+	width: 35%;
+	animation: duplicatefinder-indeterminate 1.4s ease-in-out infinite;
+}
+
+@keyframes duplicatefinder-indeterminate {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(300%);
+	}
 }
 
 .app-content-topbar .topbar-bulk-delete-button {

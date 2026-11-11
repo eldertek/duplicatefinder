@@ -188,23 +188,17 @@ export default {
         async refreshScan() {
             try {
                 this.isLoading = true
-                console.log('[DEBUG] Initiating scan for project:', this.projectId)
                 const response = await scanProject(this.projectId)
-                console.log('[DEBUG] Scan initiated response:', response)
-                showSuccess(t('duplicatefinder', 'Project scan initiated. This may take a while.'))
-
-                // Wait a bit before reloading to give the scan time to start
-                console.log('[DEBUG] Waiting 2 seconds before reloading duplicates...')
-                setTimeout(() => {
-                    console.log('[DEBUG] Reloading duplicates after scan...')
-                    this.loadDuplicates()
-                }, 2000)
+                console.log('[DEBUG] Scan completed response:', response)
+                await this.loadProject()
+                showSuccess(t('duplicatefinder', 'Project scan completed'))
             } catch (error) {
                 console.error('[DEBUG] Error refreshing scan:', error)
                 if (error.response) {
                     console.error('[DEBUG] Error response:', error.response.data)
                     console.error('[DEBUG] Error status:', error.response.status)
                 }
+            } finally {
                 this.isLoading = false
             }
         },

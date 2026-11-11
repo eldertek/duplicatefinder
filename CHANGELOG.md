@@ -1,3 +1,10 @@
+## 1.10.4 - 2026-11-12
+### Added
+- **Live scan progress banner, topbar Scan button, and automatic duplicate list refresh without page reload** ([#206](https://github.com/eldertek/duplicatefinder/issues/206)). Added a `Scan` action button in the top-right header bar alongside `Bulk Delete`, non-blocking per-user and global scan progress tracking (`/api/scan/status` and `/api/scan/start` with PHP session lock release so concurrent UI polling never stalls during multi-hour scans), an accessible progress banner showing percentage, scanned/total files, and estimated remaining time, and automatic in-place duplicate list refresh as soon as any scan completes (including background cron jobs, `occ` scans, or reverse-proxy timeouts) without unmounting open panels
+
+### Fixed
+- **Remember sidebar dropdown and sort states across page reloads and refreshes** ([#212](https://github.com/eldertek/duplicatefinder/issues/212)). Persisted the expanded/collapsed states of the `Acknowledged` and `Unacknowledged` sidebar sections as well as the active sort order and minimum size filter per Nextcloud user in `localStorage`, and switched post-boot duplicate list refreshes to update in place without briefly replacing the navigation sidebar with a full-screen spinner
+
 ## 1.10.3 - 2026-11-12
 ### Changed
 - **Prominent Bulk Delete button in the top-right header bar and top of the sidebar, with automatic initial duplicate selection** ([#206](https://github.com/eldertek/duplicatefinder/issues/206)). Added a persistent top header bar in the main content area showing the total duplicate count alongside a clear top-right `Bulk Delete` button (and a `Back to duplicates` button while inside Bulk Delete) so bulk cleanup is immediately accessible without clicking an individual duplicate first; moved the sidebar `Bulk Delete` action above the collapsible duplicate lists with high-contrast Nextcloud button styling instead of dim borderless red text at the bottom; and auto-selected the first available duplicate group on initial load

@@ -4,6 +4,7 @@ namespace OCA\DuplicateFinder\BackgroundJob;
 
 use OCA\DuplicateFinder\Service\ConfigService;
 use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\ScanStatusService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -32,6 +33,9 @@ class FindDuplicates extends TimedJob
     /** @var ITimeFactory */
     private $timeFactory;
 
+    /** @var ?ScanStatusService */
+    private $scanStatusService;
+
     /**
      * FindDuplicates constructor.
      *
@@ -42,6 +46,7 @@ class FindDuplicates extends TimedJob
      * @param FileInfoService $fileInfoService The file info service instance.
      * @param ConfigService $config The config service instance.
      * @param ITimeFactory $timeFactory The time factory instance.
+     * @param ?ScanStatusService $scanStatusService Optional scan status tracker.
      */
     public function __construct(
         IUserManager $userManager,
@@ -50,7 +55,8 @@ class FindDuplicates extends TimedJob
         IDBConnection $connection,
         FileInfoService $fileInfoService,
         ConfigService $config,
-        ITimeFactory $timeFactory
+        ITimeFactory $timeFactory,
+        ?ScanStatusService $scanStatusService = null
     ) {
         $this->timeFactory = $timeFactory;
 
@@ -63,6 +69,7 @@ class FindDuplicates extends TimedJob
         $this->logger = $logger;
         $this->connection = $connection;
         $this->fileInfoService = $fileInfoService;
+        $this->scanStatusService = $scanStatusService;
     }
 
     /**
@@ -74,9 +81,18 @@ class FindDuplicates extends TimedJob
      */
     protected function run($argument): void
     {
-        // Call the scanFiles method for all users using the userManager.
-        $this->userManager->callForAllUsers(function (IUser $user): void {
-            $this->fileInfoService->scanFiles($user->getUID());
-        });
+        if ($this->scanStatusService !== null) {
+            $this->scanStatusService->startGlobalScan();
+        }
+        try {
+            // Call the scanFiles method for all users using the userManager.
+            $this->userManager->callForAllUsers(function (IUser $user): void {
+                $this->fileInfoService->scanFiles($user->getUID());
+            });
+        } finally {
+            if ($this->scanStatusService !== null) {
+                $this->scanStatusService->finishGlobalScan();
+            }
+        }
     }
 }

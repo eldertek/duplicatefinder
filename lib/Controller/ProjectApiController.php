@@ -8,6 +8,7 @@ use OCA\DuplicateFinder\Service\ProjectService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
+use OCP\ISession;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -17,19 +18,22 @@ class ProjectApiController extends Controller
     private FileDuplicateService $fileDuplicateService;
     private IUserSession $userSession;
     private LoggerInterface $logger;
+    private ?ISession $session;
 
     public function __construct(
         IRequest $request,
         ProjectService $projectService,
         FileDuplicateService $fileDuplicateService,
         IUserSession $userSession,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ?ISession $session = null
     ) {
         parent::__construct(Application::ID, $request);
         $this->projectService = $projectService;
         $this->fileDuplicateService = $fileDuplicateService;
         $this->userSession = $userSession;
         $this->logger = $logger;
+        $this->session = $session;
     }
 
     /**
@@ -155,6 +159,13 @@ class ProjectApiController extends Controller
                 'app' => Application::ID,
                 'userId' => $this->getUserId(),
             ]);
+
+            if ($this->session !== null) {
+                $this->session->close();
+            }
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(0);
+            }
 
             $this->projectService->scan($id);
 
