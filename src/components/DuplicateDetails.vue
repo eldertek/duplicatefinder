@@ -253,7 +253,7 @@ export default {
 
 <style scoped>
 .summary-section {
-  margin-top: 50px;
+  margin-top: 16px;
   margin-bottom: 20px;
   padding: 10px;
   border-radius: 5px;

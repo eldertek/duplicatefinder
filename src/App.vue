@@ -15,7 +15,7 @@
 					:projects="projects"
 					:initial-sort-option="sortOption"
 					:initial-min-size-bytes="minSizeBytes"
-					:has-duplicates="acknowledgedDuplicates.length > 0 || unacknowledgedDuplicates.length > 0"
+					:has-duplicates="hasDuplicates"
 					@open-duplicate="openDuplicate"
 					@open-settings="settingsOpen = true"
 					@open-projects="settingsOpen = true"
@@ -28,6 +28,37 @@
 			</div>
 
 			<NcAppContent>
+				<div
+					v-if="activeView === 'details' || activeView === 'bulk-delete'"
+					class="app-content-topbar">
+					<div class="topbar-summary">
+						<h2 class="topbar-title">
+							{{ activeView === 'bulk-delete'
+								? t('duplicatefinder', 'Bulk Delete')
+								: (totalDuplicateCount > 0
+									? t('duplicatefinder', 'Duplicates ({count})', { count: totalDuplicateCount })
+									: t('duplicatefinder', 'Duplicates')) }}
+						</h2>
+					</div>
+					<div class="topbar-actions">
+						<button
+							v-if="activeView !== 'bulk-delete' && hasDuplicates"
+							type="button"
+							class="topbar-bulk-delete-button"
+							@click="openBulkDelete">
+							<Delete :size="18" />
+							<span>{{ t('duplicatefinder', 'Bulk Delete') }}</span>
+						</button>
+						<NcButton
+							v-else-if="activeView === 'bulk-delete'"
+							type="secondary"
+							class="topbar-back-button"
+							@click="closeBulkDelete">
+							{{ t('duplicatefinder', 'Back to duplicates') }}
+						</NcButton>
+					</div>
+				</div>
+
 				<template v-if="activeView === 'bulk-delete'">
 					<BulkDeletionSettings @duplicates-deleted="refreshDuplicates" />
 				</template>
@@ -191,6 +222,18 @@ export default {
 		};
 	},
 	computed: {
+		hasDuplicates() {
+			return this.acknowledgedDuplicates.length > 0 || this.unacknowledgedDuplicates.length > 0
+		},
+		totalDuplicateCount() {
+			const unackCount = Number.isFinite(this.unacknowledgedPagination?.totalItems)
+				? this.unacknowledgedPagination.totalItems
+				: this.unacknowledgedDuplicates.length
+			const ackCount = Number.isFinite(this.acknowledgedPagination?.totalItems)
+				? this.acknowledgedPagination.totalItems
+				: this.acknowledgedDuplicates.length
+			return unackCount + ackCount
+		},
 		helpModalTitle() {
 			const titles = {
 				guide: t('duplicatefinder', 'Getting Started'),
@@ -353,6 +396,8 @@ export default {
 					} else {
 						this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null;
 					}
+				} else if (this.activeView === 'details') {
+					this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null;
 				}
 			} finally {
 				this.isLoading = false;
@@ -376,6 +421,9 @@ export default {
 				this.acknowledgedPagination = acknowledgedResponse.pagination
 				this.unacknowledgedPagination = unacknowledgedResponse.pagination
 				this.projects = projectsResponse
+				if (!this.currentDuplicate && this.activeView === 'details') {
+					this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null
+				}
 			} catch (error) {
 				console.error('Error loading initial data:', error)
 				showError(t('duplicatefinder', 'Could not load duplicates'))
@@ -392,6 +440,12 @@ export default {
 		openBulkDelete() {
 			this.activeView = 'bulk-delete'
 			this.currentDuplicate = null
+		},
+		closeBulkDelete() {
+			this.activeView = 'details'
+			if (!this.currentDuplicate) {
+				this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null
+			}
 		},
 		showHelp(section) {
 			this.currentHelpSection = section || 'guide'
@@ -447,6 +501,59 @@ export default {
 <style>
 .app-content {
 	overflow-y: auto;
+}
+
+.app-content-topbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 12px 20px 12px 56px;
+	min-height: 56px;
+	box-sizing: border-box;
+	border-bottom: 1px solid var(--color-border);
+	background-color: var(--color-main-background);
+	position: sticky;
+	top: 0;
+	z-index: 10;
+}
+
+.topbar-title {
+	margin: 0;
+	font-size: 1.15rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.topbar-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: auto;
+}
+
+.app-content-topbar .topbar-bulk-delete-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 34px;
+	padding: 6px 14px;
+	border-radius: var(--border-radius-large, 8px);
+	border: 1px solid #d32f2f;
+	background-color: #d32f2f;
+	color: #ffffff;
+	font-weight: 600;
+	font-size: 0.9rem;
+	line-height: 1.2;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.app-content-topbar .topbar-bulk-delete-button:hover,
+.app-content-topbar .topbar-bulk-delete-button:focus-visible {
+	background-color: #b71c1c;
+	border-color: #b71c1c;
+	color: #ffffff;
 }
 
 .help-content {
