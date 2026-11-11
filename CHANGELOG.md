@@ -1,3 +1,9 @@
+## 1.10.1 - 2026-11-11
+### Fixed
+- **Selected duplicate entry turned white and unreadable in dark mode after collapsing and reopening its sidebar section** ([#207](https://github.com/eldertek/duplicatefinder/issues/207)). Replaced the hardcoded `#f0f0f0` active background on `DuplicateListItem` with Nextcloud theme variables (`--color-primary-element-light` and `--color-primary-element-light-text`) so the selected item keeps proper contrast in both light and dark themes
+- **Long file and folder paths overlapped action buttons in duplicate details** ([#206](https://github.com/eldertek/duplicatefinder/issues/206)). Removed absolute button positioning over the path text in `DuplicateFileDisplay`, allowed long paths to wrap cleanly within the flex layout, and added full-path hover tooltips across the sidebar list, duplicate details view, and bulk deletion Keep Folder menu
+- **Sidebar section row clickability, highlighting consistency, and sort button sizing** ([#206](https://github.com/eldertek/duplicatefinder/issues/206)). Clicking anywhere on the `Acknowledged` or `Unacknowledged` header row now toggles its collapsible list (not only the small arrow), both sections share consistent active highlighting and collapse button hover feedback, and the sort/filter icon button keeps its full 36 px clickable area
+
 ## 1.10.0 - 2026-11-11
 ### Added
 - **Server-side size sorting (`size-desc`, `size-asc`) and minimum file size filter (`minSize`) across paginated duplicate lists and REST API** ([#194](https://github.com/eldertek/duplicatefinder/issues/194)). Sorting by largest or smallest files and filtering by minimum file size (preset thresholds or custom MB value in the sidebar, plus size sorting and minimum size presets in the bulk deletion dialog) are now executed directly in SQL across the entire duplicate index instead of only sorting the currently loaded page on the client, with accurate pagination counts
