@@ -1,9 +1,9 @@
 <template>
   <div class="file-info-container">
     <div class="thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"></div>
-    <div class="file-details">
-      <p><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong></p>
-      <p><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizeItemPath(file.path) }}</p>
+    <div class="file-details" :title="normalizedPath">
+      <p class="file-label"><strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong></p>
+      <p class="file-path" :title="normalizedPath"><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizedPath }}</p>
     </div>
     <div class="action-buttons">
       <button @click="openInNewWindow" class="action-button">
@@ -44,6 +44,11 @@ export default {
     hasOtherFolders: {
       type: Boolean,
       default: false
+    }
+  },
+  computed: {
+    normalizedPath() {
+      return this.normalizeItemPath(this.file.path);
     }
   },
   methods: {
@@ -87,21 +92,36 @@ export default {
 .file-info-container {
   display: flex;
   align-items: center;
+  gap: 16px;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
 }
 
 .file-details {
-  flex-grow: 1;
+  flex: 1 1 220px;
+  min-width: 0;
   overflow: hidden;
 }
 
+.file-details p {
+  margin: 2px 0;
+}
+
+.file-path {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
 .thumbnail {
-	width: 80px;
-	height: 80px;
-	background-size: cover;
-	background-position: center;
-	margin-right: 20px;
-	border-radius: 5px;
-	flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  flex-shrink: 0;
 }
 
 .delete-button {
@@ -112,7 +132,7 @@ export default {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-left: 10px;
+  white-space: nowrap;
 }
 
 .delete-button:hover {
@@ -121,8 +141,12 @@ export default {
 
 .action-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .action-button {
@@ -133,6 +157,7 @@ export default {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
+  white-space: nowrap;
 }
 
 .action-button:hover {
@@ -146,61 +171,32 @@ export default {
   padding: 5px 10px;
   border-radius: 5px;
   cursor: not-allowed;
-  margin-left: 10px;
-}
-
-/* Desktop styles */
-@media (min-width: 801px) {
-  .action-buttons {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    margin-left: 0;
-  }
+  white-space: nowrap;
 }
 
 /* Mobile styles */
 @media (max-width: 800px) {
   .file-info-container {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    margin-bottom: 10px;
-    justify-content: space-between;
     flex-direction: column;
+    align-items: stretch;
   }
-
-  .thumbnail {
-    margin-right: 20px;
-    margin-bottom: 0;
-    flex-shrink: 0;
-  } 
 
   .file-details {
-    flex-grow: 1;
-    width: calc(100% - 100px);
-  }
-
-  .file-details p {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90%;
+    width: 100%;
+    flex-basis: auto;
   }
 
   .action-buttons {
     width: 100%;
-    flex-wrap: wrap;
     justify-content: center;
-    margin-top: 10px;
+    margin-left: 0;
+    margin-top: 6px;
   }
 
   .action-button, .delete-button, .protected-button {
     flex: 1;
     min-width: 80px;
-    margin: 5px;
-    padding: 3px 7px;
+    padding: 4px 8px;
     font-size: 12px;
   }
 }
