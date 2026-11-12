@@ -323,9 +323,18 @@ test('detail view visual refresh renders table header, per-file size and status 
 
 	const firstRow = rows(vm)[0]
 	assert.equal(firstRow.querySelector('.open-folder-button').getAttribute('title'), 'Open Folder')
+	assert.equal(firstRow.querySelector('.open-folder-button').getAttribute('data-tooltip'), 'Open Folder')
 	assert.equal(firstRow.querySelector('.open-file-button').getAttribute('title'), 'Open File')
+	assert.equal(firstRow.querySelector('.open-file-button').getAttribute('data-tooltip'), 'Open File')
+	assert.equal(firstRow.querySelector('.keep-folder-button').getAttribute('data-tooltip'), 'Keep Folder')
 	assert.equal(firstRow.querySelector('.delete-button').getAttribute('title'), 'Delete')
+	assert.equal(firstRow.querySelector('.delete-button').getAttribute('data-tooltip'), 'Delete')
 	assert.equal(rows(vm)[2].querySelector('.protected-button').getAttribute('title'), 'Protected')
+	assert.equal(rows(vm)[2].querySelector('.protected-button').getAttribute('data-tooltip'), 'Protected')
+
+	// Acknowledge button is rendered as a native <button> for consistent hover highlighting
+	const ackBtn = vm.$el.querySelector('button.acknowledge-link')
+	assert.ok(ackBtn, 'Acknowledge control is rendered as a button element')
 
 	// Top-left header checkbox toggles Select All on and off
 	const headerCheckbox = header.querySelector('.col-checkbox .file-header-checkbox')
@@ -338,6 +347,17 @@ test('detail view visual refresh renders table header, per-file size and status 
 	assert.deepEqual(selectedPaths(vm), [path('a', 'frame.png'), path('b', 'frame.png')])
 
 	headerCheckbox.click()
+	await settle()
+	assert.equal(headerCheckbox.checked, false)
+	assert.deepEqual(selectedPaths(vm), [])
+
+	// Clicking the Select All toolbar button a second time also toggles selection off
+	button(vm, 'Select All').click()
+	await settle()
+	assert.equal(headerCheckbox.checked, true)
+	assert.deepEqual(selectedPaths(vm), [path('a', 'frame.png'), path('b', 'frame.png')])
+
+	button(vm, 'Select All').click()
 	await settle()
 	assert.equal(headerCheckbox.checked, false)
 	assert.deepEqual(selectedPaths(vm), [])

@@ -33,12 +33,13 @@
       </span>
     </div>
 
-    <div class="action-buttons">
+    <div class="action-buttons" :class="{ 'is-compact': !hasOtherFolders }">
       <button
         type="button"
         class="action-button open-folder-button"
         :title="t('duplicatefinder', 'Open Folder')"
         :aria-label="t('duplicatefinder', 'Open Folder')"
+        :data-tooltip="t('duplicatefinder', 'Open Folder')"
         @click="openFolderInNewWindow">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2z"></path>
@@ -50,6 +51,7 @@
         class="action-button open-file-button"
         :title="t('duplicatefinder', 'Open File')"
         :aria-label="t('duplicatefinder', 'Open File')"
+        :data-tooltip="t('duplicatefinder', 'Open File')"
         @click="openInNewWindow">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -64,6 +66,7 @@
         class="action-button keep-folder-button"
         :title="t('duplicatefinder', 'Select duplicates in other folders for deletion')"
         :aria-label="t('duplicatefinder', 'Keep Folder')"
+        :data-tooltip="t('duplicatefinder', 'Keep Folder')"
         @click="$emit('keepFolder', file)">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2z"></path>
@@ -77,6 +80,7 @@
         class="delete-button"
         :title="t('duplicatefinder', 'Delete')"
         :aria-label="t('duplicatefinder', 'Delete')"
+        :data-tooltip="t('duplicatefinder', 'Delete')"
         @click="deleteFile">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="3 6 5 6 21 6"></polyline>
@@ -92,7 +96,8 @@
         class="protected-button"
         disabled
         :title="t('duplicatefinder', 'Protected')"
-        :aria-label="t('duplicatefinder', 'Protected')">
+        :aria-label="t('duplicatefinder', 'Protected')"
+        :data-tooltip="t('duplicatefinder', 'Protected')">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
           <path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11"></path>
@@ -188,6 +193,7 @@ export default {
   width: 56px;
   height: 56px;
   margin-left: 12px;
+  margin-right: 24px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -197,6 +203,7 @@ export default {
   flex-shrink: 0;
   cursor: pointer;
   transition: border-color 0.15s ease, transform 0.15s ease;
+  box-sizing: border-box;
 }
 
 .thumbnail:hover {
@@ -208,6 +215,7 @@ export default {
   min-width: 0;
   padding-left: 12px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .file-title-row {
@@ -248,19 +256,21 @@ export default {
 }
 
 .file-size-column {
-  width: 96px;
+  width: 108px;
   flex-shrink: 0;
   padding-left: 12px;
   font-size: 0.88rem;
   font-variant-numeric: tabular-nums;
   color: var(--color-main-text);
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .file-status-column {
-  width: 106px;
+  width: 118px;
   flex-shrink: 0;
   padding-left: 12px;
+  box-sizing: border-box;
 }
 
 .file-status-badge {
@@ -288,15 +298,21 @@ export default {
   gap: 8px;
   align-items: center;
   justify-content: flex-start;
-  width: 160px;
+  width: 172px;
   padding-left: 12px;
   flex-shrink: 0;
   margin-left: auto;
+  box-sizing: border-box;
+}
+
+.action-buttons.is-compact {
+  width: 130px;
 }
 
 .action-button,
 .delete-button,
 .protected-button {
+  position: relative;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -334,8 +350,8 @@ export default {
 
 .action-button:hover {
   background-color: var(--color-background-dark);
-  border-color: var(--color-primary-element);
-  color: var(--color-primary-element);
+  border-color: var(--color-primary-element, #ffffff);
+  color: var(--color-primary-element, #ffffff);
 }
 
 .delete-button {
@@ -345,8 +361,8 @@ export default {
 }
 
 .delete-button:hover {
-  background-color: #b71c1c;
-  border-color: #b71c1c;
+  background-color: #c62828;
+  border-color: var(--color-primary-element, #ffffff);
   color: #ffffff;
 }
 
@@ -367,6 +383,7 @@ export default {
 
   .thumbnail {
     margin-left: 0;
+    margin-right: 0;
   }
 
   .file-details,
