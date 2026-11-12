@@ -187,6 +187,7 @@ export default {
 .thumbnail {
   width: 56px;
   height: 56px;
+  margin-left: 12px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -286,8 +287,8 @@ export default {
   flex-wrap: nowrap;
   gap: 8px;
   align-items: center;
-  justify-content: flex-end;
-  width: 148px;
+  justify-content: flex-start;
+  width: 160px;
   padding-left: 12px;
   flex-shrink: 0;
   margin-left: auto;
@@ -362,6 +363,10 @@ export default {
   .file-info-container {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .thumbnail {
+    margin-left: 0;
   }
 
   .file-details,
