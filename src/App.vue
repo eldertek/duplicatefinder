@@ -359,7 +359,11 @@ export default {
 	},
 	async created() {
 		this.visibilityHandler = () => {
-			if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+			if (
+				typeof document !== 'undefined'
+				&& document.visibilityState === 'visible'
+				&& (this.wasTrackingActiveScan || this.isScanRunning)
+			) {
 				this.pollScanStatus()
 			}
 		}
@@ -560,8 +564,6 @@ export default {
 				}
 				if (initialScanStatus) {
 					await this.applyScanStatus(initialScanStatus, { isInitial: true })
-				} else {
-					this.scheduleScanPoll(10000)
 				}
 			} catch (error) {
 				console.error('Error loading initial data:', error)
@@ -594,12 +596,13 @@ export default {
 			const incomingSeq = Number.isFinite(Number(status.completedSeq)) ? Number(status.completedSeq) : 0
 			if (isInitial) {
 				this.lastCompletedSeq = incomingSeq
-				this.scanStatus = { ...this.scanStatus, ...status }
-				if (status.running) {
-					this.wasTrackingActiveScan = true
-					this.scheduleScanPoll(1500)
-				} else {
-					this.scheduleScanPoll(10000)
+				this.wasTrackingActiveScan = false
+				this.scanStatus = {
+					...this.scanStatus,
+					running: false,
+					indeterminate: false,
+					completedSeq: incomingSeq,
+					etaSeconds: null,
 				}
 				return
 			}
@@ -618,7 +621,7 @@ export default {
 				this.lastCompletedSeq = incomingSeq
 			}
 			this.wasTrackingActiveScan = false
-			this.scheduleScanPoll(10000)
+			this.clearScanPollTimer()
 
 			if (completedNewScan) {
 				await this.refreshDuplicates({ silent: true })
@@ -631,20 +634,20 @@ export default {
 			if (this._isDestroyed || typeof fetchScanStatus !== 'function') {
 				return
 			}
-			if (!this.isScanRunning && typeof document !== 'undefined' && document.visibilityState === 'hidden') {
-				this.scheduleScanPoll(10000)
+			if (!this.wasTrackingActiveScan && !this.isScanRunning) {
+				this.clearScanPollTimer()
 				return
 			}
 			try {
 				const status = await fetchScanStatus()
 				if (!this._isDestroyed && status) {
 					await this.applyScanStatus(status)
-				} else if (!this._isDestroyed) {
-					this.scheduleScanPoll(this.isScanRunning ? 2000 : 10000)
+				} else if (!this._isDestroyed && (this.wasTrackingActiveScan || this.isScanRunning)) {
+					this.scheduleScanPoll(2000)
 				}
 			} catch (error) {
-				if (!this._isDestroyed) {
-					this.scheduleScanPoll(this.isScanRunning ? 3000 : 15000)
+				if (!this._isDestroyed && (this.wasTrackingActiveScan || this.isScanRunning)) {
+					this.scheduleScanPoll(3000)
 				}
 			}
 		},
@@ -675,11 +678,11 @@ export default {
 					} else {
 						this.scanStatus = { ...this.scanStatus, running: false, indeterminate: false, percentage: 100 }
 						this.wasTrackingActiveScan = false
+						this.clearScanPollTimer()
 						await this.refreshDuplicates({ silent: true })
 						if (typeof notifyScanCompleted === 'function') {
 							notifyScanCompleted()
 						}
-						this.scheduleScanPoll(10000)
 					}
 				}
 			} catch (error) {
@@ -699,7 +702,7 @@ export default {
 				}
 				this.wasTrackingActiveScan = false
 				this.scanStatus = { ...this.scanStatus, running: false, indeterminate: false }
-				this.scheduleScanPoll(10000)
+				this.clearScanPollTimer()
 				if (typeof notifyScanFailed === 'function') {
 					notifyScanFailed()
 				}
@@ -807,20 +810,28 @@ export default {
 }
 
 .app-content-topbar .topbar-scan-button {
-	display: inline-flex;
-	align-items: center;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
 	gap: 6px;
 	min-height: 34px;
-	padding: 6px 14px;
+	margin: 0 !important;
+	padding: 6px 14px !important;
 	border-radius: var(--border-radius-large, 8px);
 	border: 1px solid var(--color-border-dark, var(--color-border));
 	background-color: var(--color-background-hover);
 	color: var(--color-main-text);
 	font-weight: 600;
 	font-size: 0.9rem;
-	line-height: 1.2;
+	line-height: 1.2 !important;
 	cursor: pointer;
+	box-sizing: border-box;
 	transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.app-content-topbar .topbar-scan-button svg {
+	display: block !important;
+	flex-shrink: 0;
 }
 
 .app-content-topbar .topbar-scan-button:hover:not(:disabled),
@@ -917,20 +928,32 @@ export default {
 }
 
 .app-content-topbar .topbar-bulk-delete-button {
-	display: inline-flex;
-	align-items: center;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
 	gap: 6px;
 	min-height: 34px;
-	padding: 6px 14px;
+	margin: 0 !important;
+	padding: 6px 14px !important;
 	border-radius: var(--border-radius-large, 8px);
 	border: 1px solid #d32f2f;
 	background-color: #d32f2f;
 	color: #ffffff;
 	font-weight: 600;
 	font-size: 0.9rem;
-	line-height: 1.2;
+	line-height: 1.2 !important;
 	cursor: pointer;
+	box-sizing: border-box;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.app-content-topbar .topbar-bulk-delete-button .material-design-icon,
+.app-content-topbar .topbar-bulk-delete-button svg {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	bottom: 0 !important;
+	flex-shrink: 0;
 }
 
 .app-content-topbar .topbar-bulk-delete-button:hover:not(:disabled),

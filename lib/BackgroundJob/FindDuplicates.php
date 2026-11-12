@@ -81,16 +81,27 @@ class FindDuplicates extends TimedJob
      */
     protected function run($argument): void
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(0);
+        }
         if ($this->scanStatusService !== null) {
-            $this->scanStatusService->startGlobalScan();
+            $this->scanStatusService->setBackgroundMode(true);
+            $this->scanStatusService->finishGlobalScan();
         }
         try {
             // Call the scanFiles method for all users using the userManager.
             $this->userManager->callForAllUsers(function (IUser $user): void {
-                $this->fileInfoService->scanFiles($user->getUID());
+                try {
+                    $this->fileInfoService->scanFiles($user->getUID());
+                } catch (\Throwable $e) {
+                    $this->logger->error('Error scanning files in background job for user ' . $user->getUID(), [
+                        'exception' => $e,
+                    ]);
+                }
             });
         } finally {
             if ($this->scanStatusService !== null) {
+                $this->scanStatusService->setBackgroundMode(false);
                 $this->scanStatusService->finishGlobalScan();
             }
         }

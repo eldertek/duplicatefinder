@@ -80,6 +80,13 @@ class ScanApiController extends AbstractAPIController
             ]);
 
             return $this->handleException($e);
+        } catch (\Throwable $e) {
+            $this->logger->error('Error running user duplicate scan', [
+                'app' => Application::ID,
+                'exception' => $e,
+            ]);
+
+            return $this->handleException(new \RuntimeException($e->getMessage(), (int)$e->getCode(), $e));
         }
     }
 }

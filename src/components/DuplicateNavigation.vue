@@ -764,6 +764,8 @@ export default {
 
 /* Search and Sort Combined */
 .search-sort-container {
+    position: relative;
+    z-index: 2000;
     display: flex;
     align-items: center;
     padding: 8px;
@@ -777,6 +779,7 @@ export default {
 
 .sort-dropdown {
     position: relative;
+    z-index: 2000;
     margin-left: 8px;
 }
 
@@ -789,17 +792,22 @@ export default {
     height: 36px;
     min-width: 36px;
     min-height: 36px;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
     flex-shrink: 0;
     color: var(--color-main-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     cursor: pointer;
     transition: background-color 0.2s;
+    box-sizing: border-box;
 }
 
 .icon-only-button svg {
+    display: block !important;
+    margin: auto !important;
     flex-shrink: 0;
 }
 
@@ -821,14 +829,18 @@ export default {
 .sort-menu {
     position: absolute;
     right: 0;
-    top: 100%;
-    background: var(--color-main-background);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
-    z-index: 100;
-    min-width: 215px;
-    padding: 4px 0;
+    top: calc(100% + 4px);
+    background-color: var(--color-main-background, #ffffff);
+    background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    z-index: 2000;
+    min-width: 220px;
+    padding: 6px 0;
+    opacity: 1;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .sort-menu-section-title {
@@ -923,10 +935,13 @@ export default {
 
 /* Fixed Menus */
 .fixed-menu {
-    background: var(--color-main-background);
-    border: 1px solid var(--color-border);
+    position: relative;
+    z-index: 1500;
+    background-color: var(--color-main-background, #ffffff);
+    background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
+    border: 1px solid var(--color-border-dark, var(--color-border));
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
     margin: 0 8px 16px 8px;
     max-width: 400px;
     width: calc(100% - 16px);
