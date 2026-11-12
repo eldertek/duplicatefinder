@@ -326,4 +326,42 @@ test('detail view visual refresh renders table header, per-file size and status 
 	assert.equal(firstRow.querySelector('.open-file-button').getAttribute('title'), 'Open File')
 	assert.equal(firstRow.querySelector('.delete-button').getAttribute('title'), 'Delete')
 	assert.equal(rows(vm)[2].querySelector('.protected-button').getAttribute('title'), 'Protected')
+
+	// Top-left header checkbox toggles Select All on and off
+	const headerCheckbox = header.querySelector('.col-checkbox .file-header-checkbox')
+	assert.ok(headerCheckbox, 'Select All checkbox is rendered in the top-left table header cell')
+	assert.equal(headerCheckbox.checked, false)
+
+	headerCheckbox.click()
+	await settle()
+	assert.equal(headerCheckbox.checked, true)
+	assert.deepEqual(selectedPaths(vm), [path('a', 'frame.png'), path('b', 'frame.png')])
+
+	headerCheckbox.click()
+	await settle()
+	assert.equal(headerCheckbox.checked, false)
+	assert.deepEqual(selectedPaths(vm), [])
+})
+
+test('German localization files include Size, Actions, Name & Path, and table UI translations (issue 206)', () => {
+	const fs = require('node:fs')
+	const pathMod = require('node:path')
+	const root = pathMod.resolve(__dirname, '../..')
+
+	for (const locale of ['de', 'de_DE']) {
+		const jsonData = JSON.parse(fs.readFileSync(pathMod.join(root, 'l10n', `${locale}.json`), 'utf8'))
+		const tr = jsonData.translations
+		assert.equal(tr['Size'], 'Größe')
+		assert.equal(tr['Actions'], 'Aktionen')
+		assert.equal(tr['Name & Path'], 'Name & Pfad')
+		assert.equal(tr['Preview'], 'Vorschau')
+		assert.equal(tr['Status'], 'Status')
+		assert.equal(tr['Original'], 'Original')
+		assert.equal(tr['Duplicate'], 'Duplikat')
+
+		const jsText = fs.readFileSync(pathMod.join(root, 'l10n', `${locale}.js`), 'utf8')
+		assert.ok(jsText.includes('"Size" : "Größe"'))
+		assert.ok(jsText.includes('"Actions" : "Aktionen"'))
+		assert.ok(jsText.includes('"Name & Path" : "Name & Pfad"'))
+	}
 })

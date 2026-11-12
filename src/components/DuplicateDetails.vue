@@ -98,7 +98,18 @@
 
           <div class="files-card">
             <div class="files-table-header">
-              <div class="col-checkbox" aria-hidden="true"></div>
+              <div class="col-checkbox">
+                <input
+                  type="checkbox"
+                  class="file-row-checkbox file-header-checkbox"
+                  :checked="isAllFilesSelected"
+                  :indeterminate.prop="isSomeFilesSelected"
+                  :disabled="defaultSelectAllTargetFiles.length === 0"
+                  :title="t('duplicatefinder', 'Select All')"
+                  :aria-label="t('duplicatefinder', 'Select All')"
+                  @change="toggleSelectAllFromHeader"
+                />
+              </div>
               <div class="col-preview">{{ t('duplicatefinder', 'Preview') }}</div>
               <div class="col-name">{{ t('duplicatefinder', 'Name & Path') }}</div>
               <div class="col-size">{{ t('duplicatefinder', 'Size') }}</div>
@@ -183,6 +194,31 @@ export default {
     // A selection belongs to the duplicate it was made on: never carry it over to another one
     duplicate() {
       this.selectedFiles = [];
+    }
+  },
+  computed: {
+    selectableFiles() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return [];
+      }
+      return this.duplicate.files.filter(file => !file.isInOriginFolder);
+    },
+    defaultSelectAllTargetFiles() {
+      const filesToSelect = this.selectableFiles;
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return [];
+      }
+      if (filesToSelect.length === this.duplicate.files.length && filesToSelect.length > 0) {
+        return filesToSelect.slice(1);
+      }
+      return filesToSelect;
+    },
+    isAllFilesSelected() {
+      const targets = this.defaultSelectAllTargetFiles;
+      return targets.length > 0 && targets.every(file => this.isFileSelected(file));
+    },
+    isSomeFilesSelected() {
+      return this.selectedFiles.length > 0 && !this.isAllFilesSelected;
     }
   },
   methods: {
@@ -290,13 +326,13 @@ export default {
       }
     },
     selectAllFiles() {
-      // Only select non-protected files and keep at least one copy
-      const filesToSelect = this.duplicate.files.filter(file => !file.isInOriginFolder);
-
-      if (filesToSelect.length === this.duplicate.files.length && filesToSelect.length > 0) {
-        this.selectedFiles = filesToSelect.slice(1);
+      this.selectedFiles = [...this.defaultSelectAllTargetFiles];
+    },
+    toggleSelectAllFromHeader() {
+      if (this.isAllFilesSelected) {
+        this.selectedFiles = [];
       } else {
-        this.selectedFiles = filesToSelect;
+        this.selectAllFiles();
       }
     },
     hasFilesInOtherFolders(targetFile) {
@@ -529,11 +565,17 @@ export default {
 .col-checkbox {
   width: 20px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .col-preview {
   width: 56px;
   flex-shrink: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--color-border);
+  text-align: left;
 }
 
 .col-name {
@@ -541,6 +583,7 @@ export default {
   min-width: 0;
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
+  text-align: left;
 }
 
 .col-size {
@@ -548,6 +591,7 @@ export default {
   flex-shrink: 0;
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
+  text-align: left;
 }
 
 .col-status {
@@ -555,14 +599,15 @@ export default {
   flex-shrink: 0;
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
+  text-align: left;
 }
 
 .col-actions {
-  width: 148px;
+  width: 160px;
   flex-shrink: 0;
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
-  text-align: right;
+  text-align: left;
 }
 
 .file-display {
@@ -591,12 +636,18 @@ export default {
 }
 
 .file-row-checkbox {
-  width: 18px;
-  height: 18px;
-  margin: 0;
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  margin: 0 1px !important;
+  padding: 0 !important;
   flex-shrink: 0;
   cursor: pointer;
   accent-color: var(--color-primary-element, #0082c9);
+}
+
+.file-header-checkbox {
+  margin: 0 !important;
 }
 
 @media (max-width: 800px) {
