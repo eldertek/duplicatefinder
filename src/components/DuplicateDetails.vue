@@ -502,6 +502,12 @@ export default {
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 }
 
+.toolbar-button > *,
+.toolbar-button svg,
+.toolbar-button span {
+  pointer-events: none;
+}
+
 .toolbar-button svg {
   display: block !important;
   flex-shrink: 0;
@@ -791,12 +797,19 @@ export default {
 
 input[type="checkbox"]:disabled {
   opacity: 0.45;
-  cursor: not-allowed;
+  cursor: not-allowed !important;
 }
 
-button:disabled {
+button:disabled,
+button:disabled *,
+.toolbar-button:disabled,
+.toolbar-button:disabled * {
   opacity: 0.45;
-  cursor: not-allowed;
+  cursor: not-allowed !important;
+}
+
+.toolbar-button:disabled * {
+  opacity: 1;
 }
 
 .dropdown {
@@ -808,30 +821,35 @@ button:disabled {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  width: 34px;
+  height: 34px;
   min-width: 34px;
   min-height: 34px;
   margin: 0 !important;
-  padding: 6px 10px !important;
+  padding: 0 !important;
   line-height: 1 !important;
   background: var(--color-main-background);
   border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
   border-radius: var(--border-radius-large, 8px);
   cursor: pointer;
+  box-sizing: border-box;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .dropdown-toggle:hover {
   background-color: var(--color-background-dark);
-  border-color: var(--color-primary-element);
+  border-color: var(--color-primary-element, #ffffff);
 }
 
 .arrow-down {
-  display: inline-block;
+  display: block;
   width: 0;
   height: 0;
+  margin: auto !important;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 5px solid var(--color-main-text);
+  border-top: 6px solid var(--color-main-text);
+  pointer-events: none;
 }
 
 .dropdown-menu {
