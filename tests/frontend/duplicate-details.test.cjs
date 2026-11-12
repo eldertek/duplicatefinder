@@ -288,3 +288,42 @@ test('Keep Folder button is hidden when all deletable copies share the same fold
 	const keepButtons = vm.$el.querySelectorAll('.keep-folder-button')
 	assert.equal(keepButtons.length, 0)
 })
+
+test('detail view visual refresh renders table header, per-file size and status badges, and compact icon action buttons (issue 206)', async () => {
+	const dup = {
+		id: 55,
+		hash: 'hash-visual-55',
+		acknowledged: false,
+		files: [
+			file('a', 'frame.png', 401, 41),
+			file('b', 'frame.png', 402, 42),
+			{ ...file('origin', 'frame.png', 403, 43), isInOriginFolder: true },
+		],
+	}
+	const { vm } = mount(dup)
+	await settle()
+
+	const header = vm.$el.querySelector('.files-table-header')
+	assert.ok(header, 'files table header bar is rendered')
+	assert.ok(header.textContent.includes('Preview'))
+	assert.ok(header.textContent.includes('Name & Path'))
+	assert.ok(header.textContent.includes('Size'))
+	assert.ok(header.textContent.includes('Status'))
+	assert.ok(header.textContent.includes('Actions'))
+
+	const groupTitle = vm.$el.querySelector('.details-group-title')
+	assert.ok(groupTitle)
+	assert.ok(groupTitle.textContent.includes('frame.png'))
+
+	const statusBadges = rows(vm).map(row => row.querySelector('.file-status-badge').textContent.trim())
+	assert.deepEqual(statusBadges, ['Original', 'Duplicate', 'Protected'])
+
+	const sizes = rows(vm).map(row => row.querySelector('.file-size-value').textContent.trim())
+	assert.deepEqual(sizes, ['9000 B', '9000 B', '9000 B'])
+
+	const firstRow = rows(vm)[0]
+	assert.equal(firstRow.querySelector('.open-folder-button').getAttribute('title'), 'Open Folder')
+	assert.equal(firstRow.querySelector('.open-file-button').getAttribute('title'), 'Open File')
+	assert.equal(firstRow.querySelector('.delete-button').getAttribute('title'), 'Delete')
+	assert.equal(rows(vm)[2].querySelector('.protected-button').getAttribute('title'), 'Protected')
+})

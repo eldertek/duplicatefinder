@@ -1,53 +1,135 @@
 <template>
-  <div>
+  <div class="duplicate-details-container">
     <transition name="fade">
       <div v-show="!isLoadingNextDuplicate">
-        <div v-if="duplicate && duplicate.files.length > 1">
+        <div v-if="duplicate && duplicate.files.length > 1" class="duplicate-details-content">
+          <div class="details-header-row">
+            <h3 class="details-group-title">
+              {{ t('duplicatefinder', 'Duplicate Details') }} - {{ getGroupDisplayName(duplicate) }}
+            </h3>
+            <span
+              class="group-status-pill"
+              :class="duplicate.acknowledged ? 'is-acknowledged' : 'is-unacknowledged'">
+              {{ duplicate.acknowledged ? t('duplicatefinder', 'Acknowledged') : t('duplicatefinder', 'Unacknowledged') }}
+            </span>
+          </div>
+
           <div class="summary-section">
-            <p>{{ t('duplicatefinder',
-              'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
-              { numberOfFiles: duplicate.files.length, formattedSize: getDuplicateSize(duplicate) }) }}</p>
-            <a @click.prevent="openFileInViewer(duplicate.files[0])" href="#"
-              class="preview-link">
-              {{ t('duplicatefinder', 'Show Preview') }}
-            </a>
-            <a v-if="duplicate.acknowledged" class="acknowledge-link" @click="unOrAcknowledgeDuplicate(duplicate)" href="#">
-              {{ t('duplicatefinder', 'Unacknowledge it') }}
-            </a>
-            <a v-else class="acknowledge-link" @click="unOrAcknowledgeDuplicate(duplicate)" href="#">
-              {{ t('duplicatefinder', 'Acknowledge it') }}
-            </a>
-            <button @click="deleteSelectedDuplicates" :disabled="selectedFiles.length === 0">
-              {{ t('duplicatefinder', 'Delete Selected') }}
-            </button>
-            <button @click="selectAllFiles">{{ t('duplicatefinder', 'Select All') }}</button>
-            <button @click="previewMerge" :disabled="selectedFiles.length === 0" class="preview-button">
-              {{ t('duplicatefinder', 'Preview') }}
-            </button>
-            <div class="dropdown">
-              <button class="dropdown-toggle" @click="toggleDropdown">
-                <span class="arrow-down"></span>
+            <div class="summary-info">
+              <p class="summary-text">{{ t('duplicatefinder',
+                'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
+                { numberOfFiles: duplicate.files.length, formattedSize: getDuplicateSize(duplicate) }) }}</p>
+            </div>
+            <div class="summary-actions">
+              <button
+                type="button"
+                class="toolbar-button select-all-button"
+                @click="selectAllFiles">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="9 11 12 14 22 4"></polyline>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                <span>{{ t('duplicatefinder', 'Select All') }}</span>
               </button>
-              <div class="dropdown-menu" v-show="showDropdown">
-                <button @click="copyFileHash">{{ t('duplicatefinder', 'Copy File Hash') }}</button>
+
+              <button
+                type="button"
+                class="toolbar-button delete-selected-button"
+                :disabled="selectedFiles.length === 0"
+                @click="deleteSelectedDuplicates">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                <span>{{ t('duplicatefinder', 'Delete Selected') }}</span>
+              </button>
+
+              <a
+                v-if="duplicate.acknowledged"
+                href="#"
+                class="toolbar-button acknowledge-link is-acknowledged"
+                @click.prevent="unOrAcknowledgeDuplicate(duplicate)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>{{ t('duplicatefinder', 'Unacknowledge it') }}</span>
+              </a>
+              <a
+                v-else
+                href="#"
+                class="toolbar-button acknowledge-link"
+                @click.prevent="unOrAcknowledgeDuplicate(duplicate)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>{{ t('duplicatefinder', 'Acknowledge it') }}</span>
+              </a>
+
+              <button
+                type="button"
+                class="toolbar-button preview-button"
+                :title="t('duplicatefinder', 'Show Preview')"
+                @click="previewMerge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <span>{{ t('duplicatefinder', 'Preview') }}</span>
+              </button>
+
+              <div class="dropdown">
+                <button
+                  type="button"
+                  class="dropdown-toggle"
+                  :title="t('duplicatefinder', 'More actions')"
+                  @click="toggleDropdown">
+                  <span class="arrow-down"></span>
+                </button>
+                <div v-show="showDropdown" class="dropdown-menu">
+                  <button type="button" @click="copyFileHash">{{ t('duplicatefinder', 'Copy File Hash') }}</button>
+                </div>
               </div>
             </div>
           </div>
-          <div v-for="(file, index) in duplicate.files" :key="fileKey(file)" class="file-display">
-            <input
-              type="checkbox"
-              v-model="selectedFiles"
-              :value="file"
-              :disabled="file.isInOriginFolder"
-            />
-            <DuplicateFileDisplay
-              :file="file"
-              :index="index"
-              :duplicate-acknowledged="duplicate.acknowledged"
-              :has-other-folders="hasFilesInOtherFolders(file)"
-              @keepFolder="selectDuplicatesOutsideFolder(file)"
-              @fileDeleted="removeFileFromListAndUpdate(file)">
-            </DuplicateFileDisplay>
+
+          <div class="files-card">
+            <div class="files-table-header">
+              <div class="col-checkbox" aria-hidden="true"></div>
+              <div class="col-preview">{{ t('duplicatefinder', 'Preview') }}</div>
+              <div class="col-name">{{ t('duplicatefinder', 'Name & Path') }}</div>
+              <div class="col-size">{{ t('duplicatefinder', 'Size') }}</div>
+              <div class="col-status">{{ t('duplicatefinder', 'Status') }}</div>
+              <div class="col-actions">{{ t('duplicatefinder', 'Actions') }}</div>
+            </div>
+
+            <div
+              v-for="(file, index) in duplicate.files"
+              :key="fileKey(file)"
+              class="file-display"
+              :class="{
+                'is-selected': isFileSelected(file),
+                'is-protected': file.isInOriginFolder
+              }">
+              <input
+                v-model="selectedFiles"
+                type="checkbox"
+                class="file-row-checkbox"
+                :value="file"
+                :disabled="file.isInOriginFolder"
+              />
+              <DuplicateFileDisplay
+                :file="file"
+                :index="index"
+                :duplicate-acknowledged="duplicate.acknowledged"
+                :has-other-folders="hasFilesInOtherFolders(file)"
+                @keepFolder="selectDuplicatesOutsideFolder(file)"
+                @fileDeleted="removeFileFromListAndUpdate(file)">
+              </DuplicateFileDisplay>
+            </div>
           </div>
         </div>
         <div v-else class="emptycontent">
@@ -105,9 +187,26 @@ export default {
   },
   methods: {
     fileKey,
+    isFileSelected(file) {
+      return this.selectedFiles.some(selected => isSameFile(selected, file));
+    },
+    getGroupDisplayName(duplicate) {
+      if (!duplicate || !Array.isArray(duplicate.files) || duplicate.files.length === 0) {
+        return '';
+      }
+      const names = duplicate.files
+        .map(file => (file && file.path ? file.path.split('/').pop() : ''))
+        .filter(Boolean);
+      if (names.length > 0 && names.every(name => name === names[0])) {
+        return names[0];
+      }
+      if (duplicate.hash && typeof duplicate.hash === 'string') {
+        return duplicate.hash.substring(0, 8);
+      }
+      return names[0] || '';
+    },
     async unOrAcknowledgeDuplicate(duplicate) {
       try {
-        // Créer une copie du doublon pour viter les mutations directes
         const updatedDuplicate = { ...duplicate };
 
         if (updatedDuplicate.acknowledged) {
@@ -118,7 +217,6 @@ export default {
           updatedDuplicate.acknowledged = true;
         }
 
-        // Émettre l'événement avec le doublon mis à jour
         this.$emit('duplicateUpdated', updatedDuplicate);
       } catch (error) {
         console.error('Error updating duplicate acknowledgement status:', error);
@@ -137,7 +235,6 @@ export default {
 
       if (this.duplicate.files.length <= 1) {
         console.log('DuplicateDetails: Emitting duplicate-resolved event');
-        // Émettre un événement pour indiquer que ce doublon doit être retiré
         this.$emit('duplicate-resolved', {
           duplicate: {
             ...this.duplicate,
@@ -159,7 +256,7 @@ export default {
         const fileHashes = this.selectedFiles.map(file => file.hash);
         const allInstances = this.duplicate.files.filter(file => fileHashes.includes(file.hash));
 
-        // Vérifier si des fichiers protégés sont sélectionnés
+        // Verify whether protected files are selected
         const hasProtectedFiles = this.selectedFiles.some(file => file.isInOriginFolder);
         if (hasProtectedFiles) {
           this.$emit('showError', this.t('duplicatefinder', 'Cannot delete protected files'));
@@ -193,12 +290,9 @@ export default {
       }
     },
     selectAllFiles() {
-      // Ne sélectionner que les fichiers non protégés
-      // Ensure we keep at least one file (preferably from origin folder)
+      // Only select non-protected files and keep at least one copy
       const filesToSelect = this.duplicate.files.filter(file => !file.isInOriginFolder);
 
-      // If all files would be selected (meaning none are in origin folder),
-      // exclude the first file to ensure at least one copy is preserved
       if (filesToSelect.length === this.duplicate.files.length && filesToSelect.length > 0) {
         this.selectedFiles = filesToSelect.slice(1);
       } else {
@@ -250,7 +344,6 @@ export default {
         showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while)'));
         await apiFindDuplicates();
         showSuccess(t('duplicatefinder', 'All duplicates found'));
-        // Emit an event to refresh the duplicates list
         this.$emit('duplicatesSearchCompleted');
       } catch (error) {
         console.error('Error finding duplicates:', error);
@@ -262,79 +355,261 @@ export default {
 </script>
 
 <style scoped>
-.summary-section {
-  margin-top: 16px;
-  margin-bottom: 20px;
-  padding: 10px;
-  border-radius: 5px;
-  font-weight: bold;
-  text-align: center;
+.duplicate-details-container {
+  padding: 20px 24px 32px;
+  box-sizing: border-box;
 }
 
-.file-display {
-  width: calc(100% - 20px);
-  box-sizing: border-box;
+.details-header-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  margin-left: 10px;
-  margin-right: 10px;
-  border: 1px solid var(--color-border, #e0e0e0);
-  padding: 10px 12px;
-  border-radius: 5px;
-  position: relative;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.details-group-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-main-text);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.group-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.group-status-pill.is-acknowledged {
+  background-color: rgba(46, 125, 50, 0.16);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.35);
+}
+
+.group-status-pill.is-unacknowledged {
+  background-color: var(--color-background-dark);
+  color: var(--color-text-maxcontrast);
+  border: 1px solid var(--color-border-dark, var(--color-border));
+}
+
+.summary-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: var(--border-radius-large, 10px);
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  background-color: var(--color-background-hover);
+}
+
+.summary-info {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.summary-text {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--color-main-text);
+  line-height: 1.4;
+}
+
+.summary-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 13px;
+  border-radius: var(--border-radius-large, 8px);
+  border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+  background-color: var(--color-main-background);
+  color: var(--color-main-text);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.toolbar-button svg {
+  flex-shrink: 0;
+}
+
+.select-all-button:hover:not(:disabled),
+.select-all-button:focus-visible:not(:disabled),
+.preview-button:hover:not(:disabled),
+.preview-button:focus-visible:not(:disabled) {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-primary-element);
+}
+
+.delete-selected-button {
+  background-color: #d32f2f;
+  border-color: #d32f2f;
+  color: #ffffff;
+}
+
+.delete-selected-button:hover:not(:disabled),
+.delete-selected-button:focus-visible:not(:disabled) {
+  background-color: #b71c1c;
+  border-color: #b71c1c;
+  color: #ffffff;
 }
 
 .acknowledge-link {
-  color: #007BFF;
-  /* Blue color */
-  text-decoration: none;
-  transition: color 0.3s ease;
+  background-color: #2e7d32;
+  border-color: #2e7d32;
+  color: #ffffff !important;
 }
 
-.acknowledge-link:hover {
-  color: #0056b3;
-  /* Darker blue on hover */
+.acknowledge-link:hover,
+.acknowledge-link:focus-visible {
+  background-color: #1b5e20;
+  border-color: #1b5e20;
+  color: #ffffff !important;
 }
 
-.preview-link {
-  color: #28a745;
-  /* Green color */
-  text-decoration: none;
-  transition: color 0.3s ease;
+.acknowledge-link.is-acknowledged {
+  background-color: var(--color-main-background);
+  border-color: var(--color-border-maxcontrast, var(--color-border-dark));
+  color: var(--color-main-text) !important;
 }
 
-.preview-link:hover {
-  color: #1e7e34;
-  /* Darker green on hover */
+.acknowledge-link.is-acknowledged:hover,
+.acknowledge-link.is-acknowledged:focus-visible {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-primary-element);
 }
 
-.preview-button {
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 3px;
+.files-card {
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  border-radius: var(--border-radius-large, 10px);
+  background-color: var(--color-main-background);
+  overflow: hidden;
+}
+
+.files-table-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background-color: var(--color-background-hover);
+  border-bottom: 1px solid var(--color-border-dark, var(--color-border));
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-maxcontrast);
+  text-transform: none;
+}
+
+.col-checkbox {
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.col-preview {
+  width: 56px;
+  flex-shrink: 0;
+}
+
+.col-name {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--color-border);
+}
+
+.col-size {
+  width: 96px;
+  flex-shrink: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--color-border);
+}
+
+.col-status {
+  width: 106px;
+  flex-shrink: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--color-border);
+}
+
+.col-actions {
+  width: 148px;
+  flex-shrink: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--color-border);
+  text-align: right;
+}
+
+.file-display {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-main-background);
+  transition: background-color 0.15s ease;
+  position: relative;
+}
+
+.file-display:last-child {
+  border-bottom: none;
+}
+
+.file-display:hover {
+  background-color: var(--color-background-hover);
+}
+
+.file-display.is-selected {
+  background-color: var(--color-primary-element-light);
+}
+
+.file-row-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.preview-button:hover {
-  background-color: #138496;
-}
-
-.preview-button:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
+  accent-color: var(--color-primary-element, #0082c9);
 }
 
 @media (max-width: 800px) {
-  .file-display {
-    flex-direction: column;
-    align-items: center;
+  .duplicate-details-container {
+    padding: 14px 12px 24px;
   }
 
+  .files-table-header {
+    display: none;
+  }
+
+  .file-display {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .loading-overlay {
@@ -353,33 +628,42 @@ export default {
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.5s;
 }
-.fade-enter, .fade-leave-to /* .fade-leave-active pour <2.1.8 */ {
+.fade-enter, .fade-leave-to {
   opacity: 0;
 }
 
 input[type="checkbox"]:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
-  background-color: #cccccc;
 }
 
 .dropdown {
   position: relative;
   display: inline-block;
-  margin-left: 8px;
 }
 
 .dropdown-toggle {
-  padding: 8px;
-  background: var(--color-background-dark);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 6px 10px;
+  background: var(--color-main-background);
+  border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+  border-radius: var(--border-radius-large, 8px);
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.dropdown-toggle:hover {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-primary-element);
 }
 
 .arrow-down {
@@ -394,22 +678,25 @@ button:disabled {
 .dropdown-menu {
   position: absolute;
   right: 0;
-  top: 100%;
+  top: calc(100% + 4px);
   background: var(--color-main-background);
   border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-popup);
+  border-radius: var(--border-radius-large, 8px);
+  box-shadow: var(--shadow-popup, 0 4px 12px rgba(0, 0, 0, 0.15));
   z-index: 100;
-  min-width: 150px;
+  min-width: 160px;
+  overflow: hidden;
 }
 
 .dropdown-menu button {
   display: block;
   width: 100%;
-  padding: 8px 12px;
+  padding: 9px 14px;
   text-align: left;
   background: none;
   border: none;
+  color: var(--color-main-text);
+  font-size: 0.88rem;
   cursor: pointer;
 }
 

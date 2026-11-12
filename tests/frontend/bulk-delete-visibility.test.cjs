@@ -112,10 +112,11 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 	})
 }
 
-describe('Issue 206: Bulk Delete button visibility, top-right placement, and initial selection', () => {
-	test('sidebar Bulk Delete button sits above duplicate lists, is immediately enabled without selecting an item, and shows active state', async () => {
+describe('Issue 206: Single top-right Bulk Delete button and initial selection', () => {
+	test('sidebar does not render a redundant second Bulk Delete button', async () => {
 		const navSource = readFileSync(resolve(root, 'src/components/DuplicateNavigation.vue'), 'utf8')
-		assert.ok(!navSource.includes('footer-actions'), 'Bulk Delete must no longer be hidden in bottom footer-actions')
+		assert.ok(!navSource.includes('footer-actions'), 'Bulk Delete must not be in bottom footer-actions')
+		assert.ok(!navSource.includes('sidebar-bulk-action'), 'redundant sidebar Bulk Delete button must be removed')
 
 		const DuplicateNavigation = createNavigationComponent()
 		const sampleDup = {
@@ -128,25 +129,15 @@ describe('Issue 206: Bulk Delete button visibility, top-right placement, and ini
 			],
 		}
 
-		let openedBulk = 0
 		const wrapper = new Vue({
-			data: {
-				unack: [sampleDup],
-				activeView: 'details',
-			},
 			render(h) {
 				return h(DuplicateNavigation, {
 					props: {
 						acknowledgedDuplicates: [],
-						unacknowledgedDuplicates: this.unack,
+						unacknowledgedDuplicates: [sampleDup],
 						currentDuplicateId: null,
-						activeView: this.activeView,
-						hasDuplicates: this.unack.length > 0,
-					},
-					on: {
-						'open-bulk-delete': () => {
-							openedBulk++
-						},
+						activeView: 'details',
+						hasDuplicates: true,
 					},
 				})
 			},
@@ -154,27 +145,8 @@ describe('Issue 206: Bulk Delete button visibility, top-right placement, and ini
 
 		await settle()
 
-		const bulkActionBox = wrapper.$el.querySelector('.sidebar-bulk-action')
-		const ackSection = wrapper.$el.querySelector('li[data-nav-name="Acknowledged"]')
-		assert.ok(bulkActionBox, 'sidebar-bulk-action container exists')
-		assert.ok(
-			Boolean(bulkActionBox.compareDocumentPosition(ackSection) & window.Node.DOCUMENT_POSITION_FOLLOWING),
-			'Bulk Delete action appears above Acknowledged and Unacknowledged sections',
-		)
-
-		const bulkBtn = bulkActionBox.querySelector('.bulk-delete-button')
-		assert.equal(bulkBtn.disabled, false, 'Bulk Delete is enabled even when currentDuplicateId is null')
-		bulkBtn.click()
-		await settle()
-		assert.equal(openedBulk, 1)
-
-		wrapper.activeView = 'bulk-delete'
-		await settle()
-		assert.ok(bulkBtn.classList.contains('is-active'), 'Bulk Delete highlights when bulk-delete view is active')
-
-		wrapper.unack = []
-		await settle()
-		assert.equal(bulkBtn.disabled, true, 'Bulk Delete disables cleanly when zero duplicates exist')
+		assert.equal(wrapper.$el.querySelector('.sidebar-bulk-action'), null, 'no Bulk Delete button in sidebar')
+		assert.equal(wrapper.$el.querySelector('.bulk-delete-button'), null, 'no redundant Bulk Delete button in sidebar')
 
 		wrapper.$destroy()
 	})

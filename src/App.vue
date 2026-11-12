@@ -21,7 +21,6 @@
 					@open-projects="settingsOpen = true"
 					@view-project="viewProject"
 					@show-help="showHelp"
-					@open-bulk-delete="openBulkDelete"
 					@query-options-changed="handleQueryOptionsChanged"
 					@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
 					@update-unacknowledged-duplicates="updateUnacknowledgedDuplicates" />
@@ -67,9 +66,13 @@
 							<span>{{ isScanRunning ? t('duplicatefinder', 'Scanning...') : t('duplicatefinder', 'Scan') }}</span>
 						</button>
 						<button
-							v-if="activeView !== 'bulk-delete' && hasDuplicates"
+							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
+							:disabled="!hasDuplicates"
+							:title="hasDuplicates
+								? t('duplicatefinder', 'Preview and delete multiple duplicates at once')
+								: t('duplicatefinder', 'No duplicates available for bulk deletion')"
 							@click="openBulkDelete">
 							<Delete :size="18" />
 							<span>{{ t('duplicatefinder', 'Bulk Delete') }}</span>
@@ -930,11 +933,16 @@ export default {
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-.app-content-topbar .topbar-bulk-delete-button:hover,
-.app-content-topbar .topbar-bulk-delete-button:focus-visible {
+.app-content-topbar .topbar-bulk-delete-button:hover:not(:disabled),
+.app-content-topbar .topbar-bulk-delete-button:focus-visible:not(:disabled) {
 	background-color: #b71c1c;
 	border-color: #b71c1c;
 	color: #ffffff;
+}
+
+.app-content-topbar .topbar-bulk-delete-button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
 }
 
 .help-content {
