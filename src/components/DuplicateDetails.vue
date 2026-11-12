@@ -434,19 +434,20 @@ export default {
 }
 
 .toolbar-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   gap: 6px;
   min-height: 34px;
-  padding: 6px 13px;
+  margin: 0 !important;
+  padding: 6px 13px !important;
   border-radius: var(--border-radius-large, 8px);
   border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
   background-color: var(--color-main-background);
   color: var(--color-main-text);
   font-size: 0.86rem;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.2 !important;
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
@@ -455,6 +456,7 @@ export default {
 }
 
 .toolbar-button svg {
+  display: block !important;
   flex-shrink: 0;
 }
 
@@ -648,12 +650,14 @@ button:disabled {
 }
 
 .dropdown-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   min-width: 34px;
   min-height: 34px;
-  padding: 6px 10px;
+  margin: 0 !important;
+  padding: 6px 10px !important;
+  line-height: 1 !important;
   background: var(--color-main-background);
   border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
   border-radius: var(--border-radius-large, 8px);
@@ -679,11 +683,12 @@ button:disabled {
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  background: var(--color-main-background);
-  border: 1px solid var(--color-border);
+  background-color: var(--color-main-background, #ffffff);
+  background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
+  border: 1px solid var(--color-border-dark, var(--color-border));
   border-radius: var(--border-radius-large, 8px);
-  box-shadow: var(--shadow-popup, 0 4px 12px rgba(0, 0, 0, 0.15));
-  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  z-index: 2000;
   min-width: 160px;
   overflow: hidden;
 }

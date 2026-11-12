@@ -598,7 +598,7 @@ class FileInfoService
                 '<error>The given scan path doesn\'t exists.</error>',
                 $output
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('An error occurred during scanning.', ['app' => Application::ID, 'exception' => $e]);
             CMDUtils::showIfOutputIsPresent(
                 '<error>An error occurred during scanning.</error>',

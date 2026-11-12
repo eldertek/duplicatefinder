@@ -117,6 +117,25 @@ class ScanStatusServiceTest extends TestCase
         $this->assertFalse($status['running']);
         $this->assertNull($status['etaSeconds']);
         $this->assertSame(5, $status['completedSeq']);
+
+        // Verify stale state was persisted as running=false in user config
+        $persisted = json_decode($this->userStore['qa-user:' . Application::ID . ':scan_status_v1'], true);
+        $this->assertIsArray($persisted);
+        $this->assertFalse($persisted['running']);
+    }
+
+    public function testBackgroundModeDoesNotMarkInteractiveScanRunning(): void
+    {
+        $service = $this->createService();
+        $service->setBackgroundMode(true);
+
+        $started = $service->startScan('qa-user', 500);
+        $this->assertFalse($started['running']);
+
+        $updated = $service->updateProgress('qa-user', 250, 500, time() - 5, 0, null);
+        $this->assertFalse($updated['running']);
+
+        $service->setBackgroundMode(false);
     }
 
     public function testScannerUtilRecordsStartAndCompletionInScanStatusService(): void

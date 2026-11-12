@@ -14,11 +14,12 @@ class ScanStatusService
 {
     private const USER_STATUS_KEY = 'scan_status_v1';
     private const GLOBAL_STATUS_KEY = 'global_scan_status_v1';
-    private const STALE_SECONDS = 300;
+    private const STALE_SECONDS = 15;
 
     private IDBConnection $connection;
     private IConfig $config;
     private LoggerInterface $logger;
+    private bool $backgroundMode = false;
 
     public function __construct(
         IDBConnection $connection,
@@ -28,6 +29,16 @@ class ScanStatusService
         $this->connection = $connection;
         $this->config = $config;
         $this->logger = $logger;
+    }
+
+    public function setBackgroundMode(bool $backgroundMode): void
+    {
+        $this->backgroundMode = $backgroundMode;
+    }
+
+    public function isBackgroundMode(): bool
+    {
+        return $this->backgroundMode;
     }
 
     /**
@@ -115,10 +126,11 @@ class ScanStatusService
         $decoded = $raw !== '' ? json_decode($raw, true) : null;
         $state = $this->normalizeState(is_array($decoded) ? $decoded : []);
 
-        if ($state['running'] && $state['updatedAt'] !== null && ($now - $state['updatedAt']) > self::STALE_SECONDS) {
+        if ($state['running'] && ($state['updatedAt'] === null || ($now - $state['updatedAt']) > self::STALE_SECONDS)) {
             $state['running'] = false;
             $state['indeterminate'] = false;
             $state['etaSeconds'] = null;
+            $this->writeUserState($user, $state);
         }
 
         if ($state['running'] && !$state['indeterminate'] && $state['startedAt'] !== null) {
@@ -157,6 +169,9 @@ class ScanStatusService
         ?int $prevCompletedSeq = null,
         ?int $prevCompletedAt = null
     ): array {
+        if ($this->backgroundMode) {
+            return $this->getStatus($user);
+        }
         $now = time();
         if ($prevCompletedSeq === null || $prevCompletedAt === null) {
             $existing = $this->getStatus($user);
@@ -199,6 +214,9 @@ class ScanStatusService
         int $prevCompletedSeq = 0,
         ?int $prevCompletedAt = null
     ): array {
+        if ($this->backgroundMode) {
+            return $this->getStatus($user);
+        }
         $now = time();
         $safeScanned = max(0, $scannedFiles);
         $effectiveTotal = max(0, $totalFiles, $safeScanned);
@@ -305,8 +323,13 @@ class ScanStatusService
             return false;
         }
         $updatedAt = isset($global['updatedAt']) ? (int)$global['updatedAt'] : 0;
+        if ($updatedAt <= 0 || ($now - $updatedAt) > self::STALE_SECONDS) {
+            $this->finishGlobalScan();
 
-        return $updatedAt > 0 && ($now - $updatedAt) <= self::STALE_SECONDS;
+            return false;
+        }
+
+        return true;
     }
 
     /**

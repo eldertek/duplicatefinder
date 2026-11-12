@@ -121,6 +121,18 @@ class ScannerUtil
                     $this->prevCompletedAt
                 );
                 $trackingActive = true;
+                register_shutdown_function(function () use (&$trackingActive, $user): void {
+                    if ($trackingActive && $this->scanStatusService !== null) {
+                        $trackingActive = false;
+                        $this->scanStatusService->finishScan(
+                            $user,
+                            $this->scannedFiles,
+                            $this->totalFiles,
+                            $this->scanStartedAt,
+                            $this->prevCompletedSeq
+                        );
+                    }
+                });
             }
 
             try {
@@ -145,12 +157,13 @@ class ScannerUtil
             $this->showOutput('<e>File locked, attempting to release: ' . $e->getPath() . '</e>');
 
             throw $e; // Rethrow to be handled in FileInfoService
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $errorMessage = 'An error occurred during scanning: ' . $e->getMessage();
             $this->logger->error($errorMessage, ['app' => Application::ID, 'exception' => $e]);
             $this->showOutput('<e>' . $errorMessage . '</e>');
         } finally {
             if ($trackingActive && $this->scanStatusService !== null) {
+                $trackingActive = false;
                 $this->scanStatusService->finishScan(
                     $user,
                     $this->scannedFiles,
@@ -293,13 +306,24 @@ class ScannerUtil
         $shares = $this->shareService->getShares($user);
 
         foreach ($shares as $share) {
-            $node = $share->getNode();
-            if (is_null($path) || strpos($node->getPath(), $path) == 0) {
-                if ($node->getType() === \OCP\Files\FileInfo::TYPE_FILE) {
-                    $this->saveScannedFile($node->getPath(), $user);
-                } else {
-                    $this->walkNode($node, $user, true);
+            try {
+                $node = $share->getNode();
+                if ($node === null) {
+                    continue;
                 }
+                if (is_null($path) || strpos($node->getPath(), $path) == 0) {
+                    if ($node->getType() === \OCP\Files\FileInfo::TYPE_FILE) {
+                        $this->saveScannedFile($node->getPath(), $user);
+                    } else {
+                        $this->walkNode($node, $user, true);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->logger->warning('Could not scan shared node: {error}', [
+                    'app' => Application::ID,
+                    'user' => $user,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
         unset($share);

@@ -408,16 +408,17 @@ describe('Issue 212 and Issue 206: persistent dropdown states, scan progress ban
 		vm.$destroy()
 	})
 
-	test('Issue 206: long background scan surviving an HTTP gateway timeout continues polling and auto-refreshes on completion', async () => {
+	test('Issue 206: long background scan surviving an HTTP gateway timeout continues polling and auto-refreshes on completion, while initial page load/reload never auto-triggers scan UI', async () => {
 		let duplicatesOnServer = []
+		let startUserScanCalled = 0
 		let liveStatus = {
 			running: true,
 			indeterminate: false,
-			scannedFiles: 500,
-			totalFiles: 5000,
-			percentage: 10,
+			scannedFiles: 72834,
+			totalFiles: 72860,
+			percentage: 99,
 			completedSeq: 10,
-			etaSeconds: 540,
+			etaSeconds: 1,
 		}
 
 		const { App } = createAppHarness({
@@ -431,13 +432,31 @@ describe('Issue 212 and Issue 206: persistent dropdown states, scan progress ban
 			}),
 			fetchScanStatus: async () => liveStatus,
 			startUserScan: async () => {
+				startUserScanCalled++
 				throw new Error('504 Gateway Timeout')
 			},
 		})
 
 		const vm = new Vue(App).$mount()
 		await settle()
-		// Initial boot saw running: true (seq 10)
+		// Visiting or reloading the page must NEVER start a scan or show a stale scan banner automatically
+		assert.equal(startUserScanCalled, 0)
+		assert.equal(vm.isScanRunning, false)
+		assert.equal(vm.$el.querySelector('.scan-progress-banner'), null)
+
+		// Now the user explicitly clicks Scan, which hits a 504 Gateway Timeout while the server scan is still running
+		liveStatus = {
+			running: true,
+			indeterminate: false,
+			scannedFiles: 500,
+			totalFiles: 5000,
+			percentage: 10,
+			completedSeq: 10,
+			etaSeconds: 540,
+		}
+		await vm.triggerScan()
+		await settle()
+		assert.equal(startUserScanCalled, 1)
 		assert.equal(vm.isScanRunning, true)
 
 		// Now simulate background scan finishing on the server
