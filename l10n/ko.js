@@ -2,6 +2,7 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Help" : "도움말",
+    "Duplicates" : "사본",
     "Filters" : "필터",
     "Projects" : "프로젝트",
     "Settings saved" : "설정 저장됨",
@@ -13,7 +14,9 @@ OC.L10N.register(
     "Select All" : "모두 선택",
     "File" : "파일",
     "Delete" : "삭제",
+    "Sort order" : "정렬 순서",
     "Default" : "디폴트",
+    "Apply" : "적용",
     "Settings" : "설정",
     "Close" : "닫기",
     "Edit" : "편집",

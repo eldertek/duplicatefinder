@@ -21,6 +21,7 @@ OC.L10N.register(
     "File" : "Fitxategia",
     "Path:" : "Bide-izena:",
     "Delete" : "Ezabatu",
+    "Sort order" : "Ordenatzeko irizpidea",
     "Default" : "Lehenetsia",
     "Settings" : "Ezarpenak",
     "Close" : "Itxi",

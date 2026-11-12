@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "FAQ" : "FAQ",
     "Help" : "ການຊ່ວຍເຫຼືອ",
+    "Duplicates" : "ລາຍການທີ່ຊ້ຳກັນ",
     "Filters" : "Filters",
     "Projects" : "Projects",
     "Settings saved" : "Settings saved",
@@ -14,7 +15,9 @@ OC.L10N.register(
     "Open Settings" : "ເປີດການຕັ້ງຄ່າ",
     "File" : "ຟາຍ",
     "Delete" : "ລຶບ",
+    "Sort order" : "ລຳດັບການຈັດລຽງ",
     "Default" : "ເລີ່ມຕົ້ນ",
+    "Apply" : "Apply",
     "Settings" : "ການຕັ້ງຄ່າ",
     "Close" : "ປິດ",
     "Project" : "ໂຄງການ",

@@ -1,6 +1,7 @@
 { "translations": {
     "FAQ" : "GYIK",
     "Help" : "Súgó",
+    "Duplicates" : "Ismétlések",
     "Filters" : "Szűrők",
     "Projects" : "Projektek",
     "Could not fetch settings" : "Nem sikerült lekérni a beállításokat",
@@ -27,7 +28,9 @@
     "Path:" : "Útvonal:",
     "Open File" : "Fájl megnyitása",
     "Delete" : "Törlés",
+    "Sort order" : "Rendezési sorrend",
     "Default" : "Alapértelmezett",
+    "Apply" : "Alkalmaz",
     "Settings" : "Beállítások",
     "Close" : "Bezárás",
     "Project" : "Projekt",

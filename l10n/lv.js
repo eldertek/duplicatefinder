@@ -12,6 +12,7 @@ OC.L10N.register(
     "Open File" : "Atvērt datni",
     "Open Folder" : "Atvērt mapi",
     "Delete" : "Izdzēst",
+    "Apply" : "Apstiprināt",
     "Settings" : "Iestatījumi",
     "Close" : "Aizvērt",
     "Edit" : "Labot",

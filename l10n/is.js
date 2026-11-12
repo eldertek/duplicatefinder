@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "FAQ" : "FAQ / Algengar spurningar",
     "Help" : "Hjálp",
+    "Duplicates" : "Tvítekningar",
     "Filters" : "Síur",
     "Projects" : "Verkefni",
     "Settings saved" : "Stillingar vistaðar",
@@ -14,6 +15,7 @@ OC.L10N.register(
     "File" : "Skrá",
     "Delete" : "Eyða",
     "Default" : "Sjálfgefið",
+    "Apply" : "Virkja",
     "Settings" : "Stillingar",
     "Close" : "Loka",
     "Project" : "Áætla",

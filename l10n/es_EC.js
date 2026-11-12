@@ -16,6 +16,7 @@ OC.L10N.register(
     "Select All" : "Seleccionar todo",
     "File" : "Archivo",
     "Delete" : "Borrar",
+    "Sort order" : "Orden",
     "Settings" : "Ajustes",
     "Close" : "Cerrar",
     "Edit" : "Editar",

@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "FAQ" : "GYIK",
     "Help" : "Súgó",
+    "Duplicates" : "Ismétlések",
     "Filters" : "Szűrők",
     "Projects" : "Projektek",
     "Could not fetch settings" : "Nem sikerült lekérni a beállításokat",
@@ -29,7 +30,9 @@ OC.L10N.register(
     "Path:" : "Útvonal:",
     "Open File" : "Fájl megnyitása",
     "Delete" : "Törlés",
+    "Sort order" : "Rendezési sorrend",
     "Default" : "Alapértelmezett",
+    "Apply" : "Alkalmaz",
     "Settings" : "Beállítások",
     "Close" : "Bezárás",
     "Project" : "Projekt",
