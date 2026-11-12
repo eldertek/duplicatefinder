@@ -963,9 +963,19 @@ export default {
 	color: #ffffff;
 }
 
-.app-content-topbar .topbar-bulk-delete-button:disabled {
+.app-content-topbar .topbar-scan-button > *,
+.app-content-topbar .topbar-bulk-delete-button > * {
+	pointer-events: none;
+}
+
+.app-content-topbar .topbar-bulk-delete-button:disabled,
+.app-content-topbar .topbar-bulk-delete-button:disabled * {
 	opacity: 0.45;
-	cursor: not-allowed;
+	cursor: not-allowed !important;
+}
+
+.app-content-topbar .topbar-bulk-delete-button:disabled * {
+	opacity: 1;
 }
 
 .help-content {
