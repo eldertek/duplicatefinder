@@ -46,28 +46,28 @@
                 <span>{{ t('duplicatefinder', 'Delete Selected') }}</span>
               </button>
 
-              <a
+              <button
                 v-if="duplicate.acknowledged"
-                href="#"
+                type="button"
                 class="toolbar-button acknowledge-link is-acknowledged"
-                @click.prevent="unOrAcknowledgeDuplicate(duplicate)">
+                @click="unOrAcknowledgeDuplicate(duplicate)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                   <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
                 <span>{{ t('duplicatefinder', 'Unacknowledge it') }}</span>
-              </a>
-              <a
+              </button>
+              <button
                 v-else
-                href="#"
+                type="button"
                 class="toolbar-button acknowledge-link"
-                @click.prevent="unOrAcknowledgeDuplicate(duplicate)">
+                @click="unOrAcknowledgeDuplicate(duplicate)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                   <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
                 <span>{{ t('duplicatefinder', 'Acknowledge it') }}</span>
-              </a>
+              </button>
 
               <button
                 type="button"
@@ -84,8 +84,10 @@
               <div class="dropdown">
                 <button
                   type="button"
-                  class="dropdown-toggle"
+                  class="dropdown-toggle has-tooltip"
                   :title="t('duplicatefinder', 'More actions')"
+                  :aria-label="t('duplicatefinder', 'More actions')"
+                  :data-tooltip="t('duplicatefinder', 'More actions')"
                   @click="toggleDropdown">
                   <span class="arrow-down"></span>
                 </button>
@@ -96,9 +98,9 @@
             </div>
           </div>
 
-          <div class="files-card">
+          <div class="files-card" :class="{ 'is-compact-actions': !hasMultiFolderActions }">
             <div class="files-table-header">
-              <div class="col-checkbox">
+              <div class="col-checkbox" @click.self="toggleSelectAllFromHeader">
                 <input
                   type="checkbox"
                   class="file-row-checkbox file-header-checkbox"
@@ -219,6 +221,12 @@ export default {
     },
     isSomeFilesSelected() {
       return this.selectedFiles.length > 0 && !this.isAllFilesSelected;
+    },
+    hasMultiFolderActions() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return false;
+      }
+      return this.duplicate.files.some(file => this.hasFilesInOtherFolders(file));
     }
   },
   methods: {
@@ -326,14 +334,17 @@ export default {
       }
     },
     selectAllFiles() {
-      this.selectedFiles = [...this.defaultSelectAllTargetFiles];
-    },
-    toggleSelectAllFromHeader() {
       if (this.isAllFilesSelected) {
         this.selectedFiles = [];
       } else {
-        this.selectAllFiles();
+        this.selectedFiles = [...this.defaultSelectAllTargetFiles];
       }
+    },
+    toggleSelectAllFromHeader() {
+      if (this.defaultSelectAllTargetFiles.length === 0) {
+        return;
+      }
+      this.selectAllFiles();
     },
     hasFilesInOtherFolders(targetFile) {
       if (!this.duplicate || !Array.isArray(this.duplicate.files) || !targetFile) {
@@ -501,7 +512,7 @@ export default {
 .preview-button:hover:not(:disabled),
 .preview-button:focus-visible:not(:disabled) {
   background-color: var(--color-background-dark);
-  border-color: var(--color-primary-element);
+  border-color: var(--color-primary-element, #ffffff);
 }
 
 .delete-selected-button {
@@ -512,8 +523,8 @@ export default {
 
 .delete-selected-button:hover:not(:disabled),
 .delete-selected-button:focus-visible:not(:disabled) {
-  background-color: #b71c1c;
-  border-color: #b71c1c;
+  background-color: #c62828;
+  border-color: var(--color-primary-element, #ffffff);
   color: #ffffff;
 }
 
@@ -523,10 +534,10 @@ export default {
   color: #ffffff !important;
 }
 
-.acknowledge-link:hover,
-.acknowledge-link:focus-visible {
-  background-color: #1b5e20;
-  border-color: #1b5e20;
+.acknowledge-link:hover:not(:disabled),
+.acknowledge-link:focus-visible:not(:disabled) {
+  background-color: #256b29;
+  border-color: var(--color-primary-element, #ffffff);
   color: #ffffff !important;
 }
 
@@ -536,17 +547,17 @@ export default {
   color: var(--color-main-text) !important;
 }
 
-.acknowledge-link.is-acknowledged:hover,
-.acknowledge-link.is-acknowledged:focus-visible {
+.acknowledge-link.is-acknowledged:hover:not(:disabled),
+.acknowledge-link.is-acknowledged:focus-visible:not(:disabled) {
   background-color: var(--color-background-dark);
-  border-color: var(--color-primary-element);
+  border-color: var(--color-primary-element, #ffffff);
 }
 
 .files-card {
   border: 1px solid var(--color-border-dark, var(--color-border));
   border-radius: var(--border-radius-large, 10px);
   background-color: var(--color-main-background);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .files-table-header {
@@ -556,26 +567,33 @@ export default {
   padding: 10px 16px;
   background-color: var(--color-background-hover);
   border-bottom: 1px solid var(--color-border-dark, var(--color-border));
+  border-top-left-radius: 9px;
+  border-top-right-radius: 9px;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text-maxcontrast);
   text-transform: none;
+  user-select: none;
+  cursor: default;
 }
 
 .col-checkbox {
-  width: 20px;
+  width: 18px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer !important;
+  user-select: none;
 }
 
 .col-preview {
-  width: 56px;
+  width: 92px;
   flex-shrink: 0;
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
   text-align: left;
+  box-sizing: border-box;
 }
 
 .col-name {
@@ -584,30 +602,38 @@ export default {
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
   text-align: left;
+  box-sizing: border-box;
 }
 
 .col-size {
-  width: 96px;
+  width: 108px;
   flex-shrink: 0;
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
   text-align: left;
+  box-sizing: border-box;
 }
 
 .col-status {
-  width: 106px;
+  width: 118px;
   flex-shrink: 0;
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
   text-align: left;
+  box-sizing: border-box;
 }
 
 .col-actions {
-  width: 160px;
+  width: 172px;
   flex-shrink: 0;
   padding-left: 12px;
   border-left: 1px solid var(--color-border);
   text-align: left;
+  box-sizing: border-box;
+}
+
+.files-card.is-compact-actions .col-actions {
+  width: 130px;
 }
 
 .file-display {
@@ -625,6 +651,8 @@ export default {
 
 .file-display:last-child {
   border-bottom: none;
+  border-bottom-left-radius: 9px;
+  border-bottom-right-radius: 9px;
 }
 
 .file-display:hover {
@@ -635,19 +663,95 @@ export default {
   background-color: var(--color-primary-element-light);
 }
 
-.file-row-checkbox {
+.file-row-checkbox,
+.file-header-checkbox {
+  appearance: none !important;
+  -webkit-appearance: none !important;
   width: 18px !important;
   height: 18px !important;
+  min-width: 18px !important;
   min-height: 18px !important;
-  margin: 0 1px !important;
+  margin: 0 !important;
   padding: 0 !important;
+  border: 1.5px solid var(--color-border-maxcontrast, #767676) !important;
+  border-radius: 4px !important;
+  background-color: var(--color-main-background, #ffffff) !important;
+  box-shadow: none !important;
+  outline: none !important;
   flex-shrink: 0;
-  cursor: pointer;
-  accent-color: var(--color-primary-element, #0082c9);
+  cursor: pointer !important;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 
-.file-header-checkbox {
-  margin: 0 !important;
+.file-row-checkbox:hover:not(:disabled),
+.file-header-checkbox:hover:not(:disabled) {
+  border-color: var(--color-primary-element, #0082c9) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+}
+
+.file-row-checkbox:focus,
+.file-row-checkbox:focus-visible,
+.file-header-checkbox:focus,
+.file-header-checkbox:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.file-row-checkbox:checked,
+.file-header-checkbox:checked {
+  background-color: var(--color-primary-element, #0082c9) !important;
+  border-color: var(--color-primary-element, #0082c9) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") !important;
+  background-size: 12px 12px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.file-row-checkbox:indeterminate,
+.file-header-checkbox:indeterminate {
+  background-color: var(--color-primary-element, #0082c9) !important;
+  border-color: var(--color-primary-element, #0082c9) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E") !important;
+  background-size: 12px 12px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.has-tooltip {
+  position: relative;
+}
+
+.has-tooltip[data-tooltip]::after,
+.file-display ::v-deep [data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 7px);
+  right: 0;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background-color: #1f2328;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  z-index: 2100;
+}
+
+.has-tooltip[data-tooltip]:hover::after,
+.has-tooltip[data-tooltip]:focus-visible::after,
+.file-display ::v-deep [data-tooltip]:hover::after,
+.file-display ::v-deep [data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (max-width: 800px) {
