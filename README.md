@@ -171,3 +171,8 @@ For more information about the tests, see the [tests/README.md](tests/README.md)
 ## Special thanks
 
 Big thanks to @PaulLereverend @chrros95 @Routhinator
+
+## Commercial Support & Custom Integration
+
+Need custom features, enterprise integration, or priority support?
+Maintained by **[Eclipse Technology](https://eclipse-technology.eu)** ([contact@eclipse-technology.eu](mailto:contact@eclipse-technology.eu)).
