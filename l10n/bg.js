@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "FAQ" : "ЧЗВ",
     "Help" : "Помощ",
+    "Duplicates" : "Дубликати",
     "Filters" : "Филтри",
     "Projects" : "Проекти",
     "Settings saved" : "Настройките са запазени",
@@ -16,7 +17,9 @@ OC.L10N.register(
     "Select All" : "Избор на всички",
     "File" : "Файл",
     "Delete" : "Изтриване",
+    "Sort order" : "Сортиране на реда",
     "Default" : "По подразбиране",
+    "Apply" : "Приложи",
     "Settings" : "Настройки",
     "Close" : "Затваряне",
     "Edit" : "Редактиране",

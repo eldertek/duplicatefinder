@@ -13,6 +13,7 @@ OC.L10N.register(
     "File" : "Файл",
     "Delete" : "Выдаліць",
     "Default" : "Прадвызначаныя",
+    "Apply" : "Прымяніць",
     "Settings" : "Налады",
     "Close" : "Закрыць",
     "Project" : "Праект",
