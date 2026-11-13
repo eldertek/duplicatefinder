@@ -477,4 +477,71 @@ class FileDuplicateServiceTest extends TestCase
 
         return $duplicate;
     }
+
+    /**
+     * Issue #202: findAll must cap returned entities at $pageSize when a second batch is fetched
+     * after earlier entries were filtered out, and stop enriching remaining items in that batch.
+     */
+    public function testFindAllCapsReturnedEntitiesAtPageSizeAcrossMultipleBatches(): void
+    {
+        $dup1 = new FileDuplicate('hash1', 'file_hash');
+        $dup1->setAcknowledged(false);
+        $dup2 = new FileDuplicate('hash2', 'file_hash');
+        $dup2->setAcknowledged(false);
+        $dup3 = new FileDuplicate('hash3', 'file_hash');
+        $dup3->setAcknowledged(false);
+        $dup4 = new FileDuplicate('hash4', 'file_hash');
+        $dup4->setAcknowledged(false);
+
+        $this->mapper->expects($this->exactly(2))
+            ->method('findAll')
+            ->withConsecutive(
+                ['user1', 2, 0, [['hash'], ['type']], 'unacknowledged'],
+                ['user1', 2, 2, [['hash'], ['type']], 'unacknowledged']
+            )
+            ->willReturnOnConsecutiveCalls(
+                [$dup1, $dup2],
+                [$dup3, $dup4]
+            );
+
+        $fileA1 = new FileInfo('/user1/files/a1.txt');
+        $fileA1->setNodeId(1);
+        $fileB1 = new FileInfo('/user1/files/b1.txt');
+        $fileB1->setNodeId(2);
+        $fileB2 = new FileInfo('/user1/files/b2.txt');
+        $fileB2->setNodeId(3);
+        $fileC1 = new FileInfo('/user1/files/c1.txt');
+        $fileC1->setNodeId(4);
+        $fileC2 = new FileInfo('/user1/files/c2.txt');
+        $fileC2->setNodeId(5);
+
+        // hash1 has only 1 accessible file (skipped), hash2 and hash3 have 2 files each (fills pageSize=2),
+        // hash4 must not even be looked up because $result reached $pageSize.
+        $this->fileInfoService->expects($this->exactly(3))
+            ->method('findByHash')
+            ->willReturnCallback(function (string $hash) use ($fileA1, $fileB1, $fileB2, $fileC1, $fileC2): array {
+                if ($hash === 'hash1') {
+                    return [$fileA1];
+                }
+                if ($hash === 'hash2') {
+                    return [$fileB1, $fileB2];
+                }
+                if ($hash === 'hash3') {
+                    return [$fileC1, $fileC2];
+                }
+                $this->fail('Unexpected lookup for ' . $hash);
+            });
+
+        $this->fileInfoService->method('hasAccessRight')->willReturn(true);
+        $this->fileInfoService->method('enrich')->willReturnArgument(0);
+        $this->originFolderService->method('isPathProtected')->willReturn(['isProtected' => false]);
+
+        $result = $this->service->findAll('unacknowledged', 'user1', 1, 2, true);
+
+        $this->assertCount(2, $result['entities']);
+        $this->assertSame('hash2', $result['entities'][0]->getHash());
+        $this->assertSame('hash3', $result['entities'][1]->getHash());
+        $this->assertFalse($result['isLastFetched']);
+        $this->assertSame(2, $result['pageKey']);
+    }
 }
