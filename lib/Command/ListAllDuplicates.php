@@ -4,6 +4,7 @@ namespace OCA\DuplicateFinder\Command;
 
 use OCA\DuplicateFinder\Db\FileInfoMapper;
 use OCA\DuplicateFinder\Service\ShareService;
+use OCA\DuplicateFinder\Utils\CMDUtils;
 use OCP\IUser;
 use OCP\IUserManager;
 use Symfony\Component\Console\Command\Command;
@@ -304,24 +305,11 @@ class ListAllDuplicates extends Command
      */
     public static function parseSize(string $value): ?int
     {
-        if (!preg_match('/^\s*(\d+(?:\.\d+)?)\s*([kmgt]?)b?\s*$/i', $value, $m)) {
-            return null;
-        }
-        $power = ['' => 0, 'k' => 1, 'm' => 2, 'g' => 3, 't' => 4][strtolower($m[2])];
-
-        return (int)round((float)$m[1] * (1024 ** $power));
+        return CMDUtils::parseSize($value);
     }
 
     public static function formatSize(int $bytes): string
     {
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $value = (float)$bytes;
-        $unit = 0;
-        while ($value >= 1024 && $unit < count($units) - 1) {
-            $value /= 1024;
-            $unit++;
-        }
-
-        return ($unit === 0 ? (string)$bytes : number_format($value, 1, '.', '')) . ' ' . $units[$unit];
+        return CMDUtils::formatSize($bytes);
     }
 }

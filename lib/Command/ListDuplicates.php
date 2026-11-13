@@ -77,7 +77,9 @@ class ListDuplicates extends Command
     {
         $this
             ->setDescription('List all duplicate files')
-            ->addOption('user', 'u', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'List files of the specified user');
+            ->addOption('user', 'u', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'List files of the specified user')
+            ->addOption('sort', 's', InputOption::VALUE_REQUIRED, 'Sort duplicate groups (default, size-desc, size-asc)', 'default')
+            ->addOption('min-size', 'm', InputOption::VALUE_REQUIRED, 'Only files of at least this size, in bytes or with a unit (500K, 10M, 1G)', '0');
     }
 
     /**
@@ -97,18 +99,41 @@ class ListDuplicates extends Command
             return 1;
         }
 
+        $sortMap = [
+            'default' => [['hash'], ['type']],
+            'size-desc' => [['size', 'DESC']],
+            'size-asc' => [['size', 'ASC']],
+        ];
+        $sortBy = $input->hasOption('sort') ? strtolower((string)$input->getOption('sort')) : 'default';
+        if (!isset($sortMap[$sortBy])) {
+            $output->writeln('<error>Unknown sort order "' . $sortBy . '", use default, size-desc or size-asc.</error>');
+
+            return 1;
+        }
+
+        $minSizeRaw = $input->hasOption('min-size') ? (string)$input->getOption('min-size') : '0';
+        $minSize = CMDUtils::parseSize($minSizeRaw);
+        if ($minSize === null) {
+            $output->writeln('<error>Invalid --min-size "' . $minSizeRaw . '", use a number of bytes or a unit such as 500K, 10M or 1G.</error>');
+
+            return 1;
+        }
+
         $users = (array)$input->getOption('user');
 
-        return (!empty($users)) ? $this->listDuplicatesForUsers($users) : $this->listAllDuplicates();
+        return (!empty($users))
+            ? $this->listDuplicatesForUsers($users, $sortMap[$sortBy], $minSize)
+            : $this->listAllDuplicates($sortMap[$sortBy], $minSize);
     }
 
     /**
      * List duplicates for the specified users.
      *
      * @param array $users The array of user names.
+     * @param array<array<string>> $orderBy
      * @return int The command exit code.
      */
-    private function listDuplicatesForUsers(array $users): int
+    private function listDuplicatesForUsers(array $users, array $orderBy = [['hash'], ['type']], int $minSize = 0): int
     {
         foreach ($users as $user) {
             if (!$this->userManager->userExists($user)) {
@@ -118,7 +143,7 @@ class ListDuplicates extends Command
             }
 
             $this->output->writeln('<info>Listing duplicates for user: ' . $user . '</info>');
-            CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function () {}, $user);
+            CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function () {}, $user, 20, $orderBy, $minSize);
         }
 
         return 0;
@@ -127,16 +152,17 @@ class ListDuplicates extends Command
     /**
      * List all duplicates for all users.
      *
+     * @param array<array<string>> $orderBy
      * @return int The command exit code.
      */
-    private function listAllDuplicates(): int
+    private function listAllDuplicates(array $orderBy = [['hash'], ['type']], int $minSize = 0): int
     {
         // List duplicates for all users
         $users = $this->userManager->search('');
         foreach ($users as $user) {
             $userId = $user->getUID();
             $this->output->writeln('<info>Listing duplicates for user: ' . $userId . '</info>');
-            CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function () {}, $userId);
+            CMDUtils::showDuplicates($this->fileDuplicateService, $this->output, function () {}, $userId, 20, $orderBy, $minSize);
         }
 
         return 0;
