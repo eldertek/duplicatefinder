@@ -484,6 +484,14 @@ OC.L10N.register(
     "Project scan initiated" : "Projektscan gestartet",
     "Failed to initiate project scan" : "Der Projektscan konnte nicht gestartet werden.",
     "Failed to load project duplicates" : "Projektduplikate konnten nicht geladen werden",
-    "The viewer is not available" : "Der Betrachter ist nicht verfügbar"
+    "The viewer is not available" : "Der Betrachter ist nicht verfügbar",
+    "Size" : "Größe",
+    "Actions" : "Aktionen",
+    "Name & Path" : "Name & Pfad",
+    "Status" : "Status",
+    "Duplicate" : "Duplikat",
+    "Duplicate Details" : "Duplikatdetails",
+    "More actions" : "Weitere Aktionen",
+    "You're Ready!" : "Sie sind bereit!"
 },
 "nplurals=2; plural=(n != 1);");
