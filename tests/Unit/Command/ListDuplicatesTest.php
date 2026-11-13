@@ -3,6 +3,8 @@
 namespace OCA\DuplicateFinder\Tests\Unit\Command;
 
 use OCA\DuplicateFinder\Command\ListDuplicates;
+use OCA\DuplicateFinder\Db\FileDuplicate;
+use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCP\Encryption\IManager;
@@ -10,7 +12,9 @@ use OCP\IDBConnection;
 use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ListDuplicatesTest extends TestCase
@@ -148,6 +152,102 @@ class ListDuplicatesTest extends TestCase
 
         $result = $this->invokeMethod($this->command, 'execute', [$this->input, $this->output]);
         $this->assertEquals(0, $result);
+    }
+
+    public function testExecuteWithSortSizeDescAndMinSize(): void
+    {
+        $this->encryptionManager->expects($this->once())
+            ->method('isEnabled')
+            ->willReturn(false);
+
+        $this->userManager->expects($this->once())
+            ->method('userExists')
+            ->with('qa-bot')
+            ->willReturn(true);
+
+        $fileA = new FileInfo('/qa-bot/files/backups/archive.tar.gz', 'qa-bot');
+        $fileA->setSize(20 * 1024 * 1024);
+        $fileB = new FileInfo('/qa-bot/files/incoming/archive.tar.gz', 'qa-bot');
+        $fileB->setSize(20 * 1024 * 1024);
+
+        $dup = new FileDuplicate('abc123', 'file_hash');
+        $dup->setFiles([$fileA, $fileB]);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('findAll')
+            ->with('all', 'qa-bot', 1, 20, true, [['size', 'DESC']], 10 * 1024 * 1024)
+            ->willReturn(['entities' => [$dup], 'isLastFetched' => true]);
+
+        $input = new ArrayInput([
+            '--user' => ['qa-bot'],
+            '--sort' => 'size-desc',
+            '--min-size' => '10M',
+        ]);
+        $output = new BufferedOutput();
+
+        $exitCode = $this->command->run($input, $output);
+
+        $this->assertSame(0, $exitCode);
+        $rendered = $output->fetch();
+        $this->assertStringContainsString('Size: 20.0 MB', $rendered);
+        $this->assertStringContainsString('archive.tar.gz', $rendered);
+    }
+
+    public function testExecuteWithSortSizeAscAndNoMinSize(): void
+    {
+        $this->encryptionManager->expects($this->once())
+            ->method('isEnabled')
+            ->willReturn(false);
+
+        $this->userManager->expects($this->once())
+            ->method('userExists')
+            ->with('qa-bot')
+            ->willReturn(true);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('findAll')
+            ->with('all', 'qa-bot', 1, 20, true, [['size', 'ASC']])
+            ->willReturn(['entities' => [], 'isLastFetched' => true]);
+
+        $input = new ArrayInput([
+            '--user' => ['qa-bot'],
+            '--sort' => 'size-asc',
+        ]);
+        $output = new BufferedOutput();
+
+        $exitCode = $this->command->run($input, $output);
+
+        $this->assertSame(0, $exitCode);
+    }
+
+    public function testExecuteRejectsInvalidSortOption(): void
+    {
+        $this->encryptionManager->expects($this->once())
+            ->method('isEnabled')
+            ->willReturn(false);
+
+        $input = new ArrayInput(['--sort' => 'newest']);
+        $output = new BufferedOutput();
+
+        $exitCode = $this->command->run($input, $output);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertStringContainsString('Unknown sort order "newest"', $output->fetch());
+    }
+
+    public function testExecuteRejectsInvalidMinSizeOption(): void
+    {
+        $this->encryptionManager->expects($this->once())
+            ->method('isEnabled')
+            ->willReturn(false);
+
+        $input = new ArrayInput(['--min-size' => 'huge']);
+        $output = new BufferedOutput();
+
+        $exitCode = $this->command->run($input, $output);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertStringContainsString('Invalid --min-size "huge"', $output->fetch());
     }
 
     /**
