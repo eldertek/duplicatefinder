@@ -1,3 +1,10 @@
+## 1.10.11 - 2026-11-13
+### Added
+- **CLI size sorting and minimum size filtering in `occ duplicates:list`** (Fix [#194](https://github.com/eldertek/duplicatefinder/issues/194), PR [#225](https://github.com/eldertek/duplicatefinder/pull/225)). Added `--sort` / `-s` (`default`, `size-desc`, `size-asc`) and `--min-size` / `-m` (`500K`, `10M`, `1G`, or bytes) options to `occ duplicates:list`, displayed group size, and factorized `parseSize()` / `formatSize()` helpers into `CMDUtils`
+
+### Fixed
+- **Strict `pageSize` cap in `FileDuplicateService::findAll()` and received share filtering in `occ duplicates:list-all`** ([#202](https://github.com/eldertek/duplicatefinder/issues/202), PR [#223](https://github.com/eldertek/duplicatefinder/pull/223), [#197](https://github.com/eldertek/duplicatefinder/issues/197), PR [#224](https://github.com/eldertek/duplicatefinder/pull/224)). Capped `FileDuplicateService::findAll()` at `$pageSize` across batches while advancing `CMDUtils::showDuplicates()` via `pageKey`, and filtered copies under received Nextcloud share mountpoints in `occ duplicates:list-all` via `ShareService`
+
 ## 1.10.10 - 2026-11-13
 ### Fixed
 - **Center initial loading spinner in the viewport** ([#220](https://github.com/eldertek/duplicatefinder/issues/220)). Wrapped the initial `<NcLoadingIcon>` in `App.vue` inside a full-width/full-height flex container (`.app-loading-container` with `display: flex; align-items: center; justify-content: center; width: 100%; min-height: calc(100vh - var(--header-height, 50px));`) so the loading indicator appears in the exact center of the screen instead of sitting at the left edge of `<NcContent>`
