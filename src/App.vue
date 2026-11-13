@@ -1,6 +1,8 @@
 <template>
 	<NcContent app-name="duplicatefinder">
-		<NcLoadingIcon v-if="isLoading" />
+		<div v-if="isLoading" class="app-loading-container">
+			<NcLoadingIcon :size="44" />
+		</div>
 		<template v-else>
 			<div class="app-navigation-header">
 				<DuplicateNavigation
@@ -776,6 +778,17 @@ export default {
 </script>
 
 <style>
+.app-loading-container {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-height: calc(100vh - var(--header-height, 50px));
+	flex: 1 1 auto;
+	margin: auto;
+}
+
 .app-content {
 	overflow-y: auto;
 }
