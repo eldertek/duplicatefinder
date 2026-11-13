@@ -27,7 +27,11 @@ class CMDUtils
             $abortIfInterrupted();
 
             $isLastFetched = $duplicates['isLastFetched'];
-            $currentPage++; // Increment to fetch the next page in the next iteration
+            if (isset($duplicates['pageKey']) && $pageSize > 0) {
+                $currentPage = max($currentPage + 1, ((int)floor($duplicates['pageKey'] / $pageSize)) + 2);
+            } else {
+                $currentPage++; // Increment to fetch the next page in the next iteration
+            }
         } while (!$isLastFetched); // Continue until the last page is fetched
     }
 

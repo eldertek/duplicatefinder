@@ -140,6 +140,7 @@ class FileDuplicateService
         $result = [];
         $isLastFetched = false;
         $entities = [];
+        $offset = 0;
 
         while (count($result) < $pageSize && !$isLastFetched) {
             $offset = ($page - 1) * $pageSize;
@@ -147,7 +148,9 @@ class FileDuplicateService
                 ? $this->mapper->findAll($user, $pageSize, $offset, $orderBy, $type, $minSize)
                 : $this->mapper->findAll($user, $pageSize, $offset, $orderBy, $type);
 
+            $consumedInBatch = 0;
             foreach ($entities as $entity) {
+                $consumedInBatch++;
                 if (($type === 'acknowledged' && !$entity->isAcknowledged())
                     || ($type === 'unacknowledged' && $entity->isAcknowledged())) {
                     continue;
@@ -169,10 +172,14 @@ class FileDuplicateService
                     } elseif ($type === 'all') {
                         $result[] = $entity;
                     }
+                    if (count($result) >= $pageSize) {
+                        break;
+                    }
                 }
             }
 
-            $isLastFetched = count($entities) < $pageSize;
+            $stoppedMidBatch = $consumedInBatch < count($entities);
+            $isLastFetched = !$stoppedMidBatch && count($entities) < $pageSize;
             if (count($result) < $pageSize && !$isLastFetched) {
                 $page++;
             }
