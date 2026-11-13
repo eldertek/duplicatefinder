@@ -4,8 +4,10 @@ namespace OCA\DuplicateFinder\Tests\Unit\Command;
 
 use OCA\DuplicateFinder\Command\ListAllDuplicates;
 use OCA\DuplicateFinder\Db\FileInfoMapper;
+use OCA\DuplicateFinder\Service\ShareService;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\Share\IShare;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -275,5 +277,45 @@ class ListAllDuplicatesTest extends TestCase
         $this->assertSame('1023 B', ListAllDuplicates::formatSize(1023));
         $this->assertSame('1.0 KB', ListAllDuplicates::formatSize(1024));
         $this->assertSame('4.5 GB', ListAllDuplicates::formatSize((int)(4.5 * 1024 ** 3)));
+    }
+
+    public function testReceivedShareMountpointsAreFilteredOutAndSingleCopyGroupsOmitted(): void
+    {
+        $this->usersAre(['alice', 'bob']);
+        $this->mapper->method('findOwners')->willReturn(['alice', 'bob']);
+        $this->mapper->method('findDuplicateGroupsAcrossUsers')->willReturn(self::rows([
+            $this->group('only_shared_dup', 4000, 2),
+            $this->group('real_plus_shared', 1000, 3),
+        ]));
+        $this->mapper->method('findCopiesOfHashes')->with(['only_shared_dup', 'real_plus_shared'], false)->willReturn([
+            'only_shared_dup' => [
+                ['owner' => 'alice', 'path' => '/alice/files/Project/spec.pdf'],
+                ['owner' => 'bob', 'path' => '/bob/files/SharedProject/spec.pdf'],
+            ],
+            'real_plus_shared' => [
+                ['owner' => 'alice', 'path' => '/alice/files/Docs/report.pdf'],
+                ['owner' => 'alice', 'path' => '/alice/files/Backup/report.pdf'],
+                ['owner' => 'bob', 'path' => '/bob/files/SharedProject/report.pdf'],
+            ],
+        ]);
+
+        $share = $this->createMock(IShare::class);
+        $share->method('getTarget')->willReturn('/SharedProject');
+
+        $shareService = $this->createMock(ShareService::class);
+        $shareService->method('getShares')->willReturnCallback(function (string $user) use ($share): array {
+            return $user === 'bob' ? [$share] : [];
+        });
+
+        $tester = new CommandTester(new ListAllDuplicates($this->mapper, $this->userManager, $shareService));
+        $this->assertSame(0, $tester->execute(['--output' => 'json', '--ignore-shared' => true]));
+        $data = json_decode($tester->getDisplay(), true);
+
+        $this->assertCount(1, $data['groups'], 'group left with 1 copy after removing received share must be omitted');
+        $this->assertSame('real_plus_shared', $data['groups'][0]['hash']);
+        $this->assertSame(2, $data['groups'][0]['copies']);
+        $this->assertSame(1000, $data['groups'][0]['wasted']);
+        $this->assertCount(2, $data['groups'][0]['files']);
+        $this->assertSame(['groups' => 1, 'copies' => 2, 'wasted' => 1000], $data['totals']);
     }
 }

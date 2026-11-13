@@ -3,6 +3,7 @@
 namespace OCA\DuplicateFinder\Command;
 
 use OCA\DuplicateFinder\Db\FileInfoMapper;
+use OCA\DuplicateFinder\Service\ShareService;
 use OCP\IUser;
 use OCP\IUserManager;
 use Symfony\Component\Console\Command\Command;
@@ -28,13 +29,21 @@ class ListAllDuplicates extends Command
     private $fileInfoMapper;
     /** @var IUserManager */
     private $userManager;
+    /** @var ?ShareService */
+    private $shareService;
+    /** @var array<string, array<string>> */
+    private $receivedSharePrefixesByUser = [];
 
-    public function __construct(FileInfoMapper $fileInfoMapper, IUserManager $userManager)
-    {
+    public function __construct(
+        FileInfoMapper $fileInfoMapper,
+        IUserManager $userManager,
+        ?ShareService $shareService = null
+    ) {
         parent::__construct('duplicates:list-all');
 
         $this->fileInfoMapper = $fileInfoMapper;
         $this->userManager = $userManager;
+        $this->shareService = $shareService;
     }
 
     protected function configure(): void
@@ -44,7 +53,8 @@ class ListAllDuplicates extends Command
             ->addOption('min-size', null, InputOption::VALUE_REQUIRED, 'Only files of at least this size, in bytes or with a unit (500K, 10M, 1G)', '1')
             ->addOption('limit', 'l', InputOption::VALUE_REQUIRED, 'Number of groups to show, the biggest waste first (0 for all of them)', (string)self::DEFAULT_LIMIT)
             ->addOption('output', null, InputOption::VALUE_REQUIRED, 'Output format: table or json', 'table')
-            ->addOption('include-shared', null, InputOption::VALUE_NONE, 'Include shared views of files in other users\' trees (excluded by default)');
+            ->addOption('include-shared', null, InputOption::VALUE_NONE, 'Include shared views of files in other users\' trees (excluded by default)')
+            ->addOption('ignore-shared', null, InputOption::VALUE_NONE, 'Exclude files located on received shares (default behaviour unless --include-shared is passed)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -198,9 +208,76 @@ class ListAllDuplicates extends Command
         }
         $copies = $this->fileInfoMapper->findCopiesOfHashes(array_column($batch, 'hash'), $includeShared);
         foreach ($batch as $group) {
-            $group['files'] = $copies[$group['hash']] ?? [];
+            $rawFiles = $copies[$group['hash']] ?? [];
+            if (!$includeShared && $this->shareService !== null && $rawFiles !== []) {
+                $filteredFiles = array_values(array_filter(
+                    $rawFiles,
+                    function (array $file): bool {
+                        return !$this->isPathInReceivedShare((string)($file['path'] ?? ''), (string)($file['owner'] ?? ''));
+                    }
+                ));
+                if (count($filteredFiles) < count($rawFiles)) {
+                    if (count($filteredFiles) <= 1) {
+                        continue;
+                    }
+                    $group['files'] = $filteredFiles;
+                    $group['copies'] = count($filteredFiles);
+                    $group['wasted'] = ($group['copies'] - 1) * (int)$group['size'];
+                    yield $group;
+
+                    continue;
+                }
+            }
+            $group['files'] = $rawFiles;
             yield $group;
         }
+    }
+
+    /**
+     * Whether a file path sits inside a share received by that user (issue 197).
+     */
+    private function isPathInReceivedShare(string $path, string $owner): bool
+    {
+        if ($this->shareService === null || $path === '') {
+            return false;
+        }
+        $pathUser = $owner;
+        if (preg_match('#^/([^/]+)/files/.+$#', $path, $m)) {
+            $pathUser = $m[1];
+        }
+        if ($pathUser === '') {
+            return false;
+        }
+
+        foreach ($this->getReceivedSharePrefixes($pathUser) as $prefix) {
+            if ($path === $prefix || strpos($path, $prefix . '/') === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array<string>
+     */
+    private function getReceivedSharePrefixes(string $user): array
+    {
+        if (isset($this->receivedSharePrefixesByUser[$user])) {
+            return $this->receivedSharePrefixesByUser[$user];
+        }
+        $prefixes = [];
+        if ($this->shareService !== null) {
+            foreach ($this->shareService->getShares($user) as $share) {
+                $target = trim((string)$share->getTarget(), '/');
+                if ($target !== '') {
+                    $prefixes[] = '/' . $user . '/files/' . $target;
+                }
+            }
+        }
+        $this->receivedSharePrefixesByUser[$user] = array_values(array_unique($prefixes));
+
+        return $this->receivedSharePrefixesByUser[$user];
     }
 
     /**
