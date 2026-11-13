@@ -205,6 +205,12 @@ describe('Issue 206: Single top-right Bulk Delete button and initial selection',
 		assert.equal(vm.activeView, 'details')
 		assert.equal(vm.currentDuplicate.id, 42, 'returning from Bulk Delete restores first duplicate selection')
 
+		// Issue 220: initial loading spinner is wrapped in a full-viewport centered container
+		vm.isLoading = true
+		await settle()
+		const loadingContainer = vm.$el.querySelector('.app-loading-container')
+		assert.ok(loadingContainer, 'initial loading spinner is wrapped in .app-loading-container for center alignment')
+
 		vm.$destroy()
 	})
 })

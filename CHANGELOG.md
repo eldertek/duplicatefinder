@@ -1,3 +1,7 @@
+## 1.10.10 - 2026-11-13
+### Fixed
+- **Center initial loading spinner in the viewport** ([#220](https://github.com/eldertek/duplicatefinder/issues/220)). Wrapped the initial `<NcLoadingIcon>` in `App.vue` inside a full-width/full-height flex container (`.app-loading-container` with `display: flex; align-items: center; justify-content: center; width: 100%; min-height: calc(100vh - var(--header-height, 50px));`) so the loading indicator appears in the exact center of the screen instead of sitting at the left edge of `<NcContent>`
+
 ## 1.10.9 - 2026-11-12
 ### Fixed
 - **Pixel-centered More actions dropdown arrow and consistent `not-allowed` cursor on disabled buttons** ([#206](https://github.com/eldertek/duplicatefinder/issues/206)). Centered the downward arrow inside the `34x34` `More actions` dropdown button with even `10x6` dimensions (`13px` top/bottom and `11px` left/right margins) and `padding: 0`, and set `pointer-events: none` on button children along with `cursor: not-allowed !important` on disabled buttons and their inner labels so hovering over the text of a disabled button (`Delete Selected` / `Bulk Delete`) never drops the `not-allowed` cursor
