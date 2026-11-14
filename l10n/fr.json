@@ -81,6 +81,7 @@
     "Copy File Hash" : "Copier le hachage du fichier",
     "Size" : "Taille",
     "Status" : "Statut",
+    "Actions" : "Actions",
     "No duplicates found or no duplicate selected." : "Aucun doublon n'a été trouvé ou aucun doublon n'a été sélectionné.",
     "You can adjust settings or run a new scan to find duplicates." : "Vous pouvez régler les paramètres ou lancer une nouvelle analyse pour trouver les doublons.",
     "Open Settings" : "Ouvrir les paramètres",
