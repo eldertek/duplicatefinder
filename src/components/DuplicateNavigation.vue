@@ -193,7 +193,17 @@
                     <div v-show="filteredAcknowledgedDuplicates.length === 0">
                         <p>{{ t('duplicatefinder', 'No acknowledged duplicates found.') }}</p>
                     </div>
-                    <button v-if="hasMoreAcknowledged" @click="loadMoreAcknowledgedDuplicates" class="load-more-button">
+                    <div
+                        v-if="hasMoreAcknowledged"
+                        ref="acknowledgedSentinel"
+                        class="load-more-sentinel"
+                        aria-hidden="true" />
+                    <button
+                        v-if="hasMoreAcknowledged"
+                        type="button"
+                        :disabled="isLoadingMoreAcknowledged"
+                        class="load-more-button"
+                        @click="loadMoreAcknowledgedDuplicates()">
                         {{ t('duplicatefinder', 'Load More') }}
                     </button>
                 </template>
@@ -224,7 +234,17 @@
                     <div v-show="filteredUnacknowledgedDuplicates.length === 0">
                         <p>{{ t('duplicatefinder', 'No unacknowledged duplicates found.') }}</p>
                     </div>
-                    <button v-if="hasMoreUnacknowledged" @click="loadMoreUnacknowledgedDuplicates" class="load-more-button">
+                    <div
+                        v-if="hasMoreUnacknowledged"
+                        ref="unacknowledgedSentinel"
+                        class="load-more-sentinel"
+                        aria-hidden="true" />
+                    <button
+                        v-if="hasMoreUnacknowledged"
+                        type="button"
+                        :disabled="isLoadingMoreUnacknowledged"
+                        class="load-more-button"
+                        @click="loadMoreUnacknowledgedDuplicates()">
                         {{ t('duplicatefinder', 'Load More') }}
                     </button>
                 </template>
@@ -311,6 +331,10 @@ export default {
         initialMinSizeBytes: {
             type: Number,
             default: 0
+        },
+        paginationResetToken: {
+            type: Number,
+            default: 0
         }
     },
     data() {
@@ -320,6 +344,12 @@ export default {
             searchType: 'simple',
             acknowledgedPage: 1,
             unacknowledgedPage: 1,
+            isLoadingMoreAcknowledged: false,
+            isLoadingMoreUnacknowledged: false,
+            exhaustedAcknowledged: false,
+            exhaustedUnacknowledged: false,
+            acknowledgedSentinelObserver: null,
+            unacknowledgedSentinelObserver: null,
             limit: 50,
             sortOption: this.initialSortOption || 'none',
             minSizeBytes: Number(this.initialMinSizeBytes) > 0 ? Number(this.initialMinSizeBytes) : 0,
@@ -337,6 +367,12 @@ export default {
     created() {
         this.syncActiveSectionWithDuplicate(this.currentDuplicateId);
     },
+    mounted() {
+        this.setupSentinelObservers();
+    },
+    beforeDestroy() {
+        this.teardownSentinelObservers();
+    },
     watch: {
         initialSortOption(newValue) {
             this.sortOption = newValue || 'none';
@@ -344,14 +380,54 @@ export default {
         initialMinSizeBytes(newValue) {
             this.minSizeBytes = Number(newValue) > 0 ? Number(newValue) : 0;
         },
+        paginationResetToken() {
+            this.acknowledgedPage = 1;
+            this.unacknowledgedPage = 1;
+            this.exhaustedAcknowledged = false;
+            this.exhaustedUnacknowledged = false;
+            this.$nextTick(() => {
+                this.setupSentinelObservers();
+            });
+        },
         currentDuplicateId(newId) {
             this.syncActiveSectionWithDuplicate(newId);
+            this.maybeAutoLoadForDuplicate(newId, false);
         },
-        acknowledgedDuplicates() {
+        acknowledgedDuplicates(newList, oldList) {
             this.syncActiveSectionWithDuplicate(this.currentDuplicateId);
+            const prevLen = Array.isArray(oldList) ? oldList.length : 0;
+            const nextLen = Array.isArray(newList) ? newList.length : 0;
+            if (nextLen < prevLen) {
+                this.$nextTick(() => {
+                    this.checkAutoLoadAfterShrink('acknowledged');
+                });
+            }
+            this.$nextTick(() => {
+                this.setupSentinelObservers();
+            });
         },
-        unacknowledgedDuplicates() {
+        unacknowledgedDuplicates(newList, oldList) {
             this.syncActiveSectionWithDuplicate(this.currentDuplicateId);
+            const prevLen = Array.isArray(oldList) ? oldList.length : 0;
+            const nextLen = Array.isArray(newList) ? newList.length : 0;
+            if (nextLen < prevLen) {
+                this.$nextTick(() => {
+                    this.checkAutoLoadAfterShrink('unacknowledged');
+                });
+            }
+            this.$nextTick(() => {
+                this.setupSentinelObservers();
+            });
+        },
+        hasMoreAcknowledged() {
+            this.$nextTick(() => {
+                this.setupSentinelObservers();
+            });
+        },
+        hasMoreUnacknowledged() {
+            this.$nextTick(() => {
+                this.setupSentinelObservers();
+            });
         }
     },
     computed: {
@@ -375,10 +451,32 @@ export default {
             ];
         },
         hasMoreAcknowledged() {
-            return this.acknowledgedPagination.currentPage < this.acknowledgedPagination.totalPages;
+            if (this.exhaustedAcknowledged) {
+                return false;
+            }
+            if (this.acknowledgedPagination && typeof this.acknowledgedPagination.hasMore === 'boolean') {
+                return this.acknowledgedPagination.hasMore;
+            }
+            const currentPage = Math.max(
+                Number(this.acknowledgedPagination && this.acknowledgedPagination.currentPage) || 1,
+                this.acknowledgedPage,
+            );
+            const totalPages = Number(this.acknowledgedPagination && this.acknowledgedPagination.totalPages) || 1;
+            return currentPage < totalPages;
         },
         hasMoreUnacknowledged() {
-            return this.unacknowledgedPagination.currentPage < this.unacknowledgedPagination.totalPages;
+            if (this.exhaustedUnacknowledged) {
+                return false;
+            }
+            if (this.unacknowledgedPagination && typeof this.unacknowledgedPagination.hasMore === 'boolean') {
+                return this.unacknowledgedPagination.hasMore;
+            }
+            const currentPage = Math.max(
+                Number(this.unacknowledgedPagination && this.unacknowledgedPagination.currentPage) || 1,
+                this.unacknowledgedPage,
+            );
+            const totalPages = Number(this.unacknowledgedPagination && this.unacknowledgedPagination.totalPages) || 1;
+            return currentPage < totalPages;
         },
         filteredUnacknowledgedDuplicates() {
             // First filter by search pattern
@@ -432,6 +530,8 @@ export default {
             this.sortOption = option;
             this.acknowledgedPage = 1;
             this.unacknowledgedPage = 1;
+            this.exhaustedAcknowledged = false;
+            this.exhaustedUnacknowledged = false;
             this.$emit('query-options-changed', {
                 sortBy: this.sortOption,
                 minSize: this.minSizeBytes,
@@ -448,6 +548,8 @@ export default {
                 : '';
             this.acknowledgedPage = 1;
             this.unacknowledgedPage = 1;
+            this.exhaustedAcknowledged = false;
+            this.exhaustedUnacknowledged = false;
             this.$emit('query-options-changed', {
                 sortBy: this.sortOption,
                 minSize: this.minSizeBytes,
@@ -561,22 +663,159 @@ export default {
                 this.syncActiveSectionWithDuplicate(duplicate.id);
             }
             this.$emit('open-duplicate', duplicate);
+            if (duplicate && duplicate.id !== undefined && duplicate.id !== null) {
+                this.maybeAutoLoadForDuplicate(duplicate.id, true);
+            }
         },
-        async loadMoreUnacknowledgedDuplicates() {
+        setupSentinelObservers() {
+            this.teardownSentinelObservers();
+            if (typeof window === 'undefined' || typeof window.IntersectionObserver !== 'function') {
+                return;
+            }
+            if (this.hasMoreAcknowledged && this.$refs.acknowledgedSentinel) {
+                this.acknowledgedSentinelObserver = new window.IntersectionObserver(entries => {
+                    const entry = entries && entries[0];
+                    const rawLen = Array.isArray(this.acknowledgedDuplicates) ? this.acknowledgedDuplicates.length : 0;
+                    if (entry && entry.isIntersecting && rawLen > 2 && this.acknowledgedOpen) {
+                        this.triggerAutoLoadMore('acknowledged');
+                    }
+                }, { rootMargin: '80px' });
+                this.acknowledgedSentinelObserver.observe(this.$refs.acknowledgedSentinel);
+            }
+            if (this.hasMoreUnacknowledged && this.$refs.unacknowledgedSentinel) {
+                this.unacknowledgedSentinelObserver = new window.IntersectionObserver(entries => {
+                    const entry = entries && entries[0];
+                    const rawLen = Array.isArray(this.unacknowledgedDuplicates) ? this.unacknowledgedDuplicates.length : 0;
+                    if (entry && entry.isIntersecting && rawLen > 2 && this.unacknowledgedOpen) {
+                        this.triggerAutoLoadMore('unacknowledged');
+                    }
+                }, { rootMargin: '80px' });
+                this.unacknowledgedSentinelObserver.observe(this.$refs.unacknowledgedSentinel);
+            }
+        },
+        teardownSentinelObservers() {
+            if (this.acknowledgedSentinelObserver) {
+                this.acknowledgedSentinelObserver.disconnect();
+                this.acknowledgedSentinelObserver = null;
+            }
+            if (this.unacknowledgedSentinelObserver) {
+                this.unacknowledgedSentinelObserver.disconnect();
+                this.unacknowledgedSentinelObserver = null;
+            }
+        },
+        maybeAutoLoadForDuplicate(duplicateId, explicitAction = false) {
+            if (duplicateId === null || duplicateId === undefined) {
+                return;
+            }
+            const unackList = this.filteredUnacknowledgedDuplicates;
+            const unackIndex = unackList.findIndex(d => d && d.id === duplicateId);
+            if (unackIndex !== -1) {
+                const canTrigger = explicitAction ? unackList.length >= 1 : unackList.length > 2;
+                if (canTrigger && unackIndex >= unackList.length - 2) {
+                    this.triggerAutoLoadMore('unacknowledged');
+                }
+                return;
+            }
+            const ackList = this.filteredAcknowledgedDuplicates;
+            const ackIndex = ackList.findIndex(d => d && d.id === duplicateId);
+            if (ackIndex !== -1) {
+                const canTrigger = explicitAction ? ackList.length >= 1 : ackList.length > 2;
+                if (canTrigger && ackIndex >= ackList.length - 2) {
+                    this.triggerAutoLoadMore('acknowledged');
+                }
+            }
+        },
+        checkAutoLoadAfterShrink(section) {
+            const rawList = section === 'acknowledged'
+                ? (Array.isArray(this.acknowledgedDuplicates) ? this.acknowledgedDuplicates : [])
+                : (Array.isArray(this.unacknowledgedDuplicates) ? this.unacknowledgedDuplicates : []);
+            const filteredList = section === 'acknowledged'
+                ? this.filteredAcknowledgedDuplicates
+                : this.filteredUnacknowledgedDuplicates;
+
+            if (rawList.length <= 2) {
+                this.triggerAutoLoadMore(section);
+                return;
+            }
+            if (this.currentDuplicateId !== null && this.currentDuplicateId !== undefined) {
+                const idx = filteredList.findIndex(d => d && d.id === this.currentDuplicateId);
+                if (idx !== -1 && idx >= filteredList.length - 2) {
+                    this.triggerAutoLoadMore(section);
+                }
+            }
+        },
+        triggerAutoLoadMore(section) {
+            if (section === 'acknowledged') {
+                if (this.hasMoreAcknowledged && !this.isLoadingMoreAcknowledged) {
+                    this.loadMoreAcknowledgedDuplicates({ isAuto: true });
+                }
+            } else if (this.hasMoreUnacknowledged && !this.isLoadingMoreUnacknowledged) {
+                this.loadMoreUnacknowledgedDuplicates({ isAuto: true });
+            }
+        },
+        async loadMoreUnacknowledgedDuplicates(loadOptions = {}) {
+            if (this.isLoadingMoreUnacknowledged) {
+                return;
+            }
+            const isAuto = Boolean(loadOptions && loadOptions.isAuto === true);
+            this.isLoadingMoreUnacknowledged = true;
+            this.$emit('load-more-start', 'unacknowledged');
             this.unacknowledgedPage++;
-            const newDuplicates = await fetchDuplicates('unacknowledged', this.limit, this.unacknowledgedPage, {
+            const requestOptions = {
                 sortBy: this.sortOption,
                 minSize: this.minSizeBytes,
-            });
-            this.$emit('update-unacknowledged-duplicates', newDuplicates.entities);
+            };
+            if (this.unacknowledgedPagination && Number.isInteger(this.unacknowledgedPagination.nextOffset)) {
+                requestOptions.offset = this.unacknowledgedPagination.nextOffset;
+            }
+            try {
+                const newDuplicates = await fetchDuplicates('unacknowledged', this.limit, this.unacknowledgedPage, requestOptions);
+                const entities = (newDuplicates && Array.isArray(newDuplicates.entities)) ? newDuplicates.entities : [];
+                const pagination = (newDuplicates && newDuplicates.pagination) ? newDuplicates.pagination : null;
+                if (isAuto && entities.length === 0) {
+                    this.exhaustedUnacknowledged = true;
+                }
+                this.$emit('update-unacknowledged-duplicates', entities, pagination);
+            } catch (error) {
+                this.unacknowledgedPage = Math.max(1, this.unacknowledgedPage - 1);
+                if (isAuto) {
+                    this.exhaustedUnacknowledged = true;
+                }
+            } finally {
+                this.isLoadingMoreUnacknowledged = false;
+            }
         },
-        async loadMoreAcknowledgedDuplicates() {
+        async loadMoreAcknowledgedDuplicates(loadOptions = {}) {
+            if (this.isLoadingMoreAcknowledged) {
+                return;
+            }
+            const isAuto = Boolean(loadOptions && loadOptions.isAuto === true);
+            this.isLoadingMoreAcknowledged = true;
+            this.$emit('load-more-start', 'acknowledged');
             this.acknowledgedPage++;
-            const newDuplicates = await fetchDuplicates('acknowledged', this.limit, this.acknowledgedPage, {
+            const requestOptions = {
                 sortBy: this.sortOption,
                 minSize: this.minSizeBytes,
-            });
-            this.$emit('update-acknowledged-duplicates', newDuplicates.entities);
+            };
+            if (this.acknowledgedPagination && Number.isInteger(this.acknowledgedPagination.nextOffset)) {
+                requestOptions.offset = this.acknowledgedPagination.nextOffset;
+            }
+            try {
+                const newDuplicates = await fetchDuplicates('acknowledged', this.limit, this.acknowledgedPage, requestOptions);
+                const entities = (newDuplicates && Array.isArray(newDuplicates.entities)) ? newDuplicates.entities : [];
+                const pagination = (newDuplicates && newDuplicates.pagination) ? newDuplicates.pagination : null;
+                if (isAuto && entities.length === 0) {
+                    this.exhaustedAcknowledged = true;
+                }
+                this.$emit('update-acknowledged-duplicates', entities, pagination);
+            } catch (error) {
+                this.acknowledgedPage = Math.max(1, this.acknowledgedPage - 1);
+                if (isAuto) {
+                    this.exhaustedAcknowledged = true;
+                }
+            } finally {
+                this.isLoadingMoreAcknowledged = false;
+            }
         },
         handleDuplicateResolved({ duplicate, type }) {
             if (duplicate.files.length <= 1) {

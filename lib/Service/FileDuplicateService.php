@@ -109,12 +109,14 @@ class FileDuplicateService
     }
 
     /**
+     * @param string|null $type
      * @param string|null $user
-     * @param int|null $limit
-     * @param int|null $offset
+     * @param int $page
+     * @param int $pageSize
      * @param bool $enrich
-     * @param array<array<string>> $orderBy
+     * @param array<array<string>>|null $orderBy
      * @param int $minSize Minimum file size in bytes (0 disables filtering)
+     * @param int|null $startOffset Explicit starting DB offset (overrides page-based offset when provided)
      * @return array<string, FileDuplicate|int|mixed>
      */
     public function findAll(
@@ -124,7 +126,8 @@ class FileDuplicateService
         int $pageSize = 20,
         bool $enrich = false,
         ?array $orderBy = [['hash'], ['type']],
-        int $minSize = 0
+        int $minSize = 0,
+        ?int $startOffset = null
     ): array {
         if ($user !== null) {
             $this->setCurrentUserId($user);
@@ -141,9 +144,13 @@ class FileDuplicateService
         $isLastFetched = false;
         $entities = [];
         $offset = 0;
+        $currentOffset = $startOffset !== null
+            ? max(0, $startOffset)
+            : max(0, ($page - 1) * $pageSize);
+        $nextOffset = $currentOffset;
 
         while (count($result) < $pageSize && !$isLastFetched) {
-            $offset = ($page - 1) * $pageSize;
+            $offset = $currentOffset;
             $entities = $minSize > 0
                 ? $this->mapper->findAll($user, $pageSize, $offset, $orderBy, $type, $minSize)
                 : $this->mapper->findAll($user, $pageSize, $offset, $orderBy, $type);
@@ -178,10 +185,11 @@ class FileDuplicateService
                 }
             }
 
+            $nextOffset = $offset + $consumedInBatch;
             $stoppedMidBatch = $consumedInBatch < count($entities);
             $isLastFetched = !$stoppedMidBatch && count($entities) < $pageSize;
             if (count($result) < $pageSize && !$isLastFetched) {
-                $page++;
+                $currentOffset += $pageSize;
             }
         }
 
@@ -190,6 +198,7 @@ class FileDuplicateService
         return [
             'entities' => $result,
             'pageKey' => $offset,
+            'nextOffset' => $nextOffset,
             'isLastFetched' => $isLastFetched,
         ];
     }

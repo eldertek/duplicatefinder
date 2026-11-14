@@ -69,12 +69,14 @@ class DuplicateApiController extends AbstractAPIController
         string $type = 'unacknowledged',
         bool $onlyNonProtected = false,
         string $sortBy = 'default',
-        int $minSize = 0
+        int $minSize = 0,
+        ?int $offset = null
     ): DataResponse {
         try {
             $safePage = max(1, $page);
             $safeLimit = max(1, $limit);
             $safeMinSize = max(0, $minSize);
+            $safeOffset = $offset !== null ? max(0, $offset) : null;
 
             $isCustomOrder = $sortBy === 'size-desc' || $sortBy === 'size-asc';
             $orderBy = [['hash'], ['type']];
@@ -84,7 +86,21 @@ class DuplicateApiController extends AbstractAPIController
                 $orderBy = [['size', 'ASC']];
             }
 
-            if ($safeMinSize > 0) {
+            if ($safeOffset !== null) {
+                $duplicates = $this->fileDuplicateService->findAll(
+                    $type,
+                    $this->getUserId(),
+                    $safePage,
+                    $safeLimit,
+                    true,
+                    $orderBy,
+                    $safeMinSize,
+                    $safeOffset
+                );
+                $totalItems = $safeMinSize > 0
+                    ? $this->fileDuplicateService->getTotalCount($type, $this->getUserId(), $safeMinSize)
+                    : $this->fileDuplicateService->getTotalCount($type, $this->getUserId());
+            } elseif ($safeMinSize > 0) {
                 $duplicates = $this->fileDuplicateService->findAll(
                     $type,
                     $this->getUserId(),
@@ -115,7 +131,7 @@ class DuplicateApiController extends AbstractAPIController
                 );
                 $totalItems = $this->fileDuplicateService->getTotalCount($type, $this->getUserId());
             }
-            $totalPages = ceil($totalItems / $safeLimit);
+            $totalPages = (int)ceil($totalItems / $safeLimit);
 
             if ($onlyNonProtected) {
                 // For each duplicate group, keep only non-protected files
@@ -151,14 +167,27 @@ class DuplicateApiController extends AbstractAPIController
                 }
             }
 
+            $entities = array_values($duplicates['entities']);
+            $effectiveOffset = $safeOffset !== null ? $safeOffset : (($safePage - 1) * $safeLimit);
+            $resolvedNextOffset = isset($duplicates['nextOffset'])
+                ? (int)$duplicates['nextOffset']
+                : ($effectiveOffset + count($entities));
+            $isLastFetched = array_key_exists('isLastFetched', $duplicates)
+                ? (bool)$duplicates['isLastFetched']
+                : (count($entities) < $safeLimit);
+            $hasMore = !$isLastFetched && $resolvedNextOffset < $totalItems;
+
             $data = [
                 'status' => 'success',
-                'entities' => array_values($duplicates['entities']),
+                'entities' => $entities,
                 'pagination' => [
                     'currentPage' => $safePage,
                     'totalPages' => $totalPages,
                     'totalItems' => $totalItems,
                     'limit' => $safeLimit,
+                    'offset' => $effectiveOffset,
+                    'nextOffset' => $resolvedNextOffset,
+                    'hasMore' => $hasMore,
                 ],
             ];
 

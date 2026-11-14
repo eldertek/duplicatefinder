@@ -18,12 +18,14 @@
 					:initial-sort-option="sortOption"
 					:initial-min-size-bytes="minSizeBytes"
 					:has-duplicates="hasDuplicates"
+					:pagination-reset-token="paginationResetToken"
 					@open-duplicate="openDuplicate"
 					@open-settings="settingsOpen = true"
 					@open-projects="settingsOpen = true"
 					@view-project="viewProject"
 					@show-help="showHelp"
 					@query-options-changed="handleQueryOptionsChanged"
+					@load-more-start="onLoadMoreStart"
 					@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
 					@update-unacknowledged-duplicates="updateUnacknowledgedDuplicates" />
 			</div>
@@ -300,6 +302,11 @@ export default {
 				currentPage: 1,
 				totalPages: 1
 			},
+			paginationResetToken: 0,
+			pendingOffsetDelta: {
+				acknowledged: 0,
+				unacknowledged: 0,
+			},
 			helpModalOpen: false,
 			currentHelpSection: 'guide',
 			activeProject: null,
@@ -382,6 +389,32 @@ export default {
 		}
 	},
 	methods: {
+		onLoadMoreStart(section) {
+			if (section === 'acknowledged' || section === 'unacknowledged') {
+				this.pendingOffsetDelta[section] = 0
+			}
+		},
+		adjustSectionPagination(section, delta) {
+			if (!delta || (section !== 'acknowledged' && section !== 'unacknowledged')) {
+				return
+			}
+			this.pendingOffsetDelta[section] = (this.pendingOffsetDelta[section] || 0) + delta
+			const paginationKey = section === 'acknowledged' ? 'acknowledgedPagination' : 'unacknowledgedPagination'
+			const current = this[paginationKey] || {}
+			const updated = { ...current }
+			if (Number.isFinite(updated.totalItems)) {
+				updated.totalItems = Math.max(0, updated.totalItems + delta)
+				const limit = Number(updated.limit) > 0 ? Number(updated.limit) : this.limit
+				updated.totalPages = Math.max(1, Math.ceil(updated.totalItems / limit))
+			}
+			if (Number.isInteger(updated.nextOffset)) {
+				updated.nextOffset = Math.max(0, updated.nextOffset + delta)
+			}
+			if (typeof updated.hasMore === 'boolean' && Number.isFinite(updated.totalItems) && Number.isInteger(updated.nextOffset)) {
+				updated.hasMore = updated.hasMore && updated.nextOffset < updated.totalItems
+			}
+			this[paginationKey] = updated
+		},
 		handleDuplicateResolved({ duplicate, type }) {
 			console.log('ISSUE146: App.handleDuplicateResolved called');
 			console.log('ISSUE146: duplicate.id =', duplicate.id);
@@ -391,13 +424,23 @@ export default {
 			// Remove from the appropriate list
 			if (type === 'acknowledged') {
 				console.log('ISSUE146: Removing from acknowledged list');
-				console.log('ISSUE146: acknowledged list length before =', this.acknowledgedDuplicates.length);
+				const beforeLen = this.acknowledgedDuplicates.length;
+				console.log('ISSUE146: acknowledged list length before =', beforeLen);
 				this.acknowledgedDuplicates = this.acknowledgedDuplicates.filter(d => d.hash !== duplicate.hash);
+				const removed = beforeLen - this.acknowledgedDuplicates.length;
+				if (removed > 0) {
+					this.adjustSectionPagination('acknowledged', -removed);
+				}
 				console.log('ISSUE146: acknowledged list length after =', this.acknowledgedDuplicates.length);
 			} else {
 				console.log('ISSUE146: Removing from unacknowledged list');
-				console.log('ISSUE146: unacknowledged list length before =', this.unacknowledgedDuplicates.length);
+				const beforeLen = this.unacknowledgedDuplicates.length;
+				console.log('ISSUE146: unacknowledged list length before =', beforeLen);
 				this.unacknowledgedDuplicates = this.unacknowledgedDuplicates.filter(d => d.hash !== duplicate.hash);
+				const removed = beforeLen - this.unacknowledgedDuplicates.length;
+				if (removed > 0) {
+					this.adjustSectionPagination('unacknowledged', -removed);
+				}
 				console.log('ISSUE146: unacknowledged list length after =', this.unacknowledgedDuplicates.length);
 			}
 
@@ -453,12 +496,22 @@ export default {
 		async updateDuplicate(updatedDuplicate) {
 			// Check if the duplicate still has more than one file
 			if (updatedDuplicate.files.length <= 1) {
+				const prevAckLen = this.acknowledgedDuplicates.length;
+				const prevUnackLen = this.unacknowledgedDuplicates.length;
 				// Remove from both lists
 				this.acknowledgedDuplicates = this.acknowledgedDuplicates.filter(d => d.id !== updatedDuplicate.id);
 				this.unacknowledgedDuplicates = this.unacknowledgedDuplicates.filter(d => d.id !== updatedDuplicate.id);
+				if (prevAckLen !== this.acknowledgedDuplicates.length) {
+					this.adjustSectionPagination('acknowledged', this.acknowledgedDuplicates.length - prevAckLen);
+				}
+				if (prevUnackLen !== this.unacknowledgedDuplicates.length) {
+					this.adjustSectionPagination('unacknowledged', this.unacknowledgedDuplicates.length - prevUnackLen);
+				}
 				this.currentDuplicate = null;
 			} else {
 				// Existing logic to update the duplicate
+				const sourceSection = !updatedDuplicate.acknowledged ? 'acknowledged' : 'unacknowledged';
+				const targetSection = !updatedDuplicate.acknowledged ? 'unacknowledged' : 'acknowledged';
 				const sourceList = !updatedDuplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates;
 				const targetList = !updatedDuplicate.acknowledged ? this.unacknowledgedDuplicates : this.acknowledgedDuplicates;
 				const index = sourceList.findIndex(d => d.id === updatedDuplicate.id);
@@ -466,11 +519,13 @@ export default {
 				if (index !== -1) {
 					sourceList.splice(index, 1);
 					targetList.push(updatedDuplicate);
+					this.adjustSectionPagination(sourceSection, -1);
+					this.adjustSectionPagination(targetSection, 1);
 				}
 
-				this.currentDuplicate = updatedDuplicate;
-
-				if (sourceList.length > 0) {
+				if (this.$refs.duplicateNavigation && typeof this.$refs.duplicateNavigation.selectNextDuplicateAfterResolution === 'function') {
+					this.$refs.duplicateNavigation.selectNextDuplicateAfterResolution(updatedDuplicate, sourceSection);
+				} else if (sourceList.length > 0) {
 					const nextIndex = index < sourceList.length ? index : 0;
 					this.currentDuplicate = sourceList[nextIndex];
 				} else {
@@ -519,6 +574,9 @@ export default {
 				this.unacknowledgedDuplicates = unacknowledgedResponse.entities;
 				this.acknowledgedPagination = acknowledgedResponse.pagination;
 				this.unacknowledgedPagination = unacknowledgedResponse.pagination;
+				this.pendingOffsetDelta.acknowledged = 0;
+				this.pendingOffsetDelta.unacknowledged = 0;
+				this.paginationResetToken++;
 
 				if (this.currentDuplicate) {
 					const existsAcknowledged = this.acknowledgedDuplicates.find(d => d.id === this.currentDuplicate.id);
@@ -710,11 +768,59 @@ export default {
 				}
 			}
 		},
-		updateAcknowledgedDuplicates(newDuplicates) {
-			this.acknowledgedDuplicates = [...this.acknowledgedDuplicates, ...newDuplicates]
+		mergePaginatedDuplicates(section, newDuplicates, incomingPagination) {
+			const listKey = section === 'acknowledged' ? 'acknowledgedDuplicates' : 'unacknowledgedDuplicates'
+			const paginationKey = section === 'acknowledged' ? 'acknowledgedPagination' : 'unacknowledgedPagination'
+			const currentList = Array.isArray(this[listKey]) ? this[listKey] : []
+			const incomingList = Array.isArray(newDuplicates) ? newDuplicates : []
+			const existingKeys = new Set(currentList.map(d => d && (d.hash || d.id)).filter(Boolean))
+			const uniqueIncoming = incomingList.filter(d => {
+				const key = d && (d.hash || d.id)
+				if (!key) {
+					return true
+				}
+				if (existingKeys.has(key)) {
+					return false
+				}
+				existingKeys.add(key)
+				return true
+			})
+			this[listKey] = [...currentList, ...uniqueIncoming]
+
+			if (incomingPagination && typeof incomingPagination === 'object') {
+				const delta = this.pendingOffsetDelta[section] || 0
+				this.pendingOffsetDelta[section] = 0
+				const mergedPagination = {
+					...(this[paginationKey] || {}),
+					...incomingPagination,
+				}
+				if (Number.isInteger(mergedPagination.nextOffset) && delta !== 0) {
+					mergedPagination.nextOffset = Math.max(0, mergedPagination.nextOffset + delta)
+				}
+				if (Number.isFinite(mergedPagination.totalItems) && delta !== 0) {
+					mergedPagination.totalItems = Math.max(0, mergedPagination.totalItems + delta)
+				}
+				if (incomingList.length === 0) {
+					mergedPagination.hasMore = false
+				} else if (
+					typeof mergedPagination.hasMore === 'boolean'
+					&& Number.isFinite(mergedPagination.totalItems)
+					&& Number.isInteger(mergedPagination.nextOffset)
+				) {
+					mergedPagination.hasMore = mergedPagination.hasMore && mergedPagination.nextOffset < mergedPagination.totalItems
+				}
+				this[paginationKey] = mergedPagination
+			}
+
+			if (!this.currentDuplicate && this.activeView === 'details' && this[listKey].length > 0) {
+				this.currentDuplicate = this[listKey][0]
+			}
 		},
-		updateUnacknowledgedDuplicates(newDuplicates) {
-			this.unacknowledgedDuplicates = [...this.unacknowledgedDuplicates, ...newDuplicates]
+		updateAcknowledgedDuplicates(newDuplicates, pagination) {
+			this.mergePaginatedDuplicates('acknowledged', newDuplicates, pagination)
+		},
+		updateUnacknowledgedDuplicates(newDuplicates, pagination) {
+			this.mergePaginatedDuplicates('unacknowledged', newDuplicates, pagination)
 		},
 		openBulkDelete() {
 			this.activeView = 'bulk-delete'

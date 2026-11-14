@@ -1,3 +1,10 @@
+## 1.10.12 - 2026-11-14
+### Added
+- **Automatic batch loading when reaching the end of duplicate lists** ([#227](https://github.com/eldertek/duplicatefinder/issues/227)). Automatically loads the next batch of duplicate groups in both the `Unacknowledged` and `Acknowledged` sidebar sections as soon as you reach the second-to-last or last displayed entry (whether by clicking down the list, resolving or acknowledging groups, or scrolling to the bottom), continuing seamlessly until all available results are loaded
+
+### Fixed
+- **Offset-accurate pagination when resolving or acknowledging duplicate groups** ([#227](https://github.com/eldertek/duplicatefinder/issues/227)). Added exact `offset` and `nextOffset` tracking between `/api/duplicates/{type}` and the Vue state so deleting or acknowledging entries from an open batch never skips subsequent database rows on the next batch load, and restored German noun translations (`Duplikat`, `Duplikatgruppe`, `Duplikatdetails`) after automated Transifex sync
+
 ## 1.10.11 - 2026-11-13
 ### Added
 - **CLI size sorting and minimum size filtering in `occ duplicates:list`** (Fix [#194](https://github.com/eldertek/duplicatefinder/issues/194), PR [#225](https://github.com/eldertek/duplicatefinder/pull/225)). Added `--sort` / `-s` (`default`, `size-desc`, `size-asc`) and `--min-size` / `-m` (`500K`, `10M`, `1G`, or bytes) options to `occ duplicates:list`, displayed group size, and factorized `parseSize()` / `formatSize()` helpers into `CMDUtils`

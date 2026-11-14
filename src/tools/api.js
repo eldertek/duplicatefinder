@@ -35,6 +35,9 @@ export const fetchDuplicates = async (type = 'all', limit = 5, page = 1, options
         if (Number(options.minSize) > 0) {
             queryParams.set('minSize', String(Math.floor(Number(options.minSize))));
         }
+        if (Number.isInteger(options.offset) && options.offset >= 0) {
+            queryParams.set('offset', String(options.offset));
+        }
         const url = generateApiBaseUrl(`/duplicates/${type}?${queryParams.toString()}`);
         const response = await axios.get(url);
         return response.data;

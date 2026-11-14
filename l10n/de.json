@@ -75,7 +75,7 @@
     "Files to be deleted" : "Zu löschende Dateien",
     "For each duplicate group, at least one file will be preserved." : "Für jede Duplikatgruppe bleibt mindestens eine Datei erhalten.",
     "Files in origin folders are automatically protected and will not be deleted." : "Dateien in Ursprungsordnern sind automatisch geschützt und werden nicht gelöscht.",
-    "Duplicate group" : "Gruppe duplizieren",
+    "Duplicate group" : "Duplikatgruppe",
     "{selected} of {total} files selected" : "{selected} von {total} Dateien ausgewählt",
     "{count} protected files in origin folders" : "{count} geschützte Dateien in Ursprungsordnern",
     "Duplicate group (all files protected)" : "Dubletten-Gruppe (Alle Dateien geschützt)",
@@ -84,7 +84,7 @@
     "Cannot delete protected files" : "Geschützte Dateien können nicht gelöscht werden",
     "This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?" : "Diese Aktion löscht alle Vorkommen des Duplikats. Mindestens eine Kopie sollte aufbewahrt werden. Wirklich fortfahren?",
     "File hash copied to clipboard" : "Datei-Hash in die Zwischenablage kopiert",
-    "Duplicate Details" : "Details zum Duplikat",
+    "Duplicate Details" : "Duplikatdetails",
     "Acknowledged" : "Bestätigt",
     "Unacknowledged" : "Nicht bestätigt",
     "Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}" : "Willkommen. Das aktuelle Duplikat besteht aus {numberOfFiles} Dateien, Gesamtgröße: {formattedSize}",
@@ -108,7 +108,7 @@
     "Path:" : "Pfad:",
     "Protected" : "Geschützt",
     "Original" : "Original",
-    "Duplicate" : "Duplizieren",
+    "Duplicate" : "Duplikat",
     "Open Folder" : "Ordner öffnen",
     "Select duplicates in other folders for deletion" : "Duplikate in anderen Ordnern zum Löschen auswählen",
     "Keep Folder" : "Ordner behalten",
@@ -489,6 +489,7 @@
     "Project scan initiated" : "Projektscan gestartet",
     "Failed to initiate project scan" : "Der Projektscan konnte nicht gestartet werden.",
     "Failed to load project duplicates" : "Projektduplikate konnten nicht geladen werden",
-    "The viewer is not available" : "Der Betrachter ist nicht verfügbar"
+    "The viewer is not available" : "Der Betrachter ist nicht verfügbar",
+    "You're Ready!" : "Du bist bereit!"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

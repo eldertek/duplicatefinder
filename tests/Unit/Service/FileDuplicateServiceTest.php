@@ -543,5 +543,23 @@ class FileDuplicateServiceTest extends TestCase
         $this->assertSame('hash3', $result['entities'][1]->getHash());
         $this->assertFalse($result['isLastFetched']);
         $this->assertSame(2, $result['pageKey']);
+        $this->assertSame(3, $result['nextOffset']);
+    }
+
+    public function testFindAllSupportsExplicitStartOffset(): void
+    {
+        $dup = $this->createStatusDuplicate('offset-group', false);
+        $this->mapper->expects($this->once())
+            ->method('findAll')
+            ->with('user1', 20, 7, [['hash'], ['type']], 'unacknowledged')
+            ->willReturn([$dup]);
+        $this->expectStatusFileLookups([$dup], ['offset-group']);
+
+        $result = $this->service->findAll('unacknowledged', 'user1', 2, 20, true, [['hash'], ['type']], 0, 7);
+
+        $this->assertCount(1, $result['entities']);
+        $this->assertSame(7, $result['pageKey']);
+        $this->assertSame(8, $result['nextOffset']);
+        $this->assertTrue($result['isLastFetched']);
     }
 }
