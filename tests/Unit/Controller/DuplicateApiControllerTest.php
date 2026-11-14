@@ -175,6 +175,34 @@ class DuplicateApiControllerTest extends TestCase
         $this->assertSame('success', $response->getData()['status']);
     }
 
+    public function testListForwardsExplicitOffsetAndComputesHasMore(): void
+    {
+        $duplicate = new FileDuplicate('offsethash', 'file_hash');
+        $duplicate->setAcknowledged(false);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('findAll')
+            ->with('unacknowledged', 'testuser', 2, 50, true, [['hash'], ['type']], 0, 2)
+            ->willReturn([
+                'entities' => [$duplicate],
+                'nextOffset' => 52,
+                'isLastFetched' => false,
+            ]);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('getTotalCount')
+            ->with('unacknowledged', 'testuser')
+            ->willReturn(120);
+
+        $response = $this->controller->list(2, 50, 'unacknowledged', false, 'default', 0, 2);
+        $data = $response->getData();
+
+        $this->assertSame('success', $data['status']);
+        $this->assertSame(2, $data['pagination']['offset']);
+        $this->assertSame(52, $data['pagination']['nextOffset']);
+        $this->assertTrue($data['pagination']['hasMore']);
+    }
+
     public function testAcknowledge()
     {
         // Mock the markAsAcknowledged method
