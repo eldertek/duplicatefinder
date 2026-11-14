@@ -78,6 +78,7 @@
         <command>OCA\DuplicateFinder\Command\FindDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ListDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ListAllDuplicates</command>
+        <command>OCA\DuplicateFinder\Command\ListFolderDuplicates</command>
         <command>OCA\DuplicateFinder\Command\ClearDuplicates</command>
     </commands>
 
