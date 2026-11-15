@@ -19,7 +19,7 @@ jobs:
               '',
               'The issue has been resolved/implemented in the latest updates. 🎉 If you have any further feedback or ideas, feel free to open a new issue or join the discussion on GitHub.',
               '',
-              'Your support helps us make Duplicate Finder even better—thank you for being part of our journey! 🚀',
+              'Your support helps us make Duplicate Finder even better - thank you for being part of our journey! 🚀',
               '',
               'If you haven\'t already, don\'t forget to ⭐ star the project on GitHub. Your support means the world to us and keeps the project thriving!'
             ].join('\n');
