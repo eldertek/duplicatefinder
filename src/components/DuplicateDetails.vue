@@ -272,6 +272,9 @@ export default {
     },
     removeFileFromListAndUpdate(file) {
       console.log('DuplicateDetails: Removing file from list:', file);
+      if (file && file.path) {
+        this.$emit('folders-touched', [file.path]);
+      }
       removeFileFromList(file, this.duplicate.files);
       // A file that is gone cannot stay selected for the next "Delete Selected"
       this.selectedFiles = this.selectedFiles.filter(selected => !isSameFile(selected, file));
@@ -319,6 +322,7 @@ export default {
 
         const { success, errors } = await deleteFiles(this.selectedFiles, { allowLastCopy });
         if (success.length > 0) {
+          this.$emit('folders-touched', success.map(file => file && file.path).filter(Boolean));
           removeFilesFromList(success, this.duplicate.files);
           this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
 

@@ -535,3 +535,55 @@ export async function fetchProjectDuplicates(id, type = 'all', page = 1, limit =
         throw error
     }
 }
+
+/**
+ * Scans user storage (or a list of recently cleaned candidate paths) for empty folders.
+ * @param {string[]} [candidatePaths] Optional folder or deleted-file paths to scope the check
+ * @returns {Promise<{folders: Array, count: number}>}
+ */
+export async function scanEmptyFolders(candidatePaths = []) {
+    try {
+        const url = generateApiBaseUrl('/empty-folders/scan')
+        const payload = Array.isArray(candidatePaths) && candidatePaths.length > 0
+            ? { candidatePaths }
+            : {}
+        const response = await axios.post(url, payload)
+        return response.data || { folders: [], count: 0 }
+    } catch (error) {
+        console.error('Error scanning empty folders:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to scan for empty folders.'))
+        throw error
+    }
+}
+
+/**
+ * Deletes selected empty folders in one batch (deepest-first on the server).
+ * @param {string[]} paths Folder paths to delete
+ * @returns {Promise<{deleted: string[], errors: Array}>}
+ */
+export async function deleteEmptyFolders(paths = []) {
+    try {
+        const url = generateApiBaseUrl('/empty-folders/delete')
+        const response = await axios.post(url, { paths })
+        const data = response.data || {}
+        const deleted = Array.isArray(data.deleted) ? data.deleted : []
+        const errors = Array.isArray(data.errors) ? data.errors : []
+
+        if (deleted.length > 0) {
+            showSuccessNotification(
+                t('duplicatefinder', '{count} empty folders deleted successfully.', { count: deleted.length })
+            )
+        }
+        if (errors.length > 0) {
+            showErrorNotification(
+                t('duplicatefinder', 'Failed to delete {count} empty folders.', { count: errors.length })
+            )
+        }
+
+        return { deleted, errors }
+    } catch (error) {
+        console.error('Error deleting empty folders:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to delete empty folders.'))
+        throw error
+    }
+}

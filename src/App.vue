@@ -70,6 +70,28 @@
 							<span>{{ isScanRunning ? t('duplicatefinder', 'Scanning...') : t('duplicatefinder', 'Scan') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-empty-folders-button"
+							:title="t('duplicatefinder', 'Detect and delete empty folders after cleanup')"
+							@click="openEmptyFoldersModal">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+								<line x1="9" y1="14" x2="15" y2="14"></line>
+							</svg>
+							<span>{{ t('duplicatefinder', 'Empty Folders') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -132,7 +154,9 @@
 				</div>
 
 				<template v-if="activeView === 'bulk-delete'">
-					<BulkDeletionSettings @duplicates-deleted="refreshDuplicates" />
+					<BulkDeletionSettings
+						@duplicates-deleted="refreshDuplicates"
+						@folders-touched="recordTouchedFolders" />
 				</template>
 				<template v-else-if="activeView === 'project'">
 					<ProjectDuplicates
@@ -147,6 +171,7 @@
 						@duplicate-resolved="backToProject"
 						@duplicateUpdated="updateDuplicate"
 						@openSettings="settingsOpen = true"
+						@folders-touched="recordTouchedFolders"
 						@duplicatesSearchCompleted="backToProject" />
 				</template>
 				<template v-else>
@@ -158,6 +183,7 @@
 						@duplicateUpdated="updateDuplicate"
 						@openSettings="settingsOpen = true"
 						@startScan="triggerScan"
+						@folders-touched="recordTouchedFolders"
 						@duplicatesSearchCompleted="refreshDuplicates" />
 				</template>
 			</NcAppContent>
@@ -213,6 +239,70 @@
 					<FAQ v-if="currentHelpSection === 'faq'" :show="true" @close="helpModalOpen = false" />
 				</div>
 			</NcModal>
+
+			<NcModal
+				v-if="emptyFoldersModalOpen"
+				:title="t('duplicatefinder', 'Empty Folders Cleanup')"
+				@close="emptyFoldersModalOpen = false">
+				<div class="empty-folders-modal">
+					<p class="empty-folders-modal__hint">
+						{{ t('duplicatefinder', 'Detect folders left empty after removing duplicates and optionally delete them in one go. Protected origin folders, excluded folders, and external mounts are never deleted.') }}
+					</p>
+					<div class="empty-folders-modal__toolbar">
+						<NcButton
+							v-if="recentCleanedPaths.length > 0"
+							type="secondary"
+							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+							@click="scanEmptyFoldersInModal(true)">
+							{{ t('duplicatefinder', 'Check cleaned locations') }}
+						</NcButton>
+						<NcButton
+							type="secondary"
+							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+							@click="scanEmptyFoldersInModal(false)">
+							{{ t('duplicatefinder', 'Scan all folders') }}
+						</NcButton>
+						<NcButton
+							v-if="modalEmptyFolders.length > 0"
+							type="tertiary"
+							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+							@click="toggleSelectAllModalEmptyFolders">
+							{{ isAllModalEmptyFoldersSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
+						</NcButton>
+						<NcButton
+							v-if="modalEmptyFolders.length > 0"
+							type="error"
+							class="modal-delete-empty-folders-button"
+							:disabled="emptyFoldersLoading || emptyFoldersDeleting || selectedModalEmptyFolders.length === 0"
+							@click="deleteSelectedModalEmptyFolders">
+							{{ t('duplicatefinder', 'Delete selected ({count})', { count: selectedModalEmptyFolders.length }) }}
+						</NcButton>
+					</div>
+
+					<div v-if="emptyFoldersLoading" class="empty-folders-modal__status">
+						<NcLoadingIcon :size="24" />
+						<span>{{ t('duplicatefinder', 'Scanning for empty folders...') }}</span>
+					</div>
+					<div v-else-if="modalEmptyFoldersScanned && modalEmptyFolders.length === 0" class="empty-folders-modal__status">
+						<span>{{ t('duplicatefinder', 'No empty folders were found.') }}</span>
+					</div>
+					<div v-else-if="modalEmptyFolders.length > 0" class="empty-folders-modal__list">
+						<label
+							v-for="folder in modalEmptyFolders"
+							:key="folder.path"
+							class="empty-folders-modal__item">
+							<input
+								type="checkbox"
+								:checked="selectedModalEmptyFolders.includes(folder.path)"
+								@change="toggleModalEmptyFolder(folder.path)">
+							<span class="empty-folders-modal__path">{{ folder.path }}</span>
+							<span v-if="folder.hasEmptySubfolders" class="empty-folders-modal__badge">
+								{{ t('duplicatefinder', 'Includes empty subfolders') }}
+							</span>
+						</label>
+					</div>
+				</div>
+			</NcModal>
 		</template>
 	</NcContent>
 </template>
@@ -230,7 +320,8 @@ import ProjectDuplicates from './components/ProjectDuplicates.vue';
 import OnboardingGuide from './components/help/OnboardingGuide.vue';
 import UsageExamples from './components/help/UsageExamples.vue';
 import FAQ from './components/help/FAQ.vue';
-import {
+import * as api from '@/tools/api';
+const {
 	fetchDuplicates,
 	fetchProjects,
 	fetchScanStatus,
@@ -238,7 +329,7 @@ import {
 	notifyScanStarted,
 	notifyScanCompleted,
 	notifyScanFailed,
-} from '@/tools/api';
+} = api;
 import {
 	removeDuplicateFromList,
 	loadUiPreferences,
@@ -309,6 +400,13 @@ export default {
 			},
 			helpModalOpen: false,
 			currentHelpSection: 'guide',
+			emptyFoldersModalOpen: false,
+			emptyFoldersLoading: false,
+			emptyFoldersDeleting: false,
+			modalEmptyFoldersScanned: false,
+			modalEmptyFolders: [],
+			selectedModalEmptyFolders: [],
+			recentCleanedPaths: [],
 			activeProject: null,
 			projectDuplicate: null,
 			projects: [],
@@ -333,6 +431,10 @@ export default {
 	computed: {
 		hasDuplicates() {
 			return this.acknowledgedDuplicates.length > 0 || this.unacknowledgedDuplicates.length > 0
+		},
+		isAllModalEmptyFoldersSelected() {
+			return this.modalEmptyFolders.length > 0
+				&& this.selectedModalEmptyFolders.length === this.modalEmptyFolders.length
 		},
 		isScanRunning() {
 			return Boolean(this.scanStatus && this.scanStatus.running)
@@ -836,6 +938,81 @@ export default {
 			this.currentHelpSection = section || 'guide'
 			this.helpModalOpen = true
 		},
+		recordTouchedFolders(paths) {
+			if (!Array.isArray(paths) || paths.length === 0) {
+				return
+			}
+			const seen = new Set(this.recentCleanedPaths)
+			paths.forEach(path => {
+				if (typeof path === 'string' && path.trim() !== '') {
+					seen.add(path.trim())
+				}
+			})
+			this.recentCleanedPaths = Array.from(seen)
+		},
+		async openEmptyFoldersModal() {
+			this.emptyFoldersModalOpen = true
+			await this.scanEmptyFoldersInModal(this.recentCleanedPaths.length > 0)
+		},
+		async scanEmptyFoldersInModal(useCleanedScope = false) {
+			if (typeof api.scanEmptyFolders !== 'function') {
+				return
+			}
+			this.emptyFoldersLoading = true
+			try {
+				const scopePaths = useCleanedScope && this.recentCleanedPaths.length > 0
+					? [...this.recentCleanedPaths]
+					: []
+				const response = await api.scanEmptyFolders(scopePaths)
+				const folders = Array.isArray(response?.folders) ? response.folders : []
+				this.modalEmptyFolders = folders
+				this.selectedModalEmptyFolders = folders.map(folder => folder.path)
+				this.modalEmptyFoldersScanned = true
+			} catch (error) {
+				console.error('Error scanning empty folders from modal:', error)
+			} finally {
+				this.emptyFoldersLoading = false
+			}
+		},
+		toggleModalEmptyFolder(path) {
+			const idx = this.selectedModalEmptyFolders.indexOf(path)
+			if (idx === -1) {
+				this.selectedModalEmptyFolders.push(path)
+			} else {
+				this.selectedModalEmptyFolders.splice(idx, 1)
+			}
+		},
+		toggleSelectAllModalEmptyFolders() {
+			if (this.isAllModalEmptyFoldersSelected) {
+				this.selectedModalEmptyFolders = []
+			} else {
+				this.selectedModalEmptyFolders = this.modalEmptyFolders.map(folder => folder.path)
+			}
+		},
+		async deleteSelectedModalEmptyFolders() {
+			if (this.selectedModalEmptyFolders.length === 0 || typeof api.deleteEmptyFolders !== 'function') {
+				return
+			}
+			if (typeof confirm === 'function' && !confirm(t('duplicatefinder', 'Are you sure you want to delete the selected empty folders?'))) {
+				return
+			}
+			this.emptyFoldersDeleting = true
+			try {
+				const { deleted } = await api.deleteEmptyFolders([...this.selectedModalEmptyFolders])
+				if (deleted.length > 0) {
+					const deletedSet = new Set(deleted)
+					this.modalEmptyFolders = this.modalEmptyFolders.filter(folder => !deletedSet.has(folder.path))
+					this.selectedModalEmptyFolders = this.selectedModalEmptyFolders.filter(path => !deletedSet.has(path))
+					if (this.modalEmptyFolders.length === 0) {
+						this.recentCleanedPaths = []
+					}
+				}
+			} catch (error) {
+				console.error('Error deleting empty folders from modal:', error)
+			} finally {
+				this.emptyFoldersDeleting = false
+			}
+		},
 
 		viewProject(projectId) {
 			this.activeProject = projectId
@@ -928,7 +1105,8 @@ export default {
 	margin-left: auto;
 }
 
-.app-content-topbar .topbar-scan-button {
+.app-content-topbar .topbar-scan-button,
+.app-content-topbar .topbar-empty-folders-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -948,13 +1126,16 @@ export default {
 	transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 
-.app-content-topbar .topbar-scan-button svg {
+.app-content-topbar .topbar-scan-button svg,
+.app-content-topbar .topbar-empty-folders-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
 
 .app-content-topbar .topbar-scan-button:hover:not(:disabled),
-.app-content-topbar .topbar-scan-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-scan-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-empty-folders-button:hover:not(:disabled),
+.app-content-topbar .topbar-empty-folders-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -1083,6 +1264,7 @@ export default {
 }
 
 .app-content-topbar .topbar-scan-button > *,
+.app-content-topbar .topbar-empty-folders-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -1101,6 +1283,71 @@ export default {
 	padding: var(--spacing-3);
 	max-width: 800px;
 	margin: 0 auto;
+}
+
+.empty-folders-modal {
+	padding: 20px;
+	max-width: 760px;
+	margin: 0 auto;
+}
+
+.empty-folders-modal__hint {
+	margin: 0 0 14px;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.92rem;
+	line-height: 1.45;
+}
+
+.empty-folders-modal__toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.empty-folders-modal__status {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 16px 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.empty-folders-modal__list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-height: 50vh;
+	overflow-y: auto;
+}
+
+.empty-folders-modal__item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius, 8px);
+	cursor: pointer;
+}
+
+.empty-folders-modal__item:hover {
+	background-color: var(--color-background-hover);
+}
+
+.empty-folders-modal__path {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	color: var(--color-main-text);
+}
+
+.empty-folders-modal__badge {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.82rem;
+	white-space: nowrap;
 }
 
 :deep(.modal-container) {
