@@ -33,6 +33,10 @@ return [
        // File routes
        ['name' => 'file_api#delete', 'url' => '/api/files/delete', 'verb' => 'POST'],
 
+       // Empty folder cleanup routes
+       ['name' => 'empty_folder_api#scan', 'url' => '/api/empty-folders/scan', 'verb' => 'POST'],
+       ['name' => 'empty_folder_api#delete', 'url' => '/api/empty-folders/delete', 'verb' => 'POST'],
+
        // Excluded folder routes
        ['name' => 'excluded_folder#index', 'url' => '/api/excluded-folders', 'verb' => 'GET'],
        ['name' => 'excluded_folder#create', 'url' => '/api/excluded-folders', 'verb' => 'POST'],

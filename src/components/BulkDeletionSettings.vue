@@ -19,15 +19,75 @@
                   {{ preset.label }}
                 </NcActionButton>
               </NcActions>
-              <NcButton type="primary" @click="performDryRun" :disabled="isLoading">
+              <NcButton type="primary" @click="performDryRun" :disabled="isLoading || isScanningEmptyFolders">
                 <template #icon>
                   <NcLoadingIcon v-if="isLoading" />
                 </template>
                 {{ t('duplicatefinder', 'Start preview') }}
               </NcButton>
+              <NcButton type="secondary" class="scan-empty-folders-button" @click="runEmptyFolderScan([])" :disabled="isLoading || isScanningEmptyFolders">
+                <template #icon>
+                  <NcLoadingIcon v-if="isScanningEmptyFolders" />
+                </template>
+                {{ t('duplicatefinder', 'Scan empty folders') }}
+              </NcButton>
             </div>
           </template>
         </NcEmptyContent>
+      </div>
+
+      <div v-if="emptyFolderScanCompleted" class="empty-folders-section">
+        <div class="empty-folders-header">
+          <div>
+            <h3>{{ t('duplicatefinder', 'Empty folders ({count})', { count: emptyFolders.length }) }}</h3>
+            <p class="merge-explanation">
+              {{ t('duplicatefinder', 'Protected origin folders, excluded folders, and external mounts are automatically skipped.') }}
+            </p>
+          </div>
+          <div class="empty-folders-actions">
+            <NcButton v-if="emptyFolders.length > 0" type="tertiary" @click="toggleSelectAllEmptyFolders">
+              {{ isAllEmptyFoldersSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
+            </NcButton>
+            <NcButton v-if="emptyFolderScanWasScoped" type="secondary" @click="runEmptyFolderScan([])" :disabled="isScanningEmptyFolders || isDeletingEmptyFolders">
+              {{ t('duplicatefinder', 'Scan all folders') }}
+            </NcButton>
+            <NcButton type="tertiary" @click="dismissEmptyFolderPanel" :disabled="isDeletingEmptyFolders">
+              {{ t('duplicatefinder', 'Dismiss') }}
+            </NcButton>
+            <NcButton
+              v-if="emptyFolders.length > 0"
+              type="error"
+              class="delete-empty-folders-button"
+              :disabled="isDeletingEmptyFolders || selectedEmptyFolders.length === 0"
+              @click="confirmDeleteEmptyFolders">
+              <template #icon>
+                <NcLoadingIcon v-if="isDeletingEmptyFolders" />
+              </template>
+              {{ t('duplicatefinder', 'Delete selected empty folders ({count})', { count: selectedEmptyFolders.length }) }}
+            </NcButton>
+          </div>
+        </div>
+
+        <div v-if="emptyFolders.length > 0" class="empty-folders-list">
+          <div v-for="folder in emptyFolders" :key="folder.path" class="file-display empty-folder-item">
+            <div class="file-checkbox">
+              <NcCheckboxRadioSwitch
+                :checked="isEmptyFolderSelected(folder.path)"
+                @update:checked="toggleEmptyFolder(folder.path)"
+                type="checkbox">
+                <div class="file-info" :title="folder.path">
+                  <span class="file-path-label">{{ folder.path }}</span>
+                  <span v-if="folder.hasEmptySubfolders" class="file-size">
+                    {{ t('duplicatefinder', 'Includes empty subfolders') }}
+                  </span>
+                </div>
+              </NcCheckboxRadioSwitch>
+            </div>
+          </div>
+        </div>
+        <p v-else class="empty-folders-none">
+          {{ t('duplicatefinder', 'No empty folders were found.') }}
+        </p>
       </div>
     </div>
 
@@ -106,6 +166,14 @@
               </template>
               {{ t('duplicatefinder', 'Delete selected files') }}
             </NcButton>
+          </div>
+          <div class="post-cleanup-option">
+            <NcCheckboxRadioSwitch
+              :checked="detectEmptyFoldersAfterDelete"
+              @update:checked="detectEmptyFoldersAfterDelete = !detectEmptyFoldersAfterDelete"
+              type="checkbox">
+              {{ t('duplicatefinder', 'Detect empty folders after deleting selected duplicates') }}
+            </NcCheckboxRadioSwitch>
           </div>
         </template>
         <template v-else>
@@ -192,10 +260,12 @@
 
 <script>
 import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon, NcActions, NcActionButton } from '@nextcloud/vue'
-import { fetchDuplicatesForBulk, deleteFiles } from '@/tools/api'
+import * as api from '@/tools/api'
 import { openFileInViewer, getTotalSizeOfDuplicate, getParentFolderPath } from '@/tools/utils'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import { translate as t } from '@nextcloud/l10n'
+
+const { fetchDuplicatesForBulk, deleteFiles } = api
 
 export default {
   name: 'BulkDeletionSettings',
@@ -217,10 +287,20 @@ export default {
       limit: 100,
       selectedFiles: {},
       sortOption: 'none',
-      minSizeBytes: 0
+      minSizeBytes: 0,
+      detectEmptyFoldersAfterDelete: false,
+      isScanningEmptyFolders: false,
+      isDeletingEmptyFolders: false,
+      emptyFolderScanCompleted: false,
+      emptyFolderScanWasScoped: false,
+      emptyFolders: [],
+      selectedEmptyFolders: []
     }
   },
   computed: {
+    isAllEmptyFoldersSelected() {
+      return this.emptyFolders.length > 0 && this.selectedEmptyFolders.length === this.emptyFolders.length
+    },
     hasDuplicatesToDelete() {
       return this.previewResults &&
              Object.keys(this.previewResults.duplicateGroups).length > 0
@@ -513,9 +593,14 @@ export default {
         const { success, errors } = await deleteFiles(filesToDelete)
 
         if (success.length > 0) {
+          const deletedPaths = success.map(file => file && file.path).filter(Boolean)
+          this.$emit('folders-touched', deletedPaths)
           this.$emit('duplicates-deleted')
           this.previewResults = null
           this.selectedFiles = {}
+          if (this.detectEmptyFoldersAfterDelete && typeof api.scanEmptyFolders === 'function') {
+            await this.runEmptyFolderScan(deletedPaths)
+          }
         }
 
         if (errors.length > 0) {
@@ -594,6 +679,72 @@ export default {
         })
         this.$set(this.selectedFiles, hash, indexesOutsideFolder)
       })
+    },
+    async runEmptyFolderScan(candidatePaths = []) {
+      if (typeof api.scanEmptyFolders !== 'function') {
+        return
+      }
+      this.isScanningEmptyFolders = true
+      try {
+        const scoped = Array.isArray(candidatePaths) && candidatePaths.length > 0
+        const response = await api.scanEmptyFolders(scoped ? candidatePaths : [])
+        const folders = Array.isArray(response?.folders) ? response.folders : []
+        this.emptyFolders = folders
+        this.selectedEmptyFolders = folders.map(folder => folder.path)
+        this.emptyFolderScanWasScoped = scoped
+        this.emptyFolderScanCompleted = true
+      } catch (error) {
+        console.error('Error scanning empty folders:', error)
+      } finally {
+        this.isScanningEmptyFolders = false
+      }
+    },
+    isEmptyFolderSelected(path) {
+      return this.selectedEmptyFolders.includes(path)
+    },
+    toggleEmptyFolder(path) {
+      const idx = this.selectedEmptyFolders.indexOf(path)
+      if (idx === -1) {
+        this.selectedEmptyFolders.push(path)
+      } else {
+        this.selectedEmptyFolders.splice(idx, 1)
+      }
+    },
+    toggleSelectAllEmptyFolders() {
+      if (this.isAllEmptyFoldersSelected) {
+        this.selectedEmptyFolders = []
+      } else {
+        this.selectedEmptyFolders = this.emptyFolders.map(folder => folder.path)
+      }
+    },
+    dismissEmptyFolderPanel() {
+      this.emptyFolderScanCompleted = false
+      this.emptyFolders = []
+      this.selectedEmptyFolders = []
+    },
+    async confirmDeleteEmptyFolders() {
+      if (this.selectedEmptyFolders.length === 0 || typeof api.deleteEmptyFolders !== 'function') {
+        return
+      }
+      if (!confirm(t('duplicatefinder', 'Are you sure you want to delete the selected empty folders?'))) {
+        return
+      }
+      this.isDeletingEmptyFolders = true
+      try {
+        const { deleted } = await api.deleteEmptyFolders([...this.selectedEmptyFolders])
+        if (deleted.length > 0) {
+          const deletedSet = new Set(deleted)
+          this.emptyFolders = this.emptyFolders.filter(folder => !deletedSet.has(folder.path))
+          this.selectedEmptyFolders = this.selectedEmptyFolders.filter(path => !deletedSet.has(path))
+          if (this.emptyFolders.length === 0) {
+            this.emptyFolderScanCompleted = false
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting empty folders:', error)
+      } finally {
+        this.isDeletingEmptyFolders = false
+      }
     }
   }
 }
@@ -777,5 +928,41 @@ export default {
 
 .preview-button:hover {
   background-color: #138496;
+}
+
+.post-cleanup-option {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  font-weight: normal;
+}
+
+.empty-folders-section {
+  background-color: var(--color-main-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-large);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.empty-folders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.empty-folders-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.empty-folders-none {
+  color: var(--color-text-maxcontrast);
+  margin: 8px 0 0;
 }
 </style>
