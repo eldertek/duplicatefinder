@@ -108,7 +108,9 @@ export const deleteFile = async (file, options = {}) => {
             body.allowLastCopy = true;
         }
         await axios.post(url, body);
-        showSuccessNotification(t('duplicatefinder', 'File deleted successfully.'));
+        if (!options.silentSuccess) {
+            showSuccessNotification(t('duplicatefinder', 'File deleted successfully.'));
+        }
         return true;
     } catch (error) {
         console.error(`Error deleting file with path ${file.path}:`, error);
@@ -149,7 +151,7 @@ export const deleteFiles = async (files, options = {}) => {
 
     for (const file of files) {
         try {
-            const success = await deleteFile(file, options);
+            const success = await deleteFile(file, { ...options, silentSuccess: true });
             if (success) {
                 results.push(file);
             }
