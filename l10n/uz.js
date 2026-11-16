@@ -3,8 +3,9 @@ OC.L10N.register(
     {
     "Help" : "Yordam",
     "Projects" : "Loyihalar",
-    "Settings saved" : "Settings saved",
     "Select all" : "Barchasini tanash",
+    "Settings saved" : "Settings saved",
+    "Dismiss" : "Rad etish",
     "Back" : "Orqaga",
     "Preview" : "Ko‘rib chiqish",
     "More actions" : "Ko'proq harakatlar",
