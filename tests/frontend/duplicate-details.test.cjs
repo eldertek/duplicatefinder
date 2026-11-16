@@ -146,38 +146,42 @@ test('a file that was unticked after "Select All" is not deleted by "Delete Sele
 
 test('deleting every copy needs the confirmation of the user and is announced to the server', async () => {
 	const { vm, calls } = mount(group({ withIds: true }))
-	const questions = []
-	global.confirm = question => { questions.push(question); return true }
-	try {
-		checkboxes(vm).forEach(box => box.click())
-		await settle()
-		assert.equal(vm.selectedFiles.length, 3)
+	checkboxes(vm).forEach(box => box.click())
+	await settle()
+	assert.equal(vm.selectedFiles.length, 3)
 
-		button(vm, 'Delete Selected').click()
-		await settle()
+	button(vm, 'Delete Selected').click()
+	await settle()
 
-		assert.equal(questions.length, 1)
-		assert.deepEqual(calls.deleteFiles.map(c => c.options), [{ allowLastCopy: true }])
-	} finally {
-		delete global.confirm
-	}
+	const dialog = vm.$el.querySelector('.nc-confirm-dialog[role="alertdialog"]')
+	assert.ok(dialog, 'opens Nextcloud confirmation dialog instead of native browser confirm')
+	assert.match(dialog.textContent, /Delete all copies\?/)
+	assert.match(dialog.textContent, /This action will delete all instances of the duplicate\./)
+	assert.deepEqual(calls.deleteFiles, [], 'does not delete before confirmation button is clicked')
+
+	dialog.querySelector('.nc-confirm-dialog__button--danger').click()
+	await settle()
+
+	assert.equal(vm.$el.querySelector('.nc-confirm-dialog'), null, 'closes dialog after confirmation')
+	assert.deepEqual(calls.deleteFiles.map(c => c.options), [{ allowLastCopy: true }])
 })
 
 test('declining the confirmation deletes nothing', async () => {
 	const { vm, calls } = mount(group({ withIds: true }))
-	global.confirm = () => false
-	try {
-		checkboxes(vm).forEach(box => box.click())
-		await settle()
+	checkboxes(vm).forEach(box => box.click())
+	await settle()
 
-		button(vm, 'Delete Selected').click()
-		await settle()
+	button(vm, 'Delete Selected').click()
+	await settle()
 
-		assert.deepEqual(calls.deleteFiles, [])
-		assert.equal(rows(vm).length, 3)
-	} finally {
-		delete global.confirm
-	}
+	const dialog = vm.$el.querySelector('.nc-confirm-dialog[role="alertdialog"]')
+	assert.ok(dialog, 'opens Nextcloud confirmation dialog')
+	dialog.querySelector('.nc-confirm-dialog__button--cancel').click()
+	await settle()
+
+	assert.equal(vm.$el.querySelector('.nc-confirm-dialog'), null, 'closes dialog after cancel')
+	assert.deepEqual(calls.deleteFiles, [])
+	assert.equal(rows(vm).length, 3)
 })
 
 test('deleting some copies never asks to delete the last one', async () => {

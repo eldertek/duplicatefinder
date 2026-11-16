@@ -182,8 +182,14 @@ describe('Issue 206: Single top-right Bulk Delete button and initial selection',
 		const title = vm.$el.querySelector('.topbar-title')
 		assert.ok(title)
 		assert.equal(title.textContent.trim(), 'Duplicates (68)')
-		assert.match(title.getAttribute('title') || '', /68 total, 65 unacknowledged, 3 acknowledged/)
-		assert.match(title.getAttribute('title') || '', /Excluded folders and ignored files are not counted/)
+		assert.equal(title.getAttribute('title'), null, 'native title attribute is omitted to prevent browser tooltip overlap')
+		assert.match(title.getAttribute('data-tooltip') || '', /68 total, 65 unacknowledged, 3 acknowledged/)
+		assert.match(title.getAttribute('data-tooltip') || '', /Excluded folders and ignored files are not counted/)
+
+		const helpBtn = vm.$el.querySelector('.topbar-count-help')
+		assert.ok(helpBtn)
+		assert.equal(helpBtn.getAttribute('title'), null, 'native title attribute is omitted on help icon to prevent double tooltip')
+		assert.match(helpBtn.getAttribute('aria-label') || '', /68 total, 65 unacknowledged, 3 acknowledged/)
 
 		const tooltipEl = vm.$el.querySelector('.topbar-count-tooltip')
 		assert.ok(tooltipEl, 'renders accessible duplicate count breakdown tooltip')

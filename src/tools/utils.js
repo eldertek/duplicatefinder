@@ -224,6 +224,7 @@ const UI_PREFERENCES_DEFAULTS = {
     unacknowledgedOpen: true,
     sortOption: 'none',
     minSizeBytes: 0,
+    ignoredEmptyFolders: [],
 };
 
 /**
@@ -270,6 +271,9 @@ export function loadUiPreferences() {
         }
         const validSorts = ['none', 'size-desc', 'size-asc'];
         const parsedMinSize = Number(parsed.minSizeBytes);
+        const ignoredEmptyFolders = Array.isArray(parsed.ignoredEmptyFolders)
+            ? Array.from(new Set(parsed.ignoredEmptyFolders.filter(p => typeof p === 'string' && p.length > 0)))
+            : [];
         return {
             acknowledgedOpen: typeof parsed.acknowledgedOpen === 'boolean'
                 ? parsed.acknowledgedOpen
@@ -283,6 +287,7 @@ export function loadUiPreferences() {
             minSizeBytes: Number.isFinite(parsedMinSize) && parsedMinSize >= 0
                 ? Math.floor(parsedMinSize)
                 : UI_PREFERENCES_DEFAULTS.minSizeBytes,
+            ignoredEmptyFolders,
         };
     } catch (e) {
         return { ...UI_PREFERENCES_DEFAULTS };
@@ -316,6 +321,11 @@ export function saveUiPreferences(partial) {
             next.minSizeBytes = Number.isFinite(parsedMinSize) && parsedMinSize >= 0
                 ? Math.floor(parsedMinSize)
                 : 0;
+        }
+        if (Array.isArray(partial.ignoredEmptyFolders)) {
+            next.ignoredEmptyFolders = Array.from(
+                new Set(partial.ignoredEmptyFolders.filter(p => typeof p === 'string' && p.length > 0))
+            );
         }
         window.localStorage.setItem(getUiPreferencesStorageKey(), JSON.stringify(next));
     } catch (e) {

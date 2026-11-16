@@ -165,6 +165,49 @@
         <NcLoadingSpinner />
       </div>
     </transition>
+    <div
+      v-if="showDeleteAllConfirmDialog"
+      class="nc-confirm-dialog-backdrop"
+      role="presentation"
+      @click.self="resolveDeleteAllConfirm(false)"
+      @keydown.esc="resolveDeleteAllConfirm(false)">
+      <div
+        class="nc-confirm-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="nc-confirm-delete-all-title"
+        aria-describedby="nc-confirm-delete-all-desc">
+        <div class="nc-confirm-dialog__header">
+          <span class="nc-confirm-dialog__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </span>
+          <h4 id="nc-confirm-delete-all-title" class="nc-confirm-dialog__title">
+            {{ t('duplicatefinder', 'Delete all copies?') }}
+          </h4>
+        </div>
+        <p id="nc-confirm-delete-all-desc" class="nc-confirm-dialog__message">
+          {{ t('duplicatefinder', 'This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?') }}
+        </p>
+        <div class="nc-confirm-dialog__actions">
+          <button
+            type="button"
+            class="nc-confirm-dialog__button nc-confirm-dialog__button--cancel"
+            @click="resolveDeleteAllConfirm(false)">
+            {{ t('duplicatefinder', 'Cancel') }}
+          </button>
+          <button
+            type="button"
+            class="nc-confirm-dialog__button nc-confirm-dialog__button--danger"
+            @click="resolveDeleteAllConfirm(true)">
+            {{ t('duplicatefinder', 'Delete all copies') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -189,13 +232,23 @@ export default {
     return {
       selectedFiles: [],
       isLoadingNextDuplicate: false,
-      showDropdown: false
+      showDropdown: false,
+      showDeleteAllConfirmDialog: false,
+      pendingDeleteAllResolver: null
     };
   },
   watch: {
     // A selection belongs to the duplicate it was made on: never carry it over to another one
     duplicate() {
       this.selectedFiles = [];
+      if (this.showDeleteAllConfirmDialog) {
+        this.resolveDeleteAllConfirm(false);
+      }
+    }
+  },
+  beforeDestroy() {
+    if (this.pendingDeleteAllResolver) {
+      this.resolveDeleteAllConfirm(false);
     }
   },
   computed: {
@@ -314,7 +367,7 @@ export default {
         const remainingFiles = this.duplicate.files.filter(file => !this.selectedFiles.includes(file));
         let allowLastCopy = false;
         if (remainingFiles.length === 0) {
-          const confirmDelete = confirm(this.t('duplicatefinder', 'This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?'));
+          const confirmDelete = await this.requestDeleteAllConfirmation();
           if (!confirmDelete) return;
           // Only an explicit confirmation lets the server delete the last copy
           allowLastCopy = true;
@@ -335,6 +388,23 @@ export default {
         }
       } catch (error) {
         console.error('Error deleting selected files:', error);
+      }
+    },
+    requestDeleteAllConfirmation() {
+      if (this.pendingDeleteAllResolver) {
+        this.pendingDeleteAllResolver(false);
+      }
+      this.showDeleteAllConfirmDialog = true;
+      return new Promise(resolve => {
+        this.pendingDeleteAllResolver = resolve;
+      });
+    },
+    resolveDeleteAllConfirm(confirmed) {
+      this.showDeleteAllConfirmDialog = false;
+      const resolver = this.pendingDeleteAllResolver;
+      this.pendingDeleteAllResolver = null;
+      if (typeof resolver === 'function') {
+        resolver(Boolean(confirmed));
       }
     },
     selectAllFiles() {
@@ -924,5 +994,99 @@ button:disabled *,
 
 .action-buttons button.primary:hover {
   background: var(--color-primary-element-hover);
+}
+
+.nc-confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 3000;
+}
+
+.nc-confirm-dialog {
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--color-main-background, #ffffff);
+  background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
+  color: var(--color-main-text);
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  border-radius: var(--border-radius-large, 10px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  padding: 20px 22px;
+  box-sizing: border-box;
+}
+
+.nc-confirm-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.nc-confirm-dialog__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(211, 47, 47, 0.14);
+  color: #ef5350;
+  flex-shrink: 0;
+}
+
+.nc-confirm-dialog__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__message {
+  margin: 0 0 18px;
+  font-size: 0.92rem;
+  line-height: 1.48;
+  color: var(--color-text-maxcontrast, var(--color-main-text));
+}
+
+.nc-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.nc-confirm-dialog__button {
+  min-height: 34px;
+  padding: 6px 14px;
+  border-radius: var(--border-radius-large, 8px);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.nc-confirm-dialog__button--cancel {
+  background-color: var(--color-background-hover);
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__button--cancel:hover {
+  background-color: var(--color-background-dark);
+}
+
+.nc-confirm-dialog__button--danger {
+  background-color: #d32f2f;
+  border: 1px solid #d32f2f;
+  color: #ffffff;
+}
+
+.nc-confirm-dialog__button--danger:hover {
+  background-color: #b71c1c;
+  border-color: #b71c1c;
 }
 </style>

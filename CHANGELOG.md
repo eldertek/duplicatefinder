@@ -1,3 +1,11 @@
+## 1.10.15 - 2026-11-16
+### Added
+- **Nextcloud confirmation dialog replacing native browser `window.confirm()`** ([#235](https://github.com/eldertek/duplicatefinder/issues/235)). Replaced native browser `window.confirm()` prompts with an accessible Nextcloud confirmation dialog (`role="alertdialog"`, `aria-modal="true"`, keyboard Escape and backdrop dismissal, and explicit `Cancel` and destructive confirmation buttons) when deleting all copies of a duplicate group (`Delete all copies`), confirming bulk duplicate deletion, or deleting empty folders, while keeping server-side `allowLastCopy` protection unchanged
+- **Folder ignore/review system with crossed-out eye toggle and clean checkbox styling in Empty Folders cleanup** ([#236](https://github.com/eldertek/duplicatefinder/issues/236)). Styled empty folder selection checkboxes consistently with the duplicate file table (removing the thick dark browser outline), added a per-folder crossed-out eye button to ignore/hide reviewed or auto-regenerated directories (such as `.cache`) or restore their visibility, added a bulk `Ignore selected ({count})` button and a `Show ignored ({count})` / `Hide ignored ({count})` toggle, and persisted ignored empty folders per user across scans and reloads
+
+### Fixed
+- **Prevent native browser `title` tooltip from overlapping the duplicate count breakdown popover** ([#234](https://github.com/eldertek/duplicatefinder/issues/234)). Removed redundant native `title` attributes from `.topbar-title` and `.topbar-count-help` (keeping `aria-label`, `data-tooltip`, and `.topbar-count-tooltip`) so the browser's native tooltip no longer overlaps on top of the custom Nextcloud duplicate count breakdown popover
+
 ## 1.10.14 - 2026-11-16
 ### Added
 - **Tooltip explaining the duplicate count and breakdown in the top header bar** ([#234](https://github.com/eldertek/duplicatefinder/issues/234)). Added an accessible info badge and hover/focus tooltip next to the `Duplicates ({count})` header showing the exact breakdown between unacknowledged and acknowledged duplicate groups, clarifying that excluded folders and ignored files are not counted, and indicating that the count reflects active scan results matching the current size filter

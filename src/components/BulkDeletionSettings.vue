@@ -45,8 +45,26 @@
             </p>
           </div>
           <div class="empty-folders-actions">
-            <NcButton v-if="emptyFolders.length > 0" type="tertiary" @click="toggleSelectAllEmptyFolders">
+            <NcButton v-if="activeEmptyFolders.length > 0" type="tertiary" @click="toggleSelectAllEmptyFolders">
               {{ isAllEmptyFoldersSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
+            </NcButton>
+            <NcButton
+              v-if="selectedEmptyFolders.length > 0"
+              type="secondary"
+              class="ignore-empty-folders-button"
+              :disabled="isScanningEmptyFolders || isDeletingEmptyFolders"
+              @click="ignoreSelectedEmptyFolders">
+              {{ t('duplicatefinder', 'Ignore selected ({count})', { count: selectedEmptyFolders.length }) }}
+            </NcButton>
+            <NcButton
+              v-if="ignoredEmptyFoldersCount > 0"
+              type="tertiary"
+              class="toggle-ignored-folders-button"
+              :disabled="isScanningEmptyFolders || isDeletingEmptyFolders"
+              @click="showIgnoredEmptyFolders = !showIgnoredEmptyFolders">
+              {{ showIgnoredEmptyFolders
+                ? t('duplicatefinder', 'Hide ignored ({count})', { count: ignoredEmptyFoldersCount })
+                : t('duplicatefinder', 'Show ignored ({count})', { count: ignoredEmptyFoldersCount }) }}
             </NcButton>
             <NcButton v-if="emptyFolderScanWasScoped" type="secondary" @click="runEmptyFolderScan([])" :disabled="isScanningEmptyFolders || isDeletingEmptyFolders">
               {{ t('duplicatefinder', 'Scan all folders') }}
@@ -68,23 +86,54 @@
           </div>
         </div>
 
-        <div v-if="emptyFolders.length > 0" class="empty-folders-list">
-          <div v-for="folder in emptyFolders" :key="folder.path" class="file-display empty-folder-item">
-            <div class="file-checkbox">
-              <NcCheckboxRadioSwitch
-                :checked="isEmptyFolderSelected(folder.path)"
-                @update:checked="toggleEmptyFolder(folder.path)"
-                type="checkbox">
-                <div class="file-info" :title="folder.path">
-                  <span class="file-path-label">{{ folder.path }}</span>
-                  <span v-if="folder.hasEmptySubfolders" class="file-size">
-                    {{ t('duplicatefinder', 'Includes empty subfolders') }}
-                  </span>
-                </div>
-              </NcCheckboxRadioSwitch>
+        <div v-if="visibleEmptyFolders.length > 0" class="empty-folders-list">
+          <div
+            v-for="folder in visibleEmptyFolders"
+            :key="folder.path"
+            class="file-display empty-folder-item"
+            :class="{
+              'is-selected': isEmptyFolderSelected(folder.path),
+              'is-ignored': isEmptyFolderIgnored(folder.path)
+            }">
+            <input
+              type="checkbox"
+              class="empty-folder-checkbox"
+              :checked="isEmptyFolderSelected(folder.path)"
+              :disabled="isEmptyFolderIgnored(folder.path)"
+              @change="toggleEmptyFolder(folder.path)">
+            <div
+              class="file-info empty-folder-info"
+              :title="folder.path"
+              @click="!isEmptyFolderIgnored(folder.path) && toggleEmptyFolder(folder.path)">
+              <span class="file-path-label">{{ folder.path }}</span>
+              <span v-if="isEmptyFolderIgnored(folder.path)" class="empty-folder-ignored-pill">
+                {{ t('duplicatefinder', 'Ignored') }}
+              </span>
+              <span v-if="folder.hasEmptySubfolders" class="file-size">
+                {{ t('duplicatefinder', 'Includes empty subfolders') }}
+              </span>
             </div>
+            <button
+              type="button"
+              class="empty-folder-ignore-button"
+              :class="{ 'is-ignored': isEmptyFolderIgnored(folder.path) }"
+              :title="isEmptyFolderIgnored(folder.path)
+                ? t('duplicatefinder', 'Restore folder to cleanup list')
+                : t('duplicatefinder', 'Ignore folder in future scans')"
+              :aria-label="isEmptyFolderIgnored(folder.path)
+                ? t('duplicatefinder', 'Restore folder to cleanup list')
+                : t('duplicatefinder', 'Ignore folder in future scans')"
+              @click.stop="toggleIgnoreEmptyFolder(folder.path)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
           </div>
         </div>
+        <p v-else-if="emptyFolders.length > 0 && visibleEmptyFolders.length === 0" class="empty-folders-none">
+          {{ t('duplicatefinder', 'All detected empty folders are currently ignored ({count}).', { count: ignoredEmptyFoldersCount }) }}
+        </p>
         <p v-else class="empty-folders-none">
           {{ t('duplicatefinder', 'No empty folders were found.') }}
         </p>
@@ -255,13 +304,57 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="confirmDialog.open"
+      class="nc-confirm-dialog-backdrop"
+      role="presentation"
+      @click.self="resolveConfirmDialog(false)"
+      @keydown.esc="resolveConfirmDialog(false)">
+      <div
+        class="nc-confirm-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="bulk-nc-confirm-title"
+        aria-describedby="bulk-nc-confirm-desc">
+        <div class="nc-confirm-dialog__header">
+          <span class="nc-confirm-dialog__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </span>
+          <h4 id="bulk-nc-confirm-title" class="nc-confirm-dialog__title">
+            {{ confirmDialog.title }}
+          </h4>
+        </div>
+        <p id="bulk-nc-confirm-desc" class="nc-confirm-dialog__message">
+          {{ confirmDialog.message }}
+        </p>
+        <div class="nc-confirm-dialog__actions">
+          <button
+            type="button"
+            class="nc-confirm-dialog__button nc-confirm-dialog__button--cancel"
+            @click="resolveConfirmDialog(false)">
+            {{ t('duplicatefinder', 'Cancel') }}
+          </button>
+          <button
+            type="button"
+            class="nc-confirm-dialog__button nc-confirm-dialog__button--danger"
+            @click="resolveConfirmDialog(true)">
+            {{ confirmDialog.confirmLabel }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon, NcActions, NcActionButton } from '@nextcloud/vue'
 import * as api from '@/tools/api'
-import { openFileInViewer, getTotalSizeOfDuplicate, getParentFolderPath } from '@/tools/utils'
+import { openFileInViewer, getTotalSizeOfDuplicate, getParentFolderPath, loadUiPreferences, saveUiPreferences } from '@/tools/utils'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import { translate as t } from '@nextcloud/l10n'
 
@@ -294,12 +387,42 @@ export default {
       emptyFolderScanCompleted: false,
       emptyFolderScanWasScoped: false,
       emptyFolders: [],
-      selectedEmptyFolders: []
+      selectedEmptyFolders: [],
+      ignoredEmptyFolders: typeof loadUiPreferences === 'function' && Array.isArray(loadUiPreferences()?.ignoredEmptyFolders)
+        ? [...loadUiPreferences().ignoredEmptyFolders]
+        : [],
+      showIgnoredEmptyFolders: false,
+      confirmDialog: {
+        open: false,
+        title: '',
+        message: '',
+        confirmLabel: '',
+        resolver: null
+      }
+    }
+  },
+  beforeDestroy() {
+    if (this.confirmDialog && typeof this.confirmDialog.resolver === 'function') {
+      this.resolveConfirmDialog(false)
     }
   },
   computed: {
+    activeEmptyFolders() {
+      const ignoredSet = new Set(this.ignoredEmptyFolders)
+      return this.emptyFolders.filter(folder => !ignoredSet.has(folder.path))
+    },
+    ignoredEmptyFoldersCount() {
+      const ignoredSet = new Set(this.ignoredEmptyFolders)
+      return this.emptyFolders.filter(folder => ignoredSet.has(folder.path)).length
+    },
+    visibleEmptyFolders() {
+      return this.showIgnoredEmptyFolders
+        ? this.emptyFolders
+        : this.activeEmptyFolders
+    },
     isAllEmptyFoldersSelected() {
-      return this.emptyFolders.length > 0 && this.selectedEmptyFolders.length === this.emptyFolders.length
+      return this.activeEmptyFolders.length > 0 &&
+        this.activeEmptyFolders.every(folder => this.selectedEmptyFolders.includes(folder.path))
     },
     hasDuplicatesToDelete() {
       return this.previewResults &&
@@ -554,13 +677,41 @@ export default {
       }
     },
 
+    requestConfirmation({ title, message, confirmLabel }) {
+      if (this.confirmDialog && typeof this.confirmDialog.resolver === 'function') {
+        this.confirmDialog.resolver(false)
+      }
+      this.confirmDialog = {
+        open: true,
+        title,
+        message,
+        confirmLabel,
+        resolver: null
+      }
+      return new Promise(resolve => {
+        this.confirmDialog.resolver = resolve
+      })
+    },
+    resolveConfirmDialog(confirmed) {
+      const resolver = this.confirmDialog ? this.confirmDialog.resolver : null
+      this.confirmDialog.open = false
+      this.confirmDialog.resolver = null
+      if (typeof resolver === 'function') {
+        resolver(Boolean(confirmed))
+      }
+    },
+
     async confirmBulkDelete() {
-      if (!confirm(t('duplicatefinder', 'Are you sure you want to delete all selected duplicates? This action cannot be undone.'))) {
+      const confirmed = await this.requestConfirmation({
+        title: t('duplicatefinder', 'Delete selected duplicates?'),
+        message: t('duplicatefinder', 'Are you sure you want to delete all selected duplicates? This action cannot be undone.'),
+        confirmLabel: t('duplicatefinder', 'Delete selected files')
+      })
+      if (!confirmed) {
         return
       }
 
       // Ensure at least one file per group is preserved
-      let allGroupsValid = true;
       Object.entries(this.selectedFiles).forEach(([hash, selectedIndexes]) => {
         const group = this.previewResults.duplicateGroups[hash];
         // Check if protected files exist for this group
@@ -569,13 +720,8 @@ export default {
         if (selectedIndexes.length === group.filesToDelete.length && !hasProtectedFiles) {
           // If all files in a group are selected and no protected copies exist, deselect one to preserve it
           this.selectedFiles[hash] = selectedIndexes.slice(0, -1);
-          allGroupsValid = false;
         }
       });
-
-      if (!allGroupsValid) {
-        alert(t('duplicatefinder', 'Some groups had all files selected. One file from each group has been automatically preserved.'));
-      }
 
       const filesToDelete = Object.entries(this.selectedFiles).flatMap(([hash, selectedIndexes]) => {
         const group = this.previewResults.duplicateGroups[hash]
@@ -689,8 +835,13 @@ export default {
         const scoped = Array.isArray(candidatePaths) && candidatePaths.length > 0
         const response = await api.scanEmptyFolders(scoped ? candidatePaths : [])
         const folders = Array.isArray(response?.folders) ? response.folders : []
+        const prefs = typeof loadUiPreferences === 'function' ? loadUiPreferences() : null
+        this.ignoredEmptyFolders = Array.isArray(prefs?.ignoredEmptyFolders) ? [...prefs.ignoredEmptyFolders] : []
+        const ignoredSet = new Set(this.ignoredEmptyFolders)
         this.emptyFolders = folders
-        this.selectedEmptyFolders = folders.map(folder => folder.path)
+        this.selectedEmptyFolders = folders
+          .filter(folder => !ignoredSet.has(folder.path))
+          .map(folder => folder.path)
         this.emptyFolderScanWasScoped = scoped
         this.emptyFolderScanCompleted = true
       } catch (error) {
@@ -699,10 +850,41 @@ export default {
         this.isScanningEmptyFolders = false
       }
     },
+    isEmptyFolderIgnored(path) {
+      return this.ignoredEmptyFolders.includes(path)
+    },
+    toggleIgnoreEmptyFolder(path) {
+      const set = new Set(this.ignoredEmptyFolders)
+      if (set.has(path)) {
+        set.delete(path)
+      } else {
+        set.add(path)
+        this.selectedEmptyFolders = this.selectedEmptyFolders.filter(p => p !== path)
+      }
+      this.ignoredEmptyFolders = Array.from(set)
+      if (typeof saveUiPreferences === 'function') {
+        saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
+      }
+    },
+    ignoreSelectedEmptyFolders() {
+      if (this.selectedEmptyFolders.length === 0) {
+        return
+      }
+      const set = new Set(this.ignoredEmptyFolders)
+      this.selectedEmptyFolders.forEach(path => set.add(path))
+      this.ignoredEmptyFolders = Array.from(set)
+      this.selectedEmptyFolders = []
+      if (typeof saveUiPreferences === 'function') {
+        saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
+      }
+    },
     isEmptyFolderSelected(path) {
       return this.selectedEmptyFolders.includes(path)
     },
     toggleEmptyFolder(path) {
+      if (this.isEmptyFolderIgnored(path)) {
+        return
+      }
       const idx = this.selectedEmptyFolders.indexOf(path)
       if (idx === -1) {
         this.selectedEmptyFolders.push(path)
@@ -714,7 +896,7 @@ export default {
       if (this.isAllEmptyFoldersSelected) {
         this.selectedEmptyFolders = []
       } else {
-        this.selectedEmptyFolders = this.emptyFolders.map(folder => folder.path)
+        this.selectedEmptyFolders = this.activeEmptyFolders.map(folder => folder.path)
       }
     },
     dismissEmptyFolderPanel() {
@@ -726,7 +908,12 @@ export default {
       if (this.selectedEmptyFolders.length === 0 || typeof api.deleteEmptyFolders !== 'function') {
         return
       }
-      if (!confirm(t('duplicatefinder', 'Are you sure you want to delete the selected empty folders?'))) {
+      const confirmed = await this.requestConfirmation({
+        title: t('duplicatefinder', 'Delete empty folders?'),
+        message: t('duplicatefinder', 'Are you sure you want to delete the selected empty folders?'),
+        confirmLabel: t('duplicatefinder', 'Delete empty folders')
+      })
+      if (!confirmed) {
         return
       }
       this.isDeletingEmptyFolders = true
@@ -964,5 +1151,208 @@ export default {
 .empty-folders-none {
   color: var(--color-text-maxcontrast);
   margin: 8px 0 0;
+}
+
+.empty-folder-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-folder-item.is-selected {
+  background-color: var(--color-primary-element-light);
+}
+
+.empty-folder-item.is-ignored {
+  opacity: 0.65;
+  background-color: var(--color-background-dark);
+}
+
+.empty-folder-info {
+  flex: 1 1 auto;
+  cursor: pointer;
+}
+
+.empty-folder-checkbox {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1.5px solid var(--color-border-maxcontrast, #767676) !important;
+  border-radius: 4px !important;
+  background-color: var(--color-main-background, #ffffff) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  flex-shrink: 0;
+  cursor: pointer !important;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.empty-folder-checkbox:hover:not(:disabled) {
+  border-color: var(--color-primary-element, #0082c9) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.empty-folder-checkbox:focus,
+.empty-folder-checkbox:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.empty-folder-checkbox:checked {
+  background-color: var(--color-primary-element, #0082c9) !important;
+  border-color: var(--color-primary-element, #0082c9) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") !important;
+  background-size: 12px 12px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.empty-folder-checkbox:disabled {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+}
+
+.empty-folder-ignored-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background-color: var(--color-background-hover);
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  color: var(--color-text-maxcontrast);
+  white-space: nowrap;
+}
+
+.empty-folder-ignore-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  background-color: var(--color-main-background);
+  color: var(--color-text-maxcontrast);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.empty-folder-ignore-button:hover {
+  background-color: var(--color-background-hover);
+  color: var(--color-main-text);
+  border-color: var(--color-primary-element);
+}
+
+.empty-folder-ignore-button.is-ignored {
+  background-color: var(--color-primary-element-light);
+  color: var(--color-primary-element, #0082c9);
+  border-color: var(--color-primary-element, #0082c9);
+}
+
+.nc-confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 3000;
+}
+
+.nc-confirm-dialog {
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--color-main-background, #ffffff);
+  background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
+  color: var(--color-main-text);
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  border-radius: var(--border-radius-large, 10px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  padding: 20px 22px;
+  box-sizing: border-box;
+}
+
+.nc-confirm-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.nc-confirm-dialog__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(211, 47, 47, 0.14);
+  color: #ef5350;
+  flex-shrink: 0;
+}
+
+.nc-confirm-dialog__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__message {
+  margin: 0 0 18px;
+  font-size: 0.92rem;
+  line-height: 1.48;
+  color: var(--color-text-maxcontrast, var(--color-main-text));
+}
+
+.nc-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.nc-confirm-dialog__button {
+  min-height: 34px;
+  padding: 6px 14px;
+  border-radius: var(--border-radius-large, 8px);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.nc-confirm-dialog__button--cancel {
+  background-color: var(--color-background-hover);
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__button--cancel:hover {
+  background-color: var(--color-background-dark);
+}
+
+.nc-confirm-dialog__button--danger {
+  background-color: #d32f2f;
+  border: 1px solid #d32f2f;
+  color: #ffffff;
+}
+
+.nc-confirm-dialog__button--danger:hover {
+  background-color: #b71c1c;
+  border-color: #b71c1c;
 }
 </style>

@@ -39,7 +39,6 @@
 						:class="{ 'has-count-tooltip': activeView !== 'bulk-delete' }">
 						<h2
 							class="topbar-title"
-							:title="activeView !== 'bulk-delete' ? duplicateCountTooltipText : null"
 							:data-tooltip="activeView !== 'bulk-delete' ? duplicateCountTooltipText : null">
 							{{ activeView === 'bulk-delete'
 								? t('duplicatefinder', 'Bulk Delete')
@@ -52,7 +51,7 @@
 							class="topbar-count-help"
 							tabindex="0"
 							role="button"
-							:title="duplicateCountTooltipText"
+							:data-tooltip="duplicateCountTooltipText"
 							:aria-label="duplicateCountTooltipText">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -305,11 +304,29 @@
 							{{ t('duplicatefinder', 'Scan all folders') }}
 						</NcButton>
 						<NcButton
-							v-if="modalEmptyFolders.length > 0"
+							v-if="activeModalEmptyFolders.length > 0"
 							type="tertiary"
 							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
 							@click="toggleSelectAllModalEmptyFolders">
 							{{ isAllModalEmptyFoldersSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
+						</NcButton>
+						<NcButton
+							v-if="selectedModalEmptyFolders.length > 0"
+							type="secondary"
+							class="modal-ignore-empty-folders-button"
+							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+							@click="ignoreSelectedModalEmptyFolders">
+							{{ t('duplicatefinder', 'Ignore selected ({count})', { count: selectedModalEmptyFolders.length }) }}
+						</NcButton>
+						<NcButton
+							v-if="ignoredModalEmptyFoldersCount > 0"
+							type="tertiary"
+							class="modal-toggle-ignored-folders-button"
+							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+							@click="showIgnoredModalEmptyFolders = !showIgnoredModalEmptyFolders">
+							{{ showIgnoredModalEmptyFolders
+								? t('duplicatefinder', 'Hide ignored ({count})', { count: ignoredModalEmptyFoldersCount })
+								: t('duplicatefinder', 'Show ignored ({count})', { count: ignoredModalEmptyFoldersCount }) }}
 						</NcButton>
 						<NcButton
 							v-if="modalEmptyFolders.length > 0"
@@ -328,23 +345,99 @@
 					<div v-else-if="modalEmptyFoldersScanned && modalEmptyFolders.length === 0" class="empty-folders-modal__status">
 						<span>{{ t('duplicatefinder', 'No empty folders were found.') }}</span>
 					</div>
-					<div v-else-if="modalEmptyFolders.length > 0" class="empty-folders-modal__list">
-						<label
-							v-for="folder in modalEmptyFolders"
+					<div v-else-if="modalEmptyFoldersScanned && visibleModalEmptyFolders.length === 0" class="empty-folders-modal__status">
+						<span>{{ t('duplicatefinder', 'All detected empty folders are currently ignored ({count}).', { count: ignoredModalEmptyFoldersCount }) }}</span>
+					</div>
+					<div v-else-if="visibleModalEmptyFolders.length > 0" class="empty-folders-modal__list">
+						<div
+							v-for="folder in visibleModalEmptyFolders"
 							:key="folder.path"
-							class="empty-folders-modal__item">
+							class="empty-folders-modal__item"
+							:class="{
+								'is-selected': selectedModalEmptyFolders.includes(folder.path),
+								'is-ignored': isEmptyFolderIgnored(folder.path)
+							}">
 							<input
 								type="checkbox"
+								class="empty-folder-checkbox"
 								:checked="selectedModalEmptyFolders.includes(folder.path)"
+								:disabled="isEmptyFolderIgnored(folder.path)"
 								@change="toggleModalEmptyFolder(folder.path)">
-							<span class="empty-folders-modal__path">{{ folder.path }}</span>
+							<span
+								class="empty-folders-modal__path"
+								@click="!isEmptyFolderIgnored(folder.path) && toggleModalEmptyFolder(folder.path)">
+								{{ folder.path }}
+							</span>
+							<span v-if="isEmptyFolderIgnored(folder.path)" class="empty-folders-modal__ignored-pill">
+								{{ t('duplicatefinder', 'Ignored') }}
+							</span>
 							<span v-if="folder.hasEmptySubfolders" class="empty-folders-modal__badge">
 								{{ t('duplicatefinder', 'Includes empty subfolders') }}
 							</span>
-						</label>
+							<button
+								type="button"
+								class="empty-folder-ignore-button"
+								:class="{ 'is-ignored': isEmptyFolderIgnored(folder.path) }"
+								:title="isEmptyFolderIgnored(folder.path)
+									? t('duplicatefinder', 'Restore folder to cleanup list')
+									: t('duplicatefinder', 'Ignore folder in future scans')"
+								:aria-label="isEmptyFolderIgnored(folder.path)
+									? t('duplicatefinder', 'Restore folder to cleanup list')
+									: t('duplicatefinder', 'Ignore folder in future scans')"
+								@click.stop="toggleIgnoreModalEmptyFolder(folder.path)">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+									<line x1="1" y1="1" x2="23" y2="23"></line>
+								</svg>
+							</button>
+						</div>
 					</div>
 				</div>
 			</NcModal>
+
+			<div
+				v-if="confirmDialog.open"
+				class="nc-confirm-dialog-backdrop"
+				role="presentation"
+				@click.self="resolveConfirmDialog(false)"
+				@keydown.esc="resolveConfirmDialog(false)">
+				<div
+					class="nc-confirm-dialog"
+					role="alertdialog"
+					aria-modal="true"
+					aria-labelledby="app-nc-confirm-title"
+					aria-describedby="app-nc-confirm-desc">
+					<div class="nc-confirm-dialog__header">
+						<span class="nc-confirm-dialog__icon" aria-hidden="true">
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+								<line x1="12" y1="9" x2="12" y2="13"></line>
+								<line x1="12" y1="17" x2="12.01" y2="17"></line>
+							</svg>
+						</span>
+						<h4 id="app-nc-confirm-title" class="nc-confirm-dialog__title">
+							{{ confirmDialog.title }}
+						</h4>
+					</div>
+					<p id="app-nc-confirm-desc" class="nc-confirm-dialog__message">
+						{{ confirmDialog.message }}
+					</p>
+					<div class="nc-confirm-dialog__actions">
+						<button
+							type="button"
+							class="nc-confirm-dialog__button nc-confirm-dialog__button--cancel"
+							@click="resolveConfirmDialog(false)">
+							{{ t('duplicatefinder', 'Cancel') }}
+						</button>
+						<button
+							type="button"
+							class="nc-confirm-dialog__button nc-confirm-dialog__button--danger"
+							@click="resolveConfirmDialog(true)">
+							{{ confirmDialog.confirmLabel }}
+						</button>
+					</div>
+				</div>
+			</div>
 		</template>
 	</NcContent>
 </template>
@@ -448,7 +541,18 @@ export default {
 			modalEmptyFoldersScanned: false,
 			modalEmptyFolders: [],
 			selectedModalEmptyFolders: [],
+			ignoredEmptyFolders: Array.isArray(savedPreferences.ignoredEmptyFolders)
+				? [...savedPreferences.ignoredEmptyFolders]
+				: [],
+			showIgnoredModalEmptyFolders: false,
 			recentCleanedPaths: [],
+			confirmDialog: {
+				open: false,
+				title: '',
+				message: '',
+				confirmLabel: '',
+				resolver: null,
+			},
 			activeProject: null,
 			projectDuplicate: null,
 			projects: [],
@@ -474,9 +578,22 @@ export default {
 		hasDuplicates() {
 			return this.acknowledgedDuplicates.length > 0 || this.unacknowledgedDuplicates.length > 0
 		},
+		activeModalEmptyFolders() {
+			const ignoredSet = new Set(this.ignoredEmptyFolders)
+			return this.modalEmptyFolders.filter(folder => !ignoredSet.has(folder.path))
+		},
+		ignoredModalEmptyFoldersCount() {
+			const ignoredSet = new Set(this.ignoredEmptyFolders)
+			return this.modalEmptyFolders.filter(folder => ignoredSet.has(folder.path)).length
+		},
+		visibleModalEmptyFolders() {
+			return this.showIgnoredModalEmptyFolders
+				? this.modalEmptyFolders
+				: this.activeModalEmptyFolders
+		},
 		isAllModalEmptyFoldersSelected() {
-			return this.modalEmptyFolders.length > 0
-				&& this.selectedModalEmptyFolders.length === this.modalEmptyFolders.length
+			return this.activeModalEmptyFolders.length > 0
+				&& this.activeModalEmptyFolders.every(folder => this.selectedModalEmptyFolders.includes(folder.path))
 		},
 		isScanRunning() {
 			return Boolean(this.scanStatus && this.scanStatus.running)
@@ -1044,8 +1161,13 @@ export default {
 					: []
 				const response = await api.scanEmptyFolders(scopePaths)
 				const folders = Array.isArray(response?.folders) ? response.folders : []
+				const prefs = loadUiPreferences()
+				this.ignoredEmptyFolders = Array.isArray(prefs.ignoredEmptyFolders) ? [...prefs.ignoredEmptyFolders] : []
+				const ignoredSet = new Set(this.ignoredEmptyFolders)
 				this.modalEmptyFolders = folders
-				this.selectedModalEmptyFolders = folders.map(folder => folder.path)
+				this.selectedModalEmptyFolders = folders
+					.filter(folder => !ignoredSet.has(folder.path))
+					.map(folder => folder.path)
 				this.modalEmptyFoldersScanned = true
 			} catch (error) {
 				console.error('Error scanning empty folders from modal:', error)
@@ -1053,7 +1175,34 @@ export default {
 				this.emptyFoldersLoading = false
 			}
 		},
+		isEmptyFolderIgnored(path) {
+			return this.ignoredEmptyFolders.includes(path)
+		},
+		toggleIgnoreModalEmptyFolder(path) {
+			const set = new Set(this.ignoredEmptyFolders)
+			if (set.has(path)) {
+				set.delete(path)
+			} else {
+				set.add(path)
+				this.selectedModalEmptyFolders = this.selectedModalEmptyFolders.filter(p => p !== path)
+			}
+			this.ignoredEmptyFolders = Array.from(set)
+			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
+		},
+		ignoreSelectedModalEmptyFolders() {
+			if (this.selectedModalEmptyFolders.length === 0) {
+				return
+			}
+			const set = new Set(this.ignoredEmptyFolders)
+			this.selectedModalEmptyFolders.forEach(path => set.add(path))
+			this.ignoredEmptyFolders = Array.from(set)
+			this.selectedModalEmptyFolders = []
+			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
+		},
 		toggleModalEmptyFolder(path) {
+			if (this.isEmptyFolderIgnored(path)) {
+				return
+			}
 			const idx = this.selectedModalEmptyFolders.indexOf(path)
 			if (idx === -1) {
 				this.selectedModalEmptyFolders.push(path)
@@ -1065,14 +1214,42 @@ export default {
 			if (this.isAllModalEmptyFoldersSelected) {
 				this.selectedModalEmptyFolders = []
 			} else {
-				this.selectedModalEmptyFolders = this.modalEmptyFolders.map(folder => folder.path)
+				this.selectedModalEmptyFolders = this.activeModalEmptyFolders.map(folder => folder.path)
+			}
+		},
+		requestConfirmation({ title, message, confirmLabel }) {
+			if (this.confirmDialog && typeof this.confirmDialog.resolver === 'function') {
+				this.confirmDialog.resolver(false)
+			}
+			this.confirmDialog = {
+				open: true,
+				title,
+				message,
+				confirmLabel,
+				resolver: null,
+			}
+			return new Promise(resolve => {
+				this.confirmDialog.resolver = resolve
+			})
+		},
+		resolveConfirmDialog(confirmed) {
+			const resolver = this.confirmDialog ? this.confirmDialog.resolver : null
+			this.confirmDialog.open = false
+			this.confirmDialog.resolver = null
+			if (typeof resolver === 'function') {
+				resolver(Boolean(confirmed))
 			}
 		},
 		async deleteSelectedModalEmptyFolders() {
 			if (this.selectedModalEmptyFolders.length === 0 || typeof api.deleteEmptyFolders !== 'function') {
 				return
 			}
-			if (typeof confirm === 'function' && !confirm(t('duplicatefinder', 'Are you sure you want to delete the selected empty folders?'))) {
+			const confirmed = await this.requestConfirmation({
+				title: t('duplicatefinder', 'Delete empty folders?'),
+				message: t('duplicatefinder', 'Are you sure you want to delete the selected empty folders?'),
+				confirmLabel: t('duplicatefinder', 'Delete empty folders'),
+			})
+			if (!confirmed) {
 				return
 			}
 			this.emptyFoldersDeleting = true
@@ -1492,6 +1669,60 @@ export default {
 	background-color: var(--color-background-hover);
 }
 
+.empty-folders-modal__item.is-selected {
+	background-color: var(--color-primary-element-light);
+}
+
+.empty-folders-modal__item.is-ignored {
+	opacity: 0.65;
+	background-color: var(--color-background-dark);
+}
+
+.empty-folder-checkbox {
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	width: 18px !important;
+	height: 18px !important;
+	min-width: 18px !important;
+	min-height: 18px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: 1.5px solid var(--color-border-maxcontrast, #767676) !important;
+	border-radius: 4px !important;
+	background-color: var(--color-main-background, #ffffff) !important;
+	box-shadow: none !important;
+	outline: none !important;
+	flex-shrink: 0;
+	cursor: pointer !important;
+	transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.empty-folder-checkbox:hover:not(:disabled) {
+	border-color: var(--color-primary-element, #0082c9) !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+.empty-folder-checkbox:focus,
+.empty-folder-checkbox:focus-visible {
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.empty-folder-checkbox:checked {
+	background-color: var(--color-primary-element, #0082c9) !important;
+	border-color: var(--color-primary-element, #0082c9) !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") !important;
+	background-size: 12px 12px !important;
+	background-position: center !important;
+	background-repeat: no-repeat !important;
+}
+
+.empty-folder-checkbox:disabled {
+	opacity: 0.45;
+	cursor: not-allowed !important;
+}
+
 .empty-folders-modal__path {
 	flex: 1 1 auto;
 	min-width: 0;
@@ -1500,10 +1731,54 @@ export default {
 	color: var(--color-main-text);
 }
 
+.empty-folders-modal__ignored-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 0.76rem;
+	font-weight: 600;
+	background-color: var(--color-background-hover);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	color: var(--color-text-maxcontrast);
+	white-space: nowrap;
+}
+
 .empty-folders-modal__badge {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.82rem;
 	white-space: nowrap;
+}
+
+.empty-folder-ignore-button {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 30px;
+	height: 30px;
+	min-width: 30px;
+	min-height: 30px;
+	margin: 0 !important;
+	padding: 0 !important;
+	border-radius: 6px;
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-color: var(--color-main-background);
+	color: var(--color-text-maxcontrast);
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.empty-folder-ignore-button:hover {
+	background-color: var(--color-background-hover);
+	color: var(--color-main-text);
+	border-color: var(--color-primary-element);
+}
+
+.empty-folder-ignore-button.is-ignored {
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element, #0082c9);
+	border-color: var(--color-primary-element, #0082c9);
 }
 
 :deep(.modal-container) {
@@ -1568,5 +1843,99 @@ export default {
 
 .file-picker .file-picker__name-container {
 	min-width: 0;
+}
+
+.nc-confirm-dialog-backdrop {
+	position: fixed;
+	inset: 0;
+	background-color: rgba(0, 0, 0, 0.45);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	z-index: 3000;
+}
+
+.nc-confirm-dialog {
+	width: 100%;
+	max-width: 440px;
+	background-color: var(--color-main-background, #ffffff);
+	background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	border-radius: var(--border-radius-large, 10px);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+	padding: 20px 22px;
+	box-sizing: border-box;
+}
+
+.nc-confirm-dialog__header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.nc-confirm-dialog__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background-color: rgba(211, 47, 47, 0.14);
+	color: #ef5350;
+	flex-shrink: 0;
+}
+
+.nc-confirm-dialog__title {
+	margin: 0;
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__message {
+	margin: 0 0 18px;
+	font-size: 0.92rem;
+	line-height: 1.48;
+	color: var(--color-text-maxcontrast, var(--color-main-text));
+}
+
+.nc-confirm-dialog__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+.nc-confirm-dialog__button {
+	min-height: 34px;
+	padding: 6px 14px;
+	border-radius: var(--border-radius-large, 8px);
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.nc-confirm-dialog__button--cancel {
+	background-color: var(--color-background-hover);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__button--cancel:hover {
+	background-color: var(--color-background-dark);
+}
+
+.nc-confirm-dialog__button--danger {
+	background-color: #d32f2f;
+	border: 1px solid #d32f2f;
+	color: #ffffff;
+}
+
+.nc-confirm-dialog__button--danger:hover {
+	background-color: #b71c1c;
+	border-color: #b71c1c;
 }
 </style>

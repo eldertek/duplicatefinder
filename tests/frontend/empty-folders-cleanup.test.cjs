@@ -9,13 +9,6 @@ const slotBox = tag => ({
 })
 
 describe('Issue 231: Optional empty folder detection and batch deletion after duplicate cleanup', () => {
-	beforeEach(() => {
-		global.confirm = () => true
-		global.alert = () => {}
-		window.confirm = () => true
-		window.alert = () => {}
-	})
-
 	test('api.scanEmptyFolders and api.deleteEmptyFolders call /empty-folders endpoints and emit summary toast', async () => {
 		const postCalls = []
 		const toasts = []
@@ -142,7 +135,11 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 		// Select second copy (/Cleaned/Sub/img.jpg) and opt in to post-cleanup empty folder detection
 		vm.toggleFile('h1', 1)
 		vm.detectEmptyFoldersAfterDelete = true
-		await vm.confirmBulkDelete()
+		const bulkDeletePromise = vm.confirmBulkDelete()
+		await settle()
+		assert.ok(vm.$el.querySelector('.nc-confirm-dialog[role="alertdialog"]'), 'opens Nextcloud confirmation dialog for bulk delete')
+		vm.$el.querySelector('.nc-confirm-dialog__button--danger').click()
+		await bulkDeletePromise
 		await settle()
 
 		assert.equal(scanCalls.length, 1)
@@ -155,7 +152,11 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 		vm.toggleEmptyFolder('/Cleaned')
 		assert.deepEqual(Array.from(vm.selectedEmptyFolders), ['/Cleaned/Sub'])
 
-		await vm.confirmDeleteEmptyFolders()
+		const emptyDeletePromise = vm.confirmDeleteEmptyFolders()
+		await settle()
+		assert.ok(vm.$el.querySelector('.nc-confirm-dialog[role="alertdialog"]'), 'opens Nextcloud confirmation dialog for empty folder deletion')
+		vm.$el.querySelector('.nc-confirm-dialog__button--danger').click()
+		await emptyDeletePromise
 		await settle()
 
 		assert.deepEqual(deleteFolderCalls, [['/Cleaned/Sub']])
@@ -239,7 +240,11 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 		assert.deepEqual(scanCalls, [['/alice/files/Photos/2023/Duplicates/dup1.jpg']])
 		assert.deepEqual(Array.from(vm.selectedModalEmptyFolders), ['/Photos/2023/Duplicates'])
 
-		await vm.deleteSelectedModalEmptyFolders()
+		const modalDeletePromise = vm.deleteSelectedModalEmptyFolders()
+		await settle()
+		assert.ok(vm.$el.querySelector('.nc-confirm-dialog[role="alertdialog"]'), 'opens Nextcloud confirmation dialog in topbar Empty Folders modal')
+		vm.$el.querySelector('.nc-confirm-dialog__button--danger').click()
+		await modalDeletePromise
 		await settle()
 
 		assert.deepEqual(deleteCalls, [['/Photos/2023/Duplicates']])
@@ -247,5 +252,103 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 		assert.equal(vm.recentCleanedPaths.length, 0)
 
 		vm.$destroy()
+	})
+
+	test('Issue 236: Empty folders support clean checkbox styling, per-folder crossed-out eye ignore/restore, bulk ignore, and persistence across scans', async () => {
+		window.localStorage.clear()
+		const icon = slotBox('span')
+		const stub = name => ({
+			name,
+			props: ['duplicate', 'projectId', 'show', 'isScanning'],
+			render(h) {
+				return h('div', { class: `stub-${name}` })
+			},
+		})
+		const utils = loadModule('src/tools/utils.js', {
+			'./notifications': { showErrorNotification: () => {} },
+		})
+
+		const App = loadComponent('src/App.vue', {
+			'@nextcloud/vue': {
+				NcAppContent: slotBox('main'),
+				NcContent: slotBox('div'),
+				NcLoadingIcon: slotBox('span'),
+				NcAppSettingsDialog: slotBox('section'),
+				NcAppSettingsSection: slotBox('div'),
+				NcButton: slotBox('button'),
+				NcModal: slotBox('div'),
+			},
+			'./components/DuplicateNavigation.vue': { __esModule: true, default: stub('duplicate-nav') },
+			'./components/DuplicateDetails.vue': { __esModule: true, default: stub('duplicate-details') },
+			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
+			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
+			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
+			'./components/ProjectsSettings.vue': { __esModule: true, default: stub('projects') },
+			'./components/ProjectDuplicates.vue': { __esModule: true, default: stub('project-dups') },
+			'./components/help/OnboardingGuide.vue': { __esModule: true, default: stub('guide') },
+			'./components/help/UsageExamples.vue': { __esModule: true, default: stub('examples') },
+			'./components/help/FAQ.vue': { __esModule: true, default: stub('faq') },
+			'./components/SearchBar.vue': { __esModule: true, default: stub('search') },
+			'./components/FilterSettings.vue': { __esModule: true, default: stub('filters') },
+			'@/tools/api': {
+				fetchDuplicates: async () => ({ entities: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0 } }),
+				fetchProjects: async () => [],
+				scanEmptyFolders: async () => ({
+					folders: [
+						{ path: '/PC/.cache/thumbnails', name: 'thumbnails', depth: 3, hasEmptySubfolders: false, mtime: 1 },
+						{ path: '/PC/NewEmpty', name: 'NewEmpty', depth: 2, hasEmptySubfolders: false, mtime: 2 },
+					],
+					count: 2,
+				}),
+				deleteEmptyFolders: async paths => ({ deleted: paths, errors: [] }),
+			},
+			'@/tools/utils': utils,
+			'vue-material-design-icons/Folder': icon,
+			'vue-material-design-icons/FolderRemove': icon,
+			'vue-material-design-icons/FolderMultiple': icon,
+			'vue-material-design-icons/Delete': icon,
+			'vue-material-design-icons/FilterOutline': icon,
+		})
+
+		const vm = new Vue(App).$mount()
+		await settle()
+
+		vm.$el.querySelector('.topbar-empty-folders-button').click()
+		await settle()
+
+		const checkboxes = vm.$el.querySelectorAll('.empty-folder-checkbox')
+		assert.equal(checkboxes.length, 2, 'renders clean .empty-folder-checkbox inputs')
+		const ignoreBtns = vm.$el.querySelectorAll('.empty-folder-ignore-button')
+		assert.equal(ignoreBtns.length, 2, 'renders crossed-out eye button next to each folder')
+
+		// Click crossed-out eye on /PC/.cache/thumbnails to ignore it
+		ignoreBtns[0].click()
+		await settle()
+
+		assert.deepEqual(Array.from(vm.ignoredEmptyFolders), ['/PC/.cache/thumbnails'])
+		assert.deepEqual(Array.from(vm.selectedModalEmptyFolders), ['/PC/NewEmpty'])
+		assert.equal(vm.visibleModalEmptyFolders.length, 1, 'ignored folder is hidden from active cleanup list by default')
+		assert.deepEqual(utils.loadUiPreferences().ignoredEmptyFolders, ['/PC/.cache/thumbnails'], 'persisted in localStorage preferences')
+
+		// Re-running a scan remembers the ignored folder and only selects genuinely new empty folders
+		await vm.scanEmptyFoldersInModal(false)
+		await settle()
+		assert.deepEqual(Array.from(vm.selectedModalEmptyFolders), ['/PC/NewEmpty'])
+		assert.equal(vm.visibleModalEmptyFolders.length, 1)
+
+		// Toggle "Show ignored (1)" and click the crossed-out eye icon to restore visibility
+		vm.$el.querySelector('.modal-toggle-ignored-folders-button').click()
+		await settle()
+		assert.equal(vm.visibleModalEmptyFolders.length, 2)
+		const restoredBtn = vm.$el.querySelector('.empty-folder-ignore-button.is-ignored')
+		assert.ok(restoredBtn, 'ignored folder shows active crossed-out eye button')
+		restoredBtn.click()
+		await settle()
+
+		assert.deepEqual(Array.from(vm.ignoredEmptyFolders), [])
+		assert.equal(vm.activeModalEmptyFolders.length, 2)
+
+		vm.$destroy()
+		window.localStorage.clear()
 	})
 })

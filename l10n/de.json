@@ -520,6 +520,18 @@
     "Unacknowledged groups ({count})" : "Nicht bestätigte Gruppen ({count})",
     "Acknowledged groups ({count})" : "Bestätigte Gruppen ({count})",
     "Excluded folders and ignored files are not counted." : "Ausgeschlossene Ordner und ignorierte Dateien werden nicht mitgezählt.",
-    "Reflects active scan results matching your current size filter." : "Zeigt aktive Scan-Ergebnisse passend zum aktuellen Größenfilter."
+    "Reflects active scan results matching your current size filter." : "Zeigt aktive Scan-Ergebnisse passend zum aktuellen Größenfilter.",
+    "Delete all copies?" : "Alle Kopien löschen?",
+    "Delete all copies" : "Alle Kopien löschen",
+    "Delete selected duplicates?" : "Ausgewählte Duplikate löschen?",
+    "Delete empty folders?" : "Leere Ordner löschen?",
+    "Delete empty folders" : "Leere Ordner löschen",
+    "Ignore selected ({count})" : "Ausgewählte ignorieren ({count})",
+    "Show ignored ({count})" : "Ignorierte anzeigen ({count})",
+    "Hide ignored ({count})" : "Ignorierte ausblenden ({count})",
+    "All detected empty folders are currently ignored ({count})." : "Alle erkannten leeren Ordner sind derzeit ignoriert ({count}).",
+    "Ignored" : "Ignoriert",
+    "Ignore folder in future scans" : "Ordner bei künftigen Scans ignorieren",
+    "Restore folder to cleanup list" : "Ordner wieder in die Bereinigungsliste aufnehmen"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }
