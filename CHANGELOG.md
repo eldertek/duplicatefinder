@@ -1,3 +1,10 @@
+## 1.10.14 - 2026-11-16
+### Added
+- **Tooltip explaining the duplicate count and breakdown in the top header bar** ([#234](https://github.com/eldertek/duplicatefinder/issues/234)). Added an accessible info badge and hover/focus tooltip next to the `Duplicates ({count})` header showing the exact breakdown between unacknowledged and acknowledged duplicate groups, clarifying that excluded folders and ignored files are not counted, and indicating that the count reflects active scan results matching the current size filter
+
+### Fixed
+- **Reconcile total duplicate count with live accessible groups when a section reaches its end** ([#234](https://github.com/eldertek/duplicatefinder/issues/234)). Reconciled `pagination.totalItems` in `DuplicateApiController::list()` and `App.vue` once `isLastFetched` / `hasMore === false` is reached so stale database index rows whose files were removed outside single-file events no longer inflate the topbar duplicate counter before the next background cleanup or scan
+
 ## 1.10.13 - 2026-11-15
 ### Added
 - **Optional detection and batch deletion of empty folders after duplicate cleanup** ([#231](https://github.com/eldertek/duplicatefinder/issues/231), PR [#233](https://github.com/eldertek/duplicatefinder/pull/233)). Added `EmptyFolderCleanupService` and `/api/empty-folders/scan` + `/api/empty-folders/delete` endpoints to detect directories left completely empty (or containing only empty subdirectories) after duplicate removal, with an opt-in checkbox and dedicated `Scan empty folders` action in `Bulk Delete`, plus an `Empty Folders` button and cleanup modal in the main topbar (`Check cleaned locations` or `Scan all folders`); strictly preserves the user root `/`, configured `Origin Folders`, `Excluded Folders`, shared/external mounts, and non-deletable directories, and deletes selected folders deepest-first

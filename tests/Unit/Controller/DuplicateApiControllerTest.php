@@ -203,6 +203,31 @@ class DuplicateApiControllerTest extends TestCase
         $this->assertTrue($data['pagination']['hasMore']);
     }
 
+    public function testListReconcilesTotalItemsWithLiveEntitiesWhenFirstPageIsLastFetched(): void
+    {
+        $this->fileDuplicateService->expects($this->once())
+            ->method('findAll')
+            ->with('unacknowledged', 'testuser', 1, 50, true)
+            ->willReturn([
+                'entities' => [],
+                'nextOffset' => 3000,
+                'isLastFetched' => true,
+            ]);
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('getTotalCount')
+            ->with('unacknowledged', 'testuser')
+            ->willReturn(3000);
+
+        $response = $this->controller->list(1, 50, 'unacknowledged');
+        $data = $response->getData();
+
+        $this->assertSame('success', $data['status']);
+        $this->assertSame(0, $data['pagination']['totalItems']);
+        $this->assertSame(1, $data['pagination']['totalPages']);
+        $this->assertFalse($data['pagination']['hasMore']);
+    }
+
     public function testAcknowledge()
     {
         // Mock the markAsAcknowledged method

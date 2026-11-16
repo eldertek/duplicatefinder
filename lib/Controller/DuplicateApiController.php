@@ -175,6 +175,10 @@ class DuplicateApiController extends AbstractAPIController
             $isLastFetched = array_key_exists('isLastFetched', $duplicates)
                 ? (bool)$duplicates['isLastFetched']
                 : (count($entities) < $safeLimit);
+            if ($isLastFetched && $effectiveOffset === 0) {
+                $totalItems = count($entities);
+                $totalPages = max(1, (int)ceil($totalItems / $safeLimit));
+            }
             $hasMore = !$isLastFetched && $resolvedNextOffset < $totalItems;
 
             $data = [

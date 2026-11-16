@@ -182,6 +182,16 @@ describe('Issue 206: Single top-right Bulk Delete button and initial selection',
 		const title = vm.$el.querySelector('.topbar-title')
 		assert.ok(title)
 		assert.equal(title.textContent.trim(), 'Duplicates (68)')
+		assert.match(title.getAttribute('title') || '', /68 total, 65 unacknowledged, 3 acknowledged/)
+		assert.match(title.getAttribute('title') || '', /Excluded folders and ignored files are not counted/)
+
+		const tooltipEl = vm.$el.querySelector('.topbar-count-tooltip')
+		assert.ok(tooltipEl, 'renders accessible duplicate count breakdown tooltip')
+		assert.match(tooltipEl.textContent, /Active duplicate groups in current scan \(68\)/)
+		assert.match(tooltipEl.textContent, /Unacknowledged groups \(65\)/)
+		assert.match(tooltipEl.textContent, /Acknowledged groups \(3\)/)
+		assert.match(tooltipEl.textContent, /Excluded folders and ignored files are not counted\./)
+		assert.match(tooltipEl.textContent, /Reflects active scan results matching your current size filter\./)
 
 		const topBulkBtn = vm.$el.querySelector('.topbar-bulk-delete-button')
 		assert.ok(topBulkBtn, 'top-right Bulk Delete button is visible immediately on load')
@@ -196,6 +206,7 @@ describe('Issue 206: Single top-right Bulk Delete button and initial selection',
 		await settle()
 		assert.equal(vm.activeView, 'bulk-delete')
 		assert.equal(vm.$el.querySelector('.topbar-title').textContent.trim(), 'Bulk Delete')
+		assert.equal(vm.$el.querySelector('.topbar-count-tooltip'), null, 'tooltip is hidden on Bulk Delete heading')
 		assert.ok(vm.$el.querySelector('.stub-bulk-deletion'))
 
 		const backBtn = vm.$el.querySelector('.topbar-back-button')
@@ -204,6 +215,17 @@ describe('Issue 206: Single top-right Bulk Delete button and initial selection',
 		await settle()
 		assert.equal(vm.activeView, 'details')
 		assert.equal(vm.currentDuplicate.id, 42, 'returning from Bulk Delete restores first duplicate selection')
+
+		// Issue 234: when a section has reached its end (hasMore === false), count reflects actual loaded live groups
+		vm.unacknowledgedDuplicates = []
+		vm.unacknowledgedPagination = { currentPage: 1, totalPages: 1, totalItems: 3000, hasMore: false }
+		vm.acknowledgedDuplicates = [{ ...dupOne, id: 50, acknowledged: true }]
+		vm.acknowledgedPagination = { currentPage: 1, totalPages: 1, totalItems: 1, hasMore: false }
+		await settle()
+		assert.equal(vm.totalDuplicateCount, 1)
+		assert.equal(vm.$el.querySelector('.topbar-title').textContent.trim(), 'Duplicates (1)')
+		assert.match(vm.$el.querySelector('.topbar-count-tooltip').textContent, /Unacknowledged groups \(0\)/)
+		assert.match(vm.$el.querySelector('.topbar-count-tooltip').textContent, /Acknowledged groups \(1\)/)
 
 		// Issue 220: initial loading spinner is wrapped in a full-viewport centered container
 		vm.isLoading = true

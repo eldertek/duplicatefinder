@@ -34,14 +34,56 @@
 				<div
 					v-if="activeView === 'details' || activeView === 'bulk-delete'"
 					class="app-content-topbar">
-					<div class="topbar-summary">
-						<h2 class="topbar-title">
+					<div
+						class="topbar-summary"
+						:class="{ 'has-count-tooltip': activeView !== 'bulk-delete' }">
+						<h2
+							class="topbar-title"
+							:title="activeView !== 'bulk-delete' ? duplicateCountTooltipText : null"
+							:data-tooltip="activeView !== 'bulk-delete' ? duplicateCountTooltipText : null">
 							{{ activeView === 'bulk-delete'
 								? t('duplicatefinder', 'Bulk Delete')
 								: (totalDuplicateCount > 0
 									? t('duplicatefinder', 'Duplicates ({count})', { count: totalDuplicateCount })
 									: t('duplicatefinder', 'Duplicates')) }}
 						</h2>
+						<span
+							v-if="activeView !== 'bulk-delete'"
+							class="topbar-count-help"
+							tabindex="0"
+							role="button"
+							:title="duplicateCountTooltipText"
+							:aria-label="duplicateCountTooltipText">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="15"
+								height="15"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle cx="12" cy="12" r="10"></circle>
+								<line x1="12" y1="16" x2="12" y2="12"></line>
+								<line x1="12" y1="8" x2="12.01" y2="8"></line>
+							</svg>
+						</span>
+						<div
+							v-if="activeView !== 'bulk-delete'"
+							class="topbar-count-tooltip"
+							role="tooltip">
+							<div class="topbar-count-tooltip__title">
+								{{ t('duplicatefinder', 'Active duplicate groups in current scan ({total})', { total: totalDuplicateCount }) }}
+							</div>
+							<ul class="topbar-count-tooltip__list">
+								<li>{{ t('duplicatefinder', 'Unacknowledged groups ({count})', { count: unacknowledgedDuplicateCount }) }}</li>
+								<li>{{ t('duplicatefinder', 'Acknowledged groups ({count})', { count: acknowledgedDuplicateCount }) }}</li>
+								<li>{{ t('duplicatefinder', 'Excluded folders and ignored files are not counted.') }}</li>
+								<li>{{ t('duplicatefinder', 'Reflects active scan results matching your current size filter.') }}</li>
+							</ul>
+						</div>
 					</div>
 					<div class="topbar-actions">
 						<button
@@ -442,14 +484,35 @@ export default {
 		formattedEta() {
 			return this.isScanRunning ? formatScanEta(this.scanStatus.etaSeconds) : ''
 		},
-		totalDuplicateCount() {
-			const unackCount = Number.isFinite(this.unacknowledgedPagination?.totalItems)
+		unacknowledgedDuplicateCount() {
+			if (this.unacknowledgedPagination && this.unacknowledgedPagination.hasMore === false) {
+				return this.unacknowledgedDuplicates.length
+			}
+			return Number.isFinite(this.unacknowledgedPagination?.totalItems)
 				? this.unacknowledgedPagination.totalItems
 				: this.unacknowledgedDuplicates.length
-			const ackCount = Number.isFinite(this.acknowledgedPagination?.totalItems)
+		},
+		acknowledgedDuplicateCount() {
+			if (this.acknowledgedPagination && this.acknowledgedPagination.hasMore === false) {
+				return this.acknowledgedDuplicates.length
+			}
+			return Number.isFinite(this.acknowledgedPagination?.totalItems)
 				? this.acknowledgedPagination.totalItems
 				: this.acknowledgedDuplicates.length
-			return unackCount + ackCount
+		},
+		totalDuplicateCount() {
+			return this.unacknowledgedDuplicateCount + this.acknowledgedDuplicateCount
+		},
+		duplicateCountTooltipText() {
+			return t(
+				'duplicatefinder',
+				'Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.',
+				{
+					total: this.totalDuplicateCount,
+					unacknowledged: this.unacknowledgedDuplicateCount,
+					acknowledged: this.acknowledgedDuplicateCount,
+				}
+			)
 		},
 		helpModalTitle() {
 			const titles = {
@@ -875,6 +938,19 @@ export default {
 			const paginationKey = section === 'acknowledged' ? 'acknowledgedPagination' : 'unacknowledgedPagination'
 			const currentList = Array.isArray(this[listKey]) ? this[listKey] : []
 			const incomingList = Array.isArray(newDuplicates) ? newDuplicates : []
+
+			if (incomingPagination === undefined) {
+				const delta = incomingList.length - currentList.length
+				this[listKey] = incomingList
+				if (delta !== 0) {
+					this.adjustSectionPagination(section, delta)
+				}
+				if (!this.currentDuplicate && this.activeView === 'details' && this[listKey].length > 0) {
+					this.currentDuplicate = this[listKey][0]
+				}
+				return
+			}
+
 			const existingKeys = new Set(currentList.map(d => d && (d.hash || d.id)).filter(Boolean))
 			const uniqueIncoming = incomingList.filter(d => {
 				const key = d && (d.hash || d.id)
@@ -910,6 +986,9 @@ export default {
 					&& Number.isInteger(mergedPagination.nextOffset)
 				) {
 					mergedPagination.hasMore = mergedPagination.hasMore && mergedPagination.nextOffset < mergedPagination.totalItems
+				}
+				if (mergedPagination.hasMore === false) {
+					mergedPagination.totalItems = this[listKey].length
 				}
 				this[paginationKey] = mergedPagination
 			}
@@ -1088,7 +1167,14 @@ export default {
 	background-color: var(--color-main-background);
 	position: sticky;
 	top: 0;
-	z-index: 10;
+	z-index: 100;
+}
+
+.topbar-summary {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
 }
 
 .topbar-title {
@@ -1096,6 +1182,76 @@ export default {
 	font-size: 1.15rem;
 	font-weight: 600;
 	color: var(--color-main-text);
+}
+
+.topbar-summary.has-count-tooltip .topbar-title {
+	cursor: help;
+}
+
+.topbar-count-help {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	color: var(--color-text-maxcontrast);
+	cursor: help;
+	outline: none;
+	transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.topbar-summary.has-count-tooltip:hover .topbar-count-help,
+.topbar-count-help:focus-visible {
+	color: var(--color-main-text);
+	background-color: var(--color-background-hover);
+}
+
+.topbar-count-tooltip {
+	position: absolute;
+	top: calc(100% + 8px);
+	left: 0;
+	min-width: 280px;
+	max-width: 360px;
+	padding: 10px 12px;
+	border-radius: var(--border-radius-large, 8px);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-color: var(--color-main-background, #ffffff);
+	background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
+	color: var(--color-main-text);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 1.45;
+	z-index: 2000;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transform: translateY(-2px);
+	transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+}
+
+.topbar-summary.has-count-tooltip:hover .topbar-count-tooltip,
+.topbar-summary.has-count-tooltip:focus-within .topbar-count-tooltip {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+
+.topbar-count-tooltip__title {
+	font-weight: 600;
+	margin-bottom: 6px;
+	color: var(--color-main-text);
+}
+
+.topbar-count-tooltip__list {
+	margin: 0;
+	padding-left: 16px;
+	list-style: disc;
+}
+
+.topbar-count-tooltip__list li + li {
+	margin-top: 3px;
 }
 
 .topbar-actions {
