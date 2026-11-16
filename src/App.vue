@@ -283,6 +283,7 @@
 
 			<NcModal
 				v-if="emptyFoldersModalOpen"
+				size="large"
 				:title="t('duplicatefinder', 'Empty Folders Cleanup')"
 				@close="emptyFoldersModalOpen = false">
 				<div class="empty-folders-modal">
@@ -449,11 +450,55 @@
 							</button>
 						</div>
 					</div>
+
+					<div
+						v-if="confirmDialog.open && emptyFoldersModalOpen"
+						class="nc-confirm-dialog-backdrop"
+						role="presentation"
+						@click.self="resolveConfirmDialog(false)"
+						@keydown.esc="resolveConfirmDialog(false)">
+						<div
+							class="nc-confirm-dialog"
+							role="alertdialog"
+							aria-modal="true"
+							aria-labelledby="app-nc-confirm-title"
+							aria-describedby="app-nc-confirm-desc">
+							<div class="nc-confirm-dialog__header">
+								<span class="nc-confirm-dialog__icon" aria-hidden="true">
+									<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+										<line x1="12" y1="9" x2="12" y2="13"></line>
+										<line x1="12" y1="17" x2="12.01" y2="17"></line>
+									</svg>
+								</span>
+								<h4 id="app-nc-confirm-title" class="nc-confirm-dialog__title">
+									{{ confirmDialog.title }}
+								</h4>
+							</div>
+							<p id="app-nc-confirm-desc" class="nc-confirm-dialog__message">
+								{{ confirmDialog.message }}
+							</p>
+							<div class="nc-confirm-dialog__actions">
+								<button
+									type="button"
+									class="nc-confirm-dialog__button nc-confirm-dialog__button--cancel"
+									@click="resolveConfirmDialog(false)">
+									{{ t('duplicatefinder', 'Cancel') }}
+								</button>
+								<button
+									type="button"
+									class="nc-confirm-dialog__button nc-confirm-dialog__button--danger"
+									@click="resolveConfirmDialog(true)">
+									{{ confirmDialog.confirmLabel }}
+								</button>
+							</div>
+						</div>
+					</div>
 				</div>
 			</NcModal>
 
 			<div
-				v-if="confirmDialog.open"
+				v-if="confirmDialog.open && !emptyFoldersModalOpen"
 				class="nc-confirm-dialog-backdrop"
 				role="presentation"
 				@click.self="resolveConfirmDialog(false)"
@@ -1311,10 +1356,27 @@ export default {
 			}
 			this.emptyFoldersDeleting = true
 			try {
-				const { deleted } = await api.deleteEmptyFolders([...this.selectedModalEmptyFolders])
+				const pathsToDeleteSet = new Set(this.selectedModalEmptyFolders)
+				this.modalEmptyFolders.forEach(folder => {
+					if (folder && folder.path && !this.isEmptyFolderIgnored(folder.path)) {
+						for (const selectedPath of this.selectedModalEmptyFolders) {
+							if (folder.path.startsWith(`${selectedPath}/`)) {
+								pathsToDeleteSet.add(folder.path)
+								break
+							}
+						}
+					}
+				})
+				const { deleted } = await api.deleteEmptyFolders(Array.from(pathsToDeleteSet))
 				if (deleted.length > 0) {
 					const deletedSet = new Set(deleted)
-					this.modalEmptyFolders = this.modalEmptyFolders.filter(folder => !deletedSet.has(folder.path))
+					const remaining = this.modalEmptyFolders.filter(folder => !deletedSet.has(folder.path))
+					this.modalEmptyFolders = remaining.map(folder => ({
+						...folder,
+						hasEmptySubfolders: remaining.some(
+							other => other.path !== folder.path && other.path.startsWith(`${folder.path}/`)
+						),
+					}))
 					this.selectedModalEmptyFolders = this.selectedModalEmptyFolders.filter(path => !deletedSet.has(path))
 					if (this.modalEmptyFolders.length === 0) {
 						this.recentCleanedPaths = []
@@ -1677,8 +1739,10 @@ export default {
 
 .empty-folders-modal {
 	padding: 22px 24px;
+	width: 100%;
 	max-width: 780px;
 	margin: 0 auto;
+	box-sizing: border-box;
 }
 
 .empty-folders-modal__title {
@@ -1697,7 +1761,7 @@ export default {
 
 .empty-folders-modal__toolbar {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: 12px;
@@ -1707,71 +1771,104 @@ export default {
 .empty-folders-modal__toolbar-left,
 .empty-folders-modal__toolbar-right {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: center;
-	gap: 10px;
+	gap: 8px;
+	white-space: nowrap;
 }
 
 .empty-folders-modal__toolbar-right {
 	margin-left: auto;
 }
 
+@media (max-width: 580px) {
+	.empty-folders-modal__toolbar,
+	.empty-folders-modal__toolbar-left,
+	.empty-folders-modal__toolbar-right {
+		flex-wrap: wrap;
+	}
+}
+
 .empty-folders-scan-btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 36px;
-	padding: 7px 18px;
-	border-radius: 999px;
-	border: 1px solid var(--color-primary-element, #0082c9);
-	background-color: var(--color-primary-element, #0082c9);
-	color: var(--color-primary-element-text, #ffffff);
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 36px !important;
+	padding: 7px 18px !important;
+	margin: 0 !important;
+	border-radius: 999px !important;
+	border: 1px solid var(--color-primary-element, #0082c9) !important;
+	background-color: var(--color-primary-element, #0082c9) !important;
+	background-image: none !important;
+	color: var(--color-primary-element-text, #ffffff) !important;
+	box-shadow: none !important;
 	font-size: 0.92rem;
 	font-weight: 600;
+	white-space: nowrap;
 	cursor: pointer;
 	transition: opacity 0.15s ease, filter 0.15s ease;
 }
 
-.empty-folders-scan-btn:hover:not(:disabled) {
+.empty-folders-scan-btn:hover:not(:disabled),
+.empty-folders-scan-btn:focus:not(:disabled) {
+	background-color: var(--color-primary-element, #0082c9) !important;
+	border-color: var(--color-primary-element, #0082c9) !important;
+	color: var(--color-primary-element-text, #ffffff) !important;
 	filter: brightness(1.08);
 }
 
 .empty-folders-unselect-link {
-	background: none !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	background: transparent !important;
+	background-color: transparent !important;
+	background-image: none !important;
 	border: none !important;
 	box-shadow: none !important;
+	min-height: 0 !important;
 	padding: 4px 6px !important;
 	margin: 0 !important;
-	color: var(--color-text-maxcontrast);
+	color: var(--color-text-maxcontrast) !important;
 	font-size: 0.9rem;
 	font-weight: 500;
-	text-decoration: underline;
+	white-space: nowrap;
+	text-decoration: underline !important;
 	cursor: pointer;
 }
 
-.empty-folders-unselect-link:hover:not(:disabled) {
-	color: var(--color-main-text);
+.empty-folders-unselect-link:hover:not(:disabled),
+.empty-folders-unselect-link:focus:not(:disabled) {
+	background: transparent !important;
+	background-color: transparent !important;
+	border: none !important;
+	color: var(--color-main-text) !important;
 }
 
 .empty-folders-pill-btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 32px;
-	padding: 5px 12px;
-	border-radius: 8px;
-	border: 1px solid var(--color-border-dark, var(--color-border));
-	background-color: var(--color-background-dark);
-	color: var(--color-main-text);
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 32px !important;
+	padding: 5px 12px !important;
+	margin: 0 !important;
+	border-radius: 8px !important;
+	border: 1px solid var(--color-border-dark, var(--color-border)) !important;
+	background-color: var(--color-background-hover) !important;
+	background-image: none !important;
+	color: var(--color-main-text) !important;
+	box-shadow: none !important;
 	font-size: 0.88rem;
 	font-weight: 600;
+	white-space: nowrap;
 	cursor: pointer;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-.empty-folders-pill-btn:hover:not(:disabled) {
-	background-color: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+.empty-folders-pill-btn:hover:not(:disabled),
+.empty-folders-pill-btn:focus:not(:disabled) {
+	background-color: var(--color-background-dark) !important;
+	border-color: var(--color-border-maxcontrast, var(--color-border-dark)) !important;
+	color: var(--color-main-text) !important;
 }
 
 .empty-folders-modal__summary {
@@ -1786,24 +1883,35 @@ export default {
 }
 
 .empty-folders-delete-pill {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 38px;
-	padding: 8px 20px;
-	border-radius: 999px;
-	border: 1px solid #d32f2f;
-	background-color: #d32f2f;
-	color: #ffffff;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 38px !important;
+	padding: 8px 20px !important;
+	margin: 0 !important;
+	border-radius: 999px !important;
+	border: 1px solid #c94a4a !important;
+	background-color: #c94a4a !important;
+	background-image: none !important;
+	color: #ffffff !important;
+	box-shadow: none !important;
 	font-size: 0.94rem;
 	font-weight: 600;
+	white-space: nowrap;
 	cursor: pointer;
-	transition: background-color 0.15s ease, border-color 0.15s ease;
+	transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 
-.empty-folders-delete-pill:hover:not(:disabled) {
-	background-color: #b71c1c;
-	border-color: #b71c1c;
+.empty-folders-delete-pill:hover:not(:disabled),
+.empty-folders-delete-pill:focus:not(:disabled) {
+	background-color: #b71c1c !important;
+	border-color: #b71c1c !important;
+	color: #ffffff !important;
+}
+
+.empty-folders-delete-pill:disabled {
+	opacity: 0.5 !important;
+	cursor: not-allowed !important;
 }
 
 .empty-folders-modal__section-title {
@@ -1966,6 +2074,11 @@ export default {
 	overflow: hidden;
 }
 
+:deep(.modal-wrapper--large > .modal-container) {
+	width: min(760px, 92vw);
+	max-width: 760px;
+}
+
 :deep(.modal-wrapper) {
 	border-radius: var(--border-radius-large);
 }
@@ -2030,7 +2143,7 @@ export default {
 	align-items: center;
 	justify-content: center;
 	padding: 16px;
-	z-index: 3000;
+	z-index: 20000 !important;
 }
 
 .nc-confirm-dialog {
@@ -2086,9 +2199,15 @@ export default {
 }
 
 .nc-confirm-dialog__button {
-	min-height: 34px;
-	padding: 6px 14px;
-	border-radius: var(--border-radius-large, 8px);
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 34px !important;
+	padding: 6px 14px !important;
+	margin: 0 !important;
+	border-radius: var(--border-radius-large, 8px) !important;
+	background-image: none !important;
+	box-shadow: none !important;
 	font-size: 0.9rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -2096,23 +2215,25 @@ export default {
 }
 
 .nc-confirm-dialog__button--cancel {
-	background-color: var(--color-background-hover);
-	border: 1px solid var(--color-border-dark, var(--color-border));
-	color: var(--color-main-text);
+	background-color: var(--color-background-hover) !important;
+	border: 1px solid var(--color-border-dark, var(--color-border)) !important;
+	color: var(--color-main-text) !important;
 }
 
 .nc-confirm-dialog__button--cancel:hover {
-	background-color: var(--color-background-dark);
+	background-color: var(--color-background-dark) !important;
+	color: var(--color-main-text) !important;
 }
 
 .nc-confirm-dialog__button--danger {
-	background-color: #d32f2f;
-	border: 1px solid #d32f2f;
-	color: #ffffff;
+	background-color: #d32f2f !important;
+	border: 1px solid #d32f2f !important;
+	color: #ffffff !important;
 }
 
 .nc-confirm-dialog__button--danger:hover {
-	background-color: #b71c1c;
-	border-color: #b71c1c;
+	background-color: #b71c1c !important;
+	border-color: #b71c1c !important;
+	color: #ffffff !important;
 }
 </style>

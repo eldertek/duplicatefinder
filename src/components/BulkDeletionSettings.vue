@@ -957,10 +957,27 @@ export default {
       }
       this.isDeletingEmptyFolders = true
       try {
-        const { deleted } = await api.deleteEmptyFolders([...this.selectedEmptyFolders])
+        const pathsToDeleteSet = new Set(this.selectedEmptyFolders)
+        this.emptyFolders.forEach(folder => {
+          if (folder && folder.path && !this.isEmptyFolderIgnored(folder.path)) {
+            for (const selectedPath of this.selectedEmptyFolders) {
+              if (folder.path.startsWith(`${selectedPath}/`)) {
+                pathsToDeleteSet.add(folder.path)
+                break
+              }
+            }
+          }
+        })
+        const { deleted } = await api.deleteEmptyFolders(Array.from(pathsToDeleteSet))
         if (deleted.length > 0) {
           const deletedSet = new Set(deleted)
-          this.emptyFolders = this.emptyFolders.filter(folder => !deletedSet.has(folder.path))
+          const remaining = this.emptyFolders.filter(folder => !deletedSet.has(folder.path))
+          this.emptyFolders = remaining.map(folder => ({
+            ...folder,
+            hasEmptySubfolders: remaining.some(
+              other => other.path !== folder.path && other.path.startsWith(`${folder.path}/`)
+            )
+          }))
           this.selectedEmptyFolders = this.selectedEmptyFolders.filter(path => !deletedSet.has(path))
           if (this.emptyFolders.length === 0) {
             this.emptyFolderScanCompleted = false
@@ -1312,7 +1329,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  z-index: 3000;
+  z-index: 20000 !important;
 }
 
 .nc-confirm-dialog {
@@ -1368,9 +1385,15 @@ export default {
 }
 
 .nc-confirm-dialog__button {
-  min-height: 34px;
-  padding: 6px 14px;
-  border-radius: var(--border-radius-large, 8px);
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 34px !important;
+  padding: 6px 14px !important;
+  margin: 0 !important;
+  border-radius: var(--border-radius-large, 8px) !important;
+  background-image: none !important;
+  box-shadow: none !important;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -1378,23 +1401,25 @@ export default {
 }
 
 .nc-confirm-dialog__button--cancel {
-  background-color: var(--color-background-hover);
-  border: 1px solid var(--color-border-dark, var(--color-border));
-  color: var(--color-main-text);
+  background-color: var(--color-background-hover) !important;
+  border: 1px solid var(--color-border-dark, var(--color-border)) !important;
+  color: var(--color-main-text) !important;
 }
 
 .nc-confirm-dialog__button--cancel:hover {
-  background-color: var(--color-background-dark);
+  background-color: var(--color-background-dark) !important;
+  color: var(--color-main-text) !important;
 }
 
 .nc-confirm-dialog__button--danger {
-  background-color: #d32f2f;
-  border: 1px solid #d32f2f;
-  color: #ffffff;
+  background-color: #d32f2f !important;
+  border: 1px solid #d32f2f !important;
+  color: #ffffff !important;
 }
 
 .nc-confirm-dialog__button--danger:hover {
-  background-color: #b71c1c;
-  border-color: #b71c1c;
+  background-color: #b71c1c !important;
+  border-color: #b71c1c !important;
+  color: #ffffff !important;
 }
 </style>

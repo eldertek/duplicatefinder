@@ -146,8 +146,13 @@ class EmptyFolderCleanupService
         });
 
         $deleted = [];
+        $deletedLookup = [];
 
         foreach ($orderedPaths as $folderPath) {
+            if (isset($deletedLookup[$folderPath])) {
+                continue;
+            }
+
             if ($this->isInsideOriginFolder($folderPath, $originPaths)) {
                 $errors[] = [
                     'path' => $folderPath,
@@ -224,16 +229,66 @@ class EmptyFolderCleanupService
                 }
 
                 if ($node->getDirectoryListing() !== []) {
-                    $errors[] = [
-                        'path' => $folderPath,
-                        'error' => 'FOLDER_NOT_EMPTY',
-                        'message' => 'Folder is not empty',
-                    ];
-                    continue;
+                    $subDetected = [];
+                    $subMemo = [];
+                    $isSubtreeEmpty = $this->scanSubtree(
+                        $node,
+                        $folderPath,
+                        $originPaths,
+                        $subDetected,
+                        $subMemo,
+                        substr_count($folderPath, '/')
+                    );
+
+                    if (!$isSubtreeEmpty) {
+                        $errors[] = [
+                            'path' => $folderPath,
+                            'error' => 'FOLDER_NOT_EMPTY',
+                            'message' => 'Folder is not empty',
+                        ];
+                        continue;
+                    }
+
+                    $subPaths = array_keys($subDetected);
+                    usort($subPaths, static function (string $a, string $b): int {
+                        $depthDiff = substr_count($b, '/') <=> substr_count($a, '/');
+                        if ($depthDiff !== 0) {
+                            return $depthDiff;
+                        }
+                        $lenDiff = strlen($b) <=> strlen($a);
+                        if ($lenDiff !== 0) {
+                            return $lenDiff;
+                        }
+
+                        return strcmp($a, $b);
+                    });
+
+                    foreach ($subPaths as $subPath) {
+                        if ($subPath === $folderPath || isset($deletedLookup[$subPath])) {
+                            continue;
+                        }
+                        $subNode = $userFolder->get($subPath);
+                        if ($subNode instanceof Folder && $subNode->getDirectoryListing() === []) {
+                            $subNode->delete();
+                            $deleted[] = $subPath;
+                            $deletedLookup[$subPath] = true;
+                            $this->logger->info('Deleted empty subfolder: {path}', ['path' => $subPath]);
+                        }
+                    }
+
+                    if ($node->getDirectoryListing() !== []) {
+                        $errors[] = [
+                            'path' => $folderPath,
+                            'error' => 'FOLDER_NOT_EMPTY',
+                            'message' => 'Folder is not empty',
+                        ];
+                        continue;
+                    }
                 }
 
                 $node->delete();
                 $deleted[] = $folderPath;
+                $deletedLookup[$folderPath] = true;
                 $this->logger->info('Deleted empty folder: {path}', ['path' => $folderPath]);
             } catch (NotFoundException $e) {
                 $errors[] = [

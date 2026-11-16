@@ -1,3 +1,7 @@
+## 1.10.17 - 2026-11-16
+### Fixed
+- **Empty Folders Cleanup modal toolbar alignment, button colors, and folder deletion confirmation** ([#236](https://github.com/eldertek/duplicatefinder/issues/236)). Widened the `Empty Folders Cleanup` modal (`size="large"`) and prevented unwanted line breaks in `.empty-folders-modal__toolbar` so `Scan folders`, `Unselect all`, `Ignore: {count}`, and `Show: {count}` stay on a single line, enforced explicit button background and text colors so Nextcloud's global `button` stylesheet no longer tints the action or delete buttons blue, rendered the confirmation dialog inside the modal above `NcModal`'s stacking context, and expanded selected parent folders with empty subfolders so deleting a parent folder removes its empty subfolders deepest-first
+
 ## 1.10.16 - 2026-11-16
 ### Changed
 - **Refined Empty Folders Cleanup modal layout, folder icons, and dynamic eye / crossed-out eye indicator** ([#236](https://github.com/eldertek/duplicatefinder/issues/236)). Tidied up the Empty Folders Cleanup modal header and toolbar with a primary `Scan folders` pill button on the left and compact `Unselect all`, `Ignore: {count}`, and `Show: {count}` / `Hide: {count}` controls on the right, added a clear `Empty folders found: {count}` counter, a dedicated `Permanently delete {count} folders` pill button, a `Selected folders` subheading, and a folder outline icon on each row, and updated the per-folder visibility toggle to display the open eye icon while visible and the crossed-out eye icon (with strikethrough line) once hidden

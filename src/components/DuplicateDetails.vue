@@ -1004,7 +1004,7 @@ button:disabled *,
   align-items: center;
   justify-content: center;
   padding: 16px;
-  z-index: 3000;
+  z-index: 20000 !important;
 }
 
 .nc-confirm-dialog {
@@ -1060,9 +1060,15 @@ button:disabled *,
 }
 
 .nc-confirm-dialog__button {
-  min-height: 34px;
-  padding: 6px 14px;
-  border-radius: var(--border-radius-large, 8px);
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 34px !important;
+  padding: 6px 14px !important;
+  margin: 0 !important;
+  border-radius: var(--border-radius-large, 8px) !important;
+  background-image: none !important;
+  box-shadow: none !important;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -1070,23 +1076,25 @@ button:disabled *,
 }
 
 .nc-confirm-dialog__button--cancel {
-  background-color: var(--color-background-hover);
-  border: 1px solid var(--color-border-dark, var(--color-border));
-  color: var(--color-main-text);
+  background-color: var(--color-background-hover) !important;
+  border: 1px solid var(--color-border-dark, var(--color-border)) !important;
+  color: var(--color-main-text) !important;
 }
 
 .nc-confirm-dialog__button--cancel:hover {
-  background-color: var(--color-background-dark);
+  background-color: var(--color-background-dark) !important;
+  color: var(--color-main-text) !important;
 }
 
 .nc-confirm-dialog__button--danger {
-  background-color: #d32f2f;
-  border: 1px solid #d32f2f;
-  color: #ffffff;
+  background-color: #d32f2f !important;
+  border: 1px solid #d32f2f !important;
+  color: #ffffff !important;
 }
 
 .nc-confirm-dialog__button--danger:hover {
-  background-color: #b71c1c;
-  border-color: #b71c1c;
+  background-color: #b71c1c !important;
+  border-color: #b71c1c !important;
+  color: #ffffff !important;
 }
 </style>

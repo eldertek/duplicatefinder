@@ -228,28 +228,40 @@ class EmptyFolderCleanupServiceTest extends TestCase
         ], array_column($detected, 'path'));
     }
 
-    public function testDeleteEmptyFoldersRemovesDeepestFirstAndRefusesNonEmptyParentIfChildKept(): void
+    public function testDeleteEmptyFoldersRemovesDeepestFirstAndRefusesNonEmptyParentIfChildHasFile(): void
     {
         $this->originFolderService->method('findAll')->willReturn([]);
         $this->originFolderService->method('isPathProtected')->willReturn(['isProtected' => false, 'protectingFolder' => null]);
         $this->excludedFolderService->method('isPathExcluded')->willReturn(false);
 
+        $this->addFolder('/ChainWithFile');
+        $this->addFolder('/ChainWithFile/Sub');
+        $this->addFile('/ChainWithFile/Sub/keep.txt');
+
+        // Case 1: parent has a non-empty child -> refused safely with FOLDER_NOT_EMPTY!
+        $nonEmptyResult = $this->service->deleteEmptyFolders('alice', ['/ChainWithFile']);
+        $this->assertSame([], $nonEmptyResult['deleted']);
+        $this->assertCount(1, $nonEmptyResult['errors']);
+        $this->assertSame('FOLDER_NOT_EMPTY', $nonEmptyResult['errors'][0]['error']);
+        $this->assertArrayHasKey('/ChainWithFile/Sub', $this->nodesByPath);
+
+        // Case 2: user selects only parent /Chain whose child /Chain/Sub is completely empty -> deletes both deepest-first!
         $this->addFolder('/Chain');
         $this->addFolder('/Chain/Sub');
-
-        // Case 1: user unchecks /Chain/Sub and tries to delete only /Chain -> refused safely!
-        $partialResult = $this->service->deleteEmptyFolders('alice', ['/Chain']);
-        $this->assertSame([], $partialResult['deleted']);
-        $this->assertCount(1, $partialResult['errors']);
-        $this->assertSame('FOLDER_NOT_EMPTY', $partialResult['errors'][0]['error']);
-        $this->assertArrayHasKey('/Chain/Sub', $this->nodesByPath);
-
-        // Case 2: user selects both /Chain and /Chain/Sub (even passed parent-first) -> deepest-first deletes both!
-        $fullResult = $this->service->deleteEmptyFolders('alice', ['/Chain', '/Chain/Sub']);
-        $this->assertSame(['/Chain/Sub', '/Chain'], $fullResult['deleted']);
-        $this->assertSame([], $fullResult['errors']);
+        $parentOnlyResult = $this->service->deleteEmptyFolders('alice', ['/Chain']);
+        $this->assertSame(['/Chain/Sub', '/Chain'], $parentOnlyResult['deleted']);
+        $this->assertSame([], $parentOnlyResult['errors']);
         $this->assertArrayNotHasKey('/Chain', $this->nodesByPath);
         $this->assertArrayNotHasKey('/Chain/Sub', $this->nodesByPath);
+
+        // Case 3: user selects both /Chain2 and /Chain2/Sub (even passed parent-first) -> deepest-first deletes both!
+        $this->addFolder('/Chain2');
+        $this->addFolder('/Chain2/Sub');
+        $fullResult = $this->service->deleteEmptyFolders('alice', ['/Chain2', '/Chain2/Sub']);
+        $this->assertSame(['/Chain2/Sub', '/Chain2'], $fullResult['deleted']);
+        $this->assertSame([], $fullResult['errors']);
+        $this->assertArrayNotHasKey('/Chain2', $this->nodesByPath);
+        $this->assertArrayNotHasKey('/Chain2/Sub', $this->nodesByPath);
     }
 
     public function testDeleteEmptyFoldersBlocksRootTraversalProtectedExcludedAndMounted(): void

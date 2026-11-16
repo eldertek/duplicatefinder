@@ -242,8 +242,8 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 
 		const modalDeletePromise = vm.deleteSelectedModalEmptyFolders()
 		await settle()
-		assert.ok(vm.$el.querySelector('.nc-confirm-dialog[role="alertdialog"]'), 'opens Nextcloud confirmation dialog in topbar Empty Folders modal')
-		vm.$el.querySelector('.nc-confirm-dialog__button--danger').click()
+		assert.ok(vm.$el.querySelector('.empty-folders-modal .nc-confirm-dialog[role="alertdialog"]'), 'renders confirmation dialog inside .empty-folders-modal so NcModal never occludes or traps it')
+		vm.$el.querySelector('.empty-folders-modal .nc-confirm-dialog__button--danger').click()
 		await modalDeletePromise
 		await settle()
 
@@ -355,6 +355,28 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 
 		assert.deepEqual(Array.from(vm.ignoredEmptyFolders), [])
 		assert.equal(vm.activeModalEmptyFolders.length, 2)
+
+		// Verify parent folder with empty subfolders expands non-ignored children when selected alone after Unselect all
+		vm.modalEmptyFolders = [
+			{ path: '/Musik/FlashIntegro', name: 'FlashIntegro', depth: 2, hasEmptySubfolders: true, mtime: 1 },
+			{ path: '/Musik/FlashIntegro/Sub', name: 'Sub', depth: 3, hasEmptySubfolders: false, mtime: 1 },
+		]
+		vm.selectedModalEmptyFolders = ['/Musik/FlashIntegro', '/Musik/FlashIntegro/Sub']
+		await settle()
+
+		// Click Unselect all, then select only /Musik/FlashIntegro
+		vm.toggleSelectAllModalEmptyFolders()
+		assert.deepEqual(Array.from(vm.selectedModalEmptyFolders), [])
+		vm.toggleModalEmptyFolder('/Musik/FlashIntegro')
+		assert.deepEqual(Array.from(vm.selectedModalEmptyFolders), ['/Musik/FlashIntegro'])
+
+		const parentDeletePromise = vm.deleteSelectedModalEmptyFolders()
+		await settle()
+		vm.$el.querySelector('.empty-folders-modal .nc-confirm-dialog__button--danger').click()
+		await parentDeletePromise
+		await settle()
+
+		assert.equal(vm.modalEmptyFolders.length, 0, 'both parent folder and its empty subfolder are deleted and removed from modal list')
 
 		vm.$destroy()
 		window.localStorage.clear()
