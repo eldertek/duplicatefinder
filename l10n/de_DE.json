@@ -532,6 +532,14 @@
     "All detected empty folders are currently ignored ({count})." : "Alle erkannten leeren Ordner sind derzeit ignoriert ({count}).",
     "Ignored" : "Ignoriert",
     "Ignore folder in future scans" : "Ordner bei künftigen Scans ignorieren",
-    "Restore folder to cleanup list" : "Ordner wieder in die Bereinigungsliste aufnehmen"
+    "Restore folder to cleanup list" : "Ordner wieder in die Bereinigungsliste aufnehmen",
+    "Finds folders left empty after removing duplicates. You can optionally delete them. Protected and excluded folders remain untouched." : "Findet Ordner, die nach der Duplikatentfernung leer geblieben sind. Sie können diese optional löschen. Geschützte und ausgeschlossene Ordner bleiben unangetastet.",
+    "Scan folders" : "Ordner durchsuchen",
+    "Ignore: {count}" : "Ignoriert: {count}",
+    "Show: {count}" : "Anzeigen: {count}",
+    "Hide: {count}" : "Ausblenden: {count}",
+    "Empty folders found: {count}" : "Gefundene leere Ordner: {count}",
+    "Permanently delete {count} folders" : "{count} Ordner unwiderruflich löschen",
+    "Selected folders" : "Ausgewählte Ordner"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

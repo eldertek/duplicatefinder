@@ -286,56 +286,74 @@
 				:title="t('duplicatefinder', 'Empty Folders Cleanup')"
 				@close="emptyFoldersModalOpen = false">
 				<div class="empty-folders-modal">
+					<h3 class="empty-folders-modal__title">
+						{{ t('duplicatefinder', 'Empty Folders Cleanup') }}
+					</h3>
 					<p class="empty-folders-modal__hint">
-						{{ t('duplicatefinder', 'Detect folders left empty after removing duplicates and optionally delete them in one go. Protected origin folders, excluded folders, and external mounts are never deleted.') }}
+						{{ t('duplicatefinder', 'Finds folders left empty after removing duplicates. You can optionally delete them. Protected and excluded folders remain untouched.') }}
 					</p>
 					<div class="empty-folders-modal__toolbar">
-						<NcButton
-							v-if="recentCleanedPaths.length > 0"
-							type="secondary"
-							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
-							@click="scanEmptyFoldersInModal(true)">
-							{{ t('duplicatefinder', 'Check cleaned locations') }}
-						</NcButton>
-						<NcButton
-							type="secondary"
-							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
-							@click="scanEmptyFoldersInModal(false)">
-							{{ t('duplicatefinder', 'Scan all folders') }}
-						</NcButton>
-						<NcButton
-							v-if="activeModalEmptyFolders.length > 0"
-							type="tertiary"
-							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
-							@click="toggleSelectAllModalEmptyFolders">
-							{{ isAllModalEmptyFoldersSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
-						</NcButton>
-						<NcButton
-							v-if="selectedModalEmptyFolders.length > 0"
-							type="secondary"
-							class="modal-ignore-empty-folders-button"
-							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
-							@click="ignoreSelectedModalEmptyFolders">
-							{{ t('duplicatefinder', 'Ignore selected ({count})', { count: selectedModalEmptyFolders.length }) }}
-						</NcButton>
-						<NcButton
-							v-if="ignoredModalEmptyFoldersCount > 0"
-							type="tertiary"
-							class="modal-toggle-ignored-folders-button"
-							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
-							@click="showIgnoredModalEmptyFolders = !showIgnoredModalEmptyFolders">
-							{{ showIgnoredModalEmptyFolders
-								? t('duplicatefinder', 'Hide ignored ({count})', { count: ignoredModalEmptyFoldersCount })
-								: t('duplicatefinder', 'Show ignored ({count})', { count: ignoredModalEmptyFoldersCount }) }}
-						</NcButton>
-						<NcButton
-							v-if="modalEmptyFolders.length > 0"
-							type="error"
-							class="modal-delete-empty-folders-button"
+						<div class="empty-folders-modal__toolbar-left">
+							<button
+								type="button"
+								class="empty-folders-scan-btn"
+								:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+								@click="scanEmptyFoldersInModal(false)">
+								{{ t('duplicatefinder', 'Scan folders') }}
+							</button>
+							<button
+								v-if="recentCleanedPaths.length > 0"
+								type="button"
+								class="empty-folders-pill-btn"
+								:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+								@click="scanEmptyFoldersInModal(true)">
+								{{ t('duplicatefinder', 'Check cleaned locations') }}
+							</button>
+						</div>
+						<div class="empty-folders-modal__toolbar-right">
+							<button
+								v-if="activeModalEmptyFolders.length > 0"
+								type="button"
+								class="empty-folders-unselect-link"
+								:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+								@click="toggleSelectAllModalEmptyFolders">
+								{{ isAllModalEmptyFoldersSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
+							</button>
+							<button
+								v-if="selectedModalEmptyFolders.length > 0"
+								type="button"
+								class="empty-folders-pill-btn modal-ignore-empty-folders-button"
+								:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+								@click="ignoreSelectedModalEmptyFolders">
+								{{ t('duplicatefinder', 'Ignore: {count}', { count: selectedModalEmptyFolders.length }) }}
+							</button>
+							<button
+								v-if="ignoredModalEmptyFoldersCount > 0"
+								type="button"
+								class="empty-folders-pill-btn modal-toggle-ignored-folders-button"
+								:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+								@click="showIgnoredModalEmptyFolders = !showIgnoredModalEmptyFolders">
+								{{ showIgnoredModalEmptyFolders
+									? t('duplicatefinder', 'Hide: {count}', { count: ignoredModalEmptyFoldersCount })
+									: t('duplicatefinder', 'Show: {count}', { count: ignoredModalEmptyFoldersCount }) }}
+							</button>
+						</div>
+					</div>
+
+					<div v-if="!emptyFoldersLoading && modalEmptyFolders.length > 0" class="empty-folders-modal__summary">
+						<div class="empty-folders-modal__found-count">
+							{{ t('duplicatefinder', 'Empty folders found: {count}', { count: activeModalEmptyFolders.length }) }}
+						</div>
+						<button
+							type="button"
+							class="empty-folders-delete-pill modal-delete-empty-folders-button"
 							:disabled="emptyFoldersLoading || emptyFoldersDeleting || selectedModalEmptyFolders.length === 0"
 							@click="deleteSelectedModalEmptyFolders">
-							{{ t('duplicatefinder', 'Delete selected ({count})', { count: selectedModalEmptyFolders.length }) }}
-						</NcButton>
+							{{ t('duplicatefinder', 'Permanently delete {count} folders', { count: selectedModalEmptyFolders.length }) }}
+						</button>
+						<h4 v-if="visibleModalEmptyFolders.length > 0" class="empty-folders-modal__section-title">
+							{{ t('duplicatefinder', 'Selected folders') }}
+						</h4>
 					</div>
 
 					<div v-if="emptyFoldersLoading" class="empty-folders-modal__status">
@@ -363,13 +381,24 @@
 								:checked="selectedModalEmptyFolders.includes(folder.path)"
 								:disabled="isEmptyFolderIgnored(folder.path)"
 								@change="toggleModalEmptyFolder(folder.path)">
+							<svg
+								class="empty-folder-row-icon"
+								xmlns="http://www.w3.org/2000/svg"
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+							</svg>
 							<span
 								class="empty-folders-modal__path"
 								@click="!isEmptyFolderIgnored(folder.path) && toggleModalEmptyFolder(folder.path)">
 								{{ folder.path }}
-							</span>
-							<span v-if="isEmptyFolderIgnored(folder.path)" class="empty-folders-modal__ignored-pill">
-								{{ t('duplicatefinder', 'Ignored') }}
 							</span>
 							<span v-if="folder.hasEmptySubfolders" class="empty-folders-modal__badge">
 								{{ t('duplicatefinder', 'Includes empty subfolders') }}
@@ -385,7 +414,35 @@
 									? t('duplicatefinder', 'Restore folder to cleanup list')
 									: t('duplicatefinder', 'Ignore folder in future scans')"
 								@click.stop="toggleIgnoreModalEmptyFolder(folder.path)">
-								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<svg
+									v-if="!isEmptyFolderIgnored(folder.path)"
+									class="eye-icon eye-icon--visible"
+									xmlns="http://www.w3.org/2000/svg"
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+									<circle cx="12" cy="12" r="3"></circle>
+								</svg>
+								<svg
+									v-else
+									class="eye-icon eye-icon--hidden"
+									xmlns="http://www.w3.org/2000/svg"
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
 									<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
 									<line x1="1" y1="1" x2="23" y2="23"></line>
 								</svg>
@@ -1619,24 +1676,141 @@ export default {
 }
 
 .empty-folders-modal {
-	padding: 20px;
-	max-width: 760px;
+	padding: 22px 24px;
+	max-width: 780px;
 	margin: 0 auto;
 }
 
+.empty-folders-modal__title {
+	margin: 0 0 8px;
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: var(--color-main-text);
+}
+
 .empty-folders-modal__hint {
-	margin: 0 0 14px;
+	margin: 0 0 18px;
 	color: var(--color-text-maxcontrast);
-	font-size: 0.92rem;
-	line-height: 1.45;
+	font-size: 0.94rem;
+	line-height: 1.48;
 }
 
 .empty-folders-modal__toolbar {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 8px;
-	margin-bottom: 16px;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 18px;
+}
+
+.empty-folders-modal__toolbar-left,
+.empty-folders-modal__toolbar-right {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.empty-folders-modal__toolbar-right {
+	margin-left: auto;
+}
+
+.empty-folders-scan-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 36px;
+	padding: 7px 18px;
+	border-radius: 999px;
+	border: 1px solid var(--color-primary-element, #0082c9);
+	background-color: var(--color-primary-element, #0082c9);
+	color: var(--color-primary-element-text, #ffffff);
+	font-size: 0.92rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.empty-folders-scan-btn:hover:not(:disabled) {
+	filter: brightness(1.08);
+}
+
+.empty-folders-unselect-link {
+	background: none !important;
+	border: none !important;
+	box-shadow: none !important;
+	padding: 4px 6px !important;
+	margin: 0 !important;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9rem;
+	font-weight: 500;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.empty-folders-unselect-link:hover:not(:disabled) {
+	color: var(--color-main-text);
+}
+
+.empty-folders-pill-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 32px;
+	padding: 5px 12px;
+	border-radius: 8px;
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-color: var(--color-background-dark);
+	color: var(--color-main-text);
+	font-size: 0.88rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.empty-folders-pill-btn:hover:not(:disabled) {
+	background-color: var(--color-background-hover);
+	border-color: var(--color-primary-element);
+}
+
+.empty-folders-modal__summary {
+	margin-bottom: 10px;
+}
+
+.empty-folders-modal__found-count {
+	margin: 0 0 12px;
+	font-size: 1.12rem;
+	font-weight: 500;
+	color: var(--color-main-text);
+}
+
+.empty-folders-delete-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 38px;
+	padding: 8px 20px;
+	border-radius: 999px;
+	border: 1px solid #d32f2f;
+	background-color: #d32f2f;
+	color: #ffffff;
+	font-size: 0.94rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.empty-folders-delete-pill:hover:not(:disabled) {
+	background-color: #b71c1c;
+	border-color: #b71c1c;
+}
+
+.empty-folders-modal__section-title {
+	margin: 20px 0 10px;
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--color-main-text);
 }
 
 .empty-folders-modal__status {
@@ -1651,7 +1825,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-	max-height: 50vh;
+	max-height: 46vh;
 	overflow-y: auto;
 }
 
@@ -1659,9 +1833,9 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	padding: 10px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius, 8px);
+	padding: 10px 14px;
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	border-radius: var(--border-radius-large, 8px);
 	cursor: pointer;
 }
 
@@ -1670,12 +1844,17 @@ export default {
 }
 
 .empty-folders-modal__item.is-selected {
-	background-color: var(--color-primary-element-light);
+	background-color: var(--color-background-hover);
 }
 
 .empty-folders-modal__item.is-ignored {
 	opacity: 0.65;
 	background-color: var(--color-background-dark);
+}
+
+.empty-folder-row-icon {
+	flex-shrink: 0;
+	color: var(--color-text-maxcontrast);
 }
 
 .empty-folder-checkbox {
@@ -1761,24 +1940,22 @@ export default {
 	margin: 0 !important;
 	padding: 0 !important;
 	border-radius: 6px;
-	border: 1px solid var(--color-border-dark, var(--color-border));
-	background-color: var(--color-main-background);
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
 	color: var(--color-text-maxcontrast);
 	cursor: pointer;
 	flex-shrink: 0;
-	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+	transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .empty-folder-ignore-button:hover {
-	background-color: var(--color-background-hover);
+	background-color: var(--color-background-hover) !important;
 	color: var(--color-main-text);
-	border-color: var(--color-primary-element);
 }
 
 .empty-folder-ignore-button.is-ignored {
-	background-color: var(--color-primary-element-light);
 	color: var(--color-primary-element, #0082c9);
-	border-color: var(--color-primary-element, #0082c9);
 }
 
 :deep(.modal-container) {

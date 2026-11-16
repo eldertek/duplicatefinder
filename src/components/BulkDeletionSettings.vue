@@ -101,14 +101,25 @@
               :checked="isEmptyFolderSelected(folder.path)"
               :disabled="isEmptyFolderIgnored(folder.path)"
               @change="toggleEmptyFolder(folder.path)">
+            <svg
+              class="empty-folder-row-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
             <div
               class="file-info empty-folder-info"
               :title="folder.path"
               @click="!isEmptyFolderIgnored(folder.path) && toggleEmptyFolder(folder.path)">
               <span class="file-path-label">{{ folder.path }}</span>
-              <span v-if="isEmptyFolderIgnored(folder.path)" class="empty-folder-ignored-pill">
-                {{ t('duplicatefinder', 'Ignored') }}
-              </span>
               <span v-if="folder.hasEmptySubfolders" class="file-size">
                 {{ t('duplicatefinder', 'Includes empty subfolders') }}
               </span>
@@ -124,7 +135,35 @@
                 ? t('duplicatefinder', 'Restore folder to cleanup list')
                 : t('duplicatefinder', 'Ignore folder in future scans')"
               @click.stop="toggleIgnoreEmptyFolder(folder.path)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                v-if="!isEmptyFolderIgnored(folder.path)"
+                class="eye-icon eye-icon--visible"
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg
+                v-else
+                class="eye-icon eye-icon--hidden"
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true">
                 <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                 <line x1="1" y1="1" x2="23" y2="23"></line>
               </svg>
@@ -1231,6 +1270,11 @@ export default {
   white-space: nowrap;
 }
 
+.empty-folder-row-icon {
+  flex-shrink: 0;
+  color: var(--color-text-maxcontrast);
+}
+
 .empty-folder-ignore-button {
   display: inline-flex !important;
   align-items: center !important;
@@ -1242,24 +1286,22 @@ export default {
   margin: 0 !important;
   padding: 0 !important;
   border-radius: 6px;
-  border: 1px solid var(--color-border-dark, var(--color-border));
-  background-color: var(--color-main-background);
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
   color: var(--color-text-maxcontrast);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .empty-folder-ignore-button:hover {
-  background-color: var(--color-background-hover);
+  background-color: var(--color-background-hover) !important;
   color: var(--color-main-text);
-  border-color: var(--color-primary-element);
 }
 
 .empty-folder-ignore-button.is-ignored {
-  background-color: var(--color-primary-element-light);
   color: var(--color-primary-element, #0082c9);
-  border-color: var(--color-primary-element, #0082c9);
 }
 
 .nc-confirm-dialog-backdrop {

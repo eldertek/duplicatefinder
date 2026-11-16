@@ -318,10 +318,16 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 
 		const checkboxes = vm.$el.querySelectorAll('.empty-folder-checkbox')
 		assert.equal(checkboxes.length, 2, 'renders clean .empty-folder-checkbox inputs')
+		const folderIcons = vm.$el.querySelectorAll('.empty-folder-row-icon')
+		assert.equal(folderIcons.length, 2, 'renders folder outline icon next to each checkbox')
 		const ignoreBtns = vm.$el.querySelectorAll('.empty-folder-ignore-button')
-		assert.equal(ignoreBtns.length, 2, 'renders crossed-out eye button next to each folder')
+		assert.equal(ignoreBtns.length, 2, 'renders eye button next to each folder')
+		assert.ok(ignoreBtns[0].querySelector('.eye-icon--visible'), 'shows open eye icon without strikethrough before folder is hidden')
+		assert.equal(ignoreBtns[0].querySelector('.eye-icon--hidden'), null, 'does not show strikethrough eye icon when folder is visible')
+		assert.match(vm.$el.querySelector('.empty-folders-modal__found-count').textContent, /Empty folders found: 2/)
+		assert.match(vm.$el.querySelector('.modal-delete-empty-folders-button').textContent, /Permanently delete 2 folders/)
 
-		// Click crossed-out eye on /PC/.cache/thumbnails to ignore it
+		// Click eye on /PC/.cache/thumbnails to ignore it
 		ignoreBtns[0].click()
 		await settle()
 
@@ -336,12 +342,14 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 		assert.deepEqual(Array.from(vm.selectedModalEmptyFolders), ['/PC/NewEmpty'])
 		assert.equal(vm.visibleModalEmptyFolders.length, 1)
 
-		// Toggle "Show ignored (1)" and click the crossed-out eye icon to restore visibility
+		// Toggle "Show: 1" and verify the hidden folder displays the crossed-out eye icon (with strikethrough line)
 		vm.$el.querySelector('.modal-toggle-ignored-folders-button').click()
 		await settle()
 		assert.equal(vm.visibleModalEmptyFolders.length, 2)
 		const restoredBtn = vm.$el.querySelector('.empty-folder-ignore-button.is-ignored')
 		assert.ok(restoredBtn, 'ignored folder shows active crossed-out eye button')
+		assert.ok(restoredBtn.querySelector('.eye-icon--hidden'), 'shows crossed-out eye icon with strikethrough once folder is hidden')
+		assert.equal(restoredBtn.querySelector('.eye-icon--visible'), null)
 		restoredBtn.click()
 		await settle()
 

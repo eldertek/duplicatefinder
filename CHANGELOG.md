@@ -1,3 +1,7 @@
+## 1.10.16 - 2026-11-16
+### Changed
+- **Refined Empty Folders Cleanup modal layout, folder icons, and dynamic eye / crossed-out eye indicator** ([#236](https://github.com/eldertek/duplicatefinder/issues/236)). Tidied up the Empty Folders Cleanup modal header and toolbar with a primary `Scan folders` pill button on the left and compact `Unselect all`, `Ignore: {count}`, and `Show: {count}` / `Hide: {count}` controls on the right, added a clear `Empty folders found: {count}` counter, a dedicated `Permanently delete {count} folders` pill button, a `Selected folders` subheading, and a folder outline icon on each row, and updated the per-folder visibility toggle to display the open eye icon while visible and the crossed-out eye icon (with strikethrough line) once hidden
+
 ## 1.10.15 - 2026-11-16
 ### Added
 - **Nextcloud confirmation dialog replacing native browser `window.confirm()`** ([#235](https://github.com/eldertek/duplicatefinder/issues/235)). Replaced native browser `window.confirm()` prompts with an accessible Nextcloud confirmation dialog (`role="alertdialog"`, `aria-modal="true"`, keyboard Escape and backdrop dismissal, and explicit `Cancel` and destructive confirmation buttons) when deleting all copies of a duplicate group (`Delete all copies`), confirming bulk duplicate deletion, or deleting empty folders, while keeping server-side `allowLastCopy` protection unchanged
