@@ -338,6 +338,29 @@
 									? t('duplicatefinder', 'Hide: {count}', { count: ignoredModalEmptyFoldersCount })
 									: t('duplicatefinder', 'Show: {count}', { count: ignoredModalEmptyFoldersCount }) }}
 							</button>
+							<button
+								v-if="ignoredModalEmptyFoldersCount > 0 || ignoredEmptyFolders.length > 0"
+								type="button"
+								class="empty-folders-pill-btn empty-folders-reset-btn modal-reset-ignored-folders-button"
+								:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+								:title="t('duplicatefinder', 'Restore all ignored folders')"
+								:aria-label="t('duplicatefinder', 'Restore all ignored folders')"
+								@click="resetIgnoredModalEmptyFolders">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<polyline points="1 4 1 10 7 10"></polyline>
+									<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+								</svg>
+							</button>
 						</div>
 					</div>
 
@@ -366,6 +389,14 @@
 					</div>
 					<div v-else-if="modalEmptyFoldersScanned && visibleModalEmptyFolders.length === 0" class="empty-folders-modal__status">
 						<span>{{ t('duplicatefinder', 'All detected empty folders are currently ignored ({count}).', { count: ignoredModalEmptyFoldersCount }) }}</span>
+						<button
+							v-if="ignoredModalEmptyFoldersCount > 0 || ignoredEmptyFolders.length > 0"
+							type="button"
+							class="empty-folders-pill-btn modal-restore-all-ignored-button"
+							:disabled="emptyFoldersLoading || emptyFoldersDeleting"
+							@click="resetIgnoredModalEmptyFolders">
+							{{ t('duplicatefinder', 'Restore all') }}
+						</button>
 					</div>
 					<div v-else-if="visibleModalEmptyFolders.length > 0" class="empty-folders-modal__list">
 						<div
@@ -1301,6 +1332,12 @@ export default {
 			this.selectedModalEmptyFolders = []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
 		},
+		resetIgnoredModalEmptyFolders() {
+			this.ignoredEmptyFolders = []
+			this.showIgnoredModalEmptyFolders = false
+			this.selectedModalEmptyFolders = this.modalEmptyFolders.map(folder => folder.path)
+			saveUiPreferences({ ignoredEmptyFolders: [] })
+		},
 		toggleModalEmptyFolder(path) {
 			if (this.isEmptyFolderIgnored(path)) {
 				return
@@ -1793,16 +1830,16 @@ export default {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	min-height: 36px !important;
-	padding: 7px 18px !important;
+	min-height: 34px !important;
+	padding: 6px 16px !important;
 	margin: 0 !important;
-	border-radius: 999px !important;
+	border-radius: var(--border-radius-large, 8px) !important;
 	border: 1px solid var(--color-primary-element, #0082c9) !important;
 	background-color: var(--color-primary-element, #0082c9) !important;
 	background-image: none !important;
-	color: var(--color-primary-element-text, #ffffff) !important;
+	color: #ffffff !important;
 	box-shadow: none !important;
-	font-size: 0.92rem;
+	font-size: 0.9rem;
 	font-weight: 600;
 	white-space: nowrap;
 	cursor: pointer;
@@ -1813,7 +1850,7 @@ export default {
 .empty-folders-scan-btn:focus:not(:disabled) {
 	background-color: var(--color-primary-element, #0082c9) !important;
 	border-color: var(--color-primary-element, #0082c9) !important;
-	color: var(--color-primary-element-text, #ffffff) !important;
+	color: #ffffff !important;
 	filter: brightness(1.08);
 }
 
@@ -1851,7 +1888,7 @@ export default {
 	min-height: 32px !important;
 	padding: 5px 12px !important;
 	margin: 0 !important;
-	border-radius: 8px !important;
+	border-radius: var(--border-radius-large, 8px) !important;
 	border: 1px solid var(--color-border-dark, var(--color-border)) !important;
 	background-color: var(--color-background-hover) !important;
 	background-image: none !important;
@@ -1871,6 +1908,15 @@ export default {
 	color: var(--color-main-text) !important;
 }
 
+.empty-folders-reset-btn {
+	width: 32px !important;
+	min-width: 32px !important;
+	height: 32px !important;
+	min-height: 32px !important;
+	padding: 0 !important;
+	flex-shrink: 0;
+}
+
 .empty-folders-modal__summary {
 	margin-bottom: 10px;
 }
@@ -1886,16 +1932,16 @@ export default {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	min-height: 38px !important;
-	padding: 8px 20px !important;
+	min-height: 36px !important;
+	padding: 7px 16px !important;
 	margin: 0 !important;
-	border-radius: 999px !important;
-	border: 1px solid #c94a4a !important;
-	background-color: #c94a4a !important;
+	border-radius: var(--border-radius-large, 8px) !important;
+	border: 1px solid #d32f2f !important;
+	background-color: #d32f2f !important;
 	background-image: none !important;
 	color: #ffffff !important;
 	box-shadow: none !important;
-	font-size: 0.94rem;
+	font-size: 0.92rem;
 	font-weight: 600;
 	white-space: nowrap;
 	cursor: pointer;

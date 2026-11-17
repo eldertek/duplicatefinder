@@ -356,6 +356,24 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 		assert.deepEqual(Array.from(vm.ignoredEmptyFolders), [])
 		assert.equal(vm.activeModalEmptyFolders.length, 2)
 
+		// Bulk-ignore all selected folders, then restore all in one click via the reset controls
+		vm.selectedModalEmptyFolders = ['/PC/.cache/thumbnails', '/PC/NewEmpty']
+		vm.showIgnoredModalEmptyFolders = false
+		await settle()
+		vm.$el.querySelector('.modal-ignore-empty-folders-button').click()
+		await settle()
+		assert.deepEqual(Array.from(vm.ignoredEmptyFolders), ['/PC/.cache/thumbnails', '/PC/NewEmpty'])
+		assert.equal(vm.visibleModalEmptyFolders.length, 0)
+		assert.ok(vm.$el.querySelector('.modal-reset-ignored-folders-button'), 'renders reset ignored folders button in modal toolbar')
+		assert.ok(vm.$el.querySelector('.modal-restore-all-ignored-button'), 'renders inline Restore all button when all detected folders are ignored')
+
+		vm.$el.querySelector('.modal-reset-ignored-folders-button').click()
+		await settle()
+		assert.deepEqual(Array.from(vm.ignoredEmptyFolders), [], 'reset button clears all ignored empty folders')
+		assert.equal(vm.visibleModalEmptyFolders.length, 2, 'all empty folders are visible again after reset')
+		assert.deepEqual(Array.from(vm.selectedModalEmptyFolders), ['/PC/.cache/thumbnails', '/PC/NewEmpty'], 'restored folders are selected again')
+		assert.deepEqual(utils.loadUiPreferences().ignoredEmptyFolders, [], 'cleared in localStorage preferences')
+
 		// Verify parent folder with empty subfolders expands non-ignored children when selected alone after Unselect all
 		vm.modalEmptyFolders = [
 			{ path: '/Musik/FlashIntegro', name: 'FlashIntegro', depth: 2, hasEmptySubfolders: true, mtime: 1 },

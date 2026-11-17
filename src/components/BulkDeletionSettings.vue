@@ -66,6 +66,14 @@
                 ? t('duplicatefinder', 'Hide ignored ({count})', { count: ignoredEmptyFoldersCount })
                 : t('duplicatefinder', 'Show ignored ({count})', { count: ignoredEmptyFoldersCount }) }}
             </NcButton>
+            <NcButton
+              v-if="ignoredEmptyFoldersCount > 0 || ignoredEmptyFolders.length > 0"
+              type="tertiary"
+              class="reset-ignored-folders-button"
+              :disabled="isScanningEmptyFolders || isDeletingEmptyFolders"
+              @click="resetIgnoredEmptyFolders">
+              {{ t('duplicatefinder', 'Restore all') }}
+            </NcButton>
             <NcButton v-if="emptyFolderScanWasScoped" type="secondary" @click="runEmptyFolderScan([])" :disabled="isScanningEmptyFolders || isDeletingEmptyFolders">
               {{ t('duplicatefinder', 'Scan all folders') }}
             </NcButton>
@@ -915,6 +923,14 @@ export default {
       this.selectedEmptyFolders = []
       if (typeof saveUiPreferences === 'function') {
         saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
+      }
+    },
+    resetIgnoredEmptyFolders() {
+      this.ignoredEmptyFolders = []
+      this.showIgnoredEmptyFolders = false
+      this.selectedEmptyFolders = this.emptyFolders.map(folder => folder.path)
+      if (typeof saveUiPreferences === 'function') {
+        saveUiPreferences({ ignoredEmptyFolders: [] })
       }
     },
     isEmptyFolderSelected(path) {
