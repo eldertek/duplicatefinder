@@ -162,15 +162,13 @@ export const deleteFiles = async (files, options = {}) => {
 
     if (results.length > 0) {
         showSuccessNotification(
-            t('duplicatefinder', '{count} files deleted successfully.',
-            { count: results.length })
+            n('duplicatefinder', '%n file deleted', '%n files deleted', results.length)
         );
     }
 
     if (errors.length > 0) {
         showErrorNotification(
-            t('duplicatefinder', 'Failed to delete {count} files.',
-            { count: errors.length })
+            n('duplicatefinder', 'Failed to delete %n file', 'Failed to delete %n files', errors.length)
         );
     }
 
@@ -571,12 +569,12 @@ export async function deleteEmptyFolders(paths = []) {
 
         if (deleted.length > 0) {
             showSuccessNotification(
-                t('duplicatefinder', '{count} empty folders deleted successfully.', { count: deleted.length })
+                n('duplicatefinder', '%n empty folder deleted', '%n empty folders deleted', deleted.length)
             )
         }
         if (errors.length > 0) {
             showErrorNotification(
-                t('duplicatefinder', 'Failed to delete {count} empty folders.', { count: errors.length })
+                n('duplicatefinder', 'Failed to delete %n empty folder', 'Failed to delete %n empty folders', errors.length)
             )
         }
 
