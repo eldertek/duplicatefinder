@@ -55,6 +55,7 @@
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                   <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
+                <!-- TRANSLATORS Button that moves this group of duplicates back from the Acknowledged list to the Unacknowledged list -->
                 <span>{{ t('duplicatefinder', 'Unacknowledge it') }}</span>
               </button>
               <button
@@ -66,6 +67,7 @@
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                   <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
+                <!-- TRANSLATORS Button that marks this group of duplicates as reviewed and kept as it is. It moves to the Acknowledged list; no files are deleted -->
                 <span>{{ t('duplicatefinder', 'Acknowledge it') }}</span>
               </button>
 
