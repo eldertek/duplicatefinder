@@ -12,7 +12,7 @@ global.HTMLElement = dom.window.HTMLElement
 global.Element = dom.window.Element
 global.Node = dom.window.Node
 global.t = window.t = (app, text, vars = {}) => text.replace(/\{(\w+)\}/g, (_, key) => String(vars[key]))
-global.n = window.n = (app, one, many, count) => count === 1 ? one : many
+global.n = window.n = (app, one, many, count) => (count === 1 ? one : many).replace(/%n/g, String(count))
 window.OC = {
 	config: {},
 	theme: {},

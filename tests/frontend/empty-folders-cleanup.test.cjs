@@ -54,7 +54,7 @@ describe('Issue 231: Optional empty folder detection and batch deletion after du
 		assert.equal(postCalls[1].url, '/apps/duplicatefinder/api/empty-folders/delete')
 		assert.deepEqual(postCalls[1].body, { paths: ['/Archive/2021'] })
 		assert.equal(toasts.length, 1)
-		assert.equal(toasts[0].msg, '1 empty folders deleted successfully.')
+		assert.equal(toasts[0].msg, '1 empty folder deleted')
 	})
 
 	test('BulkDeletionSettings optionally detects empty folders after bulk deletion and deletes selected folders in one go', async () => {

@@ -143,7 +143,7 @@ describe('Issue 230: fast, non-accumulating toast notifications during bulk dupl
 		const result = await api.deleteFiles(files)
 		assert.equal(result.success.length, 5)
 		assert.equal(result.errors.length, 0)
-		assert.deepEqual(successMessages, ['5 files deleted successfully.'])
+		assert.deepEqual(successMessages, ['5 files deleted'])
 		assert.deepEqual(errorMessages, [])
 	})
 })
