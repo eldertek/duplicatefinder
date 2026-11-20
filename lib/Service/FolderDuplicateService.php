@@ -123,6 +123,19 @@ class FolderDuplicateService
                 ];
             }
 
+            $totalDeletableAcrossFolders = 0;
+            foreach ($folderDetails as $detail) {
+                $totalDeletableAcrossFolders += $detail['deletableSize'];
+            }
+            $maxReclaimable = 0;
+            foreach ($folderDetails as $keptCandidate) {
+                $reclaimableIfKept = $totalDeletableAcrossFolders - $keptCandidate['deletableSize'];
+                if ($reclaimableIfKept > $maxReclaimable) {
+                    $maxReclaimable = $reclaimableIfKept;
+                }
+            }
+
+            $group['reclaimableSize'] = $maxReclaimable;
             $group['hasProtectedFolder'] = $hasProtectedFolder;
             $group['folderDetails'] = $folderDetails;
             $enrichedGroups[] = $group;

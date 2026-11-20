@@ -201,4 +201,36 @@ class FolderDuplicateServiceTest extends TestCase
         $this->assertSame(101, $backupDetail['files'][0]['nodeId']);
         $this->assertSame('hash-photo', $backupDetail['files'][0]['fileHash']);
     }
+
+    public function testFindFolderDuplicatesReportCapsReclaimableSizeWhenFoldersAreProtected(): void
+    {
+        $dupAllProtected = $this->makeDuplicate('hash-prot', [
+            ['/alice/files/OriginA/doc.pdf', 1500],
+            ['/alice/files/OriginB/doc.pdf', 1500],
+        ]);
+        $dupTriple = $this->makeDuplicate('hash-triple', [
+            ['/alice/files/OriginA/sub/img.jpg', 2000],
+            ['/alice/files/OriginB/sub/img.jpg', 2000],
+            ['/alice/files/Scratch/sub/img.jpg', 2000],
+        ]);
+
+        $report = $this->service->findFolderDuplicatesReport(
+            [$dupAllProtected, $dupTriple],
+            1,
+            0,
+            null,
+            static function (string $path): bool {
+                return strpos($path, '/Origin') === 0;
+            }
+        );
+
+        $byFolders = [];
+        foreach ($report['groups'] as $group) {
+            $byFolders[implode('|', $group['folders'])] = $group;
+        }
+
+        $this->assertSame(0, $byFolders['/OriginA|/OriginB']['reclaimableSize']);
+        $this->assertSame(2000, $byFolders['/OriginA/sub|/OriginB/sub|/Scratch/sub']['reclaimableSize']);
+        $this->assertSame(2000, $report['summary']['reclaimableSize']);
+    }
 }

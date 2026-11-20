@@ -273,15 +273,28 @@ class DuplicateApiController extends AbstractAPIController
         $all = [];
         $page = 1;
         $pageSize = 100;
+        $offset = 0;
 
         do {
-            $batch = $this->fileDuplicateService->findAll('all', $userId, $page, $pageSize, true);
+            $batch = $offset === 0
+                ? $this->fileDuplicateService->findAll('all', $userId, $page, $pageSize, true)
+                : $this->fileDuplicateService->findAll('all', $userId, 1, $pageSize, true, [['hash'], ['type']], 0, $offset);
             foreach ($batch['entities'] ?? [] as $entity) {
                 $all[] = $entity;
             }
             $isLastFetched = !empty($batch['isLastFetched']) || empty($batch['entities']);
+            if ($isLastFetched) {
+                break;
+            }
+            $nextOffset = isset($batch['nextOffset'])
+                ? (int)$batch['nextOffset']
+                : ($offset + $pageSize);
+            if ($nextOffset <= $offset) {
+                break;
+            }
+            $offset = $nextOffset;
             $page++;
-        } while (!$isLastFetched);
+        } while (true);
 
         return $all;
     }

@@ -275,4 +275,61 @@ describe('Issue 193 (Level 2): Duplicate folders view and one-click Keep this fo
 
 		vm.$destroy()
 	})
+
+	test('collectFilesOutsideKeptFolder refuses non-member paths and skips shared nodeIds present in kept folder', async () => {
+		const utils = loadModule('src/tools/utils.js', {
+			'./notifications': { showErrorNotification: () => {} },
+		})
+		const BulkDeletionSettings = loadComponent('src/components/BulkDeletionSettings.vue', {
+			'@nextcloud/vue': {
+				NcButton: slotBox('button'),
+				NcCheckboxRadioSwitch: slotBox('label'),
+				NcEmptyContent: slotBox('div'),
+				NcLoadingIcon: slotBox('span'),
+				NcActions: slotBox('div'),
+				NcActionButton: slotBox('button'),
+			},
+			'@/tools/api': {
+				fetchDuplicatesForBulk: async () => ({ entities: [], pagination: { currentPage: 1, totalPages: 1 } }),
+			},
+			'@/tools/utils': utils,
+			'vue-material-design-icons/ChevronDown.vue': slotBox('span'),
+			'@nextcloud/l10n': { translate: global.t },
+		})
+
+		const vm = new Vue(BulkDeletionSettings)
+		const group = {
+			signature: 'sig-shared',
+			folderDetails: [
+				{
+					path: '/Archive/A',
+					files: [
+						{ path: '/qa-bot/files/Archive/A/shared.jpg', nodeId: 777, size: 1000, isInOriginFolder: false },
+						{ path: '/qa-bot/files/Archive/A/unique.jpg', nodeId: 101, size: 1000, isInOriginFolder: false },
+					],
+				},
+				{
+					path: '/Archive/B',
+					files: [
+						{ path: '/qa-bot/files/Archive/B/shared.jpg', nodeId: 777, size: 1000, isInOriginFolder: false },
+						{ path: '/qa-bot/files/Archive/B/unique.jpg', nodeId: 202, size: 1000, isInOriginFolder: false },
+					],
+				},
+			],
+		}
+
+		assert.deepEqual(
+			vm.collectFilesOutsideKeptFolder(group, '/NotAMember'),
+			[],
+			'returns empty when keptFolderPath does not match any folder in the group'
+		)
+		const deletable = vm.collectFilesOutsideKeptFolder(group, '/Archive/A')
+		assert.deepEqual(
+			deletable.map(f => f.nodeId),
+			[202],
+			'skips shared nodeId 777 already present in kept folder /Archive/A'
+		)
+
+		vm.$destroy()
+	})
 })

@@ -1141,6 +1141,22 @@ export default {
     },
     collectFilesOutsideKeptFolder(group, keptFolderPath) {
       const details = this.getDuplicateGroupFolderDetails(group)
+      const keptFolder = keptFolderPath
+        ? details.find(folder => folder && folder.path === keptFolderPath)
+        : null
+      if (!keptFolder) {
+        return []
+      }
+
+      const keptNodeIds = new Set()
+      if (Array.isArray(keptFolder.files)) {
+        keptFolder.files.forEach(file => {
+          if (file && file.nodeId) {
+            keptNodeIds.add(Number(file.nodeId))
+          }
+        })
+      }
+
       const files = []
       const seenKeys = new Set()
 
@@ -1150,6 +1166,9 @@ export default {
         }
         folder.files.forEach(file => {
           if (!file || file.isInOriginFolder || !file.path) {
+            return
+          }
+          if (file.nodeId && keptNodeIds.has(Number(file.nodeId))) {
             return
           }
           const key = file.nodeId ? `id:${file.nodeId}` : `path:${file.path}`

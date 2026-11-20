@@ -352,4 +352,72 @@ class DuplicateApiControllerTest extends TestCase
         $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
         $this->assertSame('error', $response->getData()['status']);
     }
+
+    public function testListFoldersPaginatesUsingNextOffsetAcrossMultipleBatches(): void
+    {
+        $dup1 = new FileDuplicate('hash-batch-1', 'file_hash');
+        $f1a = new FileInfo();
+        $f1a->setPath('/testuser/files/BatchA/one.jpg');
+        $f1a->setSize(1024);
+        $f1a->setNodeId(101);
+        $f1b = new FileInfo();
+        $f1b->setPath('/testuser/files/BatchB/one.jpg');
+        $f1b->setSize(1024);
+        $f1b->setNodeId(102);
+        $dup1->setFiles([$f1a, $f1b]);
+
+        $dup2 = new FileDuplicate('hash-batch-2', 'file_hash');
+        $f2a = new FileInfo();
+        $f2a->setPath('/testuser/files/BatchA/two.jpg');
+        $f2a->setSize(2048);
+        $f2a->setNodeId(201);
+        $f2b = new FileInfo();
+        $f2b->setPath('/testuser/files/BatchB/two.jpg');
+        $f2b->setSize(2048);
+        $f2b->setNodeId(202);
+        $dup2->setFiles([$f2a, $f2b]);
+
+        $this->originFolderService->method('isPathProtected')
+            ->willReturn(['isProtected' => false, 'protectingFolder' => null]);
+
+        $calls = [];
+        $this->fileDuplicateService->expects($this->exactly(2))
+            ->method('findAll')
+            ->willReturnCallback(function (
+                string $type,
+                string $userId,
+                int $page,
+                int $pageSize,
+                bool $enrich,
+                ?array $orderBy = null,
+                int $minSize = 0,
+                ?int $startOffset = null
+            ) use (&$calls, $dup1, $dup2): array {
+                $calls[] = [$type, $userId, $page, $pageSize, $enrich, $startOffset];
+                if (count($calls) === 1) {
+                    return [
+                        'entities' => [$dup1],
+                        'nextOffset' => 137,
+                        'isLastFetched' => false,
+                    ];
+                }
+
+                return [
+                    'entities' => [$dup2],
+                    'nextOffset' => 240,
+                    'isLastFetched' => true,
+                ];
+            });
+
+        $response = $this->controller->listFolders(2, 0);
+        $data = $response->getData();
+
+        $this->assertSame('success', $data['status']);
+        $this->assertCount(2, $calls);
+        $this->assertNull($calls[0][5]);
+        $this->assertSame(137, $calls[1][5]);
+        $this->assertSame(1, $data['summary']['groupCount']);
+        $this->assertSame(2, $data['groups'][0]['fileCount']);
+        $this->assertSame(['/BatchA', '/BatchB'], $data['groups'][0]['folders']);
+    }
 }
