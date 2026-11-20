@@ -33,7 +33,6 @@ OC.L10N.register(
     "Manage your excluded folders list as needed" : "Savu neiekļauto mapju saraksts ir pārvaldāms pēc nepieciešamības",
     "All deleted files can be recovered from the Nextcloud trash bin during the retention period." : "Visas izdzēstās datnes paturēšanas laika posmā var atkopt no Nextcloud atkritnes.",
     "File not found" : "Datne nav atrasta",
-    "Failed to delete {count} files." : "Neizdevās izdzēst {count} datnes.",
     "Failed to delete origin folder" : "Neizdevās izdzēst avota mapi",
     "Failed to delete project" : "Neizdevās izdzēst projektu"
 },

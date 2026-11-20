@@ -504,8 +504,6 @@ OC.L10N.register(
     "Permission denied to delete file" : "Dosyanın silinmesine izin verilmedi",
     "File is currently locked. Please try again later." : "Dosya kilitli. Lütfen bir süre sonra yeniden deneyin.",
     "Error deleting file" : "Dosya silinirken sorun çıktı",
-    "{count} files deleted successfully." : "{count} dosya silindi",
-    "Failed to delete {count} files." : "{count} dosya silinemedi.",
     "Some folders could not be saved:\n{errors}" : "Bazı klasörler kaydedilemedi:\n{errors}",
     "Origin folders saved successfully" : "Kaynak klasörler kaydedildi",
     "Failed to save origin folders" : "Kaynak klasörler kaydedilemedi",
@@ -533,8 +531,6 @@ OC.L10N.register(
     "Failed to initiate project scan" : "Proje taraması başlatılamadı",
     "Failed to load project duplicates" : "Proje çift dosyaları yüklenemedi",
     "Failed to scan for empty folders." : "Boş klasörler taranamadı.",
-    "{count} empty folders deleted successfully." : "{count} boş klasör silindi.",
-    "Failed to delete {count} empty folders." : "{count} boş klasör silinemedi.",
     "Failed to delete empty folders." : "Boş klasörler silinemedi.",
     "The viewer is not available" : "Görüntüleyici kullanılamıyor"
 },

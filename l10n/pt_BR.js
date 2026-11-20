@@ -494,8 +494,6 @@ OC.L10N.register(
     "Permission denied to delete file" : "Permissão negada para excluir arquivo",
     "File is currently locked. Please try again later." : "O arquivo está trancado no momento. Tente novamente mais tarde.",
     "Error deleting file" : "Erro ao excluir arquivo",
-    "{count} files deleted successfully." : "{count} arquivos excluídos com sucesso.",
-    "Failed to delete {count} files." : "Falha ao excluir {count} arquivos.",
     "Some folders could not be saved:\n{errors}" : "Algumas pastas não puderam ser salvas:\n{errors}",
     "Origin folders saved successfully" : "Pastas de origem salvas com sucesso",
     "Failed to save origin folders" : "Falha ao salvar as pastas de origem",
@@ -523,8 +521,6 @@ OC.L10N.register(
     "Failed to initiate project scan" : "Falha ao iniciar a varredura do projeto.",
     "Failed to load project duplicates" : "Falha ao carregar duplicatas de projeto",
     "Failed to scan for empty folders." : "Não foi possível verificar se há pastas vazias.",
-    "{count} empty folders deleted successfully." : "{count} pastas vazias excluídas com sucesso.",
-    "Failed to delete {count} empty folders." : "Não foi possível excluir {count} pastas vazias.",
     "Failed to delete empty folders." : "Não foi possível excluir pastas vazias.",
     "The viewer is not available" : "O visualizador não está disponível"
 },

@@ -428,8 +428,6 @@
     "File not found" : "ھۆججەت تېپىلمىدى",
     "Permission denied to delete file" : "ھۆججەتنى ئۆچۈرۈشكە رۇخسەت قىلىنمىدى",
     "Error deleting file" : "ھۆججەتنى ئۆچۈرۈشتە خاتالىق كۆرۈلدى",
-    "{count} files deleted successfully." : "{count} ھۆججەت مۇۋەپپەقىيەتلىك ئۆچۈرۈلدى.",
-    "Failed to delete {count} files." : "{count} ھۆججەتنى ئۆچۈرۈش مەغلۇب بولدى.",
     "Some folders could not be saved:\n{errors}" : "بەزى قىسقۇچلارنى ساقلىغىلى بولمىدى:\n{errors}",
     "Origin folders saved successfully" : "ئەسلى قىسقۇچلار مۇۋەپپەقىيەتلىك ساقلاندى",
     "Failed to save origin folders" : "ئەسلى قىسقۇچلارنى ساقلاش مەغلۇپ بولدى",

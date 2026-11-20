@@ -150,7 +150,7 @@
     "Path:" : "Pfad:",
     "Protected" : "Geschützt",
     "Original" : "Original",
-    "Duplicate" : "Duplizieren",
+    "Duplicate" : "Duplikat",
     "Open Folder" : "Ordner öffnen",
     "Select duplicates in other folders for deletion" : "Duplikate in anderen Ordnern zum Löschen auswählen",
     "Keep Folder" : "Ordner behalten",
@@ -502,8 +502,6 @@
     "Permission denied to delete file" : "Berechtigung zum Löschen der Datei verweigert",
     "File is currently locked. Please try again later." : "Datei ist derzeit gesperrt. Bitte später noch einmal versuchen.",
     "Error deleting file" : "Fehler beim Löschen der Datei",
-    "{count} files deleted successfully." : "{count} Dateien gelöscht.",
-    "Failed to delete {count} files." : "{count} Dateien konnten nicht gelöscht werden",
     "Some folders could not be saved:\n{errors}" : "Einige Ordner konnten nicht gespeichert werden:\n{errors}",
     "Origin folders saved successfully" : "Ursprungsordner gespeichert",
     "Failed to save origin folders" : "Ursprungsordner konnten nicht gespeichert werden",
@@ -531,8 +529,6 @@
     "Failed to initiate project scan" : "Der Projektscan konnte nicht gestartet werden.",
     "Failed to load project duplicates" : "Projektduplikate konnten nicht geladen werden",
     "Failed to scan for empty folders." : "Leere Ordner konnten nicht gescannt werden.",
-    "{count} empty folders deleted successfully." : "{count} leere Ordner gelöscht",
-    "Failed to delete {count} empty folders." : "{count} leere Ordner konnten nicht gelöscht werden",
     "Failed to delete empty folders." : "Leere Ordner konnten nicht gelöscht werden.",
     "The viewer is not available" : "Der Betrachter ist nicht verfügbar"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"

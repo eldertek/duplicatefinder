@@ -307,8 +307,6 @@ OC.L10N.register(
     "Permission denied to delete file" : "Faili kustutamiseks puuduvad õigused",
     "File is currently locked. Please try again later." : "Fail on hetkel lukustatud. Palun proovi hiljem uuesti.",
     "Error deleting file" : "Viga faili kustutamisel",
-    "{count} files deleted successfully." : "{count} faili kustutamine õnnestus",
-    "Failed to delete {count} files." : "{count} faili kustutamine ei õnnestunud.",
     "Some folders could not be saved:\n{errors}" : "Mõne kausta salvestamine polnud võimalik:\n{errors}",
     "Origin folders saved successfully" : "Lähtekausta salvestamine õnnestus",
     "Failed to save origin folders" : "Lähtekausta salvestamine ei õnnestunud",
@@ -336,8 +334,6 @@ OC.L10N.register(
     "Failed to initiate project scan" : "Projekti skaneerimise käivitamine ei õnnestunud",
     "Failed to load project duplicates" : "Projekti topeltfailide laadimine ei õnnestunud",
     "Failed to scan for empty folders." : "Tühjade kaustade otsimine ei õnnestunud.",
-    "{count} empty folders deleted successfully." : "{count} tühja kausta kustutamine õnnestus",
-    "Failed to delete {count} empty folders." : "{count} tühja kausta kustutamine ei õnnestunud.",
     "Failed to delete empty folders." : "Tühjade kaustade kustutamine ei õnnestunud.",
     "The viewer is not available" : "Vaatamisrakendus pole saadaval"
 },

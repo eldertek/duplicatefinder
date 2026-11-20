@@ -436,8 +436,6 @@ OC.L10N.register(
     "File not found" : "Soubor nenalezen",
     "Permission denied to delete file" : "Oprávnění pro smazání souboru odepřeno",
     "Error deleting file" : "Chyba při mazání souboru",
-    "{count} files deleted successfully." : "{count} souborů úspěšně smazáno.",
-    "Failed to delete {count} files." : "Nepodařilo se smazat {count} souborů.",
     "Some folders could not be saved:\n{errors}" : "Některé složky nebylo možné uložit:\n{errors}",
     "Origin folders saved successfully" : "Složky původu úspěšně uloženy",
     "Failed to save origin folders" : "Nepodařilo se uložit složky původu",

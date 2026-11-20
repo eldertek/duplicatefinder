@@ -431,8 +431,6 @@ OC.L10N.register(
     "Permission denied to delete file" : "Відмовлено у видаленні файлу",
     "File is currently locked. Please try again later." : "Файл зараз заблоковано. Спробуйте пізніше.",
     "Error deleting file" : "Помилка видалення файлу",
-    "{count} files deleted successfully." : "{count} файли успішно видалено.",
-    "Failed to delete {count} files." : "Не вдалося видалити файли {count}.",
     "Some folders could not be saved:\n{errors}" : "Деякі папки не вдалося зберегти:\n{errors}",
     "Origin folders saved successfully" : "Теки Origin успішно збережено",
     "Failed to save origin folders" : "Не вдалося зберегти вихідні папки",

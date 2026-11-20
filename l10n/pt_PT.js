@@ -418,8 +418,6 @@ OC.L10N.register(
     "File not found" : "Ficheiro não encontrado",
     "Permission denied to delete file" : "Permissão negada para excluir arquivo",
     "Error deleting file" : "Erro ao excluir arquivo",
-    "{count} files deleted successfully." : "{count} ficheiros eliminados com sucesso.",
-    "Failed to delete {count} files." : "Falha ao excluir {count} arquivos.",
     "Some folders could not be saved:\n{errors}" : "Algumas pastas não puderam ser salvas:\n{errors}",
     "Origin folders saved successfully" : "Pastas de origem salvas com sucesso",
     "Failed to save origin folders" : "Falha ao salvar as pastas de origem",

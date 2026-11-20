@@ -504,8 +504,6 @@ OC.L10N.register(
     "Permission denied to delete file" : "Du har ikke tilladelse til at slette filen",
     "File is currently locked. Please try again later." : "Filen er låst. Prøv igen senere.",
     "Error deleting file" : "Fejl ved sletning af fil",
-    "{count} files deleted successfully." : "{count} filer er slettet.",
-    "Failed to delete {count} files." : "{count} filer kunne ikke slettes.",
     "Some folders could not be saved:\n{errors}" : "Nogle mapper kunne ikke gemmes:\n{errors}",
     "Origin folders saved successfully" : "Oprindelsesmapperne er gemt",
     "Failed to save origin folders" : "Oprindelsesmapperne kunne ikke gemmes",
@@ -533,8 +531,6 @@ OC.L10N.register(
     "Failed to initiate project scan" : "Projektscanningen kunne ikke startes",
     "Failed to load project duplicates" : "Projektets dubletter kunne ikke indlæses",
     "Failed to scan for empty folders." : "Scanningen efter tomme mapper mislykkedes.",
-    "{count} empty folders deleted successfully." : "{count} tomme mapper er slettet.",
-    "Failed to delete {count} empty folders." : "{count} tomme mapper kunne ikke slettes.",
     "Failed to delete empty folders." : "De tomme mapper kunne ikke slettes.",
     "The viewer is not available" : "Fremviseren er ikke tilgængelig"
 },

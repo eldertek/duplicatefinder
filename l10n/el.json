@@ -435,8 +435,6 @@
     "Permission denied to delete file" : "Δεν επιτρέπεται η διαγραφή του αρχείου",
     "File is currently locked. Please try again later." : "Το αρχείο είναι κλειδωμένο αυτήν τη στιγμή. Παρακαλούμε δοκιμάστε ξανά αργότερα.",
     "Error deleting file" : "Σφάλμα κατά τη διαγραφή του αρχείου",
-    "{count} files deleted successfully." : "{count} αρχεία διαγράφηκαν με επιτυχία.",
-    "Failed to delete {count} files." : "Αποτυχία διαγραφής {count} αρχείων.",
     "Some folders could not be saved:\n{errors}" : "Ορισμένοι φάκελοι δεν μπορούσαν να αποθηκευτούν:\n{errors}",
     "Origin folders saved successfully" : "Οι φάκελοι προέλευσης αποθηκεύτηκαν με επιτυχία",
     "Failed to save origin folders" : "Αποτυχία αποθήκευσης φακέλων προέλευσης",

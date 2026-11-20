@@ -436,8 +436,6 @@
     "Permission denied to delete file" : "Izin dihapus berkas ditolak",
     "File is currently locked. Please try again later." : "Berkas sedang dikunci. Silakan coba lagi nanti.",
     "Error deleting file" : "Kesalahan saat menghapus berkas",
-    "{count} files deleted successfully." : "{count} berkas berhasil dihapus.",
-    "Failed to delete {count} files." : "Gagal menghapus {count} berkas.",
     "Some folders could not be saved:\n{errors}" : "Beberapa folder tidak dapat disimpan:\n{errors}",
     "Origin folders saved successfully" : "Folder asal berhasil disimpan",
     "Failed to save origin folders" : "Gagal menyimpan folder asal",

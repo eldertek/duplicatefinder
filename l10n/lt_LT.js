@@ -438,8 +438,6 @@ OC.L10N.register(
     "Permission denied to delete file" : "Leidimas ištrinti failą nesuteiktas",
     "File is currently locked. Please try again later." : "Failas šiuo metu užrakintas. Bandykite dar kartą vėliau.",
     "Error deleting file" : "Klaida ištrinant failą",
-    "{count} files deleted successfully." : "{count} failai sėkmingai ištrinti.",
-    "Failed to delete {count} files." : "Nepavyko ištrinti {count} failų.",
     "Some folders could not be saved:\n{errors}" : "Kai kurių aplankų nepavyko išsaugoti:\n{errors}",
     "Origin folders saved successfully" : "Kilmės aplankai sėkmingai išsaugoti",
     "Failed to save origin folders" : "Nepavyko išsaugoti kilmės aplankų",

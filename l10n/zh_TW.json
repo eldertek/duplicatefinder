@@ -142,8 +142,6 @@
     "File not found" : "找不到檔案",
     "Permission denied to delete file" : "無權刪除檔案",
     "Error deleting file" : "刪除檔案時發生錯誤",
-    "{count} files deleted successfully." : "成功刪除 {count} 個檔案。",
-    "Failed to delete {count} files." : "刪除 {count} 個檔案失敗。",
     "Some folders could not be saved:\n{errors}" : "無法儲存部份資料夾：\n{errors}",
     "Origin folders saved successfully" : "成功儲存原始資料夾",
     "Failed to save origin folders" : "儲存原始資料夾失敗",

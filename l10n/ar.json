@@ -315,8 +315,6 @@
     "File not found" : "تعذر العثور على الملف",
     "Permission denied to delete file" : "لا توجد أذونات كافية لحذف الملف",
     "Error deleting file" : "خطأ أثناء حذف الملف",
-    "{count} files deleted successfully." : "{count} ملف تمّ حذفها بنجاحٍ.",
-    "Failed to delete {count} files." : "تعذّر حذف {count} ملف.",
     "Some folders could not be saved:\n{errors}" : "بعض الملفات تعذّر حفظها:\n{errors}",
     "Origin folders saved successfully" : "المجلدات المصدر يةتمّ حفظها بنجاحٍ",
     "Failed to save origin folders" : "تعذّر حفظ المجلدات المصدرية",

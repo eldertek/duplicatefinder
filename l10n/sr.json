@@ -431,8 +431,6 @@
     "File not found" : "Фајл није нађен",
     "Permission denied to delete file" : "Одбијена је дозвола за брисање фајла",
     "Error deleting file" : "Грешка приликом брисања фајла",
-    "{count} files deleted successfully." : "Успешно је обрисано {count} фајлова.",
-    "Failed to delete {count} files." : "Није успело брисање {count} фајлова.",
     "Some folders could not be saved:\n{errors}" : "Неки фолдери нису могли да се сачувају::\n{errors}",
     "Origin folders saved successfully" : "Успешно су сачувани фајлови изворишта",
     "Failed to save origin folders" : "Није успело чување фолдера изворишта",

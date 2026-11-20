@@ -502,8 +502,6 @@
     "Permission denied to delete file" : "Prístup odmietnutý pri mazaní súboru",
     "File is currently locked. Please try again later." : "Súbor je momentálne uzamknutý. Skúste to znova neskôr.",
     "Error deleting file" : "Chyba pri mazaní súboru",
-    "{count} files deleted successfully." : "Počet úspešne odstránených súborov: {count}.",
-    "Failed to delete {count} files." : "Nepodarilo sa vymazať {count} súborov.",
     "Some folders could not be saved:\n{errors}" : "Niektoré adresáre sa nepodarilo uložiť:\n{errors}",
     "Origin folders saved successfully" : "Zdrojové adresáre boli úspešne uložené",
     "Failed to save origin folders" : "Nepodarilo sa uložiť zdrojové priečinky",
@@ -531,8 +529,6 @@
     "Failed to initiate project scan" : "Skenovanie projektu sa nepodarilo spustiť",
     "Failed to load project duplicates" : "Duplikáty projektu sa nepodarilo načítať",
     "Failed to scan for empty folders." : "Nepodarilo sa vyhľadať prázdne priečinky.",
-    "{count} empty folders deleted successfully." : "Počet úspešne odstránených prázdnych priečinkov: {count}.",
-    "Failed to delete {count} empty folders." : "Nepodarilo sa odstrániť prázdne priečinky. Počet: {count}.",
     "Failed to delete empty folders." : "Nepodarilo sa odstrániť prázdne priečinky.",
     "The viewer is not available" : "Prehliadač nie je dostupný"
 },"pluralForm" :"nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);"

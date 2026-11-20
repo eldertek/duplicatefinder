@@ -430,8 +430,6 @@
     "File not found" : "Archivo no encontrado",
     "Permission denied to delete file" : "Permiso denegado para eliminar el archivo",
     "Error deleting file" : "Error al eliminar el archivo",
-    "{count} files deleted successfully." : "{count} archivos se eliminaron exitosamente.",
-    "Failed to delete {count} files." : "Fallo al eliminar {count} archivos.",
     "Some folders could not be saved:\n{errors}" : "Algunas carpetas no pudieron ser guardadas:\n{errors}",
     "Origin folders saved successfully" : "Se guardaron las carpetas de origen exitosamente",
     "Failed to save origin folders" : "Fallo al guardar carpetas de origen",

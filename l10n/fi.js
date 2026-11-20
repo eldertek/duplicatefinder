@@ -334,8 +334,6 @@ OC.L10N.register(
     "File not found" : "Tiedostoa ei löytynyt",
     "Permission denied to delete file" : "Ei oikeutta tiedoston poistoon",
     "Error deleting file" : "Virhe tiedostoa poistaessa",
-    "{count} files deleted successfully." : "{count} tiedosto(a) poistettu.",
-    "Failed to delete {count} files." : "{count} tiedoston poisto epäonnistui.",
     "Some folders could not be saved:\n{errors}" : "Joitain kansioita ei voitu tallentaa:\n{errors}",
     "Origin folders saved successfully" : "Alkuperäiskansiot tallennettu",
     "Failed to save origin folders" : "Alkuperäiskansioiden tallennus epäonnistui",

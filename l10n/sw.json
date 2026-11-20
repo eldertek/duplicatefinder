@@ -427,8 +427,6 @@
     "File not found" : "Faili halipatikani",
     "Permission denied to delete file" : "Ruhusa imekataliwa kufuta faili",
     "Error deleting file" : "Hitilafu katika kufuta faili",
-    "{count} files deleted successfully." : "Faili {count} zimefutwa kwa mafanikio.",
-    "Failed to delete {count} files." : "Imeshindwa kufuta faili {count}.",
     "Some folders could not be saved:\n{errors}" : "Baadhi ya folda hazikuweza kuhifadhiwa:\n{errors}",
     "Origin folders saved successfully" : "Folda za asili zimehifadhiwa",
     "Failed to save origin folders" : "Imeshindwa kuhifadhi folda asili",

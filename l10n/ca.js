@@ -320,8 +320,6 @@ OC.L10N.register(
     "File not found" : "No s'ha trobat el fitxer",
     "Permission denied to delete file" : "S'ha denegat el permís per suprimir el fitxer",
     "Error deleting file" : "S'ha produït un error en suprimir el fitxer",
-    "{count} files deleted successfully." : "{count} fitxers suprimits correctament.",
-    "Failed to delete {count} files." : "No s'han pogut suprimir {count} fitxers.",
     "Some folders could not be saved:\n{errors}" : "Algunes carpetes no s'han pogut desar:\n{errors}",
     "Origin folders saved successfully" : "Les carpetes d'origen s'han desat correctament",
     "Failed to save origin folders" : "No s'han pogut desar les carpetes d'origen",

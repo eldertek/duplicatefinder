@@ -438,8 +438,6 @@
     "Permission denied to delete file" : "Nu ai permisiunea de a șterge fișierul",
     "File is currently locked. Please try again later." : "Fișierul este blocat momentan. Încearcă din nou mai târziu.",
     "Error deleting file" : "Eroare la ștergerea fișierului",
-    "{count} files deleted successfully." : "{count} fișiere au fost șterse cu succes.",
-    "Failed to delete {count} files." : "{count} fișiere nu au putut fi șterse.",
     "Some folders could not be saved:\n{errors}" : "Unele dosare nu au putut fi salvate:\n{errors}",
     "Origin folders saved successfully" : "Dosarele de origine au fost salvate cu succes",
     "Failed to save origin folders" : "Dosarele de origine nu au putut fi salvate",

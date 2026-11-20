@@ -434,8 +434,6 @@ OC.L10N.register(
     "File not found" : "Non se atopou o ficheiro",
     "Permission denied to delete file" : "Permiso denegado para eliminar o ficheiro",
     "Error deleting file" : "Produciuse un erro ao eliminar o ficheiro",
-    "{count} files deleted successfully." : "{count} ficheiros eliminados satisfactoriamente",
-    "Failed to delete {count} files." : "Produciuse un fallo ao eliminar {count} ficheiros",
     "Some folders could not be saved:\n{errors}" : "Non foi posíbel gardar algúns cartafoles:\n{errors}",
     "Origin folders saved successfully" : "Os cartafoles de orixe gardáronse satisfactoriamente",
     "Failed to save origin folders" : "Produciuse un fallo ao gardar os cartafoles de orixe",

@@ -429,8 +429,6 @@
     "Permission denied to delete file" : "دسترسی برای حذف فایل رد شد",
     "File is currently locked. Please try again later." : "فایل در حال حاضر قفل است. لطفاً بعداً دوباره تلاش کنید.",
     "Error deleting file" : "خطا در حذف فایل",
-    "{count} files deleted successfully." : "{count} فایل با موفقیت حذف شد.",
-    "Failed to delete {count} files." : "حذف {count} فایل ناموفق بود.",
     "Some folders could not be saved:\n{errors}" : "برخی پوشه‌ها ذخیره نشدند:\n{errors}",
     "Origin folders saved successfully" : "پوشه‌های مبدأ با موفقیت ذخیره شدند",
     "Failed to save origin folders" : "ذخیره پوشه‌های مبدأ ناموفق بود",

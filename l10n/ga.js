@@ -463,8 +463,6 @@ OC.L10N.register(
     "Permission denied to delete file" : "Diúltaíodh cead an comhad a scriosadh",
     "File is currently locked. Please try again later." : "Tá an comhad faoi ghlas faoi láthair. Déan iarracht arís ar ball.",
     "Error deleting file" : "Earráid agus an comhad á scriosadh",
-    "{count} files deleted successfully." : "{count}scriostar na comhaid go rathúil.",
-    "Failed to delete {count} files." : "Theip ar scriosadh {count} comhad.",
     "Some folders could not be saved:\n{errors}" : "Níorbh fhéidir roinnt fillteán a shábháil:\n{errors}",
     "Origin folders saved successfully" : "D'éirigh le fillteáin bhunaidh a shábháil",
     "Failed to save origin folders" : "Theip ar shábháil fillteáin bhunaidh",

@@ -463,8 +463,6 @@ OC.L10N.register(
     "Permission denied to delete file" : "Behörighet att ta bort filen saknas",
     "File is currently locked. Please try again later." : "Filen är för närvarande låst. Försök igen senare.",
     "Error deleting file" : "Det gick inte att ta bort filen",
-    "{count} files deleted successfully." : "{count} filer togs bort.",
-    "Failed to delete {count} files." : "Det gick inte att ta bort {count} filer.",
     "Some folders could not be saved:\n{errors}" : "Vissa mappar kunde inte sparas:\n{errors}",
     "Origin folders saved successfully" : "Ursprungsmapparna sparades",
     "Failed to save origin folders" : "Det gick inte att spara ursprungsmapparna",
