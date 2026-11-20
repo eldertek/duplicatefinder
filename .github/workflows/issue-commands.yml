@@ -7,14 +7,18 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
 jobs:
   log-instructions:
     runs-on: ubuntu-22.04
-    if: contains(github.event.comment.body, '!log') 
+    if: contains(github.event.comment.body, '!log') && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) 
 
     steps:
       - name: Delete trigger comment
-        uses: actions/github-script@v6
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -26,7 +30,7 @@ jobs:
             });
 
       - name: Add log instructions
-        uses: actions/github-script@v6
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

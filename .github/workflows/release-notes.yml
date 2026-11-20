@@ -4,13 +4,20 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   update-release-notes:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Extract latest changelog and version
         id: extract_changelog
@@ -41,11 +48,12 @@ jobs:
             echo 'EOF'
             echo "current_version=$CURRENT_VERSION"
             echo "previous_version=$PREVIOUS_VERSION"
-          } >> $GITHUB_ENV
+          } >> "$GITHUB_ENV"
 
       - name: Update Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           # Directly assign the environment variable
           BODY="$latest"
@@ -54,10 +62,10 @@ jobs:
           gh api \
             --method GET \
             -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/releases/tags/v${current_version} \
+            /repos/"${GH_REPO}"/releases/tags/v${current_version} \
             --jq .id \
           | xargs -I {} gh api \
             --method PATCH \
             -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/releases/{} \
+            /repos/"${GH_REPO}"/releases/{} \
             -f body="$BODY" 
