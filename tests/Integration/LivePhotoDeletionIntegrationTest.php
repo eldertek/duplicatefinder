@@ -98,7 +98,7 @@ class LivePhotoDeletionIntegrationTest extends TestCase
 
         $this->assertFalse($this->folder->nodeExists('redundant/photo.jpg'));
         $this->assertFalse($this->folder->nodeExists('redundant/photo.mov'));
-        $remaining = \OC::$server->get(LivePhotoResolver::class)->resolve($survivor[0]);
+        $remaining = \OC::$server->get(LivePhotoResolver::class)->resolve($survivor[0], $this->folder);
         $this->assertSame($survivor[1]->getId(), $remaining->video->getId());
         $this->assertSame($imageContent, $survivor[0]->getContent());
     }
@@ -106,6 +106,48 @@ class LivePhotoDeletionIntegrationTest extends TestCase
     public function selectedComponents(): array
     {
         return ['selected still' => [0], 'selected MOV' => [1]];
+    }
+
+    public function testStalePeerLinkDoesNotBlockDeletingADuplicateStill(): void
+    {
+        $source = $this->pair('orphan');
+        $survivor = $this->pair('keep');
+        $this->removeMotionComponent($source);
+        $hash = $this->fileInfoService->getContentHash($source[0]);
+
+        $deleted = $this->service->deleteFile($this->user->getUID(), '/orphan/photo.jpg', $source[0]->getId(), $hash);
+
+        $this->assertCount(1, $deleted);
+        $this->assertFalse($this->folder->nodeExists('orphan/photo.jpg'));
+        $remaining = \OC::$server->get(LivePhotoResolver::class)->resolve($survivor[0], $this->folder);
+        $this->assertSame($survivor[1]->getId(), $remaining->video->getId());
+    }
+
+    public function testStalePeerLinkRetainsLastCopyProtection(): void
+    {
+        $source = $this->pair('orphan');
+        $this->removeMotionComponent($source);
+        $hash = $this->fileInfoService->getContentHash($source[0]);
+
+        $this->expectException(\OCA\DuplicateFinder\Exception\LastCopyProtectionException::class);
+        $this->service->deleteFile($this->user->getUID(), '/orphan/photo.jpg', $source[0]->getId(), $hash);
+    }
+
+    /**
+     * Reproduce an old Live Photo link after its motion component disappeared.
+     *
+     * @param File[] $pair Synthetic components owned by this test user
+     */
+    private function removeMotionComponent(array $pair): void
+    {
+        $peerId = $pair[1]->getId();
+        foreach ($pair as $file) {
+            $this->metadata->deleteMetadata($file->getId());
+        }
+        $pair[1]->delete();
+        $metadata = $this->metadata->getMetadata($pair[0]->getId(), true);
+        $metadata->setString('files-live-photo', (string)$peerId);
+        $this->metadata->saveMetadata($metadata);
     }
 
     public function testTheLastCompletePairIsProtectedEvenWithLastCopyOptIn(): void

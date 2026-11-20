@@ -18,6 +18,8 @@ class LivePhotoResolverTest extends TestCase
     private array $files;
     private LivePhotoResolver $resolver;
     private $folder;
+    private array $existingFiles;
+    private Folder $userFolder;
 
     protected function setUp(): void
     {
@@ -32,6 +34,9 @@ class LivePhotoResolverTest extends TestCase
             $this->files[$id] = $file;
         }
         $this->folder->method('getDirectoryListing')->willReturnCallback(fn (): array => array_values($this->files));
+        $this->existingFiles = $this->files;
+        $this->userFolder = $this->createMock(Folder::class);
+        $this->userFolder->method('getById')->willReturnCallback(fn (int $id): array => isset($this->existingFiles[$id]) ? [$this->existingFiles[$id]] : []);
         $manager = $this->createMock(IFilesMetadataManager::class);
         $manager->method('getMetadataForFiles')->willReturnCallback(function (array $ids): array {
             $id = $ids[0];
@@ -50,7 +55,7 @@ class LivePhotoResolverTest extends TestCase
     public function testStillAndVideoResolveToTheSamePair(): void
     {
         foreach ($this->files as $file) {
-            $pair = $this->resolver->resolve($file);
+            $pair = $this->resolver->resolve($file, $this->userFolder);
             $this->assertSame($this->files[10], $pair->image);
             $this->assertSame($this->files[11], $pair->video);
         }
@@ -59,7 +64,7 @@ class LivePhotoResolverTest extends TestCase
     public function testOrdinaryFilesHaveNoPair(): void
     {
         $this->links = [];
-        $this->assertNull($this->resolver->resolve($this->files[10]));
+        $this->assertNull($this->resolver->resolve($this->files[10], $this->userFolder));
     }
 
     /**
@@ -69,7 +74,7 @@ class LivePhotoResolverTest extends TestCase
     {
         $this->links = $links;
         $this->expectException(LivePhotoPairProtectionException::class);
-        $this->resolver->resolve($this->files[10]);
+        $this->resolver->resolve($this->files[10], $this->userFolder);
     }
 
     public function invalidLinks(): array
@@ -77,7 +82,6 @@ class LivePhotoResolverTest extends TestCase
         return [
             'one-way' => [[10 => '11']],
             'self' => [[10 => '10']],
-            'missing-peer' => [[10 => '999']],
             'cycle' => [[10 => '11', 11 => '12']],
             'negative' => [[10 => '-11']],
             'not-an-id' => [[10 => 'another-file']],
@@ -90,6 +94,12 @@ class LivePhotoResolverTest extends TestCase
         $image = $this->files[10];
         unset($this->files[11]);
         $this->expectException(LivePhotoPairProtectionException::class);
-        $this->resolver->resolve($image);
+        $this->resolver->resolve($image, $this->userFolder);
+    }
+
+    public function testLinkToDeletedPeerIsAnOrdinaryFile(): void
+    {
+        unset($this->files[11], $this->existingFiles[11]);
+        $this->assertNull($this->resolver->resolve($this->files[10], $this->userFolder));
     }
 }

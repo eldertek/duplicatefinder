@@ -7,6 +7,7 @@ namespace OCA\DuplicateFinder\Service;
 use OCA\DuplicateFinder\Exception\LivePhotoPairProtectionException;
 use OCA\DuplicateFinder\Model\LivePhotoPair;
 use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\Files\Node;
 use OCP\FilesMetadata\Exceptions\FilesMetadataNotFoundException;
 use OCP\FilesMetadata\Exceptions\FilesMetadataTypeException;
@@ -25,10 +26,11 @@ class LivePhotoResolver
      * Refuse those links instead of allowing deletion to affect an unchecked file.
      *
      * @param Node $node Either component, for example Photos/IMG_1234.MOV
-     * @return LivePhotoPair|null Null only when no Live Photo link is recorded
+     * @param Folder $userFolder The requesting user's visible filesystem, as used by core
+     * @return LivePhotoPair|null Null when no link exists or its peer is no longer in the user's files
      * @throws LivePhotoPairProtectionException When the recorded pair cannot be verified
      */
-    public function resolve(Node $node): ?LivePhotoPair
+    public function resolve(Node $node, Folder $userFolder): ?LivePhotoPair
     {
         if (!($node instanceof File)) {
             return null;
@@ -45,7 +47,7 @@ class LivePhotoResolver
             }
 
             if ($this->getPeerId($peer) !== $node->getId()) {
-                break;
+                throw new LivePhotoPairProtectionException('Cannot verify both components of this Live Photo');
             }
 
             if (str_starts_with($node->getMimetype(), 'image/') && $peer->getMimetype() === 'video/quicktime') {
@@ -55,7 +57,12 @@ class LivePhotoResolver
                 return new LivePhotoPair($peer, $node);
             }
 
-            break;
+            throw new LivePhotoPairProtectionException('Cannot verify both components of this Live Photo');
+        }
+
+        // Core cannot delete a peer absent from the user's files, including a peer in trash.
+        if ($peerId !== $node->getId() && $userFolder->getById($peerId) === []) {
+            return null;
         }
 
         throw new LivePhotoPairProtectionException('Cannot verify both components of this Live Photo');

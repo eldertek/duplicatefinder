@@ -38,7 +38,7 @@ class LivePhotoDeletionService
      */
     public function deleteIfPaired(Folder $userFolder, Node $node, bool $allowPairDeletion = false): ?array
     {
-        $pair = $this->resolver->resolve($node);
+        $pair = $this->resolver->resolve($node, $userFolder);
         if ($pair === null) {
             return null;
         }
@@ -93,7 +93,7 @@ class LivePhotoDeletionService
         bool $allowPairDeletion
     ): ?array {
         try {
-            $survivor = $this->resolver->resolve($candidate);
+            $survivor = $this->resolver->resolve($candidate, $userFolder);
         } catch (LivePhotoPairProtectionException | NotFoundException $e) {
             return null;
         }
@@ -115,7 +115,7 @@ class LivePhotoDeletionService
             }
 
             // Recheck links and contents after locking; an indexed hash alone may be stale.
-            $current = $this->resolver->resolve($survivor->image);
+            $current = $this->resolver->resolve($survivor->image, $userFolder);
             if ($current === null || $current->video->getId() !== $survivor->video->getId()
                 || $this->fileInfoService->getContentHash($survivor->image) !== $imageHash
                 || $this->fileInfoService->getContentHash($survivor->video) !== $videoHash
@@ -123,7 +123,7 @@ class LivePhotoDeletionService
                 return null;
             }
 
-            $currentSource = $this->resolver->resolve($source->image);
+            $currentSource = $this->resolver->resolve($source->image, $userFolder);
             if ($currentSource === null || $currentSource->video->getId() !== $source->video->getId()
                 || $this->fileInfoService->getContentHash($source->image) !== $imageHash
                 || $this->fileInfoService->getContentHash($source->video) !== $videoHash

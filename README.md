@@ -44,6 +44,9 @@ and video without a valid pair do not qualify.
 
 Origin-folder protection applies to both components. The last complete pair is
 kept even when deletion of the last copy of an individual file was confirmed.
+If the linked component is no longer in the user's files, including when it is
+in trash, the remaining file uses the normal duplicate and last-copy checks.
+An existing peer in another directory of the user's files remains protected.
 
 ### Bulk Delete & Dry-Run Preview
 
