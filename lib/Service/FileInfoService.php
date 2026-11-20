@@ -329,16 +329,6 @@ class FileInfoService
     public function delete(FileInfo $fileInfo): FileInfo
     {
         try {
-            // Try to release any locks first
-            try {
-                $this->lockingProvider->releaseAll($fileInfo->getPath(), ILockingProvider::LOCK_SHARED);
-            } catch (\Exception $e) {
-                $this->logger->warning('Failed to release locks, continuing anyway', [
-                    'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage(),
-                ]);
-            }
-
             // Verify if the file info exists before deletion
             if ($fileInfo->getId()) {
                 try {
