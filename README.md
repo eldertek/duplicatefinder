@@ -4,84 +4,100 @@ SPDX-License-Identifier: CC0-1.0
 -->
 
 # Duplicate Finder
-Install app using the Nextcloud App Store inside your Nextcloud. See https://apps.nextcloud.com/apps/duplicatefinder
 
-Click on the icon and find if you have duplicate files.
+Find, review, and safely clean up duplicate files in Nextcloud (**Nextcloud 28 to 35**, licensed under `AGPL-3.0-or-later`).
 
-You can either use the command or the cron job to do a full scan.
-Each time a new file is uploaded or a file is changed the app automatically checks if a duplicate of this file exists.
+Install directly from the [Nextcloud App Store](https://apps.nextcloud.com/apps/duplicatefinder) inside your Nextcloud instance.
+
+## Preview
+
+### Main Duplicate View (Light Mode)
+![Main Duplicate View in Light Mode](img/preview-light.png)
+
+### Bulk Delete & Dry-Run Preview
+![Bulk Delete and Dry-Run Preview](img/preview-bulk-delete.png)
+
+### Empty Folders Cleanup
+![Empty Folders Cleanup](img/preview-empty-folders.png)
+
+### Main Duplicate View (Dark Mode)
+![Main Duplicate View in Dark Mode](img/preview-dark.png)
 
 ## Usage
-There are three possible ways duplicates can be detected.
-1. Event-based-detection
-   For every new or changed file, Nextcloud creates an internal event. The app is listening to these and analyse if the file has a duplicate
-2. Background-job-based-detection
-   With an interval of 5 days a background job is executed, if you have enabled either cron, web cron or ajax based background jobs. This is only for events that have not been processed for any reason or a file was added manually.
-3. Command-based-detection
-   A scan for duplicates can be forced by using the occ-command (please see #Command usage)
 
-Normally the detection methods should be used in the order as listed, but if you are installing the app on an existing installation it can be quite useful to start with a full scan by using command-based detection.
+### Duplicate Detection
 
-## Ignoring Duplicates
-To prevent a folder from being scanned for duplicates, place a `.nodupefinder` file inside it. Any files in this folder will be excluded from the duplicate detection process.
+Duplicate Finder compares files by content hash (independent of filename or location) and supports three detection methods:
 
-## Protected Files in Origin Folders
-You can configure "Origin Folders" to protect specific files from accidental deletion. Files located in these designated folders cannot be deleted through the duplicate finder interface, ensuring that original files are preserved. This is particularly useful when you want to:
-- Keep original files in specific directories
-- Prevent accidental deletion of important files
-- Maintain a source of truth for your files
+1. **Event-based detection**: Automatically checks uploaded or modified files as Nextcloud emits filesystem events.
+2. **Background job detection**: Runs periodically via `OCA\DuplicateFinder\BackgroundJob\FindDuplicates` (default every 5 days / `432000` seconds) when cron, webcron, or AJAX background jobs are enabled.
+3. **Command-based detection**: Run a full or targeted scan via `occ duplicates:find-all` (see [Command usage](#command-usage)).
 
-You can configure Origin Folders in the app settings. Files in these folders will be marked as "Protected" in the interface instead of showing a delete button.
+When installing Duplicate Finder on an existing Nextcloud instance, running an initial CLI scan with `occ duplicates:find-all` is recommended.
 
-## Search and Filter Duplicates
-You can search and filter duplicates by file path or name using the search input at the top of the "Unacknowledged" and "Acknowledged" sections.
+### Bulk Delete & Dry-Run Preview
 
-- To include files containing a specific term, simply type the term (e.g., `.png` to show all PNG files).
-- To exclude files containing a specific term, prefix the term with an exclamation mark (e.g., `!.ptx` to exclude all PTX files).
+Click **Bulk Delete** in the app header to review and delete multiple duplicates in one operation:
 
-## Projects
+- **Dry-run preview**: Displays the exact number of files to delete and total space that will be freed before confirming.
+- **Sorting & size filters**: Sort by `Default`, `Size (largest first)`, or `Size (smallest first)`, and filter with `Min size` presets.
+- **Selection helpers**: Use `Select all`, `Smart select` (select all except the first or last file in each group), or `Keep folder` (preserve files inside a chosen folder while selecting copies in other folders for deletion).
+- **Safety guarantees**: At least one copy per duplicate group is always preserved, files inside Origin Folders remain protected, and the video component of a paired Live Photo cannot be deleted independently.
+- **Post-cleanup empty folder detection**: Enable `Detect empty folders after deleting selected duplicates` to review folders left empty right after deletion.
 
-Projects allow you to organize and scan for duplicates within specific folders. You can create projects through the web interface or using the command line.
+### Empty Folders Cleanup
 
-### Creating Projects
+Click **Empty Folders** in the app header (or trigger it after Bulk Delete) to open **Empty Folders Cleanup**:
 
-To create a project:
-1. Go to the Duplicate Finder app in Nextcloud
-2. Click on the "Projects" tab
-3. Click "Create New Project"
-4. Enter a name for your project and select the folders you want to include
-5. Click "Create"
+- Run **Scan folders** across your storage or **Check cleaned locations** after a cleanup.
+- Review nested empty subfolders (`Includes empty subfolders`), ignore specific folders for future scans (`Ignore`, `Show ignored`, `Restore all`), or permanently delete selected empty folders.
+- Protected Origin Folders, Excluded Folders, and external storage mounts are automatically skipped.
 
-### Scanning Projects
+### Protected Files in Origin Folders
 
-You can scan projects for duplicates either through the web interface or using the command line (see Command Usage below).
+Configure **Origin Folders** in `Settings -> Origin Folders` to protect master copies from accidental deletion:
+
+- Files in Origin Folders are marked as **Protected** in Duplicate Details and cannot be deleted through the UI or Bulk Delete.
+- Ideal for photo libraries, archival masters, or critical shared documents.
+
+### Ignoring Duplicates & Filtering
+
+You can exclude specific folders or files from duplicate detection in three ways:
+
+- **Excluded Folders (`Settings -> Excluded Folders`)**: Pick folders to ignore (including their subfolders) during scanning.
+- **File Filters (`Settings -> Filters`)**: Add per-user **File Hash** filters (ignore exact file content) or **File Name Pattern** filters using `*` wildcards (for example `*.tmp` or `backup_*`).
+- **`.nodupefinder` marker file**: Place an empty `.nodupefinder` file inside any folder to exclude that folder and its subfolders.
+
+### Search, Sort & Filter
+
+At the top of the navigation sidebar, you can narrow down **Unacknowledged** and **Acknowledged** duplicate groups:
+
+- **Search modes**: Click the chevron in the search bar to switch between **Simple search**, **Wildcard search (`*`, `?`)** (e.g., `IMG*.jpg`), and **Regular expression** (e.g., `^IMG_\d{4}\.jpg$`).
+- **Sort & minimum file size**: Click the sort/filter icon next to the search bar to sort by `Default`, `Size (largest first)`, or `Size (smallest first)`, or filter by preset sizes and custom `Min MB`.
+
+### Projects
+
+Projects let you focus duplicate scans on specific folders without scanning your entire storage.
+
+1. Open **Projects -> Manage Projects** in the sidebar (or `Settings -> Projects`).
+2. Click **Create New Project**, enter a name, and select one or more folders.
+3. Click **Create Project**, then start a scan from the UI (**Start Scan**) or via CLI (`occ duplicates:find-all --user="<user>" --project=<id>`).
 
 ## Command usage
 
-  `occ [-v] duplicates:ACTION [options]`
+```text
+occ [-v] duplicates:<action> [options]
+```
 
-Depending on your Nextcloud setup, the `occ` command may need to be called differently, such as `sudo php occ duplicates:find-all [options]` or `nextcloud.occ duplicates:find-all [options]`. Please refer to the [occ documentation](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/occ_command.html) for more details
+Depending on your Nextcloud setup, invoke `occ` as `sudo -u www-data php occ ...` or `nextcloud.occ ...`. Refer to the [Nextcloud occ documentation](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/occ_command.html) for environment-specific details.
 
-If you increase the verbosity of the occ command, the output shows a little bit more (e.g. what file is currently scanned).
-
-    ACTION
-    find-all    The command scans the files for duplicates. By using the options the scan can be limited
-      options
-        -u, --user scan files of the specified user (-u admin)
-        -p, --path limit scan to this path (--path="./Photos"). The path is relative to the root of each user or the specified user.
-        --project scan files for a specific project ID (requires --user option)
-    list        The command lists all duplicates that have been found yet. If no option is given duplicates across users are shown.
-      options
-        -u, --user list only duplicates of the specified user (-u admin)
-    list-all    Read only report of the duplicates of ALL users, for the server administrator. Files are grouped by content hash whoever owns them,
-                the biggest waste first, with the owner and path of every copy. Nothing is deleted, written or scanned: it only reads what the app has already indexed.
-      options
-        --min-size only files of at least this size, in bytes or with a unit (--min-size=500M, 10K, 1G)
-        --limit number of groups to show (default 100, 0 for all of them)
-        --output table (default) or json
-    clear       The command will clear all information that has been stored in the database
-      options
-        -f, --force the flag forces to do the cleanup. _attention_ you will not be asked any questions
+| Command | Purpose | Options |
+|---|---|---|
+| `duplicates:find-all` | Scan storage and index duplicate files | `-u, --user` (repeatable), `-p, --path` (repeatable, e.g., `--path="./Photos"`), `--project=<id>` (requires `--user`) |
+| `duplicates:list` | List indexed duplicates per user | `-u, --user` (repeatable), `-s, --sort` (`default`, `size-desc`, `size-asc`), `-m, --min-size` (bytes or `500K`, `10M`, `1G`) |
+| `duplicates:list-all` | Read-only admin report of duplicates across all users, sorted by wasted space | `--min-size` (default `1`), `-l, --limit` (default `100`, `0` for all), `--output` (`table` or `json`), `--include-shared`, `--ignore-shared` |
+| `duplicates:folders` | List folders sharing identical duplicate file trees and content hashes | `-u, --user` (repeatable), `--min-files` (default `1`), `-m, --min-size` (default `0`, bytes or unit), `--json` |
+| `duplicates:clear` | Clear indexed duplicate metadata from the database (does not delete files) | `-f, --force` (skip interactive confirmation) |
 
 ### Examples
 
@@ -89,91 +105,95 @@ If you increase the verbosity of the occ command, the output shows a little bit 
 # Scan all files for all users
 occ duplicates:find-all
 
-# Scan files for a specific user
-occ duplicates:find-all --user="admin"
-
-# Scan files in a specific path for a user
+# Scan files for a specific user and path
 occ duplicates:find-all --user="admin" --path="./Documents"
 
-# Scan files for a specific project
+# Scan a specific project
 occ duplicates:find-all --user="admin" --project=1
 
-# List all duplicates
-occ duplicates:list
+# List duplicates for a user, largest first, at least 10 MB
+occ duplicates:list --user="admin" --sort=size-desc --min-size=10M
 
-# List duplicates for a specific user
-occ duplicates:list --user="admin"
-
-# Admin report across all users: the 20 biggest wastes of files of at least 100 MB
+# Read-only admin report across all users (top 20 wasted groups >= 100 MB)
 occ duplicates:list-all --min-size=100M --limit=20
 
-# The same report as JSON, for a script
+# Export cross-user admin report as JSON
 occ duplicates:list-all --output=json --limit=0 > duplicates.json
+
+# Find duplicate folder trees containing at least 3 files and 50 MB total
+occ duplicates:folders --user="admin" --min-files=3 --min-size=50M
+
+# Export duplicate folder trees report as JSON
+occ duplicates:folders --user="admin" --json > duplicate-folders.json
+
+# Reset indexed duplicate database entries without touching stored files
+occ duplicates:clear --force
 ```
 
 ## Config
 
-The app depends on the following settings.
-All settings should be modified only through UI. If this doesn't work for you, you can apply them via the [occ-command](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/occ_command.html?highlight=occ#config-commands-label).
+Settings can be configured in the Nextcloud UI (`Settings -> Advanced Settings`, admin only) or via [occ config commands](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/occ_command.html#config-commands-label).
 
 | Setting | Type | Default | Effect |
 |---|---|---|---|
-| ignore_mounted_files | boolean | false | When true, files mounted on external storage will be ignored.<br>Computing the hash for an external file may require transferring the whole file to the Nextcloud server.<br>So, this setting can be useful when you need to reduce traffic e.g if you need to pay for the traffic. |
-| disable_filesystem_events | boolean | false | When true, the event-based detection will be disabled.<br>This gives you more control when the hashes are generated. |
-| backgroundjob_interval_cleanup | integer | 432000 | Interval in seconds between database cleanup operations. This job only cleans the database records and does not delete any actual files from your storage. It helps maintain database performance by removing outdated duplicate entries. |
-| backgroundjob_interval_find | integer | 172800 | Interval in seconds in which the background job, to find duplicates, will be run |
+| `ignore_mounted_files` | boolean | `false` | When `true`, skips files on external storage mounts during hashing to avoid remote transfer overhead. |
+| `disable_filesystem_events` | boolean | `false` | When `true`, disables real-time event-based detection on file upload/modification. |
+| `backgroundjob_interval_find` | integer | `432000` (5 days) | Interval in seconds between automatic `FindDuplicates` background scans. |
+| `backgroundjob_interval_cleanup` | integer | `172800` (2 days) | Interval in seconds between `CleanUpDB` database maintenance runs (removes stale index rows; never deletes user files). |
 
-## Preview
+## Localization & Languages
 
-### Main Duplicate View (Light Mode)
-![Main Duplicate View in Light Mode](https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-light.png)
+Duplicate Finder ships with **40 complete Nextcloud UI locales at 100.0% runtime coverage (`539/539` keys)** (56 locales total across `l10n/` and `l10n-fallback/`) and **38 languages in `appinfo/info.xml`** (`<summary>` and `<description>` in strict parity).
 
-### Bulk Delete & Dry-Run Preview
-![Bulk Delete and Dry-Run Preview](https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-bulk-delete.png)
+At package time (`make appstore`), `scripts/merge_l10n_fallback.py` populates missing singular and plural keys from `l10n-fallback/` into the packaged `l10n/` directory without overwriting existing Transifex translations.
 
-### Main Duplicate View (Dark Mode)
-![Main Duplicate View in Dark Mode](https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-dark.png)
+| Coverage Tier | Count | Locales at 100.0% (`539/539` keys) |
+|---|---:|---|
+| Priority locales | 16 | `fr`, `de`, `de_DE`, `es`, `it`, `pt_BR`, `pt_PT`, `nl`, `pl`, `ru`, `tr`, `ja`, `ko`, `zh_CN`, `ar`, `sv` |
+| Extended locales | 9 | `da`, `sk`, `cs`, `uk`, `ro`, `id`, `el`, `en_GB`, `zh_HK` |
+| Circle 3 locales | 15 | `fi`, `ca`, `zh_TW`, `nb`, `hu`, `sl`, `bg`, `hr`, `he`, `vi`, `th`, `sr`, `lt_LT`, `lv`, `et_EE` |
+
+`appinfo/info.xml` store descriptions (38 languages): `en`, `ar`, `bg`, `ca`, `cs`, `da`, `de`, `el`, `es`, `et`, `fi`, `fr`, `he`, `hr`, `hu`, `id`, `it`, `ja`, `ko`, `lt`, `lv`, `nb`, `nl`, `pl`, `pt-br`, `pt-pt`, `ro`, `ru`, `sk`, `sl`, `sr`, `sv`, `th`, `tr`, `uk`, `vi`, `zh-hans`, `zh-hant`.
 
 ## Development
 
 ### Testing
 
-The app includes a comprehensive test suite to ensure proper functionality. To run the tests:
-
 ```bash
-# Install development dependencies
+# Install PHP dependencies and run PHPUnit suites
 composer install
-
-# Run all tests
 vendor/bin/phpunit
-
-# Run only unit tests
 vendor/bin/phpunit --testsuite unit
-
-# Run only integration tests
 vendor/bin/phpunit --testsuite integration
 
-# Run a specific test file
-vendor/bin/phpunit tests/Integration/CompleteWorkflowTest.php
+# Run localization, placeholder, plural-form, and info.xml parity tests
+python3 -B -m unittest discover -s scripts -p "test_*.py" -v
 
-# Run tests with verbose output
-vendor/bin/phpunit -v
+# Preview non-destructive fallback merge without modifying tracked l10n/ files
+python3 scripts/merge_l10n_fallback.py --target-dir l10n --dry-run
 ```
+
+### Packaging for Nextcloud App Store
+
+```bash
+make build
+make appstore
+```
+
+`make appstore` excludes development files (`scripts/`, `l10n-fallback/`, `node_modules/`, `vendor/`, config files) and merges `l10n-fallback/` into the packaged `l10n/` assets inside `build/artifacts/`.
 
 #### Testing in the Devcontainer
 
-When running tests in the devcontainer environment:
+When running integration tests inside the devcontainer:
 
-1. The devcontainer includes a complete Nextcloud installation at `/var/www/nextcloud`
-2. MariaDB is available and configured for Nextcloud
-3. Integration tests can access the Nextcloud environment and database
-4. Make sure services are running before testing:
+1. A Nextcloud installation is available at `/var/www/nextcloud` with MariaDB configured.
+2. Start services before running integration tests:
    ```bash
    service mariadb start
    service apache2 start
    ```
 
-For more information about the tests, see the [tests/README.md](tests/README.md) file.
+For more details on the test suite, see [tests/README.md](tests/README.md).
 
 ## Special thanks
 
