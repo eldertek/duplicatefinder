@@ -3,7 +3,9 @@
 namespace OCA\DuplicateFinder\Tests\Unit\Controller;
 
 use OCA\DuplicateFinder\Controller\FileApiController;
+use OCA\DuplicateFinder\Exception\AbortedDeletionException;
 use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
+use OCA\DuplicateFinder\Exception\LivePhotoProtectionException;
 use OCA\DuplicateFinder\Service\FileService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -243,6 +245,106 @@ class FileApiControllerTest extends TestCase
 
         $this->assertEquals(Http::STATUS_CONFLICT, $response->getStatus());
         $this->assertEquals('LAST_COPY_PROTECTED', $response->getData()['error']);
+    }
+
+    public function testDeleteWithLivePhotoProtectionExceptionReturnsConflictWithClearMessage(): void
+    {
+        $filePath = '/Photos/IMG_0042.mov';
+        $message = 'Cannot delete "/Photos/IMG_0042.mov" directly because Nextcloud protects the video part of a Live Photo. Delete the paired photo instead only if both files are redundant.';
+
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, $filePath], ['paths', null, null]]);
+        $this->request->method('getParams')
+            ->willReturn(['path' => $filePath, 'nodeId' => 42]);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $filePath, 42, null, false)
+            ->willThrowException(new LivePhotoProtectionException($message));
+
+        $this->logger->expects($this->never())
+            ->method('error');
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with('File deletion blocked by Nextcloud Live Photo protection: {error}', [
+                'error' => $message,
+                'path' => $filePath,
+            ]);
+
+        $response = $this->controller->delete();
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertEquals(Http::STATUS_CONFLICT, $response->getStatus());
+        $this->assertEquals([
+            'error' => 'LIVE_PHOTO_VIDEO_PROTECTED',
+            'message' => $message,
+        ], $response->getData());
+    }
+
+    public function testDeleteWithGenericAbortedDeletionExceptionReturnsConflictWithoutStackError(): void
+    {
+        $filePath = '/Docs/report.pdf';
+        $message = 'File deletion was aborted by Nextcloud for "/Docs/report.pdf"';
+
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, $filePath], ['paths', null, null]]);
+        $this->request->method('getParams')
+            ->willReturn(['path' => $filePath]);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $filePath)
+            ->willThrowException(new AbortedDeletionException($message));
+
+        $this->logger->expects($this->never())
+            ->method('error');
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with('File deletion aborted by Nextcloud: {error}', [
+                'error' => $message,
+                'path' => $filePath,
+            ]);
+
+        $response = $this->controller->delete();
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertEquals(Http::STATUS_CONFLICT, $response->getStatus());
+        $this->assertEquals([
+            'error' => 'DELETE_ABORTED',
+            'message' => $message,
+        ], $response->getData());
+    }
+
+    public function testDeleteMultipleIncludesStructuredLivePhotoError(): void
+    {
+        $movPath = '/Photos/IMG_0042.mov';
+        $message = 'Cannot delete "/Photos/IMG_0042.mov" directly because Nextcloud protects the video part of a Live Photo. Delete the paired photo instead only if both files are redundant.';
+
+        $this->request->expects($this->exactly(2))
+            ->method('getParam')
+            ->withConsecutive(['path'], ['paths'])
+            ->willReturnOnConsecutiveCalls(null, [$movPath]);
+
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $movPath)
+            ->willThrowException(new LivePhotoProtectionException($message));
+
+        $this->logger->expects($this->never())
+            ->method('error');
+        $this->logger->expects($this->once())
+            ->method('warning');
+
+        $response = $this->controller->delete();
+
+        $this->assertEquals([
+            'success' => [],
+            'errors' => [[
+                'path' => $movPath,
+                'error' => 'LIVE_PHOTO_VIDEO_PROTECTED',
+                'message' => $message,
+            ]],
+        ], $response->getData());
     }
 
     // Suppression des tests testInfo, testInfoWithNotFoundException et testInfoWithGenericException
