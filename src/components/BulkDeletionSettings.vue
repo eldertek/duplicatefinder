@@ -255,8 +255,11 @@
                 {{ t('duplicatefinder', 'Keep {folder} ({count} groups)', { folder: item.folder, count: item.groupCount }) }}
               </NcActionButton>
             </NcActions>
-            <NcButton type="error" @click="confirmBulkDelete"
-              :disabled="isLoading || !hasSelectedFiles">
+            <NcButton
+              type="error"
+              class="delete-selected-files-button"
+              :disabled="isLoading || !hasSelectedFiles"
+              @click="confirmBulkDelete">
               <template #icon>
                 <NcLoadingIcon v-if="isLoading" />
               </template>
@@ -1437,5 +1440,42 @@ export default {
   background-color: #b71c1c !important;
   border-color: #b71c1c !important;
   color: #ffffff !important;
+}
+
+.delete-selected-files-button:not(:disabled),
+.delete-empty-folders-button:not(:disabled) {
+  background-color: var(--color-error-element, #d32f2f) !important;
+  border: 1px solid var(--color-error-element, #d32f2f) !important;
+  color: #ffffff !important;
+}
+
+.delete-selected-files-button:hover:not(:disabled),
+.delete-selected-files-button:focus-visible:not(:disabled),
+.delete-empty-folders-button:hover:not(:disabled),
+.delete-empty-folders-button:focus-visible:not(:disabled) {
+  background-color: #b71c1c !important;
+  border-color: #b71c1c !important;
+  color: #ffffff !important;
+}
+
+.delete-selected-files-button:not(:disabled) ::v-deep .button-vue__text,
+.delete-empty-folders-button:not(:disabled) ::v-deep .button-vue__text {
+  color: #ffffff !important;
+}
+
+.delete-selected-files-button:disabled,
+.delete-empty-folders-button:disabled {
+  background-color: var(--color-background-dark, #ededed) !important;
+  border: 1px solid var(--color-border-dark, var(--color-border)) !important;
+  color: var(--color-text-maxcontrast, #595959) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  cursor: not-allowed !important;
+}
+
+.delete-selected-files-button:disabled ::v-deep .button-vue__text,
+.delete-empty-folders-button:disabled ::v-deep .button-vue__text {
+  color: var(--color-text-maxcontrast, #595959) !important;
+  cursor: not-allowed !important;
 }
 </style>

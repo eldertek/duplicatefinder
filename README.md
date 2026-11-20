@@ -125,7 +125,14 @@ All settings should be modified only through UI. If this doesn't work for you, y
 
 ## Preview
 
-![Preview of the GUI](https://raw.githubusercontent.com/eldertek/duplicatefinder/master/img/preview.png)
+### Main Duplicate View (Light Mode)
+![Main Duplicate View in Light Mode](https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-light.png)
+
+### Bulk Delete & Dry-Run Preview
+![Bulk Delete and Dry-Run Preview](https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-bulk-delete.png)
+
+### Main Duplicate View (Dark Mode)
+![Main Duplicate View in Dark Mode](https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-dark.png)
 
 ## Development
 

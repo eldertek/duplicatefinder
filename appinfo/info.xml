@@ -1,12 +1,24 @@
 <?xml version="1.0"?>
-<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance"
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>duplicatefinder</id>
-    <licence>AGPL-3.0-or-later</licence>
 
     <name>Duplicate Finder</name>
     <summary><![CDATA[Save some space by finding and managing your duplicate files efficiently]]></summary>
     <summary lang="fr"><![CDATA[Économisez de l'espace en trouvant et gérant efficacement vos fichiers en double]]></summary>
+    <summary lang="de"><![CDATA[Speicherplatz sparen durch effizientes Finden und Verwalten doppelter Dateien]]></summary>
+    <summary lang="es"><![CDATA[Ahorre espacio encontrando y gestionando eficazmente sus archivos duplicados]]></summary>
+    <summary lang="it"><![CDATA[Risparmia spazio trovando e gestendo in modo efficiente i tuoi file duplicati]]></summary>
+    <summary lang="pt-br"><![CDATA[Economize espaço encontrando e gerenciando seus arquivos duplicados com eficiência]]></summary>
+    <summary lang="nl"><![CDATA[Bespaar opslagruimte door dubbele bestanden efficiënt op te sporen en te beheren]]></summary>
+    <summary lang="pl"><![CDATA[Oszczędzaj miejsce, skutecznie wyszukując i zarządzając zduplikowanymi plikami]]></summary>
+    <summary lang="ru"><![CDATA[Освобождайте место, эффективно находя дубликаты файлов и управляя ими]]></summary>
+    <summary lang="tr"><![CDATA[Yinelenen dosyalarınızı verimli bir şekilde bularak ve yöneterek depolama alanı kazanın]]></summary>
+    <summary lang="ja"><![CDATA[重複ファイルを効率的に検出・管理してストレージ容量を節約します]]></summary>
+    <summary lang="ko"><![CDATA[중복 파일을 효율적으로 찾고 관리하여 저장 공간을 절약하세요]]></summary>
+    <summary lang="zh-hans"><![CDATA[高效查找并管理重复文件，轻松释放存储空间]]></summary>
+    <summary lang="ar"><![CDATA[وفّر مساحة التخزين عبر العثور على الملفات المكررة وإدارتها بكفاءة]]></summary>
+
     <description><![CDATA[Find and manage duplicate files in your Nextcloud with powerful features:
 
 * 🔍 **Smart Detection** - Three ways to find duplicates:
@@ -33,7 +45,165 @@
 * 📊 **Aperçu & Simulation** - Visualisez ce qui serait supprimé avant d'agir
 * 💼 **Traitement en Arrière-plan** - Tâches automatisées de recherche de doublons
 ]]></description>
+    <description lang="de"><![CDATA[Finden und verwalten Sie doppelte Dateien in Ihrer Nextcloud mit leistungsstarken Funktionen:
+
+* 🔍 **Intelligente Erkennung** - Drei Wege zum Aufspüren von Duplikaten:
+  * Ereignisbasierte Erkennung für neue oder geänderte Dateien
+  * Automatische Hintergrund-Scans
+  * Manuelle Scans über die Kommandozeile (occ)
+* 📁 **Geschützte Ordner** - Definieren Sie "Ursprungsordner", um Originaldateien vor versehentlichem Löschen zu schützen
+* 🛡️ **Sichere Verwaltung** - Dateien in geschützten Ordnern können nicht über die Oberfläche gelöscht werden
+* 🔎 **Erweiterte Suche** - Suchen und filtern Sie Duplikate nach Dateipfad, Name, Platzhaltern oder regulären Ausdrücken
+* ⚡ **Massenoperationen** - Bereinigen Sie tausende Duplikate effizient mit Massenlöschung und Erkennung leerer Ordner
+* 📊 **Vorschau & Trockenlauf** - Prüfen Sie vor dem Löschen genau, welche Dateien entfernt und wie viel Speicherplatz frei wird
+* 💼 **Hintergrundverarbeitung** - Automatisierte Hintergrundaufgaben zur Duplikaterkennung und Datenbankpflege
+]]></description>
+    <description lang="es"><![CDATA[Encuentre y gestione archivos duplicados en su Nextcloud con funciones avanzadas:
+
+* 🔍 **Detección inteligente** - Tres formas de encontrar duplicados:
+  * Detección basada en eventos para archivos nuevos o modificados
+  * Escaneo mediante tareas en segundo plano
+  * Escaneo manual desde la línea de comandos (occ)
+* 📁 **Carpetas protegidas** - Configure "Carpetas de origen" para proteger sus archivos originales frente a borrados accidentales
+* 🛡️ **Gestión segura** - Los archivos ubicados en carpetas protegidas no pueden eliminarse desde la interfaz
+* 🔎 **Búsqueda avanzada** - Busque y filtre duplicados por ruta, nombre, comodines o expresiones regulares
+* ⚡ **Operaciones masivas** - Gestione miles de duplicados eficazmente con herramientas de borrado masivo y limpieza de carpetas vacías
+* 📊 **Vista previa y simulación** - Revise exactamente qué archivos se eliminarán antes de confirmar la acción
+* 💼 **Procesamiento en segundo plano** - Tareas automatizadas para detectar duplicados sin afectar el rendimiento
+]]></description>
+    <description lang="it"><![CDATA[Trova e gestisci i file duplicati nel tuo Nextcloud con funzionalità avanzate:
+
+* 🔍 **Rilevamento intelligente** - Tre modalità per individuare i duplicati:
+  * Rilevamento basato sugli eventi per i file nuovi o modificati
+  * Scansione tramite processi in background
+  * Scansione manuale da riga di comando (occ)
+* 📁 **Cartelle protette** - Configura le "Cartelle di origine" per proteggere i file originali da eliminazioni accidentali
+* 🛡️ **Gestione sicura** - I file nelle cartelle protette non possono essere eliminati tramite l'interfaccia
+* 🔎 **Ricerca avanzata** - Cerca e filtra i duplicati per percorso, nome file, caratteri jolly o espressioni regolari
+* ⚡ **Operazioni di massa** - Gestisci migliaia di duplicati in modo rapido con eliminazione multipla e pulizia delle cartelle vuote
+* 📊 **Anteprima e simulazione** - Verifica quali file verrebbero rimossi e lo spazio recuperato prima di procedere
+* 💼 **Elaborazione in background** - Attività pianificate automatiche per la ricerca dei duplicati
+]]></description>
+    <description lang="pt-br"><![CDATA[Encontre e gerencie arquivos duplicados no seu Nextcloud com recursos avançados:
+
+* 🔍 **Detecção inteligente** - Três maneiras de encontrar duplicados:
+  * Detecção baseada em eventos para arquivos novos ou alterados
+  * Verificação por tarefas em segundo plano
+  * Verificação manual por linha de comando (occ)
+* 📁 **Pastas protegidas** - Configure "Pastas de origem" para proteger arquivos importantes contra exclusão acidental
+* 🛡️ **Gerenciamento seguro** - Arquivos em pastas protegidas não podem ser excluídos pela interface
+* 🔎 **Pesquisa avançada** - Pesquise e filtre duplicados por caminho, nome, curingas ou expressões regulares
+* ⚡ **Operações em massa** - Limpe milhares de duplicados com eficiência usando exclusão em massa e detecção de pastas vazias
+* 📊 **Pré-visualização e simulação** - Veja exatamente o que será removido antes de confirmar a exclusão
+* 💼 **Processamento em segundo plano** - Tarefas automatizadas para localizar duplicados continuamente
+]]></description>
+    <description lang="nl"><![CDATA[Vind en beheer dubbele bestanden in uw Nextcloud met krachtige functies:
+
+* 🔍 **Slimme detectie** - Drie manieren om duplicaten te vinden:
+  * Gebeurtenisgestuurde detectie voor nieuwe of gewijzigde bestanden
+  * Achtergrondtaken voor automatische scans
+  * Handmatige scans via de opdrachtregel (occ)
+* 📁 **Beschermde mappen** - Stel "Bronmappen" in om originele bestanden te beschermen tegen per ongeluk verwijderen
+* 🛡️ **Veilig beheer** - Bestanden in beschermde mappen kunnen niet via de interface worden verwijderd
+* 🔎 **Geavanceerd zoeken** - Zoek en filter duplicaten op bestandspad, naam, jokertekens of reguliere expressies
+* ⚡ **Bulkacties** - Verwerk duizenden duplicaten efficiënt met bulkverwijdering en opschoning van lege mappen
+* 📊 **Voorbeeld & proefdraaien** - Bekijk vooraf welke bestanden worden verwijderd en hoeveel ruimte vrijkomt
+* 💼 **Achtergrondverwerking** - Geautomatiseerde taken voor het opsporen van dubbele bestanden
+]]></description>
+    <description lang="pl"><![CDATA[Wyszukuj i zarządzaj zduplikowanymi plikami w Nextcloud dzięki zaawansowanym funkcjom:
+
+* 🔍 **Inteligentne wykrywanie** - Trzy sposoby znajdowania duplikatów:
+  * Wykrywanie oparte na zdarzeniach dla nowych lub zmienionych plików
+  * Skanowanie w zadaniach w tle
+  * Ręczne skanowanie z wiersza poleceń (occ)
+* 📁 **Chronione katalogi** - Skonfiguruj "Katalogi źródłowe", aby chronić wybrane pliki przed przypadkowym usunięciem
+* 🛡️ **Bezpieczne zarządzanie** - Pliki w chronionych katalogach nie mogą zostać usunięte przez interfejs
+* 🔎 **Zaawansowane wyszukiwanie** - Filtruj duplikaty według ścieżki, nazwy pliku, symboli wieloznacznych lub wyrażeń regularnych
+* ⚡ **Operacje masowe** - Wydajnie usuwaj tysiące duplikatów oraz puste katalogi po oczyszczaniu
+* 📊 **Podgląd i symulacja** - Sprawdź, które pliki zostaną usunięte i ile miejsca odzyskasz przed wykonaniem akcji
+* 💼 **Przetwarzanie w tle** - Zautomatyzowane zadania wyszukiwania duplikatów
+]]></description>
+    <description lang="ru"><![CDATA[Находите дубликаты файлов в Nextcloud и управляйте ими с помощью мощных инструментов:
+
+* 🔍 **Умное обнаружение** - Три способа поиска дубликатов:
+  * Отслеживание событий для новых и изменённых файлов
+  * Фоновое сканирование по расписанию
+  * Ручное сканирование через командную строку (occ)
+* 📁 **Защищённые папки** - Настройте «Исходные папки», чтобы защитить оригиналы от случайного удаления
+* 🛡️ **Безопасное управление** - Файлы в защищённых папках нельзя удалить через интерфейс приложения
+* 🔎 **Расширенный поиск** - Ищите и фильтруйте дубликаты по пути, имени файла, маскам или регулярным выражениям
+* ⚡ **Массовые операции** - Эффективно обрабатывайте тысячи дубликатов с помощью массового удаления и очистки пустых папок
+* 📊 **Предпросмотр и проверка** - Оцените список удаляемых файлов и объём освобождаемого места до подтверждения
+* 💼 **Фоновая обработка** - Автоматические задания поиска дубликатов и обслуживания базы данных
+]]></description>
+    <description lang="tr"><![CDATA[Güçlü özelliklerle Nextcloud üzerindeki yinelenen dosyaları bulun ve yönetin:
+
+* 🔍 **Akıllı Algılama** - Kopyaları bulmak için üç yöntem:
+  * Yeni veya değişen dosyalar için olay tabanlı algılama
+  * Arka plan görevi taraması
+  * Komut satırı (occ) üzerinden manuel tarama
+* 📁 **Korunan Klasörler** - Dosyaları yanlışlıkla silinmeye karşı korumak için "Kaynak Klasörler" yapılandırın
+* 🛡️ **Güvenli Yönetim** - Korunan klasörlerdeki dosyalar arayüz üzerinden silinemez
+* 🔎 **Gelişmiş Arama** - Dosya yolu, ad, joker karakter veya düzenli ifadelerle kopyaları arayın ve filtreleyin
+* ⚡ **Toplu İşlemler** - Toplu silme ve boş klasör temizleme araçlarıyla binlerce kopyayı verimli şekilde yönetin
+* 📊 **Önizleme ve Deneme Çalıştırması** - İşlem yapmadan önce hangi dosyaların silineceğini ve açılacak alanı görün
+* 💼 **Arka Plan İşleme** - Otomatik yinelenen dosya bulma görevleri
+]]></description>
+    <description lang="ja"><![CDATA[多彩な機能で Nextcloud 内の重複ファイルを安全に検出・管理できます:
+
+* 🔍 **スマート検出** - 3つの方法で重複を検出:
+  * 新規・変更ファイルに対するイベント駆動の自動検出
+  * バックグラウンドジョブによる定期スキャン
+  * コマンドライン (occ) からの手動スキャン
+* 📁 **保護フォルダー** - 「オリジンフォルダー」を設定し、大切な原本ファイルの誤削除を防止
+* 🛡️ **安全な管理** - 保護フォルダー内のファイルは画面から削除できないよう保護されます
+* 🔎 **高度な検索** - パス、ファイル名、ワイルドカード、正規表現で重複ファイルを絞り込み
+* ⚡ **一括操作** - 一括削除ツールや空フォルダー検出で数千件の重複も効率的に整理
+* 📊 **プレビューと事前確認** - 削除を実行する前に、対象ファイルと解放される容量を確認可能
+* 💼 **バックグラウンド処理** - 自動化された重複検出ジョブ
+]]></description>
+    <description lang="ko"><![CDATA[강력한 기능으로 Nextcloud의 중복 파일을 안전하게 찾고 관리하세요:
+
+* 🔍 **스마트 감지** - 세 가지 중복 탐지 방식:
+  * 새 파일이나 변경된 파일에 대한 이벤트 기반 감지
+  * 백그라운드 작업 스캔
+  * 명령줄(occ) 수동 스캔
+* 📁 **보호된 폴더** - "원본 폴더"를 지정하여 실수로 인한 원본 파일 삭제 방지
+* 🛡️ **안전한 관리** - 보호된 폴더에 있는 파일은 인터페이스에서 삭제할 수 없습니다
+* 🔎 **고급 검색** - 파일 경로, 이름, 와일드카드 및 정규식으로 중복 항목 검색 및 필터링
+* ⚡ **일괄 작업** - 일괄 삭제 및 빈 폴더 정리 도구로 수천 개의 중복 파일을 효율적으로 처리
+* 📊 **미리보기 및 사전 점검** - 삭제를 실행하기 전에 삭제 대상과 확보될 용량을 미리 확인
+* 💼 **백그라운드 처리** - 자동화된 중복 파일 탐색 작업
+]]></description>
+    <description lang="zh-hans"><![CDATA[通过强大的功能在 Nextcloud 中安全查找并管理重复文件：
+
+* 🔍 **智能检测** - 三种重复文件检测方式：
+  * 针对新建或修改文件的事件驱动实时检测
+  * 后台定时任务扫描
+  * 命令行 (occ) 手动扫描
+* 📁 **受保护文件夹** - 配置“原始文件夹”，防止重要原件被误删
+* 🛡️ **安全管理** - 位于受保护文件夹中的文件无法通过界面删除
+* 🔎 **高级搜索** - 按文件路径、名称、通配符或正则表达式搜索与筛选重复项
+* ⚡ **批量操作** - 借助批量删除与空文件夹清理工具高效处理成千上万个重复文件
+* 📊 **预览与模拟运行** - 在执行删除前直观预览待删文件及可释放空间
+* 💼 **后台处理** - 自动化重复文件扫描与索引维护任务
+]]></description>
+    <description lang="ar"><![CDATA[اعثر على الملفات المكررة وأدرها في Nextcloud بأمان وفعالية عبر ميزات متقدمة:
+
+* 🔍 **اكتشاف ذكي** - ثلاث طرق للعثور على الملفات المكررة:
+  * اكتشاف تلقائي قائم على الأحداث للملفات الجديدة أو المعدّلة
+  * فحص دوري عبر مهام الخلفية
+  * فحص يدوي عبر سطر الأوامر (occ)
+* 📁 **مجلدات محمية** - إعداد "المجلدات الأصلية" لحماية الملفات المهمة من الحذف غير المقصود
+* 🛡️ **إدارة آمنة** - لا يمكن حذف الملفات الموجودة داخل المجلدات المحمية من خلال الواجهة
+* 🔎 **بحث متقدم** - البحث والتصفية حسب المسار أو الاسم أو أحرف البدل أو التعبيرات النمطية
+* ⚡ **عمليات جماعية** - التعامل مع آلاف الملفات المكررة بكفاءة مع الحذف الجماعي وتنظيف المجلدات الفارغة
+* 📊 **معاينة ومحاكاة مسبقة** - مراجعة الملفات المحددة والمساحة التي سيتم توفيرها قبل الحذف
+* 💼 **معالجة في الخلفية** - مهام مؤتمتة لاكتشاف التكرارات وصيانة الفهرس
+]]></description>
+
     <version>1.10.18</version>
+    <licence>AGPL-3.0-or-later</licence>
     <author>André Théo LAURET</author>
 
     <namespace>DuplicateFinder</namespace>
@@ -43,7 +213,7 @@
         <admin>https://github.com/eldertek/duplicatefinder#command-usage</admin>
         <developer>https://github.com/eldertek/duplicatefinder#development</developer>
     </documentation>
-      
+
     <category>tools</category>
 
     <website>https://github.com/eldertek/duplicatefinder</website>
@@ -51,11 +221,13 @@
     <bugs>https://github.com/eldertek/duplicatefinder/issues</bugs>
     <repository>https://github.com/eldertek/duplicatefinder.git</repository>
 
-    <screenshot>https://raw.githubusercontent.com/eldertek/duplicatefinder/master/img/preview.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-light.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-bulk-delete.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-dark.png</screenshot>
 
     <donation title="Support on Patreon">https://patreon.com/eldertek</donation>
     <donation title="Sponsor on GitHub">https://github.com/sponsors/eldertek</donation>
-      
+
     <dependencies>
         <nextcloud min-version="28" max-version="35"/>
     </dependencies>
