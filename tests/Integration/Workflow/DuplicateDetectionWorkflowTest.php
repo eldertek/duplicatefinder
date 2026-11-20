@@ -70,10 +70,12 @@ class DuplicateDetectionWorkflowTest extends TestCase
 
         // Create file duplicate service
         $this->fileDuplicateService = new FileDuplicateService(
+            $logger,
             $this->duplicateMapper,
             $this->fileInfoService,
             $originFolderService,
-            $logger
+            $this->createMock(\OCP\Lock\ILockingProvider::class),
+            $this->createMock(\OCA\DuplicateFinder\Service\LivePhotoStatusService::class)
         );
 
         // Update file info service with real duplicate service

@@ -65,7 +65,7 @@ class FileInfoServiceTest extends TestCase
         );
     }
 
-    public function testDeleteSetsUserContextWhenOwnerExists()
+    public function testDeleteOnlyRemovesIndexEntryWhenOwnerExists()
     {
         // Créer un mock pour FileInfo avec un propriétaire
         $fileInfo = $this->getMockBuilder(FileInfo::class)
@@ -83,22 +83,13 @@ class FileInfoServiceTest extends TestCase
             ->with(1)
             ->willReturn($fileInfo);
 
-        // L'ExcludedFolderService devrait être appelé pour définir le contexte utilisateur
-        $this->excludedFolderService->expects($this->once())
-            ->method('setUserId')
-            ->with('testuser');
+        // La suppression de l'index ne modifie pas le contexte utilisateur.
+        $this->excludedFolderService->expects($this->never())
+            ->method('setUserId');
 
-        // Configurer le FolderService pour qu'il retourne un Node
-        $node = $this->createMock(Node::class);
-        $node->method('getId')->willReturn(123);
-
-        $this->folderService->expects($this->once())
-            ->method('getNodeByFileInfo')
-            ->with($fileInfo)
-            ->willReturn($node);
-
-        // Le Node ne devrait pas être supprimé dans ce test
-        // Note: Nous ne pouvons pas vérifier cela car le mock Node n'a pas de méthode delete
+        // Le système de fichiers n'est pas consulté pour nettoyer l'index.
+        $this->folderService->expects($this->never())
+            ->method('getNodeByFileInfo');
 
         // Le mapper devrait être appelé pour supprimer le FileInfo
         $this->mapper->expects($this->once())

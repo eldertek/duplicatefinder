@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Обрисати и фотографију и видео ове Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Ова Live Photo се не може обрисати док се не потврди други потпун, идентичан пар фотографије и видеа.",
+        "Live Photo video is missing": "Недостаје видео Live Photo",
         "Acknowledged groups ({count})": "Потврђене групе ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Активне групе дупликата у тренутном скенирању (укупно {total}, непотврђено {unacknowledged}, потврђено {acknowledged}). Изузете фасцикле и игнорисани фајлови се не рачунају.",
         "Active duplicate groups in current scan ({total})": "Активне групе дупликата у тренутном скенирању ({total})",

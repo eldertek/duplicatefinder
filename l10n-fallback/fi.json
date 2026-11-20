@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Poistetaanko tämän Live Photo -kuvan valokuva ja video?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Tätä Live Photo -kuvaa ei voi poistaa, ennen kuin toinen täydellinen ja identtinen valokuva- ja videopari on varmistettu.",
+        "Live Photo video is missing": "Live Photo -kuvan video puuttuu",
         "1. Open the duplicate details of a file you want to exclude": "1. Avaa sen tiedoston kaksoiskappaleen tiedot, jonka haluat sulkea pois",
         "1. Switch to the File Name Pattern tab in Filters": "1. Siirry Suodattimet-näkymässä Tiedostonimimalli-välilehdelle",
         "2. Copy the file hash from the details view": "2. Kopioi tiedoston tiiviste tietonäkymästä",

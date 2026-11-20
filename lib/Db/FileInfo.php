@@ -14,6 +14,8 @@ namespace OCA\DuplicateFinder\Db;
  * @method void setSize(int $i)
  * @method void setIgnored(bool $b)
  * @method void setIsInOriginFolder(bool $b)
+ * @method void setIsLivePhotoVideoMissing(bool $b)
+ * @method bool getIsLivePhotoVideoMissing()
  * @method string getOwner()
  * @method string getPath()
  * @method string getPathHash()
@@ -50,11 +52,14 @@ class FileInfo extends EEntity
     protected $ignored;
     /** @var bool */
     protected $isInOriginFolder;
+    /** @var bool */
+    protected $isLivePhotoVideoMissing = false;
 
     public function __construct(?string $path = null, ?string $owner = null)
     {
         $this->addInternalType('updatedAt', 'date');
         $this->addInternalProperty('nodeId');
+        $this->addInternalProperty('isLivePhotoVideoMissing');
         $this->addType('size', 'integer');
         $this->addType('ignored', 'boolean');
         $this->addType('isInOriginFolder', 'boolean');

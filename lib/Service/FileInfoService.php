@@ -13,6 +13,7 @@ use OCA\DuplicateFinder\Utils\CMDUtils;
 use OCA\DuplicateFinder\Utils\ScannerUtil;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
@@ -329,16 +330,6 @@ class FileInfoService
     public function delete(FileInfo $fileInfo): FileInfo
     {
         try {
-            // Try to release any locks first
-            try {
-                $this->lockingProvider->releaseAll($fileInfo->getPath(), ILockingProvider::LOCK_SHARED);
-            } catch (\Exception $e) {
-                $this->logger->warning('Failed to release locks, continuing anyway', [
-                    'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage(),
-                ]);
-            }
-
             // Verify if the file info exists before deletion
             if ($fileInfo->getId()) {
                 try {
@@ -468,19 +459,8 @@ class FileInfoService
         if ($path !== false) {
             if ($requiresHash) {
                 if ($file instanceof \OCP\Files\File) {
-                    $hash = $file->getStorage()->hash('sha256', $path);
-
-                    if (!is_bool($hash)) {
-                        $fileInfo->setFileHash($hash);
-                        $fileInfo->setUpdatedAt(new \DateTime());
-                    } else {
-                        $this->logger->error('Unable to calculate hash for file: {path}', [
-                            'path' => $fileInfo->getPath(),
-                            'internalPath' => $file->getInternalPath(),
-                        ]);
-
-                        throw new UnableToCalculateHash($file->getInternalPath());
-                    }
+                    $fileInfo->setFileHash($this->getContentHash($file));
+                    $fileInfo->setUpdatedAt(new \DateTime());
                 } else {
                     $fileInfo->setFileHash(null);
                 }
@@ -495,6 +475,28 @@ class FileInfoService
         }
 
         return $fileInfo;
+    }
+
+    /**
+     * Hash current file contents without trusting an older duplicate index entry.
+     *
+     * @param \OCP\Files\File $file The readable file, including shared or external storage
+     * @return string Its current SHA-256 content hash
+     * @throws UnableToCalculateHash When the storage cannot read or hash the file
+     */
+    public function getContentHash(File $file): string
+    {
+        $hash = $file->getStorage()->hash('sha256', $file->getInternalPath());
+        if (!is_string($hash) || $hash === '') {
+            $this->logger->error('Unable to calculate hash for file: {path}', [
+                'path' => $file->getPath(),
+                'internalPath' => $file->getInternalPath(),
+            ]);
+
+            throw new UnableToCalculateHash($file->getInternalPath());
+        }
+
+        return $hash;
     }
 
     /**
@@ -533,6 +535,7 @@ class FileInfoService
         }
 
         $clearedHashes = [];
+
         try {
             $this->excludedFolderService->resetCache();
             $this->excludedFolderService->setUserId($user);

@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Ta bort både bilden och videon i denna Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Denna Live Photo kan inte tas bort förrän ett annat komplett, identiskt bild- och videopar har bekräftats.",
+        "Live Photo video is missing": "Videon för Live Photo saknas",
         "Acknowledged groups ({count})": "Bekräftade grupper ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Aktiva dubblettgrupper i aktuell sökning ({total} totalt, {unacknowledged} obekräftade, {acknowledged} bekräftade). Exkluderade mappar och ignorerade filer räknas inte.",
         "Active duplicate groups in current scan ({total})": "Aktiva dubblettgrupper i aktuell sökning ({total})",

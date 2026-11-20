@@ -11,6 +11,8 @@ source_build_directory := $(CURDIR)/build/artifacts/source
 build_dir := $(CURDIR)/build/artifacts
 sign_dir := $(source_build_directory)/sign
 EXCLUDES := --exclude="/.git" \
+    --exclude="/docker-compose.yaml" \
+    --exclude="/.devcontainer" \
     --exclude="/build" \
     --exclude="Makefile" \
     --exclude="/*.log" \
@@ -69,6 +71,8 @@ ifeq ($(detected_OS),Windows)
 	if exist "$(source_build_directory)" rd /s /q "$(source_build_directory)"
 	mkdir "$(sign_dir)" -p
 	xcopy "$(CURDIR)\\*" "$(sign_dir)\\$(app_name)" /E /H /C /I /Q /Y
+	if exist "$(sign_dir)\\$(app_name)\\docker-compose.yaml" del /Q "$(sign_dir)\\$(app_name)\\docker-compose.yaml"
+	if exist "$(sign_dir)\\$(app_name)\\.devcontainer" rd /s /q "$(sign_dir)\\$(app_name)\\.devcontainer"
 	python "$(CURDIR)\\scripts\\merge_l10n_fallback.py" --target-dir "$(sign_dir)\\$(app_name)\\l10n" --fallback-dir "$(CURDIR)\\l10n-fallback"
 	if exist "$(sign_dir)\\$(app_name)\\l10n-fallback" rd /s /q "$(sign_dir)\\$(app_name)\\l10n-fallback"
 	if exist "$(sign_dir)\\$(app_name)\\scripts" rd /s /q "$(sign_dir)\\$(app_name)\\scripts"

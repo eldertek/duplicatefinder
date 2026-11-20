@@ -1,6 +1,9 @@
 {
     "pluralForm": "nplurals=2; plural=(n != 1);",
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Zowel de foto als de video van deze Live Photo verwijderen?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Deze Live Photo kan pas worden verwijderd nadat een ander volledig, identiek foto- en videopaar is bevestigd.",
+        "Live Photo video is missing": "De video van Live Photo ontbreekt",
         "\"Background Job Find Duplicates Interval\"": "\"Interval voor achtergrondtaak duplicaten zoeken\"",
         "\"Disable Filesystem Events\"": "\"Bestandssysteemgebeurtenissen uitschakelen\"",
         "\"Find all duplicates\"": "\"Alle duplicaten zoeken\"",

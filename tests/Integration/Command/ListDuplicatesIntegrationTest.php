@@ -57,10 +57,12 @@ class ListDuplicatesIntegrationTest extends TestCase
         });
 
         $this->duplicateService = new FileDuplicateService(
+            $this->createMock(\Psr\Log\LoggerInterface::class),
             $this->duplicateMapper,
             $fileInfoService,
             $this->createMock(\OCA\DuplicateFinder\Service\OriginFolderService::class),
-            $this->createMock(\Psr\Log\LoggerInterface::class)
+            $this->createMock(\OCP\Lock\ILockingProvider::class),
+            $this->createMock(\OCA\DuplicateFinder\Service\LivePhotoStatusService::class)
         );
 
         $this->command = new ListDuplicates(

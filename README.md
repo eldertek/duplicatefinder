@@ -35,6 +35,19 @@ Duplicate Finder compares files by content hash (independent of filename or loca
 
 When installing Duplicate Finder on an existing Nextcloud instance, running an initial CLI scan with `occ duplicates:find-all` is recommended.
 
+### Live Photos
+
+Deleting either component of a redundant Live Photo asks for confirmation to delete
+both its still image and video. Another accessible, complete Live Photo with
+identical contents in both components must remain. Separate copies of the image
+and video without a valid pair do not qualify.
+
+Origin-folder protection applies to both components. The last complete pair is
+kept even when deletion of the last copy of an individual file was confirmed.
+If the linked component is no longer in the user's files, including when it is
+in trash, the remaining file uses the normal duplicate and last-copy checks.
+An existing peer in another directory of the user's files remains protected.
+
 ### Bulk Delete & Dry-Run Preview
 
 Click **Bulk Delete** in the app header to review and delete multiple duplicates in one operation:
@@ -194,6 +207,48 @@ When running integration tests inside the devcontainer:
    ```
 
 For more details on the test suite, see [tests/README.md](tests/README.md).
+
+#### Live Photo integration tests with Docker
+
+The root Compose file provides an isolated Nextcloud 35, MariaDB and Redis.
+Test data is stored under `.nextcloud-dev`; no existing Nextcloud data is mounted.
+
+```bash
+docker compose up -d --build
+docker compose exec nextcloud sh -c 'cd custom_apps/duplicatefinder && composer install'
+docker compose exec -u www-data nextcloud php occ app:enable duplicatefinder
+docker compose exec -u www-data -e NEXTCLOUD_PATH=/var/www/html nextcloud sh -c \
+  'cd custom_apps/duplicatefinder && php vendor/bin/phpunit tests/Integration/LivePhotoDeletionIntegrationTest.php'
+```
+
+The integration suite uses synthetic image/video components with Nextcloud's
+public Live Photo metadata. It exercises actual core deletion, retained pairs,
+origin protection and concurrent authenticated HTTP requests with Redis locking.
+
+The confirmation retry also needs verification with database locking, as used
+when Redis is not configured. In this isolated test instance, temporarily add a
+config override and run both confirmation cases through real HTTP requests:
+
+```bash
+docker compose exec -u www-data nextcloud php -r \
+  'file_put_contents("config/zz-live-photo-db.config.php", "<?php\n\$CONFIG = [\"memcache.locking\" => \"\"];\n");'
+docker compose exec -u www-data -e NEXTCLOUD_PATH=/var/www/html nextcloud sh -c \
+  'cd custom_apps/duplicatefinder && php vendor/bin/phpunit --filter testConfirmationRetryReleasesTheDatabasePairMutex tests/Integration/LivePhotoDeletionIntegrationTest.php'
+docker compose exec -u www-data nextcloud rm config/zz-live-photo-db.config.php
+```
+
+The test checks that the database mutex is released after each HTTP request and
+that the remaining photo/video pair stays intact. PHPUnit's in-process cache is
+not used as evidence of HTTP database locking.
+
+To measure metadata query counts with 50 ordinary images:
+
+```bash
+docker compose exec -u www-data -e NEXTCLOUD_PATH=/var/www/html nextcloud sh -c \
+  'cd custom_apps/duplicatefinder && php vendor/bin/phpunit tests/Integration/LivePhotoStatusQueryIntegrationTest.php'
+```
+
+After the checks, stop the isolated instance with `docker compose down`.
 
 ## Special thanks
 

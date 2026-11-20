@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Hapus foto dan video Live Photo ini?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Live Photo ini tidak dapat dihapus sampai pasangan foto dan video lain yang lengkap dan identik telah diverifikasi.",
+        "Live Photo video is missing": "Video Live Photo tidak ditemukan",
         "Acknowledged groups ({count})": "Grup yang diakui ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Grup duplikat aktif pada pemindaian saat ini ({total} total, {unacknowledged} belum diakui, {acknowledged} diakui). Folder yang dikecualikan dan berkas yang diabaikan tidak dihitung.",
         "Active duplicate groups in current scan ({total})": "Grup duplikat aktif pada pemindaian saat ini ({total})",

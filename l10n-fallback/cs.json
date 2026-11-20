@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Odstranit fotografii i video této Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Tuto Live Photo nelze odstranit, dokud nebude ověřena jiná úplná a shodná dvojice fotografie a videa.",
+        "Live Photo video is missing": "Video Live Photo chybí",
         "Acknowledged groups ({count})": "Potvrzené skupiny ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Aktivní skupiny duplicit v aktuálním skenu ({total} celkem, {unacknowledged} nepotvrzených, {acknowledged} potvrzených). Vyloučené složky a ignorované soubory se nepočítají.",
         "Active duplicate groups in current scan ({total})": "Aktivní skupiny duplicit v aktuálním skenu ({total})",

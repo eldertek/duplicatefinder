@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Να διαγραφούν τόσο η φωτογραφία όσο και το βίντεο αυτής της Live Photo;",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Δεν είναι δυνατή η διαγραφή αυτής της Live Photo μέχρι να επιβεβαιωθεί ένα άλλο πλήρες, πανομοιότυπο ζεύγος φωτογραφίας και βίντεο.",
+        "Live Photo video is missing": "Λείπει το βίντεο της Live Photo",
         "Acknowledged groups ({count})": "Επιβεβαιωμένες ομάδες ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Ενεργές ομάδες διπλοτύπων στην τρέχουσα σάρωση ({total} συνολικά, {unacknowledged} μη επιβεβαιωμένες, {acknowledged} επιβεβαιωμένες). Οι εξαιρεθέντες φάκελοι και τα αγνοημένα αρχεία δεν υπολογίζονται.",
         "Active duplicate groups in current scan ({total})": "Ενεργές ομάδες διπλοτύπων στην τρέχουσα σάρωση ({total})",

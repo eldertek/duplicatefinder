@@ -1,6 +1,9 @@
 {
     "pluralForm": "nplurals=1; plural=0;",
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "删除此实况照片的照片和视频？",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "在确认存在另一组完整且完全相同的照片和视频之前，无法删除此实况照片。",
+        "Live Photo video is missing": "实况照片的视频缺失",
         "\"Background Job Find Duplicates Interval\"": "“后台任务查找重复文件间隔”",
         "\"Disable Filesystem Events\"": "“禁用文件系统事件”",
         "\"Find all duplicates\"": "“查找所有重复文件”",

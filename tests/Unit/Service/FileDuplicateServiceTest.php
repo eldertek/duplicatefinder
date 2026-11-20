@@ -33,7 +33,8 @@ class FileDuplicateServiceTest extends TestCase
             $this->mapper,
             $this->fileInfoService,
             $this->originFolderService,
-            $this->createMock(\OCP\Lock\ILockingProvider::class)
+            $this->createMock(\OCP\Lock\ILockingProvider::class),
+            $this->createMock(\OCA\DuplicateFinder\Service\LivePhotoStatusService::class)
         );
     }
 

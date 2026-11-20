@@ -35,6 +35,7 @@ class FileDuplicateService
         FileInfoService $fileInfoService,
         OriginFolderService $originFolderService,
         ILockingProvider $lockingProvider,
+        private LivePhotoStatusService $livePhotoStatusService,
         ?SurplusRowsMerger $surplusRowsMerger = null
     ) {
         $this->mapper = $mapper;
@@ -95,6 +96,10 @@ class FileDuplicateService
             $files[$key]->setIsInOriginFolder($protectionInfo['isProtected']);
 
             $uniqueFiles[] = $files[$key];
+        }
+
+        if ($this->currentUserId !== null) {
+            $this->livePhotoStatusService->markMissingVideos($uniqueFiles, $this->currentUserId);
         }
 
         // Sort the enriched FileInfo objects

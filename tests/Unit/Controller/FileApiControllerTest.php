@@ -6,6 +6,8 @@ use OCA\DuplicateFinder\Controller\FileApiController;
 use OCA\DuplicateFinder\Exception\AbortedDeletionException;
 use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
 use OCA\DuplicateFinder\Exception\LivePhotoProtectionException;
+use OCA\DuplicateFinder\Exception\LivePhotoConfirmationRequiredException;
+use OCA\DuplicateFinder\Exception\LivePhotoPairProtectionException;
 use OCA\DuplicateFinder\Service\FileService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -315,6 +317,35 @@ class FileApiControllerTest extends TestCase
         ], $response->getData());
     }
 
+    public function testDeleteRefusesLivePhotoWithoutASurvivingPairWithAConflict()
+    {
+        $filePath = '/Photos/live.heic';
+        $message = 'No complete identical Live Photo pair remains.';
+
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, $filePath], ['paths', null, null]]);
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $filePath)
+            ->willThrowException(new LivePhotoPairProtectionException($message));
+
+        $this->logger->expects($this->never())->method('error');
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with('File deletion blocked by Live Photo protection: {error}', [
+                'error' => $message,
+                'path' => $filePath,
+            ]);
+
+        $response = $this->controller->delete();
+
+        $this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
+        $this->assertSame([
+            'error' => 'LIVE_PHOTO_PAIR_PROTECTED',
+            'message' => $message,
+        ], $response->getData());
+    }
+
     public function testDeleteMultipleIncludesStructuredLivePhotoError(): void
     {
         $movPath = '/Photos/IMG_0042.mov';
@@ -342,6 +373,137 @@ class FileApiControllerTest extends TestCase
             'errors' => [[
                 'path' => $movPath,
                 'error' => 'LIVE_PHOTO_VIDEO_PROTECTED',
+                'message' => $message,
+            ]],
+        ], $response->getData());
+    }
+
+    public function testDeleteMultipleIncludesStructuredLivePhotoErrorAndContinues()
+    {
+        $protectedPath = '/Photos/live.heic';
+        $ordinaryPath = '/Photos/duplicate.jpg';
+        $message = 'No complete identical Live Photo pair remains.';
+
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, null], ['paths', null, [$protectedPath, $ordinaryPath]]]);
+        $this->service->expects($this->exactly(2))
+            ->method('deleteFile')
+            ->withConsecutive([$this->userId, $protectedPath], [$this->userId, $ordinaryPath])
+            ->willReturnCallback(function (string $uid, string $path) use ($protectedPath, $message): array {
+                if ($path === $protectedPath) {
+                    throw new LivePhotoPairProtectionException($message);
+                }
+                return [];
+            });
+
+        $this->logger->expects($this->never())->method('error');
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with('File deletion blocked by Live Photo protection: {error}', [
+                'error' => $message,
+                'path' => $protectedPath,
+            ]);
+
+        $response = $this->controller->delete();
+
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame([
+            'success' => [$ordinaryPath],
+            'errors' => [[
+                'path' => $protectedPath,
+                'error' => 'LIVE_PHOTO_PAIR_PROTECTED',
+                'message' => $message,
+            ]],
+        ], $response->getData());
+    }
+
+    public function testDeleteRequiresLivePhotoConfirmationWithAConflict()
+    {
+        $filePath = '/Photos/live.heic';
+        $message = 'Confirm deletion of both Live Photo components.';
+
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, $filePath], ['paths', null, null]]);
+        $this->request->method('getParams')->willReturn(['allowLivePhotoPair' => 'false']);
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $filePath)
+            ->willThrowException(new LivePhotoConfirmationRequiredException($message));
+
+        $this->logger->expects($this->never())->method('error');
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with('File deletion blocked by Live Photo protection: {error}', [
+                'error' => $message,
+                'path' => $filePath,
+            ]);
+
+        $response = $this->controller->delete();
+
+        $this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
+        $this->assertSame([
+            'error' => 'LIVE_PHOTO_CONFIRMATION_REQUIRED',
+            'message' => $message,
+        ], $response->getData());
+    }
+
+    public function testDeleteForwardsLivePhotoConfirmationAndReturnsDeletedNodeIds()
+    {
+        $filePath = '/Photos/live.heic';
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, $filePath], ['paths', null, null]]);
+        $this->request->method('getParams')->willReturn([
+            'nodeId' => 77,
+            'hash' => 'abc123',
+            'allowLastCopy' => true,
+            'allowLivePhotoPair' => 'true',
+        ]);
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $filePath, 77, 'abc123', true, true)
+            ->willReturn([77, 78]);
+
+        $response = $this->controller->delete();
+
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(['status' => 'success', 'deletedNodeIds' => [77, 78]], $response->getData());
+    }
+
+    public function testDeleteOrdinaryFileKeepsTheExistingSuccessResponse()
+    {
+        $filePath = '/Photos/ordinary.jpg';
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, $filePath], ['paths', null, null]]);
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $filePath)
+            ->willReturn([77]);
+
+        $response = $this->controller->delete();
+
+        $this->assertSame(['status' => 'success'], $response->getData());
+    }
+
+    public function testDeleteMultipleIncludesStructuredLivePhotoConfirmationError()
+    {
+        $filePath = '/Photos/live.mov';
+        $message = 'Confirm deletion of both Live Photo components.';
+        $this->request->method('getParam')
+            ->willReturnMap([['path', null, null], ['paths', null, [$filePath]]]);
+        $this->service->expects($this->once())
+            ->method('deleteFile')
+            ->with($this->userId, $filePath)
+            ->willThrowException(new LivePhotoConfirmationRequiredException($message));
+        $this->logger->expects($this->never())->method('error');
+        $this->logger->expects($this->once())->method('warning');
+
+        $response = $this->controller->delete();
+
+        $this->assertSame([
+            'success' => [],
+            'errors' => [[
+                'path' => $filePath,
+                'error' => 'LIVE_PHOTO_CONFIRMATION_REQUIRED',
                 'message' => $message,
             ]],
         ], $response->getData());

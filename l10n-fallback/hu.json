@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Törli ennek a Live Photo felvételnek a fotóját és a videóját is?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Ez a Live Photo felvétel nem törölhető, amíg nincs ellenőrizve egy másik teljes, azonos fotó- és videópár.",
+        "Live Photo video is missing": "A Live Photo videója hiányzik",
         "\"Background Job Find Duplicates Interval\"": "\"Háttérfeladat ismétlődéskeresési időköze\"",
         "\"Disable Filesystem Events\"": "\"Fájlrendszer-események letiltása\"",
         "\"Find all duplicates\"": "\"Összes ismétlődés keresése\"",

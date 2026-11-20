@@ -91,7 +91,9 @@ export const unacknowledgeDuplicate = async (hash) => {
  * @param {Object} file The file to delete.
  * @param {Object} [options]
  * @param {boolean} [options.allowLastCopy] Delete the file even if it is the last copy of its group.
- * @returns {Promise<void>}
+ * @param {boolean} [options.allowLivePhotoPair] Confirm deletion of both Live Photo components.
+ * @param {Set<number>} [options.deletedNodeIds] Node IDs already deleted during this batch.
+ * @returns {Promise<boolean>} Whether the file was deleted rather than cancelled.
  */
 export const deleteFile = async (file, options = {}) => {
     try {
@@ -107,14 +109,26 @@ export const deleteFile = async (file, options = {}) => {
         if (options.allowLastCopy) {
             body.allowLastCopy = true;
         }
-        await axios.post(url, body);
+        if (options.allowLivePhotoPair) {
+            body.allowLivePhotoPair = true;
+        }
+        const response = await axios.post(url, body);
+        for (const nodeId of response.data.deletedNodeIds || []) {
+            options.deletedNodeIds?.add(Number(nodeId));
+        }
         if (!options.silentSuccess) {
             showSuccessNotification(t('duplicatefinder', 'File deleted successfully.'));
         }
         return true;
     } catch (error) {
-        console.error(`Error deleting file with path ${file.path}:`, error);
         const errorData = error.response?.data;
+        if (errorData?.error === 'LIVE_PHOTO_CONFIRMATION_REQUIRED' && !options.allowLivePhotoPair) {
+            if (window.confirm(t('duplicatefinder', 'Delete both the photo and the video of this Live Photo?'))) {
+                return deleteFile(file, { ...options, allowLivePhotoPair: true });
+            }
+            return false;
+        }
+        console.error(`Error deleting file with path ${file.path}:`, error);
 
         switch(errorData?.error) {
             case 'ORIGIN_FOLDER_PROTECTED':
@@ -128,6 +142,9 @@ export const deleteFile = async (file, options = {}) => {
                 break;
             case 'DELETE_ABORTED':
                 showErrorNotification(t('duplicatefinder', 'File deletion was aborted by Nextcloud.'));
+                break;
+            case 'LIVE_PHOTO_PAIR_PROTECTED':
+                showErrorNotification(t('duplicatefinder', 'Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.'));
                 break;
             case 'FILE_NOT_FOUND':
                 showErrorNotification(t('duplicatefinder', 'File not found'));
@@ -149,15 +166,20 @@ export const deleteFile = async (file, options = {}) => {
  * Deletes multiple files.
  * @param {Array} files The files to delete.
  * @param {Object} [options] Same options as deleteFile.
- * @returns {Promise<void>}
+ * @returns {Promise<{success: Array, errors: Array, deletedNodeIds?: number[]}>} Deleted selections and any paired components.
  */
 export const deleteFiles = async (files, options = {}) => {
     const results = [];
     const errors = [];
+    const deletedNodeIds = options.deletedNodeIds || new Set();
 
     for (const file of files) {
+        if (file.nodeId && deletedNodeIds.has(Number(file.nodeId))) {
+            results.push(file);
+            continue;
+        }
         try {
-            const success = await deleteFile(file, { ...options, silentSuccess: true });
+            const success = await deleteFile(file, { ...options, silentSuccess: true, deletedNodeIds });
             if (success) {
                 results.push(file);
             }
@@ -180,7 +202,8 @@ export const deleteFiles = async (files, options = {}) => {
 
     return {
         success: results,
-        errors: errors
+        errors: errors,
+        ...(deletedNodeIds.size > 1 ? { deletedNodeIds: Array.from(deletedNodeIds) } : {})
     };
 };
 

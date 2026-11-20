@@ -132,9 +132,8 @@ class FileInfoServiceDeletionTest extends TestCase
         $this->folderService->expects($this->never())
             ->method('getNodeByFileInfo');
 
-        $this->lockingProvider->expects($this->once())
-            ->method('releaseAll')
-            ->with('/important/document.pdf', ILockingProvider::LOCK_SHARED);
+        $this->lockingProvider->expects($this->never())
+            ->method('releaseAll');
 
         $this->mapper->expects($this->once())
             ->method('findById')

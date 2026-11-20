@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Voleu suprimir tant la foto com el vídeo d'aquesta Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "No es pot suprimir aquesta Live Photo fins que es confirmi una altra parella completa i idèntica de foto i vídeo.",
+        "Live Photo video is missing": "Falta el vídeo de la Live Photo",
         "Access your project from the navigation sidebar": "Accediu al vostre projecte des de la barra lateral de navegació",
         "Acknowledged groups ({count})": "Grups reconeguts ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Grups de duplicats actius a l'escaneig actual ({total} en total, {unacknowledged} no reconeguts, {acknowledged} reconeguts). Les carpetes excloses i els fitxers ignorats no es comptabilitzen.",

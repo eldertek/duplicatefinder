@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Slette både bildet og videoen i dette Live Photo-bildet?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Dette Live Photo-bildet kan ikke slettes før et annet komplett og identisk bilde- og videopar er bekreftet.",
+        "Live Photo video is missing": "Videoen til Live Photo mangler",
         "\"Background Job Find Duplicates Interval\"": "\"Intervall for bakgrunnsjobb for duplikatsøk\"",
         "\"Disable Filesystem Events\"": "\"Deaktiver filsystemhendelser\"",
         "\"Find all duplicates\"": "\"Finn alle duplikater\"",

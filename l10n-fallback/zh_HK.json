@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "要刪除此原況相片的相片和影片嗎？",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "確認存在另一組完整且完全相同的相片和影片之前，無法刪除此原況相片。",
+        "Live Photo video is missing": "原況相片的影片遺失",
         "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "無法直接刪除原況相片的影片部分。僅當兩個檔案都重複時，才請改為刪除配對的相片。",
         "File deletion was aborted by Nextcloud.": "Nextcloud 已中止刪除檔案。",
         "You're Ready!": "準備就緒！",

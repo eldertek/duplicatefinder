@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "למחוק גם את התמונה וגם את הווידאו של Live Photo זו?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "לא ניתן למחוק Live Photo זו עד שיאומת זוג נוסף, שלם וזהה, של תמונה ווידאו.",
+        "Live Photo video is missing": "סרטון הווידאו של Live Photo חסר",
         "\"Background Job Find Duplicates Interval\"": "\"מרווח משימת רקע לאיתור כפילויות\"",
         "\"Disable Filesystem Events\"": "\"השבתת אירועי מערכת קבצים\"",
         "\"Find all duplicates\"": "\"איתור כל הכפילויות\"",
