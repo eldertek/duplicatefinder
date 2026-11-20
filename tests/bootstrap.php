@@ -42,7 +42,7 @@ require_once $nextcloudPath . '/lib/base.php';
 
 // Initialiser l'application
 try {
-    \OC::$server->getAppManager()->enableApp('duplicatefinder');
+    \OC::$server->get(\OCP\App\IAppManager::class)->enableApp('duplicatefinder');
 } catch (\Exception $e) {
     echo 'Warning: Could not enable duplicatefinder app: ' . $e->getMessage() . "\n";
 }
