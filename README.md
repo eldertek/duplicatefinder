@@ -219,12 +219,36 @@ docker compose exec nextcloud sh -c 'cd custom_apps/duplicatefinder && composer 
 docker compose exec -u www-data nextcloud php occ app:enable duplicatefinder
 docker compose exec -u www-data -e NEXTCLOUD_PATH=/var/www/html nextcloud sh -c \
   'cd custom_apps/duplicatefinder && php vendor/bin/phpunit tests/Integration/LivePhotoDeletionIntegrationTest.php'
-docker compose down
 ```
 
 The integration suite uses synthetic image/video components with Nextcloud's
 public Live Photo metadata. It exercises actual core deletion, retained pairs,
 origin protection and concurrent authenticated HTTP requests with Redis locking.
+
+The confirmation retry also needs verification with database locking, as used
+when Redis is not configured. In this isolated test instance, temporarily add a
+config override and run both confirmation cases through real HTTP requests:
+
+```bash
+docker compose exec -u www-data nextcloud php -r \
+  'file_put_contents("config/zz-live-photo-db.config.php", "<?php\n\$CONFIG = [\"memcache.locking\" => \"\"];\n");'
+docker compose exec -u www-data -e NEXTCLOUD_PATH=/var/www/html nextcloud sh -c \
+  'cd custom_apps/duplicatefinder && php vendor/bin/phpunit --filter testConfirmationRetryReleasesTheDatabasePairMutex tests/Integration/LivePhotoDeletionIntegrationTest.php'
+docker compose exec -u www-data nextcloud rm config/zz-live-photo-db.config.php
+```
+
+The test checks that the database mutex is released after each HTTP request and
+that the remaining photo/video pair stays intact. PHPUnit's in-process cache is
+not used as evidence of HTTP database locking.
+
+To measure metadata query counts with 50 ordinary images:
+
+```bash
+docker compose exec -u www-data -e NEXTCLOUD_PATH=/var/www/html nextcloud sh -c \
+  'cd custom_apps/duplicatefinder && php vendor/bin/phpunit tests/Integration/LivePhotoStatusQueryIntegrationTest.php'
+```
+
+After the checks, stop the isolated instance with `docker compose down`.
 
 ## Special thanks
 

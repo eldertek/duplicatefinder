@@ -53,7 +53,7 @@ class LivePhotoDeletionService
 
         $imageHash = $this->fileInfoService->getContentHash($pair->image);
         $videoHash = $this->fileInfoService->getContentHash($pair->video);
-        $lock = 'duplicatefinder/live-photo/' . hash('sha256', $imageHash . ':' . $videoHash);
+        $lock = 'df-lp/' . substr(hash('sha256', $imageHash . ':' . $videoHash), 0, 48);
 
         // Serialize deletions of identical pairs, including requests through shared paths.
         $this->lockingProvider->acquireLock($lock, ILockingProvider::LOCK_EXCLUSIVE);

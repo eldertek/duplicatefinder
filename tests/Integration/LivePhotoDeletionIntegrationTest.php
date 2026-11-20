@@ -14,6 +14,8 @@ use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\FilesMetadata\IFilesMetadataManager;
+use OCP\IConfig;
+use OCP\IDBConnection;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -276,5 +278,87 @@ class LivePhotoDeletionIntegrationTest extends TestCase
 
         $this->assertSame([$id], $this->service->deleteFile($this->user->getUID(), '/ordinary.txt', $id));
         $this->assertFalse($this->folder->nodeExists('ordinary.txt'));
+    }
+
+    /**
+     * @dataProvider selectedComponents
+     */
+    public function testConfirmationRetryReleasesTheDatabasePairMutex(int $selected): void
+    {
+        // PHPUnit uses an in-memory locking provider; the HTTP requests use this config.
+        if (\OC::$server->get(IConfig::class)->getSystemValueString('memcache.locking', '') !== '') {
+            $this->markTestSkipped('Run without memcache.locking to exercise the database locking provider');
+        }
+
+        $motion = 'db-lock-' . $this->user->getUID();
+        $source = $this->pair('redundant', $motion);
+        $survivor = $this->pair('keep', $motion);
+        $sourceIds = [$source[0]->getId(), $source[1]->getId()];
+        $key = 'df-lp/' . substr(hash('sha256', $this->fileInfoService->getContentHash($source[0]) . ':' . $this->fileInfoService->getContentHash($source[1])), 0, 48);
+
+        [$status, $body] = $this->requestDeletion($sourceIds[$selected], false);
+        $this->assertSame(409, $status);
+        $this->assertSame('LIVE_PHOTO_CONFIRMATION_REQUIRED', $body['error']);
+        $this->assertTrue($this->folder->nodeExists('redundant/photo.jpg'));
+        $this->assertTrue($this->folder->nodeExists('redundant/photo.mov'));
+
+        $firstLock = $this->readPairMutex($key);
+        $this->assertSame($key, $firstLock['key']);
+        $this->assertLessThanOrEqual(64, strlen($firstLock['key']));
+        $this->assertSame(0, (int)$firstLock['lock']);
+
+        // Let the database TTL advance so both HTTP requests prove they acquired this mutex.
+        usleep(1100000);
+        [$status, $body] = $this->requestDeletion($sourceIds[$selected], true);
+        $this->assertSame(200, $status);
+        $this->assertSame($sourceIds, $body['deletedNodeIds']);
+        $this->assertFalse($this->folder->nodeExists('redundant/photo.jpg'));
+        $this->assertFalse($this->folder->nodeExists('redundant/photo.mov'));
+        $remaining = \OC::$server->get(LivePhotoResolver::class)->resolve($survivor[0], $this->folder);
+        $this->assertSame($survivor[1]->getId(), $remaining->video->getId());
+
+        $confirmedLock = $this->readPairMutex($key);
+        $this->assertSame(0, (int)$confirmedLock['lock']);
+        $this->assertGreaterThan((int)$firstLock['ttl'], (int)$confirmedLock['ttl']);
+    }
+
+    /**
+     * Make each confirmation step a separate authenticated HTTP request.
+     *
+     * @return array{int, array} The response status and decoded JSON body
+     */
+    private function requestDeletion(int $nodeId, bool $confirmed): array
+    {
+        $handle = curl_init('http://127.0.0.1/index.php/apps/duplicatefinder/api/files/delete');
+        curl_setopt_array($handle, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode(['nodeId' => $nodeId, 'allowLivePhotoPair' => $confirmed]),
+            CURLOPT_USERPWD => $this->user->getUID() . ':local-test-password',
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'OCS-APIRequest: true'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 30,
+        ]);
+        $response = curl_exec($handle);
+        $this->assertSame('', curl_error($handle));
+
+        return [curl_getinfo($handle, CURLINFO_RESPONSE_CODE), json_decode($response, true, 512, JSON_THROW_ON_ERROR)];
+    }
+
+    /**
+     * Inspect only the unique test pair's mutex row, without changing live lock state.
+     *
+     * @return array The persisted key, lock count and expiry after an HTTP request
+     */
+    private function readPairMutex(string $key): array
+    {
+        $query = \OC::$server->get(IDBConnection::class)->getQueryBuilder();
+        $query->select('key', 'lock', 'ttl')->from('file_locks')
+            ->where($query->expr()->eq('key', $query->createNamedParameter($key)));
+        $result = $query->executeQuery();
+        $row = $result->fetchAssociative();
+        $result->closeCursor();
+        $this->assertIsArray($row, 'The HTTP request must use DBLockingProvider and persist its mutex');
+
+        return $row;
     }
 }
