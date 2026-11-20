@@ -23,7 +23,9 @@ EXCLUDES := --exclude="/.git" \
     --exclude="*.config.js" \
     --exclude="psalm.xml" \
     --exclude="/.*" \
-    --exclude="/js/.*"
+    --exclude="/js/.*" \
+    --exclude="/l10n-fallback" \
+    --exclude="/scripts"
 
 all: build
 
@@ -67,11 +69,15 @@ ifeq ($(detected_OS),Windows)
 	if exist "$(source_build_directory)" rd /s /q "$(source_build_directory)"
 	mkdir "$(sign_dir)" -p
 	xcopy "$(CURDIR)\\*" "$(sign_dir)\\$(app_name)" /E /H /C /I /Q /Y
+	python "$(CURDIR)\\scripts\\merge_l10n_fallback.py" --target-dir "$(sign_dir)\\$(app_name)\\l10n" --fallback-dir "$(CURDIR)\\l10n-fallback"
+	if exist "$(sign_dir)\\$(app_name)\\l10n-fallback" rd /s /q "$(sign_dir)\\$(app_name)\\l10n-fallback"
+	if exist "$(sign_dir)\\$(app_name)\\scripts" rd /s /q "$(sign_dir)\\$(app_name)\\scripts"
 	cd "$(sign_dir)" && tar -czf "$(build_dir)\\$(app_name).tar.gz" "$(app_name)"
 else
 	rm -rf "$(source_build_directory)"
 	mkdir -p "$(sign_dir)"
 	rsync -a $(EXCLUDES) $(CURDIR)/  $(sign_dir)/$(app_name)
+	python3 "$(CURDIR)/scripts/merge_l10n_fallback.py" --target-dir "$(sign_dir)/$(app_name)/l10n" --fallback-dir "$(CURDIR)/l10n-fallback"
 	tar -czf $(build_dir)/$(app_name).tar.gz -C $(sign_dir) $(app_name)
 endif
 
