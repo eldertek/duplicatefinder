@@ -2,7 +2,6 @@ OC.L10N.register(
     "duplicatefinder",
     {
     "Duplicate Finder" : "Поиск дубликатов",
-    "Live Photo video is missing" : "Видео Live Photo отсутствует",
     "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted." : "Активные группы дубликатов в текущем сканировании (всего: {total}, непросмотренных: {unacknowledged}, просмотренных: {acknowledged}). Исключённые папки и игнорируемые файлы не учитываются.",
     "Getting Started" : "Начало работы",
     "Usage Examples" : "Примеры использования",
