@@ -35,6 +35,7 @@ class LivePhotoDeletionIntegrationTest extends TestCase
         }
 
         $this->user = \OC::$server->get(IUserManager::class)->createUser('livephoto-test-' . bin2hex(random_bytes(4)), 'local-test-password');
+        $this->user->updateLastLoginTimestamp();
         \OC::$server->get(IUserSession::class)->setUser($this->user);
         \OC_Util::tearDownFS();
         \OC_Util::setupFS($this->user->getUID());
