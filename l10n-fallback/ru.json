@@ -1,0 +1,32 @@
+{
+    "translations": {
+        "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "Невозможно удалить видеочасть Live Photo напрямую. Вместо этого удалите связанное фото, но только если оба файла являются дубликатами.",
+        "File deletion was aborted by Nextcloud.": "Удаление файла было прервано Nextcloud.",
+        "You're Ready!": "Все готово!",
+        "_%n empty folder deleted_::_%n empty folders deleted_": [
+            "Удалена %n пустая папка",
+            "Удалены %n пустые папки",
+            "Удалено %n пустых папок",
+            "Удалено %n пустых папок"
+        ],
+        "_%n file deleted_::_%n files deleted_": [
+            "Удален %n файл",
+            "Удалены %n файла",
+            "Удалено %n файлов",
+            "Удалено %n файлов"
+        ],
+        "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_": [
+            "Не удалось удалить %n пустую папку",
+            "Не удалось удалить %n пустые папки",
+            "Не удалось удалить %n пустых папок",
+            "Не удалось удалить %n пустых папок"
+        ],
+        "_Failed to delete %n file_::_Failed to delete %n files_": [
+            "Не удалось удалить %n файл",
+            "Не удалось удалить %n файла",
+            "Не удалось удалить %n файлов",
+            "Не удалось удалить %n файлов"
+        ]
+    },
+    "pluralForm": "nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);"
+}

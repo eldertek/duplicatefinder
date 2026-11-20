@@ -1,0 +1,24 @@
+{
+    "translations": {
+        "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "Der Videoteil eines Live Photos kann nicht direkt gelöscht werden. Löschen Sie stattdessen das zugehörige Foto, jedoch nur, wenn beide Dateien redundant sind.",
+        "File deletion was aborted by Nextcloud.": "Das Löschen der Datei wurde von Nextcloud abgebrochen.",
+        "You're Ready!": "Sie sind startklar!",
+        "_%n empty folder deleted_::_%n empty folders deleted_": [
+            "%n leerer Ordner gelöscht",
+            "%n leere Ordner gelöscht"
+        ],
+        "_%n file deleted_::_%n files deleted_": [
+            "%n Datei gelöscht",
+            "%n Dateien gelöscht"
+        ],
+        "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_": [
+            "Fehler beim Löschen von %n leerem Ordner",
+            "Fehler beim Löschen von %n leeren Ordnern"
+        ],
+        "_Failed to delete %n file_::_Failed to delete %n files_": [
+            "Fehler beim Löschen von %n Datei",
+            "Fehler beim Löschen von %n Dateien"
+        ]
+    },
+    "pluralForm": "nplurals=2; plural=(n != 1);"
+}

@@ -8,7 +8,7 @@
           :icon="'icon-delete'">
           <template #action>
             <div class="summary-actions">
-              <NcActions :menu-title="minSizeButtonLabel" :disabled="isLoading">
+              <NcActions :menu-name="minSizeButtonLabel" :disabled="isLoading">
                 <template #icon>
                   <ChevronDown :size="20" />
                 </template>
@@ -198,7 +198,7 @@
               { current: currentPage, total: previewResults.pagination.totalPages }) }}
           </div>
           <div class="summary-actions">
-            <NcActions :menu-title="sortButtonLabel" :disabled="isLoading">
+            <NcActions :menu-name="sortButtonLabel" :disabled="isLoading">
               <template #icon>
                 <ChevronDown :size="20" />
               </template>
@@ -215,7 +215,7 @@
                 {{ t('duplicatefinder', 'Size (smallest first)') }}
               </NcActionButton>
             </NcActions>
-            <NcActions :menu-title="minSizeButtonLabel" :disabled="isLoading">
+            <NcActions :menu-name="minSizeButtonLabel" :disabled="isLoading">
               <template #icon>
                 <ChevronDown :size="20" />
               </template>
@@ -229,7 +229,7 @@
             <NcButton type="tertiary" @click="toggleSelectAll">
               {{ isAllSelected ? t('duplicatefinder', 'Unselect all') : t('duplicatefinder', 'Select all') }}
             </NcButton>
-            <NcActions :menu-title="t('duplicatefinder', 'Smart select')" :disabled="isLoading">
+            <NcActions :menu-name="t('duplicatefinder', 'Smart select')" :disabled="isLoading">
               <template #icon>
                 <ChevronDown :size="20" />
               </template>
@@ -242,7 +242,7 @@
             </NcActions>
             <NcActions
               v-if="availableKeepFolders.length > 0"
-              :menu-title="t('duplicatefinder', 'Keep folder')"
+              :menu-name="t('duplicatefinder', 'Keep folder')"
               :disabled="isLoading">
               <template #icon>
                 <ChevronDown :size="20" />

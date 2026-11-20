@@ -1,0 +1,20 @@
+{
+    "translations": {
+        "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "無法直接刪除原況相片的影片部分。僅當兩個檔案都重複時，才請改為刪除配對的相片。",
+        "File deletion was aborted by Nextcloud.": "Nextcloud 已中止刪除檔案。",
+        "You're Ready!": "準備就緒！",
+        "_%n empty folder deleted_::_%n empty folders deleted_": [
+            "已刪除 %n 個空資料夾"
+        ],
+        "_%n file deleted_::_%n files deleted_": [
+            "已刪除 %n 個檔案"
+        ],
+        "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_": [
+            "刪除 %n 個空資料夾失敗"
+        ],
+        "_Failed to delete %n file_::_Failed to delete %n files_": [
+            "刪除 %n 個檔案失敗"
+        ]
+    },
+    "pluralForm": "nplurals=1; plural=0;"
+}
