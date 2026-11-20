@@ -7,37 +7,60 @@ namespace OCA\DuplicateFinder\Service;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Exception\LivePhotoPairProtectionException;
 use OCP\Files\NotFoundException;
+use OCP\FilesMetadata\IFilesMetadataManager;
 
 class LivePhotoStatusService
 {
     public function __construct(
         private FolderService $folderService,
-        private LivePhotoResolver $resolver
+        private LivePhotoResolver $resolver,
+        private IFilesMetadataManager $metadataManager
     ) {
     }
 
     /**
-     * Identify a still image whose recorded motion component left the user's files.
+     * Mark still images whose recorded motion component left the user's files.
      *
-     * @param FileInfo $fileInfo An enriched file visible in the duplicate results
+     * Fetch metadata once for the batch; ordinary images need no file lookups.
+     *
+     * @param FileInfo[] $files Enriched files visible in the duplicate results
      * @param string $userId The requesting user, including access through shares
-     * @return bool Whether the recorded Live Photo video is missing
+     * @return void
      */
-    public function isVideoMissing(FileInfo $fileInfo, string $userId): bool
+    public function markMissingVideos(array $files, string $userId): void
     {
-        if (!$fileInfo->getNodeId() || !str_starts_with($fileInfo->getMimetype() ?? '', 'image/')) {
-            return false;
-        }
-
-        try {
-            $folder = $this->folderService->getUserFolder($userId);
-            foreach ($folder->getById($fileInfo->getNodeId()) as $node) {
-                return $this->resolver->hasMissingPeer($node, $folder);
+        $images = [];
+        foreach ($files as $file) {
+            $file->setIsLivePhotoVideoMissing(false);
+            if ($file->getNodeId() && str_starts_with($file->getMimetype() ?? '', 'image/')) {
+                $images[$file->getNodeId()][] = $file;
             }
-        } catch (NotFoundException | LivePhotoPairProtectionException $e) {
-            return false;
+        }
+        if ($images === []) {
+            return;
         }
 
-        return false;
+        $metadata = $this->metadataManager->getMetadataForFiles(array_keys($images));
+        $folder = null;
+        $peerExists = [];
+        foreach ($images as $id => $imageFiles) {
+            try {
+                $peerId = $this->resolver->getPeerIdFromMetadata($metadata[$id] ?? null);
+                if ($peerId === null || $peerId === $id) {
+                    continue;
+                }
+
+                // Only recorded Live Photos need a peer lookup; share it within this batch.
+                $folder ??= $this->folderService->getUserFolder($userId);
+                if (!array_key_exists($peerId, $peerExists)) {
+                    $peerExists[$peerId] = $folder->getById($peerId) !== [];
+                }
+                foreach ($imageFiles as $file) {
+                    $file->setIsLivePhotoVideoMissing(!$peerExists[$peerId]);
+                }
+            } catch (NotFoundException | LivePhotoPairProtectionException $e) {
+                continue;
+            }
+        }
     }
 }

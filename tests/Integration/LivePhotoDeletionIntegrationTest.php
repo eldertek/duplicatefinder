@@ -116,8 +116,11 @@ class LivePhotoDeletionIntegrationTest extends TestCase
         $hash = $this->fileInfoService->getContentHash($source[0]);
 
         $status = \OC::$server->get(\OCA\DuplicateFinder\Service\LivePhotoStatusService::class);
-        $this->assertTrue($status->isVideoMissing($this->fileInfoService->find($source[0]->getPath(), $this->user->getUID(), true), $this->user->getUID()));
-        $this->assertFalse($status->isVideoMissing($this->fileInfoService->find($survivor[0]->getPath(), $this->user->getUID(), true), $this->user->getUID()));
+        $sourceInfo = $this->fileInfoService->find($source[0]->getPath(), $this->user->getUID(), true);
+        $survivorInfo = $this->fileInfoService->find($survivor[0]->getPath(), $this->user->getUID(), true);
+        $status->markMissingVideos([$sourceInfo, $survivorInfo], $this->user->getUID());
+        $this->assertTrue($sourceInfo->getIsLivePhotoVideoMissing());
+        $this->assertFalse($survivorInfo->getIsLivePhotoVideoMissing());
 
         $group = new \OCA\DuplicateFinder\Db\FileDuplicate($hash);
         $group->setFiles([$this->fileInfoService->find($source[0]->getPath(), $this->user->getUID(), true)]);

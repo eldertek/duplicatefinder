@@ -94,13 +94,12 @@ class FileDuplicateService
             // Check if file is in an origin folder
             $protectionInfo = $this->originFolderService->isPathProtected($normalizedPath);
             $files[$key]->setIsInOriginFolder($protectionInfo['isProtected']);
-            if ($this->currentUserId !== null) {
-                $files[$key]->setIsLivePhotoVideoMissing(
-                    $this->livePhotoStatusService->isVideoMissing($files[$key], $this->currentUserId)
-                );
-            }
 
             $uniqueFiles[] = $files[$key];
+        }
+
+        if ($this->currentUserId !== null) {
+            $this->livePhotoStatusService->markMissingVideos($uniqueFiles, $this->currentUserId);
         }
 
         // Sort the enriched FileInfo objects

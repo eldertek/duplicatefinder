@@ -12,6 +12,7 @@ use OCP\Files\Node;
 use OCP\FilesMetadata\Exceptions\FilesMetadataNotFoundException;
 use OCP\FilesMetadata\Exceptions\FilesMetadataTypeException;
 use OCP\FilesMetadata\IFilesMetadataManager;
+use OCP\FilesMetadata\Model\IFilesMetadata;
 
 class LivePhotoResolver
 {
@@ -69,31 +70,14 @@ class LivePhotoResolver
     }
 
     /**
-     * Distinguish a missing recorded component from an ordinary image or invalid link.
+     * Read a recorded peer from metadata already fetched individually or in a batch.
      *
-     * @param Node $node A still image or video from the user's visible filesystem
-     * @param Folder $userFolder The same lookup scope core uses for a paired deletion
-     * @return bool Whether a valid recorded peer id is absent from the user's files
-     */
-    public function hasMissingPeer(Node $node, Folder $userFolder): bool
-    {
-        if (!($node instanceof File)) {
-            return false;
-        }
-        $peerId = $this->getPeerId($node);
-
-        return $peerId !== null && $peerId !== $node->getId() && $userFolder->getById($peerId) === [];
-    }
-
-    /**
-     * Read the public metadata API shared by Nextcloud 28 and later.
-     *
-     * @return int|null The peer node id, or null for an ordinary file
+     * @param IFilesMetadata|null $metadata Metadata for a file, when available
+     * @return int|null The recorded peer id, or null for an ordinary file
      * @throws LivePhotoPairProtectionException When a recorded link is invalid
      */
-    private function getPeerId(File $file): ?int
+    public function getPeerIdFromMetadata(?IFilesMetadata $metadata): ?int
     {
-        $metadata = $this->metadataManager->getMetadataForFiles([$file->getId()])[$file->getId()] ?? null;
         if ($metadata === null || !$metadata->hasKey('files-live-photo')) {
             return null;
         }
@@ -108,5 +92,18 @@ class LivePhotoResolver
         }
 
         return (int)$value;
+    }
+
+    /**
+     * Read the public metadata API shared by Nextcloud 28 and later.
+     *
+     * @return int|null The peer node id, or null for an ordinary file
+     * @throws LivePhotoPairProtectionException When a recorded link is invalid
+     */
+    private function getPeerId(File $file): ?int
+    {
+        $metadata = $this->metadataManager->getMetadataForFiles([$file->getId()])[$file->getId()] ?? null;
+
+        return $this->getPeerIdFromMetadata($metadata);
     }
 }
