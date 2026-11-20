@@ -200,7 +200,7 @@ describe('Bulk deletion disabled button contrast & l10n-fallback packaging safeg
 
 	test('repository l10n-fallback files cover major locales cleanly with matching placeholders', () => {
 		const fallbackLocales = ['it', 'nl', 'ja', 'ko', 'zh_CN', 'pl', 'ar', 'es', 'pt_PT']
-		const placeholderRegex = /\{[a-zA-Z0-9_]+\}/g
+		const placeholderRegex = /\{[a-zA-Z0-9_]+\}|%[ns]/g
 
 		for (const locale of fallbackLocales) {
 			const fallbackPath = resolve(root, `l10n-fallback/${locale}.json`)
@@ -215,15 +215,26 @@ describe('Bulk deletion disabled button contrast & l10n-fallback packaging safeg
 			assert.ok(entries.length >= 70, `${locale}.json should populate major missing UI keys (found ${entries.length})`)
 
 			for (const [enKey, translated] of entries) {
-				assert.equal(typeof translated, 'string')
-				assert.ok(translated.trim().length > 0, `Empty translation in ${locale}.json for "${enKey}"`)
-				const expectedPlaceholders = (enKey.match(placeholderRegex) || []).sort()
-				const actualPlaceholders = (translated.match(placeholderRegex) || []).sort()
-				assert.deepEqual(
-					actualPlaceholders,
-					expectedPlaceholders,
-					`Placeholder mismatch in ${locale}.json for key "${enKey}": expected ${expectedPlaceholders}, got ${actualPlaceholders}`
-				)
+				const pluralKey = /^_(.*)_::_(.*)_$/.exec(enKey)
+				const forms = Array.isArray(translated) ? translated : [translated]
+				if (Array.isArray(translated)) {
+					assert.ok(pluralKey, `Plural forms require a plural source key in ${locale}.json: "${enKey}"`)
+					const nplurals = /nplurals\s*=\s*(\d+)/.exec(parsed.pluralForm)
+					assert.ok(nplurals, `Missing plural count in ${locale}.json`)
+					assert.equal(forms.length, Number(nplurals[1]), `Wrong plural form count in ${locale}.json for "${enKey}"`)
+				}
+				const source = pluralKey ? pluralKey[1] : enKey
+				const expectedPlaceholders = (source.match(placeholderRegex) || []).sort()
+				for (const form of forms) {
+					assert.equal(typeof form, 'string')
+					assert.ok(form.trim().length > 0, `Empty translation in ${locale}.json for "${enKey}"`)
+					const actualPlaceholders = (form.match(placeholderRegex) || []).sort()
+					assert.deepEqual(
+						actualPlaceholders,
+						expectedPlaceholders,
+						`Placeholder mismatch in ${locale}.json for key "${enKey}": expected ${expectedPlaceholders}, got ${actualPlaceholders}`
+					)
+				}
 			}
 		}
 	})
