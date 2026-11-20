@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class StoreMetadataAndBulkContrastTest extends TestCase
 {
-    public function testInfoXmlHasThreeMainBranchScreenshotsAndFourteenLanguages(): void
+    public function testInfoXmlHasFourMainBranchScreenshotsAndThirtyEightLanguages(): void
     {
         $infoPath = __DIR__ . '/../../appinfo/info.xml';
         $content = file_get_contents($infoPath);
@@ -28,19 +28,24 @@ class StoreMetadataAndBulkContrastTest extends TestCase
         $this->assertSame([
             'https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-light.png',
             'https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-bulk-delete.png',
+            'https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-empty-folders.png',
             'https://raw.githubusercontent.com/eldertek/duplicatefinder/main/img/preview-dark.png',
         ], $screenshots);
 
-        foreach (['preview.png', 'preview-light.png', 'preview-bulk-delete.png', 'preview-dark.png'] as $imgFile) {
+        foreach (['preview-light.png', 'preview-bulk-delete.png', 'preview-empty-folders.png', 'preview-dark.png'] as $imgFile) {
             $imgPath = __DIR__ . '/../../img/' . $imgFile;
             $this->assertFileExists($imgPath);
             $this->assertGreaterThan(10000, filesize($imgPath));
         }
 
         $expectedLangs = [
-            'en', 'fr', 'de', 'es', 'it', 'pt-br', 'nl',
-            'pl', 'ru', 'tr', 'ja', 'ko', 'zh-hans', 'ar',
+            'en', 'ar', 'bg', 'ca', 'cs', 'da', 'de', 'el',
+            'es', 'et', 'fi', 'fr', 'he', 'hr', 'hu', 'id',
+            'it', 'ja', 'ko', 'lt', 'lv', 'nb', 'nl', 'pl',
+            'pt-br', 'pt-pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv',
+            'th', 'tr', 'uk', 'vi', 'zh-hans', 'zh-hant',
         ];
+        sort($expectedLangs);
 
         $summaryLangs = [];
         foreach ($dom->getElementsByTagName('summary') as $node) {
@@ -61,6 +66,9 @@ class StoreMetadataAndBulkContrastTest extends TestCase
             $descriptionLangs[] = $lang;
             $this->assertNotEmpty(trim($node->textContent), "Description for {$lang} must not be empty");
         }
+
+        sort($summaryLangs);
+        sort($descriptionLangs);
 
         $this->assertSame($expectedLangs, $summaryLangs);
         $this->assertSame($expectedLangs, $descriptionLangs);

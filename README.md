@@ -156,11 +156,11 @@ Settings can be configured in the Nextcloud UI (`Settings -> Advanced Settings`,
 
 ## Localization & Languages
 
-Duplicate Finder ships with **40 complete Nextcloud UI locales at 100.0% runtime coverage (`539/539` keys)** (56 locales total across `l10n/` and `l10n-fallback/`) and **38 languages in `appinfo/info.xml`** (`<summary>` and `<description>` in strict parity).
+Duplicate Finder ships with **40 complete Nextcloud UI locales at 100.0% runtime coverage (`542/542` keys)** (56 locales total across `l10n/` and `l10n-fallback/`) and **38 languages in `appinfo/info.xml`** (`<summary>` and `<description>` in strict parity).
 
 At package time (`make appstore`), `scripts/merge_l10n_fallback.py` populates missing singular and plural keys from `l10n-fallback/` into the packaged `l10n/` directory without overwriting existing Transifex translations.
 
-| Coverage Tier | Count | Locales at 100.0% (`539/539` keys) |
+| Coverage Tier | Count | Locales at 100.0% (`542/542` keys) |
 |---|---:|---|
 | Priority locales | 16 | `fr`, `de`, `de_DE`, `es`, `it`, `pt_BR`, `pt_PT`, `nl`, `pl`, `ru`, `tr`, `ja`, `ko`, `zh_CN`, `ar`, `sv` |
 | Extended locales | 9 | `da`, `sk`, `cs`, `uk`, `ro`, `id`, `el`, `en_GB`, `zh_HK` |
