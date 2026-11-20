@@ -30,6 +30,10 @@ if (!file_exists($nextcloudPath)) {
     // Le paquet nextcloud/ocp ne déclare pas d'autoload
     $loader->addPsr4('OCP\\', __DIR__ . '/../vendor/nextcloud/ocp/OCP/');
 
+    if (!class_exists('OCP\\Exceptions\\AbortedEventException')) {
+        eval('namespace OCP\\Exceptions { class AbortedEventException extends \\Exception {} }');
+    }
+
     return;
 }
 

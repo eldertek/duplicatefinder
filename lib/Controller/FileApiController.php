@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace OCA\DuplicateFinder\Controller;
 
 use Exception;
+use OCA\DuplicateFinder\Exception\AbortedDeletionException;
+use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
+use OCA\DuplicateFinder\Exception\LivePhotoProtectionException;
+use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCA\DuplicateFinder\Service\FileService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -105,8 +109,10 @@ class FileApiController extends Controller
     private function getDeletionErrorStatus(Exception $e): int
     {
         return match (true) {
-            $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => Http::STATUS_FORBIDDEN,
-            $e instanceof \OCA\DuplicateFinder\Exception\LastCopyProtectionException => Http::STATUS_CONFLICT,
+            $e instanceof OriginFolderProtectionException => Http::STATUS_FORBIDDEN,
+            $e instanceof LastCopyProtectionException => Http::STATUS_CONFLICT,
+            $e instanceof LivePhotoProtectionException => Http::STATUS_CONFLICT,
+            $e instanceof AbortedDeletionException => Http::STATUS_CONFLICT,
             $e instanceof \OCP\Files\NotFoundException => Http::STATUS_NOT_FOUND,
             $e instanceof \OCP\Files\NotPermittedException => Http::STATUS_FORBIDDEN,
             $e instanceof LockedException => Http::STATUS_LOCKED,
@@ -117,12 +123,20 @@ class FileApiController extends Controller
     private function getDeletionError(Exception $e, string $path): array
     {
         return match (true) {
-            $e instanceof \OCA\DuplicateFinder\Exception\OriginFolderProtectionException => [
+            $e instanceof OriginFolderProtectionException => [
                 'error' => 'ORIGIN_FOLDER_PROTECTED',
                 'message' => $e->getMessage(),
             ],
-            $e instanceof \OCA\DuplicateFinder\Exception\LastCopyProtectionException => [
+            $e instanceof LastCopyProtectionException => [
                 'error' => 'LAST_COPY_PROTECTED',
+                'message' => $e->getMessage(),
+            ],
+            $e instanceof LivePhotoProtectionException => [
+                'error' => 'LIVE_PHOTO_VIDEO_PROTECTED',
+                'message' => $e->getMessage(),
+            ],
+            $e instanceof AbortedDeletionException => [
+                'error' => 'DELETE_ABORTED',
                 'message' => $e->getMessage(),
             ],
             $e instanceof \OCP\Files\NotFoundException => [
@@ -153,6 +167,18 @@ class FileApiController extends Controller
 
         if ($e instanceof LockedException) {
             $this->logger->warning('File deletion blocked by lock: {error}', $context);
+
+            return;
+        }
+
+        if ($e instanceof LivePhotoProtectionException) {
+            $this->logger->warning('File deletion blocked by Nextcloud Live Photo protection: {error}', $context);
+
+            return;
+        }
+
+        if ($e instanceof AbortedDeletionException) {
+            $this->logger->warning('File deletion aborted by Nextcloud: {error}', $context);
 
             return;
         }
