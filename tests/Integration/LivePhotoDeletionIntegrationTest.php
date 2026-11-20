@@ -115,6 +115,17 @@ class LivePhotoDeletionIntegrationTest extends TestCase
         $this->removeMotionComponent($source);
         $hash = $this->fileInfoService->getContentHash($source[0]);
 
+        $status = \OC::$server->get(\OCA\DuplicateFinder\Service\LivePhotoStatusService::class);
+        $this->assertTrue($status->isVideoMissing($this->fileInfoService->find($source[0]->getPath(), $this->user->getUID(), true), $this->user->getUID()));
+        $this->assertFalse($status->isVideoMissing($this->fileInfoService->find($survivor[0]->getPath(), $this->user->getUID(), true), $this->user->getUID()));
+
+        $group = new \OCA\DuplicateFinder\Db\FileDuplicate($hash);
+        $group->setFiles([$this->fileInfoService->find($source[0]->getPath(), $this->user->getUID(), true)]);
+        $groups = \OC::$server->get(\OCA\DuplicateFinder\Service\FileDuplicateService::class);
+        $groups->setCurrentUserId($this->user->getUID());
+        $enriched = $groups->enrich($group)->getFiles()[0];
+        $this->assertTrue($enriched->jsonSerialize()['isLivePhotoVideoMissing']);
+
         $deleted = $this->service->deleteFile($this->user->getUID(), '/orphan/photo.jpg', $source[0]->getId(), $hash);
 
         $this->assertCount(1, $deleted);

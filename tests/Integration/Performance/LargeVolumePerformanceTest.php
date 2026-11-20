@@ -222,10 +222,12 @@ class LargeVolumePerformanceTest extends TestCase
 
         // Find all duplicates
         $duplicateService = new FileDuplicateService(
+            $this->createMock(\Psr\Log\LoggerInterface::class),
             $this->duplicateMapper,
             $this->createMock(FileInfoService::class),
             $this->createMock(\OCA\DuplicateFinder\Service\OriginFolderService::class),
-            $this->createMock(\Psr\Log\LoggerInterface::class)
+            $this->createMock(\OCP\Lock\ILockingProvider::class),
+            $this->createMock(\OCA\DuplicateFinder\Service\LivePhotoStatusService::class)
         );
 
         $result = $duplicateService->findAll(1000, 0);

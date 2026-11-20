@@ -50,10 +50,12 @@ class FileDuplicateServiceIntegrationTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
 
         $this->service = new FileDuplicateService(
+            $logger,
             $this->duplicateMapper,
             $this->fileInfoService,
             $originFolderService,
-            $logger
+            $this->createMock(\OCP\Lock\ILockingProvider::class),
+            $this->createMock(\OCA\DuplicateFinder\Service\LivePhotoStatusService::class)
         );
     }
 

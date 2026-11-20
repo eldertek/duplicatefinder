@@ -35,6 +35,7 @@ class FileDuplicateService
         FileInfoService $fileInfoService,
         OriginFolderService $originFolderService,
         ILockingProvider $lockingProvider,
+        private LivePhotoStatusService $livePhotoStatusService,
         ?SurplusRowsMerger $surplusRowsMerger = null
     ) {
         $this->mapper = $mapper;
@@ -93,6 +94,11 @@ class FileDuplicateService
             // Check if file is in an origin folder
             $protectionInfo = $this->originFolderService->isPathProtected($normalizedPath);
             $files[$key]->setIsInOriginFolder($protectionInfo['isProtected']);
+            if ($this->currentUserId !== null) {
+                $files[$key]->setIsLivePhotoVideoMissing(
+                    $this->livePhotoStatusService->isVideoMissing($files[$key], $this->currentUserId)
+                );
+            }
 
             $uniqueFiles[] = $files[$key];
         }

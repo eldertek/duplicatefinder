@@ -69,6 +69,23 @@ class LivePhotoResolver
     }
 
     /**
+     * Distinguish a missing recorded component from an ordinary image or invalid link.
+     *
+     * @param Node $node A still image or video from the user's visible filesystem
+     * @param Folder $userFolder The same lookup scope core uses for a paired deletion
+     * @return bool Whether a valid recorded peer id is absent from the user's files
+     */
+    public function hasMissingPeer(Node $node, Folder $userFolder): bool
+    {
+        if (!($node instanceof File)) {
+            return false;
+        }
+        $peerId = $this->getPeerId($node);
+
+        return $peerId !== null && $peerId !== $node->getId() && $userFolder->getById($peerId) === [];
+    }
+
+    /**
      * Read the public metadata API shared by Nextcloud 28 and later.
      *
      * @return int|null The peer node id, or null for an ordinary file

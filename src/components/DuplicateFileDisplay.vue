@@ -15,6 +15,9 @@
         <span v-if="fileName" class="file-name-badge" :title="fileName">{{ fileName }}</span>
       </div>
       <p class="file-path" :title="normalizedPath"><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizedPath }}</p>
+      <span v-if="file.isLivePhotoVideoMissing" class="file-status-badge is-duplicate">
+        {{ t('duplicatefinder', 'Live Photo video is missing') }}
+      </span>
     </div>
 
     <div class="file-size-column">
