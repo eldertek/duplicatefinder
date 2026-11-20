@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace OCA\DuplicateFinder\Service;
 
+use Exception;
+use OCA\DuplicateFinder\Exception\AbortedDeletionException;
 use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
+use OCA\DuplicateFinder\Exception\LivePhotoProtectionException;
 use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCP\Files\Folder;
 use OCP\Files\Node;
@@ -48,6 +51,8 @@ class FileService
      * @throws NotPermittedException If the user doesn't have permission to delete
      * @throws OriginFolderProtectionException If the file is in an origin folder
      * @throws LastCopyProtectionException If the file is the last copy of its duplicate group
+     * @throws LivePhotoProtectionException If Nextcloud blocks deleting the video part of a Live Photo
+     * @throws AbortedDeletionException If a Nextcloud event listener aborts deletion
      */
     public function deleteFile(
         string $userId,
@@ -82,7 +87,47 @@ class FileService
             );
         }
 
-        $node->delete();
+        try {
+            $node->delete();
+        } catch (Exception $e) {
+            if (is_a($e, 'OCP\\Exceptions\\AbortedEventException')) {
+                if (stripos($e->getMessage(), 'live photo') !== false) {
+                    $this->logger->warning(
+                        'File deletion blocked by Nextcloud Live Photo protection: {path} ({reason})',
+                        [
+                            'path' => $filePath,
+                            'reason' => $e->getMessage(),
+                        ]
+                    );
+
+                    throw new LivePhotoProtectionException(
+                        sprintf(
+                            'Cannot delete "%s" directly because Nextcloud protects the video part of a Live Photo. Delete the paired photo instead only if both files are redundant.',
+                            $filePath
+                        ),
+                        0,
+                        $e
+                    );
+                }
+
+                $this->logger->warning(
+                    'File deletion aborted by a Nextcloud listener: {path} ({reason})',
+                    [
+                        'path' => $filePath,
+                        'reason' => $e->getMessage(),
+                    ]
+                );
+
+                throw new AbortedDeletionException(
+                    sprintf('File deletion was aborted by Nextcloud for "%s"', $filePath),
+                    0,
+                    $e
+                );
+            }
+
+            throw $e;
+        }
+
         $this->logger->info('Successfully deleted file: {path}', ['path' => $filePath]);
     }
 

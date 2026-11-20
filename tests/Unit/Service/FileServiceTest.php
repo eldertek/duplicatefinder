@@ -2,7 +2,9 @@
 
 namespace OCA\DuplicateFinder\Tests\Unit\Service;
 
+use OCA\DuplicateFinder\Exception\AbortedDeletionException;
 use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
+use OCA\DuplicateFinder\Exception\LivePhotoProtectionException;
 use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FileService;
@@ -211,5 +213,72 @@ class FileServiceTest extends TestCase
         $node->expects($this->once())->method('delete');
 
         $this->service->deleteFile('alice', '/Photos/a.jpg');
+    }
+
+    public function testLivePhotoVideoAbortThrowsLivePhotoProtectionExceptionAndNeverDeletesPairedPhoto(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $service = new FileService(
+            $this->folderService,
+            $this->originFolderService,
+            $this->fileInfoService,
+            $logger
+        );
+
+        $pairedJpg = $this->node('/Photos/IMG_0042.jpg', 41);
+        $pairedJpg->expects($this->never())->method('delete');
+
+        $movNode = $this->node('/Photos/IMG_0042.mov', 42);
+        $this->userFolder->method('getById')->with(42)->willReturn([$movNode]);
+        $movNode->expects($this->once())
+            ->method('delete')
+            ->willThrowException(new \OCP\Exceptions\AbortedEventException('Cannot delete the video part of a live photo'));
+
+        $logger->expects($this->once())
+            ->method('warning')
+            ->with(
+                'File deletion blocked by Nextcloud Live Photo protection: {path} ({reason})',
+                [
+                    'path' => '/Photos/IMG_0042.mov',
+                    'reason' => 'Cannot delete the video part of a live photo',
+                ]
+            );
+
+        $this->expectException(LivePhotoProtectionException::class);
+        $this->expectExceptionMessage('Live Photo');
+
+        $service->deleteFile('alice', '/Photos/IMG_0042.mov', 42);
+    }
+
+    public function testGenericAbortedEventExceptionThrowsAbortedDeletionException(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $service = new FileService(
+            $this->folderService,
+            $this->originFolderService,
+            $this->fileInfoService,
+            $logger
+        );
+
+        $node = $this->node('/Docs/report.pdf', 88);
+        $this->userFolder->method('get')->with('/Docs/report.pdf')->willReturn($node);
+        $node->expects($this->once())
+            ->method('delete')
+            ->willThrowException(new \OCP\Exceptions\AbortedEventException('Blocked by retention workflow'));
+
+        $logger->expects($this->once())
+            ->method('warning')
+            ->with(
+                'File deletion aborted by a Nextcloud listener: {path} ({reason})',
+                [
+                    'path' => '/Docs/report.pdf',
+                    'reason' => 'Blocked by retention workflow',
+                ]
+            );
+
+        $this->expectException(AbortedDeletionException::class);
+        $this->expectExceptionMessage('File deletion was aborted by Nextcloud for "/Docs/report.pdf"');
+
+        $service->deleteFile('alice', '/Docs/report.pdf');
     }
 }

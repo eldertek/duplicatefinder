@@ -123,6 +123,12 @@ export const deleteFile = async (file, options = {}) => {
             case 'LAST_COPY_PROTECTED':
                 showErrorNotification(t('duplicatefinder', 'This is the last remaining copy of this file, it was not deleted'));
                 break;
+            case 'LIVE_PHOTO_VIDEO_PROTECTED':
+                showErrorNotification(t('duplicatefinder', 'Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.'));
+                break;
+            case 'DELETE_ABORTED':
+                showErrorNotification(t('duplicatefinder', 'File deletion was aborted by Nextcloud.'));
+                break;
             case 'FILE_NOT_FOUND':
                 showErrorNotification(t('duplicatefinder', 'File not found'));
                 break;

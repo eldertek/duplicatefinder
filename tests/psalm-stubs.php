@@ -186,3 +186,9 @@ namespace OCP\AppFramework\Bootstrap {
     {
     }
 }
+
+namespace OCP\Exceptions {
+    class AbortedEventException extends \Exception
+    {
+    }
+}
