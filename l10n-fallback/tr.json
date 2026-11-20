@@ -1,0 +1,24 @@
+{
+    "translations": {
+        "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "Bir Live Photo'nun video bölümü doğrudan silinemez. Bunun yerine yalnızca her iki dosya da yineleniyorsa eşleştirilmiş fotoğrafı silin.",
+        "File deletion was aborted by Nextcloud.": "Dosya silme işlemi Nextcloud tarafından iptal edildi.",
+        "You're Ready!": "Hazırsınız!",
+        "_%n empty folder deleted_::_%n empty folders deleted_": [
+            "%n boş klasör silindi",
+            "%n boş klasör silindi"
+        ],
+        "_%n file deleted_::_%n files deleted_": [
+            "%n dosya silindi",
+            "%n dosya silindi"
+        ],
+        "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_": [
+            "%n boş klasör silinemedi",
+            "%n boş klasör silinemedi"
+        ],
+        "_Failed to delete %n file_::_Failed to delete %n files_": [
+            "%n dosya silinemedi",
+            "%n dosya silinemedi"
+        ]
+    },
+    "pluralForm": "nplurals=2; plural=(n > 1);"
+}

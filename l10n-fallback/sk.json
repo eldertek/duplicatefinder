@@ -1,0 +1,32 @@
+{
+    "translations": {
+        "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "Video časť fotografie Live Photo nie je možné odstrániť priamo. Namiesto toho odstráňte spárovanú fotografiu, iba ak sú oba súbory nadbytočné.",
+        "File deletion was aborted by Nextcloud.": "Odstránenie súboru bolo prerušené systémom Nextcloud.",
+        "You're Ready!": "Všetko je pripravené!",
+        "_%n empty folder deleted_::_%n empty folders deleted_": [
+            "Odstránený %n prázdny priečinok",
+            "Odstránené %n prázdne priečinky",
+            "Odstránených %n prázdnych priečinkov",
+            "Odstránených %n prázdnych priečinkov"
+        ],
+        "_%n file deleted_::_%n files deleted_": [
+            "Odstránený %n súbor",
+            "Odstránené %n súbory",
+            "Odstránených %n súborov",
+            "Odstránených %n súborov"
+        ],
+        "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_": [
+            "Nepodarilo sa odstrániť %n prázdny priečinok",
+            "Nepodarilo sa odstrániť %n prázdne priečinky",
+            "Nepodarilo sa odstrániť %n prázdnych priečinkov",
+            "Nepodarilo sa odstrániť %n prázdnych priečinkov"
+        ],
+        "_Failed to delete %n file_::_Failed to delete %n files_": [
+            "Nepodarilo sa odstrániť %n súbor",
+            "Nepodarilo sa odstrániť %n súbory",
+            "Nepodarilo sa odstrániť %n súborov",
+            "Nepodarilo sa odstrániť %n súborov"
+        ]
+    },
+    "pluralForm": "nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);"
+}

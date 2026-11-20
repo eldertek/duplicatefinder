@@ -4,7 +4,7 @@
 """Merge complementary l10n-fallback/*.json dictionaries into packaged l10n/*.json and l10n/*.js.
 
 Transifex non-overwrite contract:
-- Existing non-empty translations in target l10n/<locale>.json ALWAYS take precedence.
+- Existing non-empty translations (string or plural list[str]) in target l10n/<locale>.json ALWAYS take precedence.
 - Existing pluralForm rules in target l10n/<locale>.json ALWAYS take precedence.
 - Only absent or blank/whitespace keys are populated from l10n-fallback/<locale>.json.
 """
@@ -15,13 +15,22 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple, Union
 
 APP_ID = "duplicatefinder"
 DEFAULT_PLURAL_FORM = "nplurals=2; plural=(n != 1);"
+TranslationValue = Union[str, List[str]]
 
 
-def format_nextcloud_json(translations: Dict[str, str], plural_form: str) -> str:
+def is_valid_translation_value(value: object) -> bool:
+    if isinstance(value, str):
+        return value.strip() != ""
+    if isinstance(value, list) and len(value) > 0:
+        return all(isinstance(item, str) and item.strip() != "" for item in value)
+    return False
+
+
+def format_nextcloud_json(translations: Dict[str, TranslationValue], plural_form: str) -> str:
     items = [
         f"    {json.dumps(key, ensure_ascii=False)} : {json.dumps(val, ensure_ascii=False)}"
         for key, val in translations.items()
@@ -33,7 +42,7 @@ def format_nextcloud_json(translations: Dict[str, str], plural_form: str) -> str
     return f'{{ "translations": {{}},"pluralForm" :{encoded_plural}\n}}\n'
 
 
-def format_nextcloud_js(translations: Dict[str, str], plural_form: str) -> str:
+def format_nextcloud_js(translations: Dict[str, TranslationValue], plural_form: str) -> str:
     items = [
         f"    {json.dumps(key, ensure_ascii=False)} : {json.dumps(val, ensure_ascii=False)}"
         for key, val in translations.items()
@@ -64,7 +73,7 @@ def merge_locale_files(
         existing_translations = existing_payload.get("translations", {})
         if not isinstance(existing_translations, dict):
             raise ValueError(f"Target file '{target_json_path}' has invalid 'translations' object")
-        merged_translations: Dict[str, str] = dict(existing_translations)
+        merged_translations: Dict[str, TranslationValue] = dict(existing_translations)
         plural_form = str(
             existing_payload.get("pluralForm")
             or fallback_payload.get("pluralForm")
@@ -78,17 +87,15 @@ def merge_locale_files(
     preserved_count = 0
 
     for key, fallback_value in fallback_translations.items():
-        if not isinstance(key, str) or not isinstance(fallback_value, str):
-            continue
-        if fallback_value.strip() == "":
+        if not isinstance(key, str) or not is_valid_translation_value(fallback_value):
             continue
 
         current_value = merged_translations.get(key)
-        if isinstance(current_value, str) and current_value.strip() != "":
+        if is_valid_translation_value(current_value):
             preserved_count += 1
             continue
 
-        merged_translations[key] = fallback_value
+        merged_translations[key] = list(fallback_value) if isinstance(fallback_value, list) else fallback_value
         added_count += 1
 
     if added_count > 0 and not dry_run:

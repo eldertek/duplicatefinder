@@ -1,0 +1,24 @@
+{
+    "translations": {
+        "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "Videodelen af et Live Photo kan ikke slettes direkte. Slet i stedet det tilhørende foto, men kun hvis begge filer er overflødige.",
+        "File deletion was aborted by Nextcloud.": "Sletning af filen blev afbrudt af Nextcloud.",
+        "You're Ready!": "Du er klar!",
+        "_%n empty folder deleted_::_%n empty folders deleted_": [
+            "%n tom mappe slettet",
+            "%n tomme mapper slettet"
+        ],
+        "_%n file deleted_::_%n files deleted_": [
+            "%n fil slettet",
+            "%n filer slettet"
+        ],
+        "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_": [
+            "Kunne ikke slette %n tom mappe",
+            "Kunne ikke slette %n tomme mapper"
+        ],
+        "_Failed to delete %n file_::_Failed to delete %n files_": [
+            "Kunne ikke slette %n fil",
+            "Kunne ikke slette %n filer"
+        ]
+    },
+    "pluralForm": "nplurals=2; plural=(n != 1);"
+}
