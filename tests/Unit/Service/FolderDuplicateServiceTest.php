@@ -5,6 +5,8 @@ namespace OCA\DuplicateFinder\Tests\Unit\Service;
 use OCA\DuplicateFinder\Db\FileDuplicate;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\FolderDuplicateService;
+use OCP\Files\File;
+use OCP\Files\Folder;
 use PHPUnit\Framework\TestCase;
 
 class FolderDuplicateServiceTest extends TestCase
@@ -130,5 +132,73 @@ class FolderDuplicateServiceTest extends TestCase
         $duplicate->setFiles($files);
 
         return $duplicate;
+    }
+
+    public function testFindFolderDuplicatesReportExcludesExtraLiveFilesAndMarksOriginFolders(): void
+    {
+        $dupA = $this->makeDuplicate('hash-photo', [
+            ['/alice/files/Archive/2025/IMG_1.HEIC', 2000],
+            ['/alice/files/Backup/2025/IMG_1.HEIC', 2000],
+            ['/alice/files/Extra/2025/IMG_1.HEIC', 2000],
+        ]);
+        foreach ($dupA->getFiles() as $index => $file) {
+            $file->setNodeId(100 + $index);
+            $file->setMimetype('image/heic');
+        }
+
+        $makeFolderMock = function (int $fileCount): Folder {
+            $folder = $this->createMock(Folder::class);
+            $nodes = [];
+            for ($i = 0; $i < $fileCount; $i++) {
+                $nodes[] = $this->createMock(File::class);
+            }
+            $folder->method('getDirectoryListing')->willReturn($nodes);
+
+            return $folder;
+        };
+
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->method('get')->willReturnCallback(function (string $path) use ($makeFolderMock) {
+            // /Extra/2025 has 2 live files (1 non-duplicate extra file), so it is not 100% identical
+            if ($path === '/Extra/2025') {
+                return $makeFolderMock(2);
+            }
+            if ($path === '/Archive/2025' || $path === '/Backup/2025') {
+                return $makeFolderMock(1);
+            }
+
+            return $makeFolderMock(5);
+        });
+
+        $report = $this->service->findFolderDuplicatesReport(
+            [$dupA],
+            1,
+            0,
+            $userFolder,
+            static function (string $path): bool {
+                return $path === '/Archive' || strpos($path, '/Archive/') === 0;
+            }
+        );
+
+        $this->assertCount(1, $report['groups']);
+        $group = $report['groups'][0];
+        $this->assertSame(['/Archive/2025', '/Backup/2025'], $group['folders']);
+        $this->assertTrue($group['hasProtectedFolder']);
+        $this->assertCount(2, $group['folderDetails']);
+
+        $archiveDetail = $group['folderDetails'][0];
+        $backupDetail = $group['folderDetails'][1];
+        $this->assertSame('/Archive/2025', $archiveDetail['path']);
+        $this->assertTrue($archiveDetail['isProtected']);
+        $this->assertSame(1, $archiveDetail['protectedFileCount']);
+        $this->assertSame(0, $archiveDetail['deletableFileCount']);
+
+        $this->assertSame('/Backup/2025', $backupDetail['path']);
+        $this->assertFalse($backupDetail['isProtected']);
+        $this->assertSame(0, $backupDetail['protectedFileCount']);
+        $this->assertSame(1, $backupDetail['deletableFileCount']);
+        $this->assertSame('/alice/files/Backup/2025/IMG_1.HEIC', $backupDetail['files'][0]['path']);
+        $this->assertSame(101, $backupDetail['files'][0]['nodeId']);
+        $this->assertSame('hash-photo', $backupDetail['files'][0]['fileHash']);
     }
 }

@@ -497,6 +497,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} file ({percent}%)",
         "{scanned} files scanned": "{scanned} file analizzati",
         "{selected} of {total} files selected": "{selected} di {total} file selezionati",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Inizia con la ricerca semplice per ricerche di base<br>• Usa i caratteri jolly quando conosci parte del modello del nome file<br>• Passa alle espressioni regolari per ricerche complesse<br>• Combina con i filtri per affinare i risultati<br>• Consulta la finestra di aiuto per esempi di modelli<br>• Ricorda che la ricerca non distingue tra maiuscole e minuscole"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Inizia con la ricerca semplice per ricerche di base<br>• Usa i caratteri jolly quando conosci parte del modello del nome file<br>• Passa alle espressioni regolari per ricerche complesse<br>• Combina con i filtri per affinare i risultati<br>• Consulta la finestra di aiuto per esempi di modelli<br>• Ricorda che la ricerca non distingue tra maiuscole e minuscole",
+        "Failed to scan duplicate folders.": "Impossibile analizzare le cartelle duplicate.",
+        "Scan duplicate folders": "Analizza cartelle duplicate",
+        "Duplicate folders ({count})": "Cartelle duplicate ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Cartelle con struttura di file identica al 100%. Mantieni una cartella per eliminare le copie corrispondenti dalle altre. Le cartelle di origine protette e le Live Photo restano protette.",
+        "No identical duplicate folders were found.": "Nessuna cartella duplicata identica trovata.",
+        "Identical folder group": "Gruppo di cartelle identiche",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} file, {size} per cartella, {reclaimable} recuperabili",
+        "Protected": "Protetta",
+        "Keep this folder": "Mantieni questa cartella",
+        "Keep this folder and delete duplicate copies?": "Mantenere questa cartella ed eliminare le copie duplicate?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Mantenere \"{folder}\" ed eliminare {count} file duplicati ({size}) dalle altre cartelle identiche? Le protezioni per cartelle di origine e Live Photo restano attive.",
+        "Delete duplicate copies": "Elimina copie duplicate"
     }
 }

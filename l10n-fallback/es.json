@@ -102,6 +102,18 @@
             "Error al eliminar %n archivos"
         ],
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} archivos ({percent}%)",
-        "{scanned} files scanned": "{scanned} archivos escaneados"
+        "{scanned} files scanned": "{scanned} archivos escaneados",
+        "Failed to scan duplicate folders.": "No se pudieron analizar las carpetas duplicadas.",
+        "Scan duplicate folders": "Analizar carpetas duplicadas",
+        "Duplicate folders ({count})": "Carpetas duplicadas ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Carpetas con árboles de archivos 100 % idénticos. Conserva una carpeta para eliminar las copias coincidentes de las demás. Las carpetas de origen protegidas y las Live Photos siguen protegidas.",
+        "No identical duplicate folders were found.": "No se encontraron carpetas duplicadas idénticas.",
+        "Identical folder group": "Grupo de carpetas idénticas",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} archivos, {size} por carpeta, {reclaimable} recuperables",
+        "Protected": "Protegida",
+        "Keep this folder": "Conservar esta carpeta",
+        "Keep this folder and delete duplicate copies?": "¿Conservar esta carpeta y eliminar las copias duplicadas?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "¿Conservar \"{folder}\" y eliminar {count} archivos duplicados ({size}) de las otras carpetas idénticas? Las protecciones de carpetas de origen y Live Photos siguen vigentes.",
+        "Delete duplicate copies": "Eliminar copias duplicadas"
     }
 }

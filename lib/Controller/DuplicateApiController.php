@@ -3,9 +3,13 @@
 namespace OCA\DuplicateFinder\Controller;
 
 use OCA\DuplicateFinder\AppInfo\Application;
+use OCA\DuplicateFinder\Db\FileDuplicate;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
+use OCA\DuplicateFinder\Exception\NotAuthenticatedException;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
+use OCA\DuplicateFinder\Service\FolderDuplicateService;
+use OCA\DuplicateFinder\Service\FolderService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
 use OCA\DuplicateFinder\Service\ScanStatusService;
 use OCP\AppFramework\Http\DataResponse;
@@ -34,6 +38,10 @@ class DuplicateApiController extends AbstractAPIController
     private $session;
     /** @var ?ScanStatusService */
     private $scanStatusService;
+    /** @var FolderDuplicateService */
+    private $folderDuplicateService;
+    /** @var ?FolderService */
+    private $folderService;
 
     public function __construct(
         $appName,
@@ -46,7 +54,9 @@ class DuplicateApiController extends AbstractAPIController
         LoggerInterface $logger,
         OriginFolderService $originFolderService,
         ?ISession $session = null,
-        ?ScanStatusService $scanStatusService = null
+        ?ScanStatusService $scanStatusService = null,
+        ?FolderDuplicateService $folderDuplicateService = null,
+        ?FolderService $folderService = null
     ) {
         parent::__construct($appName, $request, $userSession, $logger);
         $this->fileInfoService = $fileInfoService;
@@ -57,6 +67,8 @@ class DuplicateApiController extends AbstractAPIController
         $this->originFolderService = $originFolderService;
         $this->session = $session;
         $this->scanStatusService = $scanStatusService;
+        $this->folderDuplicateService = $folderDuplicateService ?? new FolderDuplicateService();
+        $this->folderService = $folderService;
     }
 
     /**
@@ -201,6 +213,77 @@ class DuplicateApiController extends AbstractAPIController
 
             return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * List identical duplicate folder groups computed from existing duplicate groups.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function listFolders(int $minFiles = 1, int $minSize = 0): DataResponse
+    {
+        try {
+            $userId = $this->getUserId();
+            $this->originFolderService->setUserId($userId);
+
+            $allDuplicates = $this->collectAllDuplicatesForUser($userId);
+            $userFolder = null;
+            if ($this->folderService !== null) {
+                try {
+                    $userFolder = $this->folderService->getUserFolder($userId);
+                } catch (\Throwable $e) {
+                    $userFolder = null;
+                }
+            }
+
+            $isProtectedFn = function (string $path): bool {
+                $info = $this->originFolderService->isPathProtected($path);
+
+                return !empty($info['isProtected']);
+            };
+
+            $report = $this->folderDuplicateService->findFolderDuplicatesReport(
+                $allDuplicates,
+                max(1, $minFiles),
+                max(0, $minSize),
+                $userFolder,
+                $isProtectedFn
+            );
+
+            return new DataResponse([
+                'status' => 'success',
+                'groups' => $report['groups'],
+                'summary' => $report['summary'],
+            ]);
+        } catch (NotAuthenticatedException $e) {
+            return $this->handleException($e);
+        } catch (\Exception $e) {
+            $this->logger->error('An error occurred while listing duplicate folders', ['app' => Application::ID, 'exception' => $e]);
+
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * @return FileDuplicate[]
+     */
+    private function collectAllDuplicatesForUser(string $userId): array
+    {
+        $all = [];
+        $page = 1;
+        $pageSize = 100;
+
+        do {
+            $batch = $this->fileDuplicateService->findAll('all', $userId, $page, $pageSize, true);
+            foreach ($batch['entities'] ?? [] as $entity) {
+                $all[] = $entity;
+            }
+            $isLastFetched = !empty($batch['isLastFetched']) || empty($batch['entities']);
+            $page++;
+        } while (!$isLastFetched);
+
+        return $all;
     }
 
 

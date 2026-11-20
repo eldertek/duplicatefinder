@@ -19,13 +19,19 @@
                   {{ preset.label }}
                 </NcActionButton>
               </NcActions>
-              <NcButton type="primary" @click="performDryRun" :disabled="isLoading || isScanningEmptyFolders">
+              <NcButton type="primary" @click="performDryRun" :disabled="isLoading || isScanningEmptyFolders || isScanningDuplicateFolders || isDeletingDuplicateFolder">
                 <template #icon>
                   <NcLoadingIcon v-if="isLoading" />
                 </template>
                 {{ t('duplicatefinder', 'Start preview') }}
               </NcButton>
-              <NcButton type="secondary" class="scan-empty-folders-button" @click="runEmptyFolderScan([])" :disabled="isLoading || isScanningEmptyFolders">
+              <NcButton type="secondary" class="scan-duplicate-folders-button" @click="scanDuplicateFolders" :disabled="isLoading || isScanningEmptyFolders || isScanningDuplicateFolders || isDeletingDuplicateFolder">
+                <template #icon>
+                  <NcLoadingIcon v-if="isScanningDuplicateFolders" />
+                </template>
+                {{ t('duplicatefinder', 'Scan duplicate folders') }}
+              </NcButton>
+              <NcButton type="secondary" class="scan-empty-folders-button" @click="runEmptyFolderScan([])" :disabled="isLoading || isScanningEmptyFolders || isScanningDuplicateFolders || isDeletingDuplicateFolder">
                 <template #icon>
                   <NcLoadingIcon v-if="isScanningEmptyFolders" />
                 </template>
@@ -34,6 +40,74 @@
             </div>
           </template>
         </NcEmptyContent>
+      </div>
+
+      <div v-if="duplicateFoldersScanCompleted" class="duplicate-folders-section">
+        <div class="empty-folders-header">
+          <div>
+            <h3>{{ t('duplicatefinder', 'Duplicate folders ({count})', { count: duplicateFolderGroups.length }) }}</h3>
+            <p class="merge-explanation">
+              {{ duplicateFolderGroups.length > 0
+                ? t('duplicatefinder', 'Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.')
+                : t('duplicatefinder', 'No identical duplicate folders were found.') }}
+            </p>
+          </div>
+          <div class="empty-folders-actions">
+            <NcButton type="tertiary" class="dismiss-duplicate-folders-button" @click="dismissDuplicateFoldersPanel" :disabled="isDeletingDuplicateFolder">
+              {{ t('duplicatefinder', 'Dismiss') }}
+            </NcButton>
+          </div>
+        </div>
+
+        <div v-if="duplicateFolderGroups.length > 0" class="post-cleanup-option duplicate-folders-empty-option">
+          <NcCheckboxRadioSwitch
+            :checked="detectEmptyFoldersAfterDelete"
+            @update:checked="detectEmptyFoldersAfterDelete = !detectEmptyFoldersAfterDelete"
+            type="checkbox">
+            {{ t('duplicatefinder', 'Detect empty folders after deleting selected duplicates') }}
+          </NcCheckboxRadioSwitch>
+        </div>
+
+        <div v-if="duplicateFolderGroups.length > 0" class="duplicate-folders-list">
+          <div v-for="group in duplicateFolderGroups" :key="group.signature" class="duplicate-group duplicate-folder-group">
+            <div class="group-header">
+              <span class="group-title">
+                {{ t('duplicatefinder', 'Identical folder group') }}
+                <span class="group-stats">
+                  ({{ t('duplicatefinder', '{files} files, {size} per folder, {reclaimable} reclaimable', {
+                    files: group.fileCount,
+                    size: formatBytes(group.totalSize),
+                    reclaimable: formatBytes(group.reclaimableSize)
+                  }) }})
+                </span>
+              </span>
+            </div>
+            <div class="duplicate-folder-rows">
+              <div
+                v-for="folder in getDuplicateGroupFolderDetails(group)"
+                :key="folder.path"
+                class="file-display duplicate-folder-row"
+                :class="{ 'is-protected': folder.isProtected }">
+                <div class="file-info duplicate-folder-info" :title="folder.path">
+                  <span class="file-path-label">{{ folder.path }}</span>
+                  <span v-if="folder.isProtected" class="origin-badge">
+                    {{ t('duplicatefinder', 'Protected') }}
+                  </span>
+                </div>
+                <NcButton
+                  type="secondary"
+                  class="keep-duplicate-folder-button"
+                  :disabled="isDeletingDuplicateFolder || !canKeepDuplicateFolder(group, folder.path)"
+                  @click="keepDuplicateFolder(group, folder.path)">
+                  <template #icon>
+                    <NcLoadingIcon v-if="isDeletingDuplicateFolder && activeKeptDuplicateFolder === folder.path" />
+                  </template>
+                  {{ t('duplicatefinder', 'Keep this folder') }}
+                </NcButton>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-if="emptyFolderScanCompleted" class="empty-folders-section">
@@ -432,6 +506,16 @@ export default {
       sortOption: 'none',
       minSizeBytes: 0,
       detectEmptyFoldersAfterDelete: false,
+      isScanningDuplicateFolders: false,
+      isDeletingDuplicateFolder: false,
+      activeKeptDuplicateFolder: '',
+      duplicateFoldersScanCompleted: false,
+      duplicateFolderGroups: [],
+      duplicateFolderSummary: {
+        groupCount: 0,
+        duplicateFolderCount: 0,
+        reclaimableSize: 0
+      },
       isScanningEmptyFolders: false,
       isDeletingEmptyFolders: false,
       emptyFolderScanCompleted: false,
@@ -1007,6 +1091,134 @@ export default {
       } finally {
         this.isDeletingEmptyFolders = false
       }
+    },
+    async scanDuplicateFolders() {
+      if (typeof api.fetchDuplicateFolders !== 'function') {
+        return
+      }
+      this.isScanningDuplicateFolders = true
+      try {
+        const response = await api.fetchDuplicateFolders({
+          minSize: this.minSizeBytes
+        })
+        this.duplicateFolderGroups = Array.isArray(response?.groups) ? response.groups : []
+        this.duplicateFolderSummary = response?.summary || {
+          groupCount: this.duplicateFolderGroups.length,
+          duplicateFolderCount: 0,
+          reclaimableSize: 0
+        }
+        this.duplicateFoldersScanCompleted = true
+      } catch (error) {
+        console.error('Error scanning duplicate folders:', error)
+      } finally {
+        this.isScanningDuplicateFolders = false
+      }
+    },
+    dismissDuplicateFoldersPanel() {
+      this.duplicateFoldersScanCompleted = false
+      this.duplicateFolderGroups = []
+      this.duplicateFolderSummary = {
+        groupCount: 0,
+        duplicateFolderCount: 0,
+        reclaimableSize: 0
+      }
+    },
+    getDuplicateGroupFolderDetails(group) {
+      if (Array.isArray(group?.folderDetails) && group.folderDetails.length > 0) {
+        return group.folderDetails
+      }
+      if (Array.isArray(group?.folders)) {
+        return group.folders.map(folderPath => ({
+          path: folderPath,
+          isProtected: false,
+          protectedFileCount: 0,
+          deletableFileCount: Number(group.fileCount) || 0,
+          deletableSize: Number(group.totalSize) || 0,
+          files: []
+        }))
+      }
+      return []
+    },
+    collectFilesOutsideKeptFolder(group, keptFolderPath) {
+      const details = this.getDuplicateGroupFolderDetails(group)
+      const files = []
+      const seenKeys = new Set()
+
+      details.forEach(folder => {
+        if (!folder || folder.path === keptFolderPath || !Array.isArray(folder.files)) {
+          return
+        }
+        folder.files.forEach(file => {
+          if (!file || file.isInOriginFolder || !file.path) {
+            return
+          }
+          const key = file.nodeId ? `id:${file.nodeId}` : `path:${file.path}`
+          if (seenKeys.has(key)) {
+            return
+          }
+          seenKeys.add(key)
+          files.push({
+            path: file.path,
+            nodeId: file.nodeId,
+            fileHash: file.fileHash || group.signature,
+            size: Number(file.size) || 0,
+            mimetype: file.mimetype || 'application/octet-stream'
+          })
+        })
+      })
+
+      // Delete photo files before paired Live Photo video files (.mov/.mp4/.m4v)
+      return files.sort((a, b) => {
+        const isVideoA = /\.(mov|mp4|m4v)$/i.test(a.path) ? 1 : 0
+        const isVideoB = /\.(mov|mp4|m4v)$/i.test(b.path) ? 1 : 0
+        if (isVideoA !== isVideoB) {
+          return isVideoA - isVideoB
+        }
+        return a.path.localeCompare(b.path)
+      })
+    },
+    canKeepDuplicateFolder(group, keptFolderPath) {
+      return this.collectFilesOutsideKeptFolder(group, keptFolderPath).length > 0
+    },
+    async keepDuplicateFolder(group, keptFolderPath) {
+      const filesToDelete = this.collectFilesOutsideKeptFolder(group, keptFolderPath)
+      if (filesToDelete.length === 0) {
+        return
+      }
+
+      const totalBytes = filesToDelete.reduce((sum, file) => sum + (Number(file.size) || 0), 0)
+      const confirmed = await this.requestConfirmation({
+        title: t('duplicatefinder', 'Keep this folder and delete duplicate copies?'),
+        message: t('duplicatefinder', 'Keep "{folder}" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.', {
+          folder: keptFolderPath,
+          count: filesToDelete.length,
+          size: this.formatBytes(totalBytes)
+        }),
+        confirmLabel: t('duplicatefinder', 'Delete duplicate copies')
+      })
+      if (!confirmed) {
+        return
+      }
+
+      this.isDeletingDuplicateFolder = true
+      this.activeKeptDuplicateFolder = keptFolderPath
+      try {
+        const { success } = await deleteFiles(filesToDelete)
+        if (success.length > 0) {
+          const deletedPaths = success.map(file => file && file.path).filter(Boolean)
+          this.$emit('folders-touched', deletedPaths)
+          this.$emit('duplicates-deleted')
+          if (this.detectEmptyFoldersAfterDelete && typeof api.scanEmptyFolders === 'function') {
+            await this.runEmptyFolderScan(deletedPaths)
+          }
+          await this.scanDuplicateFolders()
+        }
+      } catch (error) {
+        console.error('Error keeping duplicate folder:', error)
+      } finally {
+        this.isDeletingDuplicateFolder = false
+        this.activeKeptDuplicateFolder = ''
+      }
     }
   }
 }
@@ -1199,12 +1411,48 @@ export default {
   font-weight: normal;
 }
 
-.empty-folders-section {
+.empty-folders-section,
+.duplicate-folders-section {
   background-color: var(--color-main-background);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-large);
   padding: 20px;
   margin-bottom: 24px;
+}
+
+.duplicate-folders-empty-option {
+  justify-content: flex-start;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.duplicate-folder-row {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.duplicate-folder-row.is-protected {
+  border-color: var(--color-primary-element);
+}
+
+.duplicate-folder-info {
+  flex: 1 1 auto;
+}
+
+.origin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background-color: var(--color-primary-element-light);
+  color: var(--color-primary-element-text-dark, var(--color-main-text));
+  white-space: nowrap;
+}
+
+.keep-duplicate-folder-button {
+  flex-shrink: 0;
 }
 
 .empty-folders-header {

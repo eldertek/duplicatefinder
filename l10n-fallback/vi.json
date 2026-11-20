@@ -549,7 +549,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} tệp ({percent}%)",
         "{scanned} files scanned": "Đã quét {scanned} tệp",
         "{selected} of {total} files selected": "Đã chọn {selected} / {total} tệp",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Bắt đầu bằng tìm kiếm đơn giản cho truy vấn cơ bản<br>• Dùng ký tự đại diện khi bạn biết một phần mẫu tên tệp<br>• Chuyển sang regex cho nhu cầu khớp mẫu phức tạp<br>• Kết hợp với bộ lọc để thu hẹp kết quả<br>• Xem hộp thoại trợ giúp để tham khảo ví dụ mẫu<br>• Lưu ý rằng tìm kiếm không phân biệt chữ hoa chữ thường"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Bắt đầu bằng tìm kiếm đơn giản cho truy vấn cơ bản<br>• Dùng ký tự đại diện khi bạn biết một phần mẫu tên tệp<br>• Chuyển sang regex cho nhu cầu khớp mẫu phức tạp<br>• Kết hợp với bộ lọc để thu hẹp kết quả<br>• Xem hộp thoại trợ giúp để tham khảo ví dụ mẫu<br>• Lưu ý rằng tìm kiếm không phân biệt chữ hoa chữ thường",
+        "Failed to scan duplicate folders.": "Không thể quét các thư mục trùng lặp.",
+        "Scan duplicate folders": "Quét thư mục trùng lặp",
+        "Duplicate folders ({count})": "Thư mục trùng lặp ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Các thư mục có cây tệp giống nhau 100%. Giữ lại một thư mục để xóa các bản sao tương ứng ở những thư mục khác. Các thư mục gốc được bảo vệ và Live Photos vẫn được giữ nguyên bảo vệ.",
+        "No identical duplicate folders were found.": "Không tìm thấy thư mục trùng lặp giống hệt nhau.",
+        "Identical folder group": "Nhóm thư mục giống nhau",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} tệp, {size} mỗi thư mục, có thể thu hồi {reclaimable}",
+        "Keep this folder": "Giữ lại thư mục này",
+        "Keep this folder and delete duplicate copies?": "Giữ lại thư mục này và xóa các bản sao trùng lặp?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Giữ lại \"{folder}\" và xóa {count} tệp trùng lặp ({size}) khỏi các thư mục giống nhau khác? Các biện pháp bảo vệ thư mục gốc và Live Photo vẫn được áp dụng.",
+        "Delete duplicate copies": "Xóa các bản sao trùng lặp"
     },
     "pluralForm": "nplurals=1; plural=0;"
 }

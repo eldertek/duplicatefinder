@@ -92,7 +92,19 @@
             "Αποτυχία διαγραφής %n αρχείων"
         ],
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} αρχεία ({percent}%)",
-        "{scanned} files scanned": "Σαρώθηκαν {scanned} αρχεία"
+        "{scanned} files scanned": "Σαρώθηκαν {scanned} αρχεία",
+        "Failed to scan duplicate folders.": "Αποτυχία σάρωσης διπλότυπων φακέλων.",
+        "Scan duplicate folders": "Σάρωση διπλότυπων φακέλων",
+        "Duplicate folders ({count})": "Διπλότυποι φάκελοι ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Φάκελοι με 100% πανομοιότυπη δομή αρχείων. Διατηρήστε έναν φάκελο για να διαγράψετε τα αντίστοιχα αντίγραφα από τους άλλους. Οι προστατευμένοι φάκελοι προέλευσης και οι Live Photos παραμένουν προστατευμένοι.",
+        "No identical duplicate folders were found.": "Δεν βρέθηκαν πανομοιότυποι διπλότυποι φάκελοι.",
+        "Identical folder group": "Ομάδα πανομοιότυπων φακέλων",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} αρχεία, {size} ανά φάκελο, {reclaimable} ανακτήσιμα",
+        "Protected": "Προστατευμένος",
+        "Keep this folder": "Διατήρηση αυτού του φακέλου",
+        "Keep this folder and delete duplicate copies?": "Διατήρηση αυτού του φακέλου και διαγραφή διπλότυπων αντιγράφων;",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Να διατηρηθεί το \"{folder}\" και να διαγραφούν {count} διπλότυπα αρχεία ({size}) από τους άλλους πανομοιότυπους φακέλους; Οι προστασίες φακέλων προέλευσης και Live Photos παραμένουν ενεργές.",
+        "Delete duplicate copies": "Διαγραφή διπλότυπων αντιγράφων"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

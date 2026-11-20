@@ -614,3 +614,34 @@ export async function deleteEmptyFolders(paths = []) {
         throw error
     }
 }
+
+/**
+ * Fetches identical duplicate folder trees computed from active duplicate groups.
+ * @param {Object} [options] Optional filters
+ * @param {number} [options.minFiles] Minimum duplicate files inside a folder
+ * @param {number} [options.minSize] Minimum total size in bytes per folder
+ * @returns {Promise<{status: string, groups: Array, summary: Object}>}
+ */
+export async function fetchDuplicateFolders(options = {}) {
+    try {
+        const url = generateApiBaseUrl('/duplicates/folders')
+        const params = {}
+        if (Number(options.minFiles) > 1) {
+            params.minFiles = Math.floor(Number(options.minFiles))
+        }
+        if (Number(options.minSize) > 0) {
+            params.minSize = Math.floor(Number(options.minSize))
+        }
+        const response = await axios.get(url, { params })
+        const data = response.data || {}
+        return {
+            status: data.status || 'success',
+            groups: Array.isArray(data.groups) ? data.groups : [],
+            summary: data.summary || { groupCount: 0, duplicateFolderCount: 0, reclaimableSize: 0 },
+        }
+    } catch (error) {
+        console.error('Error fetching duplicate folders:', error)
+        showErrorNotification(t('duplicatefinder', 'Failed to scan duplicate folders.'))
+        throw error
+    }
+}

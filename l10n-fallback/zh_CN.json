@@ -266,6 +266,18 @@
         "{count} protected files in origin folders": "原始文件夹中有 {count} 个受保护的文件",
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} 个文件 ({percent}%)",
         "{scanned} files scanned": "已扫描 {scanned} 个文件",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• 基础查询请先使用简单搜索<br>• 已知部分文件名模式时可使用通配符<br>• 需要复杂模式匹配时可切换到正则表达式<br>• 结合过滤器以缩小结果范围<br>• 查看帮助窗口获取模式示例<br>• 请注意搜索不区分大小写"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• 基础查询请先使用简单搜索<br>• 已知部分文件名模式时可使用通配符<br>• 需要复杂模式匹配时可切换到正则表达式<br>• 结合过滤器以缩小结果范围<br>• 查看帮助窗口获取模式示例<br>• 请注意搜索不区分大小写",
+        "Failed to scan duplicate folders.": "扫描重复文件夹失败。",
+        "Scan duplicate folders": "扫描重复文件夹",
+        "Duplicate folders ({count})": "重复文件夹 ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "文件结构完全相同的文件夹。保留一个文件夹即可删除其他文件夹中的对应副本。受保护的源文件夹和实况照片仍将受到保护。",
+        "No identical duplicate folders were found.": "未找到完全相同的重复文件夹。",
+        "Identical folder group": "相同文件夹组",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} 个文件，每个文件夹 {size}，可释放 {reclaimable}",
+        "Protected": "受保护",
+        "Keep this folder": "保留此文件夹",
+        "Keep this folder and delete duplicate copies?": "保留此文件夹并删除重复副本？",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "是否保留“{folder}”并从其他相同文件夹中删除 {count} 个重复文件（{size}）？受保护的源文件夹和实况照片保护规则仍然生效。",
+        "Delete duplicate copies": "删除重复副本"
     }
 }

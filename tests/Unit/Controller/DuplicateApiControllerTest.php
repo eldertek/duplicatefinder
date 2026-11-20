@@ -5,9 +5,11 @@ namespace OCA\DuplicateFinder\Tests\Unit\Controller;
 use OCA\DuplicateFinder\Controller\DuplicateApiController;
 use OCA\DuplicateFinder\Db\FileDuplicate;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
+use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUser;
@@ -280,5 +282,74 @@ class DuplicateApiControllerTest extends TestCase
         $data = $response->getData();
         $this->assertEquals('error', $data['status']);
         $this->assertEquals('Test exception', $data['message']);
+    }
+
+    public function testListFoldersReturnsDuplicateFolderGroupsAndProtectionMetadata(): void
+    {
+        $dup = new FileDuplicate('hash-folder-1', 'file_hash');
+        $fileA = new FileInfo();
+        $fileA->setPath('/testuser/files/OriginPhotos/2025/shot.jpg');
+        $fileA->setSize(4096);
+        $fileA->setNodeId(11);
+        $fileA->setMimetype('image/jpeg');
+        $fileB = new FileInfo();
+        $fileB->setPath('/testuser/files/TempPhotos/2025/shot.jpg');
+        $fileB->setSize(4096);
+        $fileB->setNodeId(12);
+        $fileB->setMimetype('image/jpeg');
+        $dup->setFiles([$fileA, $fileB]);
+
+        $this->originFolderService->expects($this->once())
+            ->method('setUserId')
+            ->with('testuser');
+        $this->originFolderService->method('isPathProtected')
+            ->willReturnCallback(static function (string $path): array {
+                $protected = strpos($path, '/OriginPhotos') === 0;
+
+                return [
+                    'isProtected' => $protected,
+                    'protectingFolder' => $protected ? '/OriginPhotos' : null,
+                ];
+            });
+
+        $this->fileDuplicateService->expects($this->once())
+            ->method('findAll')
+            ->with('all', 'testuser', 1, 100, true)
+            ->willReturn([
+                'entities' => [$dup],
+                'isLastFetched' => true,
+            ]);
+
+        $response = $this->controller->listFolders(1, 0);
+        $data = $response->getData();
+
+        $this->assertSame('success', $data['status']);
+        $this->assertSame(1, $data['summary']['groupCount']);
+        $this->assertSame(['/OriginPhotos', '/TempPhotos'], $data['groups'][0]['folders']);
+        $this->assertTrue($data['groups'][0]['hasProtectedFolder']);
+        $this->assertTrue($data['groups'][0]['folderDetails'][0]['isProtected']);
+        $this->assertFalse($data['groups'][0]['folderDetails'][1]['isProtected']);
+    }
+
+    public function testListFoldersReturnsUnauthorizedWhenUserSessionMissing(): void
+    {
+        $anonSession = $this->createMock(IUserSession::class);
+        $anonSession->method('getUser')->willReturn(null);
+
+        $controller = new DuplicateApiController(
+            'duplicatefinder',
+            $this->request,
+            $anonSession,
+            $this->fileDuplicateService,
+            $this->fileInfoService,
+            $this->fileDuplicateMapper,
+            $this->userManager,
+            $this->logger,
+            $this->originFolderService
+        );
+
+        $response = $controller->listFolders();
+        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+        $this->assertSame('error', $response->getData()['status']);
     }
 }

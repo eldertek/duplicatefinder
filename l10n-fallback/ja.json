@@ -472,6 +472,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} ファイル ({percent}%)",
         "{scanned} files scanned": "{scanned} ファイルをスキャン済み",
         "{selected} of {total} files selected": "{total} 件中 {selected} 件を選択",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• 基本的な検索にはシンプル検索から始めましょう<br>• ファイル名の一部パターンが分かる場合はワイルドカードを使用しましょう<br>• 複雑なパターン一致が必要な場合は正規表現に切り替えましょう<br>• フィルターと組み合わせて結果を絞り込みましょう<br>• パターンの例はヘルプモーダルで確認できます<br>• 検索は大文字と小文字を区別しません"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• 基本的な検索にはシンプル検索から始めましょう<br>• ファイル名の一部パターンが分かる場合はワイルドカードを使用しましょう<br>• 複雑なパターン一致が必要な場合は正規表現に切り替えましょう<br>• フィルターと組み合わせて結果を絞り込みましょう<br>• パターンの例はヘルプモーダルで確認できます<br>• 検索は大文字と小文字を区別しません",
+        "Failed to scan duplicate folders.": "重複フォルダーのスキャンに失敗しました。",
+        "Scan duplicate folders": "重複フォルダーをスキャン",
+        "Duplicate folders ({count})": "重複フォルダー ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "ファイル構成が100%同一のフォルダーです。1つのフォルダーを保持して他のフォルダーのコピーを削除できます。保護されたオリジンフォルダーとLive Photosは保護されます。",
+        "No identical duplicate folders were found.": "同一の重複フォルダーは見つかりませんでした。",
+        "Identical folder group": "同一フォルダーグループ",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} 件のファイル、フォルダーあたり {size}、解放可能 {reclaimable}",
+        "Protected": "保護済み",
+        "Keep this folder": "このフォルダーを保持",
+        "Keep this folder and delete duplicate copies?": "このフォルダーを保持して重複コピーを削除しますか？",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "「{folder}」を保持し、他の同一フォルダーから {count} 個の重複ファイル ({size}) を削除しますか？保護されたオリジンフォルダーとLive Photoの保護は有効なままです。",
+        "Delete duplicate copies": "重複コピーを削除"
     }
 }

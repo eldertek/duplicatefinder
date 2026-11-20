@@ -117,6 +117,18 @@
             "Falha ao eliminar %n ficheiros"
         ],
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} ficheiros ({percent}%)",
-        "{scanned} files scanned": "{scanned} ficheiros analisados"
+        "{scanned} files scanned": "{scanned} ficheiros analisados",
+        "Failed to scan duplicate folders.": "Falha ao analisar pastas duplicadas.",
+        "Scan duplicate folders": "Analisar pastas duplicadas",
+        "Duplicate folders ({count})": "Pastas duplicadas ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Pastas com árvores de ficheiros 100% idênticas. Mantenha uma pasta para eliminar as cópias correspondentes das restantes. As pastas de origem protegidas e as Live Photos mantêm-se protegidas.",
+        "No identical duplicate folders were found.": "Não foram encontradas pastas duplicadas idênticas.",
+        "Identical folder group": "Grupo de pastas idênticas",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} ficheiros, {size} por pasta, {reclaimable} recuperáveis",
+        "Protected": "Protegida",
+        "Keep this folder": "Manter esta pasta",
+        "Keep this folder and delete duplicate copies?": "Manter esta pasta e eliminar cópias duplicadas?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Manter \"{folder}\" e eliminar {count} ficheiros duplicados ({size}) das outras pastas idênticas? As proteções de pastas de origem e Live Photos permanecem ativas.",
+        "Delete duplicate copies": "Eliminar cópias duplicadas"
     }
 }

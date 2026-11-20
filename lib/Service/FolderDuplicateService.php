@@ -4,6 +4,10 @@ namespace OCA\DuplicateFinder\Service;
 
 use OCA\DuplicateFinder\Db\FileDuplicate;
 use OCA\DuplicateFinder\Db\FileInfo;
+use OCP\Files\File;
+use OCP\Files\Folder;
+use OCP\Files\NotFoundException;
+use Throwable;
 
 class FolderDuplicateService
 {
@@ -22,8 +26,155 @@ class FolderDuplicateService
         int $minSize = 0,
         ?array $folderFileCounts = null
     ): array {
-        $folderTrees = $this->buildTreesFromFileDuplicates($duplicates);
+        $folderTrees = $this->filterTreesByFileCounts(
+            $this->buildTreesFromFileDuplicates($duplicates),
+            $folderFileCounts
+        );
 
+        return $this->groupDuplicateFolders($folderTrees, $minFiles, $minSize);
+    }
+
+    /**
+     * Compute detailed duplicate folder groups and summary for the UI/API.
+     *
+     * When a user root folder is provided without precomputed counts, live file counts
+     * exclude folders that contain additional non-duplicate files in storage.
+     *
+     * @param FileDuplicate[] $duplicates
+     * @param int $minFiles
+     * @param int $minSize
+     * @param Folder|null $userFolder
+     * @param callable(string):bool|null $isProtectedFn
+     * @param array<string, int>|null $folderFileCounts
+     * @return array{groups: array<int, array<string, mixed>>, summary: array{groupCount: int, duplicateFolderCount: int, reclaimableSize: int}}
+     */
+    public function findFolderDuplicatesReport(
+        array $duplicates,
+        int $minFiles = 1,
+        int $minSize = 0,
+        ?Folder $userFolder = null,
+        ?callable $isProtectedFn = null,
+        ?array $folderFileCounts = null
+    ): array {
+        $folderTrees = $this->buildTreesFromFileDuplicates($duplicates);
+        if ($folderFileCounts === null && $userFolder !== null && $folderTrees !== []) {
+            $folderFileCounts = $this->countLiveFolderFiles($userFolder, $folderTrees);
+        }
+
+        $groups = $this->groupDuplicateFolders(
+            $this->filterTreesByFileCounts($folderTrees, $folderFileCounts),
+            $minFiles,
+            $minSize
+        );
+        $fileIndex = $this->indexDuplicateFiles($duplicates);
+
+        $enrichedGroups = [];
+        foreach ($groups as $group) {
+            $folderDetails = [];
+            $hasProtectedFolder = false;
+
+            foreach ($group['folders'] as $folderPath) {
+                $folderProtected = $isProtectedFn !== null ? (bool)$isProtectedFn($folderPath) : false;
+                $folderFiles = [];
+                $protectedFileCount = 0;
+                $deletableFileCount = 0;
+                $deletableSize = 0;
+
+                foreach ($group['files'] as $fileSummary) {
+                    $relativePath = (string)$fileSummary['relativePath'];
+                    $normalizedChildPath = $folderPath . '/' . $relativePath;
+                    $indexed = $fileIndex[$normalizedChildPath] ?? null;
+
+                    $isFileProtected = ($indexed['isInOriginFolder'] ?? false)
+                        || $folderProtected
+                        || ($isProtectedFn !== null && (bool)$isProtectedFn($normalizedChildPath));
+
+                    $fileSize = (int)($indexed['size'] ?? $fileSummary['size']);
+                    if ($isFileProtected) {
+                        $protectedFileCount++;
+                    } else {
+                        $deletableFileCount++;
+                        $deletableSize += $fileSize;
+                    }
+
+                    $folderFiles[] = [
+                        'path' => $indexed['path'] ?? $normalizedChildPath,
+                        'relativePath' => $relativePath,
+                        'nodeId' => $indexed['nodeId'] ?? null,
+                        'size' => $fileSize,
+                        'mimetype' => $indexed['mimetype'] ?? '',
+                        'fileHash' => $indexed['fileHash'] ?? (string)$fileSummary['hash'],
+                        'isInOriginFolder' => $isFileProtected,
+                    ];
+                }
+
+                $isAnyProtected = $folderProtected || $protectedFileCount > 0;
+                if ($isAnyProtected) {
+                    $hasProtectedFolder = true;
+                }
+
+                $folderDetails[] = [
+                    'path' => $folderPath,
+                    'isProtected' => $isAnyProtected,
+                    'protectedFileCount' => $protectedFileCount,
+                    'deletableFileCount' => $deletableFileCount,
+                    'deletableSize' => $deletableSize,
+                    'files' => $folderFiles,
+                ];
+            }
+
+            $group['hasProtectedFolder'] = $hasProtectedFolder;
+            $group['folderDetails'] = $folderDetails;
+            $enrichedGroups[] = $group;
+        }
+
+        return [
+            'groups' => $enrichedGroups,
+            'summary' => $this->summarizeReport($enrichedGroups),
+        ];
+    }
+
+    /**
+     * Count live files inside each candidate folder, stopping early once the count
+     * exceeds the duplicate-tree entry count.
+     *
+     * @param Folder $userFolder
+     * @param array<string, array<string, array{hash: string, size: int}>> $folderTrees
+     * @return array<string, int>
+     */
+    public function countLiveFolderFiles(Folder $userFolder, array $folderTrees): array
+    {
+        $counts = [];
+
+        foreach ($folderTrees as $folderPath => $entries) {
+            if (!is_array($entries)) {
+                continue;
+            }
+            $limit = count($entries) + 1;
+            try {
+                $node = $userFolder->get($folderPath);
+                if (!($node instanceof Folder)) {
+                    $counts[$folderPath] = -1;
+                    continue;
+                }
+                $counts[$folderPath] = $this->countFilesUpToLimit($node, $limit);
+            } catch (NotFoundException $e) {
+                $counts[$folderPath] = -1;
+            } catch (Throwable $e) {
+                // Leave count unset if storage cannot be inspected cleanly
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * @param array<string, array<string, array{hash: string, size: int}>> $folderTrees
+     * @param array<string, int>|null $folderFileCounts
+     * @return array<string, array<string, array{hash: string, size: int}>>
+     */
+    private function filterTreesByFileCounts(array $folderTrees, ?array $folderFileCounts): array
+    {
         if ($folderFileCounts !== null) {
             foreach ($folderTrees as $folderPath => $files) {
                 if (isset($folderFileCounts[$folderPath]) && $folderFileCounts[$folderPath] !== count($files)) {
@@ -32,7 +183,64 @@ class FolderDuplicateService
             }
         }
 
-        return $this->groupDuplicateFolders($folderTrees, $minFiles, $minSize);
+        return $folderTrees;
+    }
+
+    private function countFilesUpToLimit(Folder $folder, int $limit): int
+    {
+        if ($limit <= 0) {
+            return 0;
+        }
+
+        $count = 0;
+        foreach ($folder->getDirectoryListing() as $child) {
+            if ($child instanceof Folder) {
+                $count += $this->countFilesUpToLimit($child, $limit - $count);
+            } elseif ($child instanceof File) {
+                $count++;
+            }
+
+            if ($count >= $limit) {
+                return $count;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param FileDuplicate[] $duplicates
+     * @return array<string, array{path: string, nodeId: int|null, size: int, mimetype: string, fileHash: string, isInOriginFolder: bool}>
+     */
+    private function indexDuplicateFiles(array $duplicates): array
+    {
+        $index = [];
+
+        foreach ($duplicates as $duplicate) {
+            if (!$duplicate instanceof FileDuplicate) {
+                continue;
+            }
+            $hash = (string)$duplicate->getHash();
+            foreach ($duplicate->getFiles() as $file) {
+                if (!$file instanceof FileInfo) {
+                    continue;
+                }
+                $normalized = $this->normalizeUserFilesPath($file->getPath());
+                if ($normalized === '' || $normalized === '/') {
+                    continue;
+                }
+                $index[$normalized] = [
+                    'path' => $file->getPath(),
+                    'nodeId' => $file->getNodeId(),
+                    'size' => (int)$file->getSize(),
+                    'mimetype' => (string)$file->getMimetype(),
+                    'fileHash' => $hash,
+                    'isInOriginFolder' => (bool)$file->getIsInOriginFolder(),
+                ];
+            }
+        }
+
+        return $index;
     }
 
     /**

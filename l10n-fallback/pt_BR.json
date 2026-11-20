@@ -35,7 +35,19 @@
             "Falha ao excluir %n arquivo",
             "Falha ao excluir %n de arquivos",
             "Falha ao excluir %n arquivos"
-        ]
+        ],
+        "Failed to scan duplicate folders.": "Falha ao verificar pastas duplicadas.",
+        "Scan duplicate folders": "Verificar pastas duplicadas",
+        "Duplicate folders ({count})": "Pastas duplicadas ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Pastas com árvores de arquivos 100% idênticas. Mantenha uma pasta para excluir as cópias correspondentes das outras. Pastas de origem protegidas e Live Photos permanecem protegidas.",
+        "No identical duplicate folders were found.": "Nenhuma pasta duplicada idêntica foi encontrada.",
+        "Identical folder group": "Grupo de pastas idênticas",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} arquivos, {size} por pasta, {reclaimable} recuperáveis",
+        "Protected": "Protegida",
+        "Keep this folder": "Manter esta pasta",
+        "Keep this folder and delete duplicate copies?": "Manter esta pasta e excluir cópias duplicadas?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Manter \"{folder}\" e excluir {count} arquivos duplicados ({size}) das outras pastas idênticas? As proteções de pastas de origem e Live Photos continuam ativas.",
+        "Delete duplicate copies": "Excluir cópias duplicadas"
     },
     "pluralForm": "nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
 }

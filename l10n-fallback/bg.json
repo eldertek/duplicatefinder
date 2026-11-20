@@ -332,7 +332,7 @@
         "Projects allow you to scan specific folders for duplicates instead of your entire storage. This is useful when you want to focus on cleaning up duplicates in particular areas of your Nextcloud.": "Проектите ви позволяват да сканирате конкретни папки за дубликати вместо цялото хранилище. Това е полезно, когато искате да почистите определени зони на Nextcloud.",
         "Projects allow you to scan specific folders for duplicates instead of your entire storage. To use projects:\n\n1. Go to Settings → Projects\n2. Create a new project with a name\n3. Select the folders you want to include in the scan\n4. Start the scan and view results\n\nProjects are perfect for focusing on cleaning up specific areas of your storage without scanning everything.": "Проектите ви позволяват да сканирате конкретни папки вместо цялото хранилище. Как да ги използвате:\n\n1. Отидете в Настройки → Проекти\n2. Създайте нов проект с име\n3. Изберете папките за включване в сканирането\n4. Стартирайте сканирането и прегледайте резултатите\n\nПроектите са идеални за почистване на избрани зони без сканиране на всичко.",
         "Projects allow you to scan specific folders for duplicates instead of your entire storage:": "Проектите ви позволяват да сканирате конкретни папки за дубликати вместо цялото хранилище:",
-        "Protected": "Защитен",
+        "Protected": "Защитена",
         "Protected Folders (Origin Folders)": "Защитени папки (изходни папки)",
         "Protected origin folders, excluded folders, and external mounts are automatically skipped.": "Защитените изходни папки, изключените папки и външните хранилища се пропускат автоматично.",
         "Provides real-time duplicate detection": "Осигурява откриване на дубликати в реално време",
@@ -519,7 +519,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} файла ({percent}%)",
         "{scanned} files scanned": "Сканирани файлове: {scanned}",
         "{selected} of {total} files selected": "Избрани {selected} от {total} файла",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Започнете с обикновено търсене за основни заявки<br>• Използвайте заместващи знаци, когато знаете част от шаблона на името<br>• Превключете на regex за по-сложни шаблони<br>• Комбинирайте с филтри за стесняване на резултатите<br>• Проверете прозореца за помощ за примери на шаблони<br>• Помнете, че търсенето не прави разлика между главни и малки букви"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Започнете с обикновено търсене за основни заявки<br>• Използвайте заместващи знаци, когато знаете част от шаблона на името<br>• Превключете на regex за по-сложни шаблони<br>• Комбинирайте с филтри за стесняване на резултатите<br>• Проверете прозореца за помощ за примери на шаблони<br>• Помнете, че търсенето не прави разлика между главни и малки букви",
+        "Failed to scan duplicate folders.": "Неуспешно сканиране за дублирани папки.",
+        "Scan duplicate folders": "Сканиране на дублирани папки",
+        "Duplicate folders ({count})": "Дублирани папки ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Папки със 100% идентична файлова структура. Запазете една папка, за да изтриете съвпадащите копия от останалите. Защитените изходни папки и Live Photos остават защитени.",
+        "No identical duplicate folders were found.": "Не са открити идентични дублирани папки.",
+        "Identical folder group": "Група идентични папки",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} файла, {size} на папка, {reclaimable} освободими",
+        "Keep this folder": "Запази тази папка",
+        "Keep this folder and delete duplicate copies?": "Да се запази ли тази папка и да се изтрият дублираните копия?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Да се запази ли \"{folder}\" и да се изтрият {count} дублирани файла ({size}) от другите идентични папки? Защитата на изходните папки и Live Photos остава активна.",
+        "Delete duplicate copies": "Изтрий дублираните копия"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

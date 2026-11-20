@@ -509,7 +509,19 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} datotek ({percent}%)",
         "{scanned} files scanned": "Pregledanih datotek: {scanned}",
         "{selected} of {total} files selected": "Izbranih {selected} od {total} datotek",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Za osnovna iskanja začnite s preprostim iskanjem<br>• Uporabite nadomestne znake, ko poznate del vzorca imena<br>• Za zahtevnejše vzorce preklopite na regularne izraze<br>• Združite s filtri za zožitev rezultatov<br>• Oglejte si primere vzorcev v oknu pomoči<br>• Ne pozabite, da iskanje ne razlikuje med velikimi in malimi črkami"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Za osnovna iskanja začnite s preprostim iskanjem<br>• Uporabite nadomestne znake, ko poznate del vzorca imena<br>• Za zahtevnejše vzorce preklopite na regularne izraze<br>• Združite s filtri za zožitev rezultatov<br>• Oglejte si primere vzorcev v oknu pomoči<br>• Ne pozabite, da iskanje ne razlikuje med velikimi in malimi črkami",
+        "Failed to scan duplicate folders.": "Pregled podvojenih map ni uspel.",
+        "Scan duplicate folders": "Preišči podvojene mape",
+        "Duplicate folders ({count})": "Podvojene mape ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Mape s 100% enakim drevesom datotek. Obdržite eno mapo, da izbrišete ujemajoče se kopije iz drugih. Zaščitene izvorne mape in Live Photos ostanejo zaščitene.",
+        "No identical duplicate folders were found.": "Enakih podvojenih map ni bilo najdenih.",
+        "Identical folder group": "Skupina enakih map",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} datotek, {size} na mapo, {reclaimable} za sprostitev",
+        "Protected": "Zaščitena",
+        "Keep this folder": "Obdrži to mapo",
+        "Keep this folder and delete duplicate copies?": "Obdržati to mapo in izbrisati podvojene kopije?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Obdržati \"{folder}\" in izbrisati {count} podvojenih datotek ({size}) iz drugih enakih map? Zaščita izvornih map in Live Photos ostane v veljavi.",
+        "Delete duplicate copies": "Izbriši podvojene kopije"
     },
     "pluralForm": "nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);"
 }

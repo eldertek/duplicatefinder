@@ -205,7 +205,19 @@
         "{count} protected files in origin folders": "{count} suojattua tiedostoa alkuperäkansioissa",
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} tiedostoa ({percent}%)",
         "{scanned} files scanned": "{scanned} tiedostoa skannattu",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Aloita yksinkertaisella haulla perushakuihin<br>• Käytä jokerimerkkejä, kun tunnet osan tiedostonimimallista<br>• Vaihda regex-hakuun monimutkaisissa malleissa<br>• Yhdistä suodattimiin tulosten rajaamiseksi<br>• Katso malliesimerkkejä ohjeikkunasta<br>• Muista, että haku ei erottele isoja ja pieniä kirjaimia"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Aloita yksinkertaisella haulla perushakuihin<br>• Käytä jokerimerkkejä, kun tunnet osan tiedostonimimallista<br>• Vaihda regex-hakuun monimutkaisissa malleissa<br>• Yhdistä suodattimiin tulosten rajaamiseksi<br>• Katso malliesimerkkejä ohjeikkunasta<br>• Muista, että haku ei erottele isoja ja pieniä kirjaimia",
+        "Failed to scan duplicate folders.": "Kaksoiskansioiden skannaus epäonnistui.",
+        "Scan duplicate folders": "Skannaa kaksoiskansiot",
+        "Duplicate folders ({count})": "Kaksoiskansiot ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Kansiot, joilla on 100 % identtinen tiedostopuu. Säilytä yksi kansio poistaaksesi vastaavat kopiot muista kansioista. Suojatut lähdekansiot ja Live Photos pysyvät suojattuina.",
+        "No identical duplicate folders were found.": "Identtisiä kaksoiskansioita ei löytynyt.",
+        "Identical folder group": "Identtisten kansioiden ryhmä",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} tiedostoa, {size} per kansio, {reclaimable} vapautettavissa",
+        "Protected": "Suojattu",
+        "Keep this folder": "Säilytä tämä kansio",
+        "Keep this folder and delete duplicate copies?": "Säilytetäänkö tämä kansio ja poistetaan kaksoiskappaleet?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Säilytetäänkö \"{folder}\" ja poistetaan {count} kaksoistiedostoa ({size}) muista identtisistä kansioista? Lähdekansioiden ja Live Photo -kuvien suojaukset pysyvät voimassa.",
+        "Delete duplicate copies": "Poista kaksoiskappaleet"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -549,7 +549,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} ไฟล์ ({percent}%)",
         "{scanned} files scanned": "สแกนแล้ว {scanned} ไฟล์",
         "{selected} of {total} files selected": "เลือกแล้ว {selected} จาก {total} ไฟล์",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• เริ่มด้วยการค้นหาแบบง่ายสำหรับคำค้นพื้นฐาน<br>• ใช้อักขระแทนเมื่อคุณทราบบางส่วนของรูปแบบชื่อไฟล์<br>• เปลี่ยนไปใช้ regex สำหรับการจับคู่รูปแบบที่ซับซ้อน<br>• ใช้ร่วมกับตัวกรองเพื่อจำกัดผลลัพธ์ให้แคบลง<br>• ตรวจสอบหน้าต่างช่วยเหลือสำหรับตัวอย่างรูปแบบ<br>• โปรดจำไว้ว่าการค้นหาไม่คำนึงถึงตัวพิมพ์เล็กและตัวพิมพ์ใหญ่"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• เริ่มด้วยการค้นหาแบบง่ายสำหรับคำค้นพื้นฐาน<br>• ใช้อักขระแทนเมื่อคุณทราบบางส่วนของรูปแบบชื่อไฟล์<br>• เปลี่ยนไปใช้ regex สำหรับการจับคู่รูปแบบที่ซับซ้อน<br>• ใช้ร่วมกับตัวกรองเพื่อจำกัดผลลัพธ์ให้แคบลง<br>• ตรวจสอบหน้าต่างช่วยเหลือสำหรับตัวอย่างรูปแบบ<br>• โปรดจำไว้ว่าการค้นหาไม่คำนึงถึงตัวพิมพ์เล็กและตัวพิมพ์ใหญ่",
+        "Failed to scan duplicate folders.": "สแกนโฟลเดอร์ที่ซ้ำกันไม่สำเร็จ",
+        "Scan duplicate folders": "สแกนโฟลเดอร์ที่ซ้ำกัน",
+        "Duplicate folders ({count})": "โฟลเดอร์ที่ซ้ำกัน ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "โฟลเดอร์ที่มีโครงสร้างไฟล์เหมือนกัน 100% เก็บโฟลเดอร์หนึ่งไว้เพื่อลบสำเนาที่ตรงกันออกจากโฟลเดอร์อื่น โฟลเดอร์ต้นฉบับที่ได้รับการปกป้องและ Live Photos จะยังคงได้รับการปกป้อง",
+        "No identical duplicate folders were found.": "ไม่พบโฟลเดอร์ที่ซ้ำกันที่เหมือนกันทุกประการ",
+        "Identical folder group": "กลุ่มโฟลเดอร์ที่เหมือนกัน",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} ไฟล์, {size} ต่อโฟลเดอร์, เรียกคืนพื้นที่ได้ {reclaimable}",
+        "Keep this folder": "เก็บโฟลเดอร์นี้",
+        "Keep this folder and delete duplicate copies?": "เก็บโฟลเดอร์นี้และลบสำเนาที่ซ้ำกันหรือไม่?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "เก็บ \"{folder}\" และลบไฟล์ที่ซ้ำกัน {count} ไฟล์ ({size}) ออกจากโฟลเดอร์อื่นที่เหมือนกันหรือไม่? การปกป้องโฟลเดอร์ต้นฉบับและ Live Photo ยังคงมีผลบังคับใช้",
+        "Delete duplicate copies": "ลบสำเนาที่ซ้ำกัน"
     },
     "pluralForm": "nplurals=1; plural=0;"
 }
