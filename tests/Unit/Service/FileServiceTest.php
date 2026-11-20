@@ -10,6 +10,8 @@ use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FileService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
+use OCA\DuplicateFinder\Service\LivePhotoDeletionService;
+use OCA\DuplicateFinder\Exception\LivePhotoPairProtectionException;
 use OCP\Files\Folder;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
@@ -26,6 +28,7 @@ class FileServiceTest extends TestCase
     private $fileInfoService;
     private $userFolder;
     private $service;
+    private $livePhotoDeletionService;
 
     protected function setUp(): void
     {
@@ -34,6 +37,7 @@ class FileServiceTest extends TestCase
         $this->folderService = $this->createMock(FolderService::class);
         $this->originFolderService = $this->createMock(OriginFolderService::class);
         $this->fileInfoService = $this->createMock(FileInfoService::class);
+        $this->livePhotoDeletionService = $this->createMock(LivePhotoDeletionService::class);
         $this->userFolder = $this->createMock(Folder::class);
         $this->folderService->method('getUserFolder')->with('alice')->willReturn($this->userFolder);
         $this->originFolderService->method('isPathProtected')->willReturn(['isProtected' => false, 'protectingFolder' => null]);
@@ -42,7 +46,8 @@ class FileServiceTest extends TestCase
             $this->folderService,
             $this->originFolderService,
             $this->fileInfoService,
-            $this->createMock(LoggerInterface::class)
+            $this->createMock(LoggerInterface::class),
+            $this->livePhotoDeletionService
         );
     }
 
@@ -123,13 +128,14 @@ class FileServiceTest extends TestCase
     public function testProtectedPathIsNeverDeleted(): void
     {
         $originFolderService = $this->createMock(OriginFolderService::class);
-        $originFolderService->method('isPathProtected')
-            ->willReturn(['isProtected' => true, 'protectingFolder' => '/Originals']);
+        $originFolderService->method('assertNotProtected')
+            ->willThrowException(new OriginFolderProtectionException('/Originals'));
         $service = new FileService(
             $this->folderService,
             $originFolderService,
             $this->fileInfoService,
-            $this->createMock(LoggerInterface::class)
+            $this->createMock(LoggerInterface::class),
+            $this->livePhotoDeletionService
         );
         $this->userFolder->expects($this->never())->method('get');
 
@@ -144,16 +150,17 @@ class FileServiceTest extends TestCase
     public function testPlaceFoundByNodeIdIsCheckedForProtection(): void
     {
         $originFolderService = $this->createMock(OriginFolderService::class);
-        $originFolderService->method('isPathProtected')->willReturnCallback(function (string $path): array {
-            $protected = $path === '/Originals/z.jpg';
-
-            return ['isProtected' => $protected, 'protectingFolder' => $protected ? '/Originals' : null];
+        $originFolderService->method('assertNotProtected')->willReturnCallback(function (string $path): void {
+            if ($path === '/Originals/z.jpg') {
+                throw new OriginFolderProtectionException('/Originals');
+            }
         });
         $service = new FileService(
             $this->folderService,
             $originFolderService,
             $this->fileInfoService,
-            $this->createMock(LoggerInterface::class)
+            $this->createMock(LoggerInterface::class),
+            $this->livePhotoDeletionService
         );
         $node = $this->node('/Originals/z.jpg', 9);
         $this->userFolder->method('getById')->with(9)->willReturn([$node]);
@@ -222,7 +229,8 @@ class FileServiceTest extends TestCase
             $this->folderService,
             $this->originFolderService,
             $this->fileInfoService,
-            $logger
+            $logger,
+            $this->livePhotoDeletionService
         );
 
         $pairedJpg = $this->node('/Photos/IMG_0042.jpg', 41);
@@ -257,7 +265,8 @@ class FileServiceTest extends TestCase
             $this->folderService,
             $this->originFolderService,
             $this->fileInfoService,
-            $logger
+            $logger,
+            $this->livePhotoDeletionService
         );
 
         $node = $this->node('/Docs/report.pdf', 88);
@@ -289,7 +298,8 @@ class FileServiceTest extends TestCase
             $this->folderService,
             $this->originFolderService,
             $this->fileInfoService,
-            $logger
+            $logger,
+            $this->livePhotoDeletionService
         ) extends FileService {
             protected function resolveLivePhotoPeerId(Node $node): ?int
             {
@@ -372,5 +382,18 @@ class FileServiceTest extends TestCase
         $this->expectExceptionMessage('File deletion was aborted by Nextcloud for "/Docs/locked-by-listener.pdf"');
 
         $service->deleteFile('alice', '/Docs/locked-by-listener.pdf');
+    }
+
+    public function testLastCopyOptInCannotBypassLivePhotoProtection(): void
+    {
+        $node = $this->node('/Photos/a.mov', 10);
+        $this->userFolder->method('get')->willReturn($node);
+        $this->livePhotoDeletionService->expects($this->once())->method('deleteIfPaired')
+            ->with($this->userFolder, $node)
+            ->willThrowException(new LivePhotoPairProtectionException('No complete replacement'));
+        $node->expects($this->never())->method('delete');
+
+        $this->expectException(LivePhotoPairProtectionException::class);
+        $this->service->deleteFile('alice', '/Photos/a.mov', null, 'video-hash', true);
     }
 }

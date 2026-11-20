@@ -164,10 +164,13 @@ export default {
     async deleteFile() {
       try {
         console.log('DuplicateFileDisplay: Deleting file:', this.file);
-        await deleteFile(this.file);
+        const deletedNodeIds = new Set();
+        const deleted = await deleteFile(this.file, { deletedNodeIds });
+        if (!deleted) return;
         const eventData = {
           file: this.file,
-          acknowledged: this.duplicateAcknowledged
+          acknowledged: this.duplicateAcknowledged,
+          deletedNodeIds: Array.from(deletedNodeIds)
         };
         console.log('DuplicateFileDisplay: Emitting fileDeleted event with data:', eventData);
         this.$emit('fileDeleted', eventData);

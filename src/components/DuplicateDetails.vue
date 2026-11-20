@@ -142,7 +142,7 @@
                 :duplicate-acknowledged="duplicate.acknowledged"
                 :has-other-folders="hasFilesInOtherFolders(file)"
                 @keepFolder="selectDuplicatesOutsideFolder(file)"
-                @fileDeleted="removeFileFromListAndUpdate(file)">
+                @fileDeleted="removeFileFromListAndUpdate(file, $event)">
               </DuplicateFileDisplay>
             </div>
           </div>
@@ -325,10 +325,14 @@ export default {
     getDuplicateSize(duplicate) {
       return getFormattedSizeOfCurrentDuplicate(duplicate);
     },
-    removeFileFromListAndUpdate(file) {
+    removeFileFromListAndUpdate(file, result = {}) {
       console.log('DuplicateDetails: Removing file from list:', file);
       if (file && file.path) {
         this.$emit('folders-touched', [file.path]);
+      }
+      if (result.deletedNodeIds && result.deletedNodeIds.length > 1) {
+        this.$emit('duplicatesSearchCompleted');
+        return;
       }
       removeFileFromList(file, this.duplicate.files);
       // A file that is gone cannot stay selected for the next "Delete Selected"
@@ -375,9 +379,13 @@ export default {
           allowLastCopy = true;
         }
 
-        const { success, errors } = await deleteFiles(this.selectedFiles, { allowLastCopy });
+        const { success, errors, deletedNodeIds = [] } = await deleteFiles(this.selectedFiles, { allowLastCopy });
         if (success.length > 0) {
           this.$emit('folders-touched', success.map(file => file && file.path).filter(Boolean));
+          if (deletedNodeIds.length > 1) {
+            this.$emit('duplicatesSearchCompleted');
+            return;
+          }
           removeFilesFromList(success, this.duplicate.files);
           this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
 

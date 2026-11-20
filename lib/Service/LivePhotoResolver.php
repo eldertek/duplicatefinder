@@ -1,0 +1,88 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OCA\DuplicateFinder\Service;
+
+use OCA\DuplicateFinder\Exception\LivePhotoPairProtectionException;
+use OCA\DuplicateFinder\Model\LivePhotoPair;
+use OCP\Files\File;
+use OCP\Files\Node;
+use OCP\FilesMetadata\Exceptions\FilesMetadataNotFoundException;
+use OCP\FilesMetadata\Exceptions\FilesMetadataTypeException;
+use OCP\FilesMetadata\IFilesMetadataManager;
+
+class LivePhotoResolver
+{
+    public function __construct(private IFilesMetadataManager $metadataManager)
+    {
+    }
+
+    /**
+     * Resolve a Live Photo without guessing its peer from a filename.
+     *
+     * Older Nextcloud versions follow one-way links and peers outside the folder.
+     * Refuse those links instead of allowing deletion to affect an unchecked file.
+     *
+     * @param Node $node Either component, for example Photos/IMG_1234.MOV
+     * @return LivePhotoPair|null Null only when no Live Photo link is recorded
+     * @throws LivePhotoPairProtectionException When the recorded pair cannot be verified
+     */
+    public function resolve(Node $node): ?LivePhotoPair
+    {
+        if (!($node instanceof File)) {
+            return null;
+        }
+
+        $peerId = $this->getPeerId($node);
+        if ($peerId === null) {
+            return null;
+        }
+
+        foreach ($node->getParent()->getDirectoryListing() as $peer) {
+            if (!($peer instanceof File) || $peer->getId() !== $peerId || $peerId === $node->getId()) {
+                continue;
+            }
+
+            if ($this->getPeerId($peer) !== $node->getId()) {
+                break;
+            }
+
+            if (str_starts_with($node->getMimetype(), 'image/') && $peer->getMimetype() === 'video/quicktime') {
+                return new LivePhotoPair($node, $peer);
+            }
+            if ($node->getMimetype() === 'video/quicktime' && str_starts_with($peer->getMimetype(), 'image/')) {
+                return new LivePhotoPair($peer, $node);
+            }
+
+            break;
+        }
+
+        throw new LivePhotoPairProtectionException('Cannot verify both components of this Live Photo');
+    }
+
+    /**
+     * Read the public metadata API shared by Nextcloud 28 and later.
+     *
+     * @return int|null The peer node id, or null for an ordinary file
+     * @throws LivePhotoPairProtectionException When a recorded link is invalid
+     */
+    private function getPeerId(File $file): ?int
+    {
+        $metadata = $this->metadataManager->getMetadataForFiles([$file->getId()])[$file->getId()] ?? null;
+        if ($metadata === null || !$metadata->hasKey('files-live-photo')) {
+            return null;
+        }
+
+        try {
+            $value = $metadata->getString('files-live-photo');
+        } catch (FilesMetadataNotFoundException | FilesMetadataTypeException $e) {
+            throw new LivePhotoPairProtectionException('Invalid Live Photo component link', 0, $e);
+        }
+        if (!ctype_digit($value) || (int)$value <= 0 || (string)(int)$value !== $value) {
+            throw new LivePhotoPairProtectionException('Invalid Live Photo component link');
+        }
+
+        return (int)$value;
+    }
+}

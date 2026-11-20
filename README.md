@@ -35,6 +35,16 @@ Duplicate Finder compares files by content hash (independent of filename or loca
 
 When installing Duplicate Finder on an existing Nextcloud instance, running an initial CLI scan with `occ duplicates:find-all` is recommended.
 
+### Live Photos
+
+Deleting either component of a redundant Live Photo asks for confirmation to delete
+both its still image and video. Another accessible, complete Live Photo with
+identical contents in both components must remain. Separate copies of the image
+and video without a valid pair do not qualify.
+
+Origin-folder protection applies to both components. The last complete pair is
+kept even when deletion of the last copy of an individual file was confirmed.
+
 ### Bulk Delete & Dry-Run Preview
 
 Click **Bulk Delete** in the app header to review and delete multiple duplicates in one operation:
@@ -194,6 +204,24 @@ When running integration tests inside the devcontainer:
    ```
 
 For more details on the test suite, see [tests/README.md](tests/README.md).
+
+#### Live Photo integration tests with Docker
+
+The root Compose file provides an isolated Nextcloud 35, MariaDB and Redis.
+Test data is stored under `.nextcloud-dev`; no existing Nextcloud data is mounted.
+
+```bash
+docker compose up -d --build
+docker compose exec nextcloud sh -c 'cd custom_apps/duplicatefinder && composer install'
+docker compose exec -u www-data nextcloud php occ app:enable duplicatefinder
+docker compose exec -u www-data -e NEXTCLOUD_PATH=/var/www/html nextcloud sh -c \
+  'cd custom_apps/duplicatefinder && php vendor/bin/phpunit tests/Integration/LivePhotoDeletionIntegrationTest.php'
+docker compose down
+```
+
+The integration suite uses synthetic image/video components with Nextcloud's
+public Live Photo metadata. It exercises actual core deletion, retained pairs,
+origin protection and concurrent authenticated HTTP requests with Redis locking.
 
 ## Special thanks
 

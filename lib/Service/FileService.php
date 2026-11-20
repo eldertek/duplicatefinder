@@ -21,17 +21,20 @@ class FileService
     private OriginFolderService $originFolderService;
     private FileInfoService $fileInfoService;
     private LoggerInterface $logger;
+    private LivePhotoDeletionService $livePhotoDeletionService;
 
     public function __construct(
         FolderService $folderService,
         OriginFolderService $originFolderService,
         FileInfoService $fileInfoService,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        LivePhotoDeletionService $livePhotoDeletionService
     ) {
         $this->folderService = $folderService;
         $this->originFolderService = $originFolderService;
         $this->fileInfoService = $fileInfoService;
         $this->logger = $logger;
+        $this->livePhotoDeletionService = $livePhotoDeletionService;
     }
 
     /**
@@ -47,6 +50,8 @@ class FileService
      * @param string|null $hash The content hash of the duplicate group the file is deleted from.
      *                          When given, the last remaining copy of that group is never deleted.
      * @param bool $allowLastCopy Delete the file even if it is the last copy of its group
+     * @param bool $allowLivePhotoPair Confirm deleting both components of a redundant Live Photo
+     * @return int[] The ids actually deleted, including a Live Photo's paired component
      * @throws NotFoundException If the file doesn't exist
      * @throws NotPermittedException If the user doesn't have permission to delete
      * @throws OriginFolderProtectionException If the file is in an origin folder
@@ -59,15 +64,16 @@ class FileService
         string $filePath,
         ?int $nodeId = null,
         ?string $hash = null,
-        bool $allowLastCopy = false
-    ): void {
+        bool $allowLastCopy = false,
+        bool $allowLivePhotoPair = false
+    ): array {
         $this->logger->debug('Attempting to delete file: {path} for user: {userId}', [
             'path' => $filePath,
             'userId' => $userId,
         ]);
 
         // Check if file is in an origin folder
-        $this->assertNotProtected($filePath);
+        $this->originFolderService->assertNotProtected($filePath);
 
         $userFolder = $this->folderService->getUserFolder($userId);
         $node = $this->resolveNode($userFolder, $filePath, $nodeId);
@@ -75,33 +81,39 @@ class FileService
         // The node found may sit elsewhere than the path we were given: protect that place too
         $resolvedPath = $userFolder->getRelativePath($node->getPath());
         if ($resolvedPath !== null && $resolvedPath !== $filePath) {
-            $this->assertNotProtected($resolvedPath);
-        }
-
-        if ($hash !== null && $hash !== '' && !$allowLastCopy
-            && !$this->fileInfoService->hasOtherLiveCopy($hash, $node->getId(), $userId)) {
-            $this->logger->warning('File deletion blocked, last remaining copy: {path}', ['path' => $filePath]);
-
-            throw new LastCopyProtectionException(
-                sprintf('Cannot delete file "%s" as it is the last remaining copy of its content', $filePath)
-            );
-        }
-
-        if ($this->isProtectedLivePhotoVideo($node)) {
-            $this->logger->warning(
-                'File deletion blocked by Nextcloud Live Photo protection: {path}',
-                ['path' => $filePath]
-            );
-
-            throw new LivePhotoProtectionException(
-                sprintf(
-                    'Cannot delete "%s" directly because Nextcloud protects the video part of a Live Photo. Delete the paired photo instead only if both files are redundant.',
-                    $filePath
-                )
-            );
+            $this->originFolderService->assertNotProtected($resolvedPath);
         }
 
         try {
+            $deletedPair = $this->livePhotoDeletionService->deleteIfPaired($userFolder, $node, $allowLivePhotoPair);
+            if ($deletedPair !== null) {
+                return $deletedPair;
+            }
+
+            if ($this->isProtectedLivePhotoVideo($node)) {
+                $this->logger->warning(
+                    'File deletion blocked by Nextcloud Live Photo protection: {path}',
+                    ['path' => $filePath]
+                );
+
+                throw new LivePhotoProtectionException(
+                    sprintf(
+                        'Cannot delete "%s" directly because Nextcloud protects the video part of a Live Photo. Delete the paired photo instead only if both files are redundant.',
+                        $filePath
+                    )
+                );
+            }
+
+            if ($hash !== null && $hash !== '' && !$allowLastCopy
+                && !$this->fileInfoService->hasOtherLiveCopy($hash, $node->getId(), $userId)) {
+                $this->logger->warning('File deletion blocked, last remaining copy: {path}', ['path' => $filePath]);
+
+                throw new LastCopyProtectionException(
+                    sprintf('Cannot delete file "%s" as it is the last remaining copy of its content', $filePath)
+                );
+            }
+
+            $nodeId = $node->getId();
             $node->delete();
         } catch (Exception $e) {
             if (is_a($e, 'OCP\\Exceptions\\AbortedEventException')) {
@@ -157,6 +169,8 @@ class FileService
         }
 
         $this->logger->info('Successfully deleted file: {path}', ['path' => $filePath]);
+
+        return $nodeId === null ? [] : [$nodeId];
     }
 
     /**
@@ -217,27 +231,6 @@ class FileService
         }
 
         return false;
-    }
-
-    /**
-     * @throws OriginFolderProtectionException
-     */
-    private function assertNotProtected(string $path): void
-    {
-        $protection = $this->originFolderService->isPathProtected($path);
-        if ($protection['isProtected']) {
-            $this->logger->debug('File deletion blocked - protected by origin folder: {folder}', [
-                'folder' => $protection['protectingFolder'],
-            ]);
-
-            throw new OriginFolderProtectionException(
-                sprintf(
-                    'Cannot delete file "%s" as it is protected by origin folder "%s"',
-                    $path,
-                    $protection['protectingFolder']
-                )
-            );
-        }
     }
 
     /**

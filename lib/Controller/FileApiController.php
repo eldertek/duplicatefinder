@@ -7,6 +7,8 @@ namespace OCA\DuplicateFinder\Controller;
 use Exception;
 use OCA\DuplicateFinder\Exception\AbortedDeletionException;
 use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
+use OCA\DuplicateFinder\Exception\LivePhotoConfirmationRequiredException;
+use OCA\DuplicateFinder\Exception\LivePhotoPairProtectionException;
 use OCA\DuplicateFinder\Exception\LivePhotoProtectionException;
 use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCA\DuplicateFinder\Service\FileService;
@@ -55,6 +57,7 @@ class FileApiController extends Controller
         $nodeId = isset($extra['nodeId']) && is_numeric($extra['nodeId']) ? (int)$extra['nodeId'] : null;
         $hash = isset($extra['hash']) && is_string($extra['hash']) && $extra['hash'] !== '' ? $extra['hash'] : null;
         $allowLastCopy = filter_var($extra['allowLastCopy'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $allowLivePhotoPair = filter_var($extra['allowLivePhotoPair'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         if (empty($path) && empty($paths) && $nodeId === null) {
             return new JSONResponse(
@@ -70,7 +73,11 @@ class FileApiController extends Controller
                 foreach ($paths as $singlePath) {
                     try {
                         $this->logger->debug('Attempting to delete file: {path}', ['path' => $singlePath]);
-                        $this->service->deleteFile($this->userId, $singlePath);
+                        if ($allowLivePhotoPair) {
+                            $this->service->deleteFile($this->userId, $singlePath, null, null, false, true);
+                        } else {
+                            $this->service->deleteFile($this->userId, $singlePath);
+                        }
                         $this->logger->info('Successfully deleted file: {path}', ['path' => $singlePath]);
                         $results['success'][] = $singlePath;
                     } catch (Exception $e) {
@@ -87,14 +94,25 @@ class FileApiController extends Controller
                 return new JSONResponse($results);
             } else {
                 $this->logger->debug('Attempting to delete single file: {path}', ['path' => $path]);
-                if ($nodeId === null && $hash === null && !$allowLastCopy) {
-                    $this->service->deleteFile($this->userId, (string)$path);
+                if ($allowLivePhotoPair) {
+                    $deletedNodeIds = $this->service->deleteFile(
+                        $this->userId, (string)$path, $nodeId, $hash, $allowLastCopy, true
+                    );
+                } elseif ($nodeId === null && $hash === null && !$allowLastCopy) {
+                    $deletedNodeIds = $this->service->deleteFile($this->userId, (string)$path);
                 } else {
-                    $this->service->deleteFile($this->userId, (string)$path, $nodeId, $hash, $allowLastCopy);
+                    $deletedNodeIds = $this->service->deleteFile(
+                        $this->userId, (string)$path, $nodeId, $hash, $allowLastCopy
+                    );
                 }
                 $this->logger->info('Successfully deleted file: {path}', ['path' => $path]);
 
-                return new JSONResponse(['status' => 'success']);
+                $result = ['status' => 'success'];
+                if (count($deletedNodeIds) > 1) {
+                    $result['deletedNodeIds'] = $deletedNodeIds;
+                }
+
+                return new JSONResponse($result);
             }
         } catch (Exception $e) {
             $this->logDeletionFailure($e, (string)$path, true);
@@ -113,6 +131,7 @@ class FileApiController extends Controller
             $e instanceof LastCopyProtectionException => Http::STATUS_CONFLICT,
             $e instanceof LivePhotoProtectionException => Http::STATUS_CONFLICT,
             $e instanceof AbortedDeletionException => Http::STATUS_CONFLICT,
+            $e instanceof LivePhotoPairProtectionException => Http::STATUS_CONFLICT,
             $e instanceof \OCP\Files\NotFoundException => Http::STATUS_NOT_FOUND,
             $e instanceof \OCP\Files\NotPermittedException => Http::STATUS_FORBIDDEN,
             $e instanceof LockedException => Http::STATUS_LOCKED,
@@ -137,6 +156,14 @@ class FileApiController extends Controller
             ],
             $e instanceof AbortedDeletionException => [
                 'error' => 'DELETE_ABORTED',
+                'message' => $e->getMessage(),
+            ],
+            $e instanceof LivePhotoConfirmationRequiredException => [
+                'error' => 'LIVE_PHOTO_CONFIRMATION_REQUIRED',
+                'message' => $e->getMessage(),
+            ],
+            $e instanceof LivePhotoPairProtectionException => [
+                'error' => 'LIVE_PHOTO_PAIR_PROTECTED',
                 'message' => $e->getMessage(),
             ],
             $e instanceof \OCP\Files\NotFoundException => [
@@ -179,6 +206,12 @@ class FileApiController extends Controller
 
         if ($e instanceof AbortedDeletionException) {
             $this->logger->warning('File deletion aborted by Nextcloud: {error}', $context);
+
+            return;
+        }
+
+        if ($e instanceof LivePhotoPairProtectionException) {
+            $this->logger->warning('File deletion blocked by Live Photo protection: {error}', $context);
 
             return;
         }

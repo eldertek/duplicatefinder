@@ -1,0 +1,47 @@
+name: duplicatefinder-live-photo
+
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: nextcloud
+      MARIADB_USER: nextcloud
+      MARIADB_PASSWORD: local-test-password
+      MARIADB_ROOT_PASSWORD: local-test-root-password
+    volumes:
+      - ./.nextcloud-dev/db:/var/lib/mysql
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    command: [redis-server, --save, "", --appendonly, "no"]
+
+  nextcloud:
+    build:
+      context: .
+      dockerfile: .devcontainer/live-photo.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: local-test-password
+      NEXTCLOUD_ADMIN_USER: test-admin
+      NEXTCLOUD_ADMIN_PASSWORD: local-test-admin-password
+      NEXTCLOUD_TRUSTED_DOMAINS: localhost 127.0.0.1
+      REDIS_HOST: redis
+      PHP_MEMORY_LIMIT: 1G
+      COMPOSER_ALLOW_SUPERUSER: "1"
+    ports:
+      - "127.0.0.1:${DUPLICATEFINDER_TEST_PORT:-18095}:80"
+    volumes:
+      - ./.nextcloud-dev/server:/var/www/html
+      - .:/var/www/html/custom_apps/duplicatefinder

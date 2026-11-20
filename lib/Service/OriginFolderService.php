@@ -6,6 +6,7 @@ namespace OCA\DuplicateFinder\Service;
 
 use DateTime;
 use Exception;
+use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCA\DuplicateFinder\Db\OriginFolder;
 use OCA\DuplicateFinder\Db\OriginFolderMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -135,6 +136,30 @@ class OriginFolderService
             'isProtected' => false,
             'protectingFolder' => null,
         ];
+    }
+
+    /**
+     * Apply the same origin-folder protection to every component a deletion affects.
+     *
+     * @param string $path A path relative to the current user's files folder
+     * @throws OriginFolderProtectionException When an origin folder protects the path
+     */
+    public function assertNotProtected(string $path): void
+    {
+        $protection = $this->isPathProtected($path);
+        if ($protection['isProtected']) {
+            $this->logger->debug('File deletion blocked - protected by origin folder: {folder}', [
+                'folder' => $protection['protectingFolder'],
+            ]);
+
+            throw new OriginFolderProtectionException(
+                sprintf(
+                    'Cannot delete file "%s" as it is protected by origin folder "%s"',
+                    $path,
+                    $protection['protectingFolder']
+                )
+            );
+        }
     }
 
     public function setUserId(?string $userId): void
