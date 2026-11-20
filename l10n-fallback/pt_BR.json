@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Excluir a foto e o vídeo desta Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Não é possível excluir esta Live Photo até que outro par completo e idêntico de foto e vídeo seja confirmado.",
+        "Live Photo video is missing": "O vídeo da Live Photo está ausente",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Grupos de duplicatas ativos na varredura atual ({total} no total, {unacknowledged} não reconhecidas, {acknowledged} reconhecidas). Pastas excluídas e arquivos ignorados não são contabilizados.",
         "All detected empty folders are currently ignored ({count}).": "Todas as pastas vazias detectadas estão ignoradas no momento ({count}).",
         "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "Não é possível excluir diretamente a parte de vídeo de uma Live Photo. Em vez disso, exclua a foto associada apenas se ambos os arquivos forem redundantes.",

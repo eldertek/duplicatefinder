@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Želite li izbrisati i fotografiju i videozapis ove Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Ova Live Photo ne može se izbrisati dok se ne potvrdi drugi potpuni i identični par fotografije i videozapisa.",
+        "Live Photo video is missing": "Nedostaje videozapis za Live Photo",
         "\"Background Job Find Duplicates Interval\"": "\"Interval pozadinskog zadatka za pronalaženje duplikata\"",
         "\"Disable Filesystem Events\"": "\"Onemogući događaje datotečnog sustava\"",
         "\"Find all duplicates\"": "\"Pronađi sve duplikate\"",

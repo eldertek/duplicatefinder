@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Видалити і фото, і відео цієї Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Неможливо видалити цю Live Photo, доки не підтверджено іншу повну, ідентичну пару фото та відео.",
+        "Live Photo video is missing": "Відео Live Photo відсутнє",
         "Acknowledged groups ({count})": "Підтверджені групи ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Активні групи дублікатів у поточному скануванні ({total} усього, {unacknowledged} непідтверджених, {acknowledged} підтверджених). Виключені теки та ігноровані файли не враховуються.",
         "Active duplicate groups in current scan ({total})": "Активні групи дублікатів у поточному скануванні ({total})",

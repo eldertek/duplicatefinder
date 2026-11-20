@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Ištrinti ir šios „Live Photo“ nuotrauką, ir vaizdo įrašą?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Šios „Live Photo“ negalima ištrinti, kol nepatvirtinta kita pilna, identiška nuotraukos ir vaizdo įrašo pora.",
+        "Live Photo video is missing": "Trūksta „Live Photo“ vaizdo įrašo",
         "Acknowledged groups ({count})": "Patvirtintos grupės ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Aktyvios dublikatų grupės dabartiniame nuskaityme (iš viso {total}, nepatvirtinta {unacknowledged}, patvirtinta {acknowledged}). Neįtraukti aplankai ir ignoruojami failai neskaičiuojami.",
         "Active duplicate groups in current scan ({total})": "Aktyvios dublikatų grupės dabartiniame nuskaityme ({total})",

@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Möchten Sie sowohl das Foto als auch das Video dieses Live Photos löschen?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Dieses Live Photo kann erst gelöscht werden, wenn ein weiteres vollständiges, identisches Foto- und Videopaar bestätigt wurde.",
+        "Live Photo video is missing": "Das Live-Photo-Video fehlt",
         "Cannot delete the video part of a Live Photo directly. Delete the paired photo instead only if both files are redundant.": "Der Videoteil eines Live Photos kann nicht direkt gelöscht werden. Löschen Sie stattdessen das zugehörige Foto, jedoch nur, wenn beide Dateien redundant sind.",
         "File deletion was aborted by Nextcloud.": "Das Löschen der Datei wurde von Nextcloud abgebrochen.",
         "You're Ready!": "Sie sind startklar!",

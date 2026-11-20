@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Xóa cả ảnh và video của Live Photo này?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Không thể xóa Live Photo này cho đến khi xác nhận được một cặp ảnh và video khác đầy đủ và giống hệt.",
+        "Live Photo video is missing": "Thiếu video của Live Photo",
         "\"Background Job Find Duplicates Interval\"": "\"Khoảng thời gian tác vụ nền tìm bản trùng lặp\"",
         "\"Disable Filesystem Events\"": "\"Tắt sự kiện hệ thống tệp\"",
         "\"Find all duplicates\"": "\"Tìm tất cả bản trùng lặp\"",

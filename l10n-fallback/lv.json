@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Vai dzēst gan šī Live Photo fotoattēlu, gan video?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Šo Live Photo nevar izdzēst, kamēr nav apstiprināts cits pilns, identisks fotoattēla un video pāris.",
+        "Live Photo video is missing": "Trūkst Live Photo video",
         "\"Background Job Find Duplicates Interval\"": "\"Fona uzdevuma dublikātu meklēšanas intervāls\"",
         "\"Disable Filesystem Events\"": "\"Atspējot datņu sistēmas notikumus\"",
         "\"Find all duplicates\"": "\"Atrast visus dublikātus\"",

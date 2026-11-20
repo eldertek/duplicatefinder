@@ -1,6 +1,9 @@
 {
     "pluralForm": "nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;",
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "هل تريد حذف كلٍ من صورة وفيديو Live Photo هذه؟",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "لا يمكن حذف صورة Live Photo هذه حتى يتم التحقق من وجود زوج آخر كامل ومطابق من الصورة والفيديو.",
+        "Live Photo video is missing": "فيديو Live Photo غير موجود",
         "Access your project from the navigation sidebar": "افتح مشروعك من الشريط الجانبي للتنقل",
         "Acknowledged groups ({count})": "مجموعات معترف بها ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "مجموعات التكرار النشطة في الفحص الحالي (الإجمالي {total}، غير معترف بها: {unacknowledged}، معترف بها: {acknowledged}). لا يتم احتساب المجلدات المستثناة والملفات المتجاهلة.",

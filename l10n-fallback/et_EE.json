@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Kas kustutada selle Live Photo foto ja video?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Seda Live Photot ei saa kustutada enne, kui on kinnitatud teise täieliku ja identse foto- ja videopaari olemasolu.",
+        "Live Photo video is missing": "Live Photo video puudub",
         "\"Background Job Find Duplicates Interval\"": "\"Taustatöö topeltfailide otsingu intervall\"",
         "\"Disable Filesystem Events\"": "\"Keela failisüsteemi sündmused\"",
         "\"Find all duplicates\"": "\"Otsi kõik topeltfailid\"",

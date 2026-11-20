@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Ștergeți atât fotografia, cât și videoclipul acestei Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Această Live Photo nu poate fi ștearsă până când nu este confirmată o altă pereche completă și identică de fotografie și videoclip.",
+        "Live Photo video is missing": "Lipsește videoclipul Live Photo",
         "Acknowledged groups ({count})": "Grupuri confirmate ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Grupuri active de duplicate în scanarea curentă ({total} în total, {unacknowledged} neconfirmate, {acknowledged} confirmate). Dosarele excluse și fișierele ignorate nu sunt numărate.",
         "Active duplicate groups in current scan ({total})": "Grupuri active de duplicate în scanarea curentă ({total})",

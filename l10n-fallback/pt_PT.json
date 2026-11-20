@@ -1,6 +1,9 @@
 {
     "pluralForm": "nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;",
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Eliminar a fotografia e o vídeo desta Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Não é possível eliminar esta Live Photo até ser confirmado outro par completo e idêntico de fotografia e vídeo.",
+        "Live Photo video is missing": "O vídeo da Live Photo está em falta",
         "2. Select Folders": "2. Selecionar pastas",
         "Acknowledged groups ({count})": "Grupos reconhecidos ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Grupos de duplicados ativos na análise atual ({total} no total, {unacknowledged} não reconhecidos, {acknowledged} reconhecidos). As pastas excluídas e os ficheiros ignorados não são contabilizados.",

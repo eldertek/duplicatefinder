@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Supprimer la photo et la vidéo de cette Live Photo ?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Impossible de supprimer cette Live Photo tant qu'une autre paire complète et identique de photo et de vidéo n'a pas été vérifiée.",
+        "Live Photo video is missing": "La vidéo de la Live Photo est manquante",
         "Acknowledged groups ({count})": "Groupes traités ({count})",
         "Active duplicate groups in current scan ({total} total, {unacknowledged} unacknowledged, {acknowledged} acknowledged). Excluded folders and ignored files are not counted.": "Groupes de doublons actifs dans l'analyse actuelle ({total} au total, {unacknowledged} non traités, {acknowledged} traités). Les dossiers exclus et les fichiers ignorés ne sont pas comptabilisés.",
         "Active duplicate groups in current scan ({total})": "Groupes de doublons actifs dans l'analyse actuelle ({total})",

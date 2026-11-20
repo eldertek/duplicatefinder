@@ -1,6 +1,9 @@
 {
     "pluralForm": "nplurals=1; plural=0;",
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "이 Live Photo의 사진과 동영상을 모두 삭제하시겠습니까?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "동일한 사진과 동영상으로 구성된 다른 완전한 쌍이 확인될 때까지 이 Live Photo를 삭제할 수 없습니다.",
+        "Live Photo video is missing": "Live Photo 동영상이 없습니다",
         "\"Background Job Find Duplicates Interval\"": "\"백그라운드 작업 중복 검색 간격\"",
         "\"Disable Filesystem Events\"": "\"파일 시스템 이벤트 비활성화\"",
         "\"Find all duplicates\"": "\"모든 중복 찾기\"",

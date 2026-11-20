@@ -1,6 +1,9 @@
 {
     "pluralForm": "nplurals=1; plural=0;",
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "この Live Photo の写真と動画の両方を削除しますか？",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "写真と動画が揃った同一のペアが他にあると確認できるまで、この Live Photo は削除できません。",
+        "Live Photo video is missing": "Live Photo の動画がありません",
         "\"Background Job Find Duplicates Interval\"": "「バックグラウンド重複検索ジョブの間隔」",
         "\"Disable Filesystem Events\"": "「ファイルシステムイベントを無効化」",
         "\"Find all duplicates\"": "「すべての重複を検索」",

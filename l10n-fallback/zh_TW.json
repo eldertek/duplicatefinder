@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "要刪除此原況照片的照片和影片嗎？",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "確認存在另一組完整且完全相同的照片和影片之前，無法刪除此原況照片。",
+        "Live Photo video is missing": "原況照片的影片遺失",
         "\"Background Job Find Duplicates Interval\"": "「後台作業尋找重複檔案項間距」",
         "\"Disable Filesystem Events\"": "「停用檔案系統活動」",
         "\"Find all duplicates\"": "「尋找所有重複檔案」",

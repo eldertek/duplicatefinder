@@ -1,6 +1,9 @@
 {
     "pluralForm": "nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);",
     "translations": {
+        "Delete both the photo and the video of this Live Photo?": "Usunąć zarówno zdjęcie, jak i film z tego Live Photo?",
+        "Cannot delete this Live Photo until another complete, identical photo and video pair is confirmed.": "Nie można usunąć tego Live Photo, dopóki nie zostanie potwierdzona inna kompletna, identyczna para zdjęcia i filmu.",
+        "Live Photo video is missing": "Brak filmu Live Photo",
         "\"Background Job Find Duplicates Interval\"": "\"Interwał zadania w tle wyszukiwania duplikatów\"",
         "\"Disable Filesystem Events\"": "\"Wyłącz zdarzenia systemu plików\"",
         "\"Find all duplicates\"": "\"Znajdź wszystkie duplikaty\"",
