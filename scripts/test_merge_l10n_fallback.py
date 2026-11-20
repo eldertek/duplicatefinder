@@ -340,6 +340,49 @@ class TestMergeL10nFallback(unittest.TestCase):
         self.assertEqual(summaries, descriptions)
         self.assertEqual(len(summaries), 38)
 
+    def test_readme_and_store_screenshots_parity(self) -> None:
+        readme_path = REPO_ROOT / "README.md"
+        readme = readme_path.read_text(encoding="utf-8")
+        self.assertNotIn("\u2014", readme, "Forbidden em-dash in README.md")
+        self.assertNotIn("\u2013", readme, "Forbidden en-dash in README.md")
+
+        # Every Markdown image link in README.md resolves locally and is non-empty
+        image_targets = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", readme)
+        self.assertGreaterEqual(len(image_targets), 4)
+        for target in image_targets:
+            self.assertFalse(
+                target.startswith(("http://", "https://")),
+                f"Use relative repo image paths in README.md instead of {target}",
+            )
+            img_path = REPO_ROOT / target
+            self.assertTrue(img_path.is_file(), f"Missing README image: {target}")
+            self.assertGreater(img_path.stat().st_size, 0, f"Empty README image: {target}")
+
+        # Every <screenshot> in appinfo/info.xml exists in img/ and is shown in README.md
+        info_root = ET.fromstring((REPO_ROOT / "appinfo" / "info.xml").read_text(encoding="utf-8"))
+        info_screenshots = [el.text.strip() for el in info_root.findall("screenshot") if el.text]
+        self.assertEqual(len(info_screenshots), 4)
+        for url in info_screenshots:
+            rel_path = "img/" + url.rsplit("/", 1)[-1]
+            self.assertTrue((REPO_ROOT / rel_path).is_file(), f"Missing info.xml screenshot: {rel_path}")
+            self.assertIn(rel_path, image_targets, f"info.xml screenshot missing from README.md: {rel_path}")
+
+        # Every local relative Markdown link (non-URL, non-anchor) resolves on disk
+        for link in re.findall(r"(?<!!)\[[^\]]+\]\(([^)]+)\)", readme):
+            if link.startswith(("http://", "https://", "mailto:", "#")):
+                continue
+            self.assertTrue((REPO_ROOT / link).is_file(), f"Broken local link in README.md: {link}")
+
+        # Every GitHub anchor linked from appinfo/info.xml <documentation> matches a heading in README.md
+        heading_slugs = {
+            re.sub(r"[^a-z0-9\- ]", "", h.strip().lower()).replace(" ", "-")
+            for h in re.findall(r"^#{1,6}\s+(.+)$", readme, flags=re.MULTILINE)
+        }
+        for doc_el in info_root.findall("./documentation/*"):
+            if doc_el.text and "#" in doc_el.text:
+                anchor = doc_el.text.rsplit("#", 1)[-1]
+                self.assertIn(anchor, heading_slugs, f"Missing README heading for info.xml anchor #{anchor}")
+
 
 if __name__ == "__main__":
     unittest.main()
