@@ -339,7 +339,8 @@ class FileServiceTest extends TestCase
             $this->folderService,
             $this->originFolderService,
             $this->fileInfoService,
-            $this->createMock(LoggerInterface::class)
+            $this->createMock(LoggerInterface::class),
+            $this->livePhotoDeletionService
         ) extends FileService {
             protected function resolveLivePhotoPeerId(Node $node): ?int
             {
@@ -363,7 +364,8 @@ class FileServiceTest extends TestCase
             $this->folderService,
             $this->originFolderService,
             $this->fileInfoService,
-            $logger
+            $logger,
+            $this->livePhotoDeletionService
         );
 
         $node = $this->node('/Docs/locked-by-listener.pdf', 91);
