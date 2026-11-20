@@ -535,6 +535,7 @@ class FileInfoService
         }
 
         $clearedHashes = [];
+
         try {
             $this->excludedFolderService->resetCache();
             $this->excludedFolderService->setUserId($user);

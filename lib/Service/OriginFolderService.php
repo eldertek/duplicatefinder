@@ -6,9 +6,9 @@ namespace OCA\DuplicateFinder\Service;
 
 use DateTime;
 use Exception;
-use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCA\DuplicateFinder\Db\OriginFolder;
 use OCA\DuplicateFinder\Db\OriginFolderMapper;
+use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\Files\IRootFolder;

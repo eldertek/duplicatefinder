@@ -96,13 +96,22 @@ class FileApiController extends Controller
                 $this->logger->debug('Attempting to delete single file: {path}', ['path' => $path]);
                 if ($allowLivePhotoPair) {
                     $deletedNodeIds = $this->service->deleteFile(
-                        $this->userId, (string)$path, $nodeId, $hash, $allowLastCopy, true
+                        $this->userId,
+                        (string)$path,
+                        $nodeId,
+                        $hash,
+                        $allowLastCopy,
+                        true
                     );
                 } elseif ($nodeId === null && $hash === null && !$allowLastCopy) {
                     $deletedNodeIds = $this->service->deleteFile($this->userId, (string)$path);
                 } else {
                     $deletedNodeIds = $this->service->deleteFile(
-                        $this->userId, (string)$path, $nodeId, $hash, $allowLastCopy
+                        $this->userId,
+                        (string)$path,
+                        $nodeId,
+                        $hash,
+                        $allowLastCopy
                     );
                 }
                 $this->logger->info('Successfully deleted file: {path}', ['path' => $path]);
