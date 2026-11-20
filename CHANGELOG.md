@@ -1,3 +1,7 @@
+## 1.10.20 - 2026-11-20
+### Fixed
+- **Nextcloud App Store `info.xml` XSD validation for Portuguese locale**. Changed `lang="pt-pt"` on `<summary>` and `<description>` in `appinfo/info.xml` to `lang="pt"` (matching the official `l10n-code` enumeration in Nextcloud `info.xsd`, while keeping `l10n/pt_PT.*` untouched) and enforced `info.xsd` language code validation in `StoreMetadataAndBulkContrastTest`.
+
 ## 1.10.19 - 2026-11-20
 ### Added
 - **Live Photo pair deletion protection and confirmation flow** ([#240](https://github.com/eldertek/duplicatefinder/issues/240), PR [#241](https://github.com/eldertek/duplicatefinder/pull/241), PR [#243](https://github.com/eldertek/duplicatefinder/pull/243)). Detected Live Photo still/video peers across `FileService`, `LivePhotoResolver`, `LivePhotoStatusService`, and `LivePhotoDeletionService`, handled HookConnector silent aborts and `409 Conflict` responses, required explicit confirmation before deleting a redundant complete Live Photo pair, protected the last complete pair and origin folders, and surfaced missing Live Photo video status in the UI.

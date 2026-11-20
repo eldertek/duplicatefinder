@@ -166,7 +166,7 @@ At package time (`make appstore`), `scripts/merge_l10n_fallback.py` populates mi
 | Extended locales | 9 | `da`, `sk`, `cs`, `uk`, `ro`, `id`, `el`, `en_GB`, `zh_HK` |
 | Circle 3 locales | 15 | `fi`, `ca`, `zh_TW`, `nb`, `hu`, `sl`, `bg`, `hr`, `he`, `vi`, `th`, `sr`, `lt_LT`, `lv`, `et_EE` |
 
-`appinfo/info.xml` store descriptions (38 languages): `en`, `ar`, `bg`, `ca`, `cs`, `da`, `de`, `el`, `es`, `et`, `fi`, `fr`, `he`, `hr`, `hu`, `id`, `it`, `ja`, `ko`, `lt`, `lv`, `nb`, `nl`, `pl`, `pt-br`, `pt-pt`, `ro`, `ru`, `sk`, `sl`, `sr`, `sv`, `th`, `tr`, `uk`, `vi`, `zh-hans`, `zh-hant`.
+`appinfo/info.xml` store descriptions (38 languages): `en`, `ar`, `bg`, `ca`, `cs`, `da`, `de`, `el`, `es`, `et`, `fi`, `fr`, `he`, `hr`, `hu`, `id`, `it`, `ja`, `ko`, `lt`, `lv`, `nb`, `nl`, `pl`, `pt`, `pt-br`, `ro`, `ru`, `sk`, `sl`, `sr`, `sv`, `th`, `tr`, `uk`, `vi`, `zh-hans`, `zh-hant`.
 
 ## Development
 

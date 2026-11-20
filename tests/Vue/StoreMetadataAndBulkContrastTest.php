@@ -42,14 +42,26 @@ class StoreMetadataAndBulkContrastTest extends TestCase
             'en', 'ar', 'bg', 'ca', 'cs', 'da', 'de', 'el',
             'es', 'et', 'fi', 'fr', 'he', 'hr', 'hu', 'id',
             'it', 'ja', 'ko', 'lt', 'lv', 'nb', 'nl', 'pl',
-            'pt-br', 'pt-pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv',
+            'pt', 'pt-br', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv',
             'th', 'tr', 'uk', 'vi', 'zh-hans', 'zh-hant',
         ];
         sort($expectedLangs);
 
+        $officialInfoXsdLangs = [
+            'af', 'ar', 'ast', 'az', 'bg', 'be', 'bn', 'br', 'bs', 'ca', 'cs', 'cy',
+            'da', 'de', 'el', 'en', 'eo', 'es', 'es-ar', 'es-co', 'es-mx', 'es-ni',
+            'es-ve', 'et', 'eu', 'fa', 'fi', 'fr', 'fy', 'ga', 'gd', 'gl', 'he', 'hi',
+            'hr', 'hu', 'ia', 'id', 'io', 'is', 'it', 'ja', 'ka', 'kk', 'km', 'kn',
+            'ko', 'lb', 'lt', 'lv', 'mk', 'ml', 'mn', 'mr', 'my', 'nb', 'ne', 'nl',
+            'nn', 'os', 'pa', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sk', 'sl', 'sq', 'sr',
+            'sr-latn', 'sv', 'sw', 'ta', 'te', 'th', 'tr', 'tt', 'udm', 'uk', 'ur',
+            'vi', 'zh-hans', 'zh-hant',
+        ];
+
         $summaryLangs = [];
         foreach ($dom->getElementsByTagName('summary') as $node) {
             $lang = $node->hasAttribute('lang') ? $node->getAttribute('lang') : 'en';
+            $this->assertContains($lang, $officialInfoXsdLangs, "Summary lang '{$lang}' must be valid in Nextcloud info.xsd");
             $summaryLangs[] = $lang;
             $summaryText = trim($node->textContent);
             $this->assertNotEmpty($summaryText, "Summary for {$lang} must not be empty");
@@ -63,6 +75,7 @@ class StoreMetadataAndBulkContrastTest extends TestCase
         $descriptionLangs = [];
         foreach ($dom->getElementsByTagName('description') as $node) {
             $lang = $node->hasAttribute('lang') ? $node->getAttribute('lang') : 'en';
+            $this->assertContains($lang, $officialInfoXsdLangs, "Description lang '{$lang}' must be valid in Nextcloud info.xsd");
             $descriptionLangs[] = $lang;
             $this->assertNotEmpty(trim($node->textContent), "Description for {$lang} must not be empty");
         }

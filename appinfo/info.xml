@@ -19,7 +19,7 @@
     <summary lang="zh-hans"><![CDATA[高效查找并管理重复文件，轻松释放存储空间]]></summary>
     <summary lang="zh-hant"><![CDATA[高效尋找並管理重複檔案，輕鬆釋放儲存空間]]></summary>
     <summary lang="ar"><![CDATA[وفّر مساحة التخزين عبر العثور على الملفات المكررة وإدارتها بكفاءة]]></summary>
-    <summary lang="pt-pt"><![CDATA[Poupe espaço encontrando e gerindo os seus ficheiros duplicados de forma eficiente]]></summary>
+    <summary lang="pt"><![CDATA[Poupe espaço encontrando e gerindo os seus ficheiros duplicados de forma eficiente]]></summary>
     <summary lang="sv"><![CDATA[Spara lagringsutrymme genom att hitta och hantera dubblettfiler effektivt]]></summary>
     <summary lang="da"><![CDATA[Spar lagerplads ved at finde og administrere dine dubletfiler effektivt]]></summary>
     <summary lang="fi"><![CDATA[Säästä tallennustilaa etsimällä ja hallitsemalla kaksoiskappaleita tehokkaasti]]></summary>
@@ -225,7 +225,7 @@
 * 📊 **معاينة ومحاكاة مسبقة** - مراجعة الملفات المحددة والمساحة التي سيتم توفيرها قبل الحذف
 * 💼 **معالجة في الخلفية** - مهام مؤتمتة لاكتشاف التكرارات وصيانة الفهرس
 ]]></description>
-    <description lang="pt-pt"><![CDATA[Encontre e gira ficheiros duplicados no seu Nextcloud com funcionalidades avançadas:
+    <description lang="pt"><![CDATA[Encontre e gira ficheiros duplicados no seu Nextcloud com funcionalidades avançadas:
 
 * 🔍 **Deteção inteligente** - Três formas de encontrar duplicados:
   * Deteção baseada em eventos para ficheiros novos ou alterados
@@ -538,7 +538,7 @@
 * 💼 **Taustatöötlus** - Automatiseeritud taustatööd duplikaatide otsimiseks ja andmebaasi hoolduseks
 ]]></description>
 
-    <version>1.10.19</version>
+    <version>1.10.20</version>
     <licence>AGPL-3.0-or-later</licence>
     <author>André Théo LAURET</author>
 
