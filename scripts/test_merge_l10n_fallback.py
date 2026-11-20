@@ -45,6 +45,24 @@ EXTENDED_FULL_LOCALES = [
     "zh_HK",
 ]
 
+CIRCLE_3_LOCALES = [
+    "fi",
+    "ca",
+    "zh_TW",
+    "nb",
+    "hu",
+    "sl",
+    "bg",
+    "hr",
+    "he",
+    "vi",
+    "th",
+    "sr",
+    "lt_LT",
+    "lv",
+    "et_EE",
+]
+
 PLACEHOLDER_RE = re.compile(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}|%[ns]")
 NPLURALS_RE = re.compile(r"nplurals\s*=\s*(\d+)")
 
@@ -236,7 +254,7 @@ class TestMergeL10nFallback(unittest.TestCase):
     def test_all_fallback_files_placeholders_plurals_and_typography(self) -> None:
         fallback_dir = REPO_ROOT / "l10n-fallback"
         fallback_files = sorted(fallback_dir.glob("*.json"))
-        self.assertGreaterEqual(len(fallback_files), 25)
+        self.assertGreaterEqual(len(fallback_files), 40)
 
         for path in fallback_files:
             raw = path.read_text(encoding="utf-8")
@@ -292,7 +310,11 @@ class TestMergeL10nFallback(unittest.TestCase):
                 target_dir=tmp_l10n, fallback_dir=REPO_ROOT / "l10n-fallback"
             )
 
-            for locale in PRIORITY_16_LOCALES + EXTENDED_FULL_LOCALES:
+            all_full_locales = (
+                PRIORITY_16_LOCALES + EXTENDED_FULL_LOCALES + CIRCLE_3_LOCALES
+            )
+            self.assertEqual(len(all_full_locales), 40)
+            for locale in all_full_locales:
                 merged_path = tmp_l10n / f"{locale}.json"
                 self.assertTrue(merged_path.exists(), f"Missing merged {locale}.json")
                 merged = json.loads(merged_path.read_text(encoding="utf-8"))["translations"]
@@ -306,7 +328,7 @@ class TestMergeL10nFallback(unittest.TestCase):
                     f"Locale {locale} missing {len(missing)} keys: {sorted(missing)[:5]}",
                 )
 
-    def test_info_xml_valid_and_28_language_parity(self) -> None:
+    def test_info_xml_valid_and_38_language_parity(self) -> None:
         info_xml = REPO_ROOT / "appinfo" / "info.xml"
         raw = info_xml.read_text(encoding="utf-8")
         self.assertNotIn("\u2014", raw, "Forbidden em-dash in appinfo/info.xml")
@@ -316,7 +338,7 @@ class TestMergeL10nFallback(unittest.TestCase):
         summaries = {el.attrib.get("lang") for el in root.findall("summary")}
         descriptions = {el.attrib.get("lang") for el in root.findall("description")}
         self.assertEqual(summaries, descriptions)
-        self.assertEqual(len(summaries), 28)
+        self.assertEqual(len(summaries), 38)
 
 
 if __name__ == "__main__":

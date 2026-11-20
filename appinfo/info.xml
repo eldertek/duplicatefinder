@@ -32,6 +32,16 @@
     <summary lang="el"><![CDATA[Εξοικονομήστε χώρο εντοπίζοντας και διαχειριζόμενοι αποτελεσματικά τα διπλότυπα αρχεία σας]]></summary>
     <summary lang="id"><![CDATA[Hemat ruang penyimpanan dengan menemukan dan mengelola file duplikat secara efisien]]></summary>
     <summary lang="vi"><![CDATA[Tiết kiệm dung lượng lưu trữ bằng cách tìm và quản lý tệp trùng lặp hiệu quả]]></summary>
+    <summary lang="ca"><![CDATA[Estalvieu espai d'emmagatzematge trobant i gestionant els fitxers duplicats de manera eficient]]></summary>
+    <summary lang="sl"><![CDATA[Prihranite prostor za shranjevanje z učinkovitim iskanjem in upravljanjem podvojenih datotek]]></summary>
+    <summary lang="bg"><![CDATA[Спестете дисково пространство чрез ефективно откриване и управление на дублиращи се файлове]]></summary>
+    <summary lang="hr"><![CDATA[Uštedite prostor za pohranu učinkovitim pronalaženjem i upravljanjem dupliciranim datotekama]]></summary>
+    <summary lang="he"><![CDATA[חסכו מקום אחסון על ידי איתור וניהול יעילים של קבצים כפולים]]></summary>
+    <summary lang="th"><![CDATA[ประหยัดพื้นที่จัดเก็บด้วยการค้นหาและจัดการไฟล์ซ้ำอย่างมีประสิทธิภาพ]]></summary>
+    <summary lang="sr"><![CDATA[Уштедите простор за складиштење ефикасним проналажењем и управљањем дуплираним фајловима]]></summary>
+    <summary lang="lt"><![CDATA[Taupykite saugyklos vietą efektyviai rasdami ir tvarkydami pasikartojančius failus]]></summary>
+    <summary lang="lv"><![CDATA[Ietaupiet krātuves vietu, efektīvi atrodot un pārvaldot dublētās datnes]]></summary>
+    <summary lang="et"><![CDATA[Säästke salvestusruumi, leides ja hallates duplikaatfaile tõhusalt]]></summary>
 
     <description><![CDATA[Find and manage duplicate files in your Nextcloud with powerful features:
 
@@ -396,6 +406,136 @@
 * ⚡ **Thao tác hàng loạt** - Xử lý hàng nghìn tệp trùng lặp hiệu quả với công cụ xóa hàng loạt và dọn thư mục trống
 * 📊 **Xem trước & chạy thử** - Kiểm tra chính xác tệp sẽ bị xóa và dung lượng giải phóng trước khi xác nhận
 * 💼 **Xử lý nền** - Tác vụ tự động tìm tệp trùng lặp và bảo trì cơ sở dữ liệu
+]]></description>
+    <description lang="ca"><![CDATA[Trobeu i gestioneu els fitxers duplicats al vostre Nextcloud amb funcions avançades:
+
+* 🔍 **Detecció intel·ligent** - Tres maneres de trobar duplicats:
+  * Detecció basada en esdeveniments per a fitxers nous o modificats
+  * Escaneig automàtic en segon pla
+  * Escaneig manual des de la línia d'ordres (occ)
+* 📁 **Carpetes protegides** - Configureu "Carpetes d'origen" per protegir els fitxers importants d'una supressió accidental
+* 🛡️ **Gestió segura** - Els fitxers de les carpetes protegides no es poden suprimir des de la interfície
+* 🔎 **Cerca avançada** - Cerqueu i filtreu duplicats per camí, nom de fitxer, comodins o expressions regulars
+* ⚡ **Operacions massives** - Gestioneu milers de duplicats de manera eficient amb supressió massiva i neteja de carpetes buides
+* 📊 **Previsualització i simulació** - Reviseu exactament què se suprimirà i quant espai s'alliberarà abans de confirmar
+* 💼 **Processament en segon pla** - Tasques automatitzades per detectar duplicats i mantenir la base de dades
+]]></description>
+    <description lang="sl"><![CDATA[Poiščite in upravljajte podvojene datoteke v svojem Nextcloudu z naprednimi orodji:
+
+* 🔍 **Pametno zaznavanje** - Trije načini iskanja dvojnikov:
+  * Zaznavanje na podlagi dogodkov za nove in spremenjene datoteke
+  * Samodejno pregledovanje v ozadju
+  * Ročno pregledovanje iz ukazne vrstice (occ)
+* 📁 **Zaščitene mape** - Nastavite "Izvorne mape" za zaščito pomembnih datotek pred nenamernim izbrisom
+* 🛡️ **Varno upravljanje** - Datotek v zaščitenih mapah ni mogoče izbrisati prek uporabniškega vmesnika
+* 🔎 **Napredno iskanje** - Iščite in filtrirajte dvojnike po poti, imenu datoteke, nadomestnih znakih ali regularnih izrazih
+* ⚡ **Množična opravila** - Učinkovito uredite na tisoče dvojnikov z množičnim brisanjem in čiščenjem praznih map
+* 📊 **Predogled in preizkus** - Pred potrditvijo natančno preverite, katere datoteke bodo izbrisane in koliko prostora se sprosti
+* 💼 **Obdelava v ozadju** - Avtomatizirana opravila za iskanje podvojenih datotek in vzdrževanje baze podatkov
+]]></description>
+    <description lang="bg"><![CDATA[Откривайте и управлявайте дублиращите се файлове във вашия Nextcloud с мощни функции:
+
+* 🔍 **Интелигентно откриване** - Три начина за намиране на дубликати:
+  * Откриване при събития за нови или променени файлове
+  * Автоматично фоново сканиране
+  * Ръчно сканиране от командния ред (occ)
+* 📁 **Защитени папки** - Настройте "Изходни папки", за да предпазите важни файлове от случайно изтриване
+* 🛡️ **Безопасно управление** - Файловете в защитени папки не могат да бъдат изтрити през интерфейса
+* 🔎 **Разширено търсене** - Търсете и филтрирайте дубликати по път, име, заместващи знаци или регулярни изрази
+* ⚡ **Групови операции** - Управлявайте ефективно хиляди дубликати с групово изтриване и почистване на празни папки
+* 📊 **Преглед и проверка** - Вижте точно кои файлове ще бъдат изтрити и колко място ще се освободи преди потвърждение
+* 💼 **Фонова обработка** - Автоматизирани задачи за откриване на дубликати и поддръжка на базата данни
+]]></description>
+    <description lang="hr"><![CDATA[Pronađite i upravljajte dupliciranim datotekama u svom Nextcloudu uz napredne značajke:
+
+* 🔍 **Pametno otkrivanje** - Tri načina za pronalaženje duplikata:
+  * Otkrivanje na temelju događaja za nove ili izmijenjene datoteke
+  * Automatsko pozadinsko skeniranje
+  * Ručno skeniranje putem naredbenog retka (occ)
+* 📁 **Zaštićene mape** - Postavite "Izvorne mape" kako biste zaštitili važne datoteke od slučajnog brisanja
+* 🛡️ **Sigurno upravljanje** - Datoteke u zaštićenim mapama ne mogu se izbrisati kroz sučelje
+* 🔎 **Napredno pretraživanje** - Pretražujte i filtrirajte duplikate po putanji, nazivu datoteke, zamjenskim znakovima ili regularnim izrazima
+* ⚡ **Skupne operacije** - Učinkovito obradite tisuće duplikata uz skupno brisanje i čišćenje praznih mapa
+* 📊 **Pregled i provjera** - Prije potvrde točno provjerite koje će datoteke biti izbrisane i koliko će se prostora osloboditi
+* 💼 **Pozadinska obrada** - Automatizirani zadaci za pronalaženje duplikata i održavanje baze podataka
+]]></description>
+    <description lang="he"><![CDATA[אתרו ונהלו קבצים כפולים ב-Nextcloud שלכם בעזרת כלים מתקדמים:
+
+* 🔍 **זיהוי חכם** - שלוש דרכים לאיתור כפילויות:
+  * זיהוי מבוסס אירועים עבור קבצים חדשים או מעודכנים
+  * סריקה אוטומטית במשימות רקע
+  * סריקה ידנית משורת הפקודה (occ)
+* 📁 **תיקיות מוגנות** - הגדירו "תיקיות מקור" כדי להגן על קבצים חשובים מפני מחיקה מקרית
+* 🛡️ **ניהול בטוח** - לא ניתן למחוק קבצים בתיקיות מוגנות דרך ממשק המשתמש
+* 🔎 **חיפוש מתקדם** - חפשו וסננו כפילויות לפי נתיב, שם קובץ, תווים כלליים או ביטויים רגולריים
+* ⚡ **פעולות מרוכזות** - טפלו ביעילות באלפי כפילויות באמצעות מחיקה מרוכזת וניקוי תיקיות ריקות
+* 📊 **תצוגה מקדימה ובדיקה** - בדקו בדיוק אילו קבצים יימחקו וכמה מקום יתפנה לפני האישור
+* 💼 **עיבוד ברקע** - משימות אוטומטיות לאיתור כפילויות ותחזוקת מסד הנתונים
+]]></description>
+    <description lang="th"><![CDATA[ค้นหาและจัดการไฟล์ซ้ำใน Nextcloud ของคุณด้วยฟีเจอร์อันทรงพลัง:
+
+* 🔍 **การตรวจจับอัจฉริยะ** - สามวิธีในการค้นหาไฟล์ซ้ำ:
+  * การตรวจจับตามเหตุการณ์สำหรับไฟล์ใหม่หรือไฟล์ที่แก้ไข
+  * การสแกนอัตโนมัติผ่านงานเบื้องหลัง
+  * การสแกนด้วยตนเองผ่านบรรทัดคำสั่ง (occ)
+* 📁 **โฟลเดอร์ที่ได้รับการปกป้อง** - ตั้งค่า "โฟลเดอร์ต้นฉบับ" เพื่อปกป้องไฟล์สำคัญจากการลบโดยไม่ตั้งใจ
+* 🛡️ **การจัดการอย่างปลอดภัย** - ไม่สามารถลบไฟล์ในโฟลเดอร์ที่ได้รับการปกป้องผ่านหน้าเว็บได้
+* 🔎 **การค้นหาขั้นสูง** - ค้นหาและกรองไฟล์ซ้ำตามเส้นทาง ชื่อไฟล์ อักขระแทน หรือนิพจน์ทั่วไป
+* ⚡ **การทำงานเป็นกลุ่ม** - จัดการไฟล์ซ้ำหลายพันรายการได้อย่างมีประสิทธิภาพพร้อมการลบเป็นกลุ่มและล้างโฟลเดอร์ว่าง
+* 📊 **ดูตัวอย่างและตรวจสอบก่อนลบ** - ตรวจสอบรายการไฟล์ที่จะถูกลบและพื้นที่ที่จะได้คืนก่อนยืนยัน
+* 💼 **การประมวลผลเบื้องหลัง** - งานอัตโนมัติสำหรับการค้นหาไฟล์ซ้ำและดูแลฐานข้อมูล
+]]></description>
+    <description lang="sr"><![CDATA[Пронађите и управљајте дуплираним фајловима у вашем Nextcloud-у уз напредне могућности:
+
+* 🔍 **Паметно откривање** - Три начина за проналажење дупликата:
+  * Откривање засновано на догађајима за нове или измењене фајлове
+  * Аутоматско позадинско скенирање
+  * Ручно скенирање из командне линије (occ)
+* 📁 **Заштићени фолдери** - Подесите "Изворне фолдере" да заштитите важне фајлове од случајног брисања
+* 🛡️ **Безбедно управљање** - Фајлови у заштићеним фолдерима не могу се обрисати кроз интерфејс
+* 🔎 **Напредна претрага** - Претражујте и филтрирајте дупликате по путањи, називу фајла, џокерима или регуларним изразима
+* ⚡ **Групне операције** - Ефикасно обрадите хиљаде дупликата помоћу групног брисања и чишћења празних фолдера
+* 📊 **Преглед и провера** - Пре потврде проверите тачно који фајлови ће бити обрисани и колико простора се ослобађа
+* 💼 **Позадинска обрада** - Аутоматизовани задаци за проналажење дупликата и одржавање базе података
+]]></description>
+    <description lang="lt"><![CDATA[Raskite ir tvarkykite pasikartojančius failus savo Nextcloud sistemoje su galingomis priemonėmis:
+
+* 🔍 **Išmanus aptikimas** - Trys būdai rasti dublikatus:
+  * Įvykiais pagrįstas aptikimas naujiems arba pakeistiems failams
+  * Automatinis foninis nuskaitymas
+  * Rankinis nuskaitymas iš komandinės eilutės (occ)
+* 📁 **Apsaugoti aplankai** - Sukonfigūruokite "Šaltinio aplankus", kad apsaugotumėte svarbius failus nuo netyčinio ištrynimo
+* 🛡️ **Saugus valdymas** - Apsaugotuose aplankuose esančių failų negalima ištrinti per sąsają
+* 🔎 **Išplėstinė paieška** - Ieškokite ir filtruokite dublikatus pagal kelią, failo pavadinimą, pakaitos simbolius ar reguliariuosius reiškinius
+* ⚡ **Masiniai veiksmai** - Efektyviai sutvarkykite tūkstančius dublikatų su masiniu trynimu ir tuščių aplankų valymu
+* 📊 **Peržiūra ir patikra** - Prieš patvirtindami pamatykite, kurie failai bus ištrinti ir kiek vietos atlaisvinsite
+* 💼 **Foninis apdorojimas** - Automatizuotos dublikatų paieškos ir duomenų bazės priežiūros užduotys
+]]></description>
+    <description lang="lv"><![CDATA[Atrodiet un pārvaldiet dublētās datnes savā Nextcloud sistēmā ar jaudīgām funkcijām:
+
+* 🔍 **Viedā noteikšana** - Trīs veidi, kā atrast dublikātus:
+  * Notikumos balstīta noteikšana jaunām vai mainītām datnēm
+  * Automātiska fona skenēšana
+  * Manuāla skenēšana no komandrindas (occ)
+* 📁 **Aizsargātās mapes** - Konfigurējiet "Izcelsmes mapes", lai pasargātu svarīgas datnes no nejaušas dzēšanas
+* 🛡️ **Droša pārvaldība** - Datnes aizsargātajās mapēs nevar izdzēst caur lietotāja saskarni
+* 🔎 **Uzlabotā meklēšana** - Meklējiet un filtrējiet dublikātus pēc ceļa, datnes nosaukuma, aizstājējzīmēm vai regulārajām izteiksmēm
+* ⚡ **Masveida darbības** - Efektīvi apstrādājiet tūkstošiem dublikātu ar masveida dzēšanu un tukšo mapju tīrīšanu
+* 📊 **Priekšskatījums un pārbaude** - Pirms apstiprināšanas redziet, kuras datnes tiks dzēstas un cik daudz vietas tiks atbrīvots
+* 💼 **Fona apstrāde** - Automatizēti uzdevumi dublikātu meklēšanai un datubāzes uzturēšanai
+]]></description>
+    <description lang="et"><![CDATA[Leidke ja hallake oma Nextcloudis duplikaatfaile võimsate tööriistadega:
+
+* 🔍 **Nutikas tuvastus** - Kolm viisi duplikaatide leidmiseks:
+  * Sündmustepõhine tuvastus uutele ja muudetud failidele
+  * Automaatne taustaskannimine
+  * Käsitsi skannimine käsurealt (occ)
+* 📁 **Kaitstud kaustad** - Määrake "Algkaustad", et kaitsta olulisi faile juhusliku kustutamise eest
+* 🛡️ **Turvaline haldus** - Kaitstud kaustades olevaid faile ei saa kasutajaliidese kaudu kustutada
+* 🔎 **Täpsem otsing** - Otsige ja filtreerige duplikaate tee, failinime, metamärkide või regulaaravaldiste järgi
+* ⚡ **Hulgitoimingud** - Hallake tõhusalt tuhandeid duplikaate hulgikustutamise ja tühjade kaustade puhastamisega
+* 📊 **Eelvaade ja kontroll** - Vaadake enne kinnitamist täpselt, millised failid kustutatakse ja kui palju ruumi vabaneb
+* 💼 **Taustatöötlus** - Automatiseeritud taustatööd duplikaatide otsimiseks ja andmebaasi hoolduseks
 ]]></description>
 
     <version>1.10.18</version>
