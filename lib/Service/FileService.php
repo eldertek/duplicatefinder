@@ -87,6 +87,20 @@ class FileService
             );
         }
 
+        if ($this->isProtectedLivePhotoVideo($node)) {
+            $this->logger->warning(
+                'File deletion blocked by Nextcloud Live Photo protection: {path}',
+                ['path' => $filePath]
+            );
+
+            throw new LivePhotoProtectionException(
+                sprintf(
+                    'Cannot delete "%s" directly because Nextcloud protects the video part of a Live Photo. Delete the paired photo instead only if both files are redundant.',
+                    $filePath
+                )
+            );
+        }
+
         try {
             $node->delete();
         } catch (Exception $e) {
@@ -128,7 +142,81 @@ class FileService
             throw $e;
         }
 
+        // Nextcloud's HookConnector catches AbortedEventException and sets $arguments['run'] = false
+        // without rethrowing from Node::delete(), leaving the file intact in user storage.
+        $effectivePath = ($resolvedPath !== null && $resolvedPath !== '') ? $resolvedPath : $filePath;
+        if ($effectivePath !== '' && $userFolder->nodeExists($effectivePath)) {
+            $this->logger->warning(
+                'File deletion aborted by Nextcloud before unlink (node still exists): {path}',
+                ['path' => $filePath]
+            );
+
+            throw new AbortedDeletionException(
+                sprintf('File deletion was aborted by Nextcloud for "%s"', $filePath)
+            );
+        }
+
         $this->logger->info('Successfully deleted file: {path}', ['path' => $filePath]);
+    }
+
+    /**
+     * Resolve the paired Live Photo peer node id via Nextcloud's LivePhotosService when available.
+     */
+    protected function resolveLivePhotoPeerId(Node $node): ?int
+    {
+        if (!class_exists('OCP\\Server') || !class_exists('OCA\\Files\\Service\\LivePhotosService')) {
+            return null;
+        }
+
+        try {
+            /** @var object $livePhotosService */
+            $livePhotosService = \OCP\Server::get('OCA\\Files\\Service\\LivePhotosService');
+            if (!method_exists($livePhotosService, 'getLivePhotoPeerId')) {
+                return null;
+            }
+
+            $ref = new \ReflectionMethod($livePhotosService, 'getLivePhotoPeerId');
+            $params = $ref->getParameters();
+            $paramType = isset($params[0]) ? (string)$params[0]->getType() : '';
+            /** @var mixed $peerId */
+            $peerId = ($paramType === 'int' || $paramType === '?int')
+                ? $livePhotosService->getLivePhotoPeerId($node->getId())
+                : $livePhotosService->getLivePhotoPeerId($node);
+
+            return is_int($peerId) && $peerId > 0 ? $peerId : null;
+        } catch (\Throwable $ignore) {
+            return null;
+        }
+    }
+
+    /**
+     * Detect whether a QuickTime video node is protected by Nextcloud's SyncLivePhotosListener
+     * (paired Live Photo image present in the same folder). Checking before Node::delete() prevents
+     * OC\Files\Node\File::delete() from emitting a false postDelete hook when HookConnector aborts unlink.
+     */
+    private function isProtectedLivePhotoVideo(Node $node): bool
+    {
+        if ($node->getMimetype() !== 'video/quicktime') {
+            return false;
+        }
+
+        $peerId = $this->resolveLivePhotoPeerId($node);
+        if ($peerId === null) {
+            return false;
+        }
+
+        try {
+            $parent = $node->getParent();
+            foreach ($parent->getDirectoryListing() as $sibling) {
+                if ($sibling->getId() === $peerId) {
+                    return true;
+                }
+            }
+        } catch (\Throwable $ignore) {
+            return false;
+        }
+
+        return false;
     }
 
     /**
