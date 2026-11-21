@@ -504,6 +504,8 @@ OC.L10N.register(
     "Permission denied to delete file" : "無權刪除檔案",
     "File is currently locked. Please try again later." : "檔案目前被上鎖，請稍候再試",
     "Error deleting file" : "刪除檔案時發生錯誤",
+    "_%n file deleted_::_%n files deleted_" : ["已刪除 %n 個檔案"],
+    "_Failed to delete %n file_::_Failed to delete %n files_" : ["刪除 %n 個檔案失敗。"],
     "Some folders could not be saved:\n{errors}" : "無法儲存部份資料夾：\n{errors}",
     "Origin folders saved successfully" : "成功儲存原始資料夾",
     "Failed to save origin folders" : "儲存原始資料夾失敗",
@@ -531,6 +533,8 @@ OC.L10N.register(
     "Failed to initiate project scan" : "無法啟動專案掃描",
     "Failed to load project duplicates" : "無法加載項目重複項",
     "Failed to scan for empty folders." : "無法掃描空資料夾。",
+    "_%n empty folder deleted_::_%n empty folders deleted_" : ["已刪除 %n 個空資料夾。"],
+    "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_" : ["無法刪除 %n 個空資料夾。"],
     "Failed to delete empty folders." : "無法刪除空資料夾。",
     "The viewer is not available" : "檢視程式不可用"
 },

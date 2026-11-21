@@ -504,6 +504,8 @@ OC.L10N.register(
     "Permission denied to delete file" : "Berechtigung zum Löschen der Datei verweigert",
     "File is currently locked. Please try again later." : "Datei ist derzeit gesperrt. Bitte später noch einmal versuchen.",
     "Error deleting file" : "Fehler beim Löschen der Datei",
+    "_%n file deleted_::_%n files deleted_" : ["%n Datei gelöscht","%n Dateien gelöscht"],
+    "_Failed to delete %n file_::_Failed to delete %n files_" : ["Löschen von %n Datei fehlgeschlagen","Löschen von %n Dateien fehlgeschlagen"],
     "Some folders could not be saved:\n{errors}" : "Einige Ordner konnten nicht gespeichert werden:\n{errors}",
     "Origin folders saved successfully" : "Ursprungsordner gespeichert",
     "Failed to save origin folders" : "Ursprungsordner konnten nicht gespeichert werden",
@@ -531,6 +533,8 @@ OC.L10N.register(
     "Failed to initiate project scan" : "Der Projektscan konnte nicht gestartet werden.",
     "Failed to load project duplicates" : "Projektduplikate konnten nicht geladen werden",
     "Failed to scan for empty folders." : "Leere Ordner konnten nicht gescannt werden.",
+    "_%n empty folder deleted_::_%n empty folders deleted_" : ["%n leerer Ordner gelöscht","%n leere Ordner gelöscht"],
+    "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_" : ["%n leerer Ordner konnte nicht gelöscht werden","%n leere Ordner konnten nicht gelöscht werden"],
     "Failed to delete empty folders." : "Leere Ordner konnten nicht gelöscht werden.",
     "The viewer is not available" : "Der Betrachter ist nicht verfügbar"
 },

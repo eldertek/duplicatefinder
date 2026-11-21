@@ -504,6 +504,8 @@ OC.L10N.register(
     "Permission denied to delete file" : "Permission denied to delete file",
     "File is currently locked. Please try again later." : "File is currently locked. Please try again later.",
     "Error deleting file" : "Error deleting file",
+    "_%n file deleted_::_%n files deleted_" : ["%n file deleted","%n files deleted"],
+    "_Failed to delete %n file_::_Failed to delete %n files_" : ["Failed to delete %n file","Failed to delete %n files"],
     "Some folders could not be saved:\n{errors}" : "Some folders could not be saved:\n{errors}",
     "Origin folders saved successfully" : "Origin folders saved successfully",
     "Failed to save origin folders" : "Failed to save origin folders",
@@ -531,6 +533,8 @@ OC.L10N.register(
     "Failed to initiate project scan" : "Failed to initiate project scan",
     "Failed to load project duplicates" : "Failed to load project duplicates",
     "Failed to scan for empty folders." : "Failed to scan for empty folders.",
+    "_%n empty folder deleted_::_%n empty folders deleted_" : ["%n empty folder deleted","%n empty folders deleted"],
+    "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_" : ["Failed to delete %n empty folder","Failed to delete %n empty folders"],
     "Failed to delete empty folders." : "Failed to delete empty folders.",
     "The viewer is not available" : "The viewer is not available"
 },
