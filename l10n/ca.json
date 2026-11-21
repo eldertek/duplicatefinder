@@ -332,6 +332,23 @@
     "Failed to add filter" : "No s'ha pogut afegir el filtre",
     "Filter removed successfully" : "El filtre s'ha eliminat correctament",
     "Failed to remove filter" : "No s'ha pogut eliminar el filtre",
-    "The viewer is not available" : "El visor no està disponible"
+    "The viewer is not available" : "El visor no està disponible",
+    "Failed to scan duplicate folders." : "No s'han pogut escanejar les carpetes duplicades.",
+    "Scan duplicate folders" : "Escaneja carpetes duplicades",
+    "Duplicate folders ({count})" : "Carpetes duplicades ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Carpetes amb arbres de fitxers 100% idèntics. Conserva una carpeta per suprimir les còpies coincidents de les altres. Les carpetes d'origen protegides i les Live Photos continuen protegides.",
+    "No identical duplicate folders were found." : "No s'han trobat carpetes duplicades idèntiques.",
+    "Identical folder group" : "Grup de carpetes idèntiques",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} fitxers, {size} per carpeta, {reclaimable} recuperables",
+    "Keep this folder" : "Conserva aquesta carpeta",
+    "Keep this folder and delete duplicate copies?" : "Voleu conservar aquesta carpeta i suprimir les còpies duplicades?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Voleu conservar \"{folder}\" i suprimir {count} fitxers duplicats ({size}) de les altres carpetes idèntiques? Les proteccions de carpetes d'origen i Live Photos continuen aplicant-se.",
+    "Delete duplicate copies" : "Suprimeix les còpies duplicades",
+    "Hide ignored ({count})" : "Amaga els ignorats ({count})",
+    "Ignore folder in future scans" : "Ignora la carpeta en escaneigs futurs",
+    "Ignore selected ({count})" : "Ignora la selecció ({count})",
+    "Restore all" : "Restaura-ho tot",
+    "Restore folder to cleanup list" : "Restaura la carpeta a la llista de neteja",
+    "Show ignored ({count})" : "Mostra els ignorats ({count})"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

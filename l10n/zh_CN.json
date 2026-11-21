@@ -282,6 +282,23 @@
     "Error unacknowledging duplicate." : "取消确认重复项时发生错误",
     "File deleted successfully." : "文件删除成功。",
     "File not found" : "文件未找到",
-    "The viewer is not available" : "查看器不可用"
+    "The viewer is not available" : "查看器不可用",
+    "Failed to scan duplicate folders." : "扫描重复文件夹失败。",
+    "Scan duplicate folders" : "扫描重复文件夹",
+    "Duplicate folders ({count})" : "重复文件夹 ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "文件结构完全相同的文件夹。保留一个文件夹即可删除其他文件夹中的对应副本。受保护的源文件夹和实况照片仍将受到保护。",
+    "No identical duplicate folders were found." : "未找到完全相同的重复文件夹。",
+    "Identical folder group" : "相同文件夹组",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} 个文件，每个文件夹 {size}，可释放 {reclaimable}",
+    "Keep this folder" : "保留此文件夹",
+    "Keep this folder and delete duplicate copies?" : "保留此文件夹并删除重复副本？",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "是否保留“{folder}”并从其他相同文件夹中删除 {count} 个重复文件（{size}）？受保护的源文件夹和实况照片保护规则仍然生效。",
+    "Delete duplicate copies" : "删除重复副本",
+    "Hide ignored ({count})" : "隐藏已忽略 ({count})",
+    "Ignore folder in future scans" : "在以后的扫描中忽略此文件夹",
+    "Ignore selected ({count})" : "忽略所选 ({count})",
+    "Restore all" : "全部恢复",
+    "Restore folder to cleanup list" : "将文件夹恢复到清理列表",
+    "Show ignored ({count})" : "显示已忽略 ({count})"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

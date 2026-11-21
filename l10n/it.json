@@ -59,6 +59,23 @@
     "Next" : "Successivo",
     "Advanced Settings" : "Impostazioni avanzate",
     "Note:" : "Nota:",
-    "File not found" : "File non trovato"
+    "File not found" : "File non trovato",
+    "Failed to scan duplicate folders." : "Impossibile analizzare le cartelle duplicate.",
+    "Scan duplicate folders" : "Analizza cartelle duplicate",
+    "Duplicate folders ({count})" : "Cartelle duplicate ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Cartelle con struttura di file identica al 100%. Mantieni una cartella per eliminare le copie corrispondenti dalle altre. Le cartelle di origine protette e le Live Photo restano protette.",
+    "No identical duplicate folders were found." : "Nessuna cartella duplicata identica trovata.",
+    "Identical folder group" : "Gruppo di cartelle identiche",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} file, {size} per cartella, {reclaimable} recuperabili",
+    "Keep this folder" : "Mantieni questa cartella",
+    "Keep this folder and delete duplicate copies?" : "Mantenere questa cartella ed eliminare le copie duplicate?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Mantenere \"{folder}\" ed eliminare {count} file duplicati ({size}) dalle altre cartelle identiche? Le protezioni per cartelle di origine e Live Photo restano attive.",
+    "Delete duplicate copies" : "Elimina copie duplicate",
+    "Hide ignored ({count})" : "Nascondi ignorate ({count})",
+    "Ignore folder in future scans" : "Ignora cartella nelle scansioni future",
+    "Ignore selected ({count})" : "Ignora selezionate ({count})",
+    "Restore all" : "Ripristina tutto",
+    "Restore folder to cleanup list" : "Ripristina cartella nell'elenco di pulizia",
+    "Show ignored ({count})" : "Mostra ignorate ({count})"
 },"pluralForm" :"nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
 }

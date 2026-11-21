@@ -66,6 +66,24 @@
     "Next" : "Volgende",
     "Advanced Settings" : "Geavanceerde instellingen",
     "Note:" : "Notitie:",
-    "File not found" : "Bestand niet gevonden"
+    "File not found" : "Bestand niet gevonden",
+    "Failed to scan duplicate folders." : "Kan dubbele mappen niet scannen.",
+    "Scan duplicate folders" : "Dubbele mappen scannen",
+    "Duplicate folders ({count})" : "Dubbele mappen ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Mappen met 100% identieke bestandsstructuren. Behoud één map om overeenkomende kopieën uit de andere te verwijderen. Beschermde oorspronkelijke mappen en Live Photos blijven beschermd.",
+    "No identical duplicate folders were found." : "Geen identieke dubbele mappen gevonden.",
+    "Identical folder group" : "Groep identieke mappen",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} bestanden, {size} per map, {reclaimable} vrij te maken",
+    "Protected" : "Beschermd",
+    "Keep this folder" : "Deze map behouden",
+    "Keep this folder and delete duplicate copies?" : "Deze map behouden en dubbele kopieën verwijderen?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "\"{folder}\" behouden en {count} dubbele bestanden ({size}) uit de andere identieke mappen verwijderen? Beveiliging van oorspronkelijke mappen en Live Photos blijft van kracht.",
+    "Delete duplicate copies" : "Dubbele kopieën verwijderen",
+    "Hide ignored ({count})" : "Genegeerde verbergen ({count})",
+    "Ignore folder in future scans" : "Map negeren bij toekomstige scans",
+    "Ignore selected ({count})" : "Geselecteerde negeren ({count})",
+    "Restore all" : "Alles herstellen",
+    "Restore folder to cleanup list" : "Map terugzetten naar opschoonlijst",
+    "Show ignored ({count})" : "Genegeerde tonen ({count})"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

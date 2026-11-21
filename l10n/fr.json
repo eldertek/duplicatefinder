@@ -512,6 +512,23 @@
     "Failed to load project duplicates" : "Échec du chargement des doublons du projet",
     "Failed to scan for empty folders." : "Échec du scan des dossiers vides.",
     "Failed to delete empty folders." : "Échec de la suppression des dossiers vides.",
-    "The viewer is not available" : "La visionneuse n'est pas disponible"
+    "The viewer is not available" : "La visionneuse n'est pas disponible",
+    "Failed to scan duplicate folders." : "Échec de l'analyse des dossiers en doublon.",
+    "Scan duplicate folders" : "Analyser les dossiers en doublon",
+    "Duplicate folders ({count})" : "Dossiers en doublon ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Dossiers ayant une arborescence de fichiers 100 % identique. Conservez un dossier pour supprimer les copies correspondantes des autres dossiers. Les dossiers d'origine protégés et les Live Photos restent protégés.",
+    "No identical duplicate folders were found." : "Aucun dossier en doublon identique trouvé.",
+    "Identical folder group" : "Groupe de dossiers identiques",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} fichiers, {size} par dossier, {reclaimable} récupérables",
+    "Keep this folder" : "Conserver ce dossier",
+    "Keep this folder and delete duplicate copies?" : "Conserver ce dossier et supprimer les copies en doublon ?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Conserver « {folder} » et supprimer {count} fichiers en doublon ({size}) dans les autres dossiers identiques ? Les protections des dossiers d'origine et des Live Photos restent appliquées.",
+    "Delete duplicate copies" : "Supprimer les copies en doublon",
+    "Hide ignored ({count})" : "Masquer les ignorés ({count})",
+    "Ignore folder in future scans" : "Ignorer ce dossier lors des prochaines analyses",
+    "Ignore selected ({count})" : "Ignorer la sélection ({count})",
+    "Restore all" : "Tout restaurer",
+    "Restore folder to cleanup list" : "Restaurer le dossier dans la liste de nettoyage",
+    "Show ignored ({count})" : "Afficher les ignorés ({count})"
 },"pluralForm" :"nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
 }

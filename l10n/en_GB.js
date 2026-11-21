@@ -532,6 +532,17 @@ OC.L10N.register(
     "Failed to load project duplicates" : "Failed to load project duplicates",
     "Failed to scan for empty folders." : "Failed to scan for empty folders.",
     "Failed to delete empty folders." : "Failed to delete empty folders.",
-    "The viewer is not available" : "The viewer is not available"
+    "The viewer is not available" : "The viewer is not available",
+    "Failed to scan duplicate folders." : "Failed to scan duplicate folders.",
+    "Scan duplicate folders" : "Scan duplicate folders",
+    "Duplicate folders ({count})" : "Duplicate folders ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.",
+    "No identical duplicate folders were found." : "No identical duplicate folders were found.",
+    "Identical folder group" : "Identical folder group",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} files, {size} per folder, {reclaimable} reclaimable",
+    "Keep this folder" : "Keep this folder",
+    "Keep this folder and delete duplicate copies?" : "Keep this folder and delete duplicate copies?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.",
+    "Delete duplicate copies" : "Delete duplicate copies"
 },
 "nplurals=2; plural=(n != 1);");

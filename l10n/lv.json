@@ -32,6 +32,24 @@
     "All deleted files can be recovered from the Nextcloud trash bin during the retention period." : "Visas izdzēstās datnes paturēšanas laika posmā var atkopt no Nextcloud atkritnes.",
     "File not found" : "Datne nav atrasta",
     "Failed to delete origin folder" : "Neizdevās izdzēst avota mapi",
-    "Failed to delete project" : "Neizdevās izdzēst projektu"
+    "Failed to delete project" : "Neizdevās izdzēst projektu",
+    "Failed to scan duplicate folders." : "Neizdevās skenēt dublētās mapes.",
+    "Scan duplicate folders" : "Skenēt dublētās mapes",
+    "Duplicate folders ({count})" : "Dublētās mapes ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Mapes ar 100% identisku failu koku. Saglabājiet vienu mapi, lai dzēstu atbilstošās kopijas no pārējām. Aizsargātās sākotnējās mapes un Live Photos paliek aizsargātas.",
+    "No identical duplicate folders were found." : "Identiskas dublētās mapes netika atrastas.",
+    "Identical folder group" : "Identisko mapju grupa",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} faili, {size} mapē, {reclaimable} atbrīvojams",
+    "Protected" : "Aizsargāta",
+    "Keep this folder" : "Saglabāt šo mapi",
+    "Keep this folder and delete duplicate copies?" : "Saglabāt šo mapi un dzēst dublētās kopijas?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Saglabāt \"{folder}\" un dzēst {count} dublētus failus ({size}) no citām identiskajām mapēm? Sākotnējo mapju un Live Photos aizsardzība joprojām ir spēkā.",
+    "Delete duplicate copies" : "Dzēst dublētās kopijas",
+    "Hide ignored ({count})" : "Slēpt ignorētās ({count})",
+    "Ignore folder in future scans" : "Ignorēt mapi turpmākajās skenēšanās",
+    "Ignore selected ({count})" : "Ignorēt atlasītās ({count})",
+    "Restore all" : "Atjaunot visas",
+    "Restore folder to cleanup list" : "Atgriezt mapi tīrīšanas sarakstā",
+    "Show ignored ({count})" : "Rādīt ignorētās ({count})"
 },"pluralForm" :"nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);"
 }

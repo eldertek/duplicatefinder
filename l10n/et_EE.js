@@ -335,6 +335,22 @@ OC.L10N.register(
     "Failed to load project duplicates" : "Projekti topeltfailide laadimine ei õnnestunud",
     "Failed to scan for empty folders." : "Tühjade kaustade otsimine ei õnnestunud.",
     "Failed to delete empty folders." : "Tühjade kaustade kustutamine ei õnnestunud.",
-    "The viewer is not available" : "Vaatamisrakendus pole saadaval"
+    "The viewer is not available" : "Vaatamisrakendus pole saadaval",
+    "Failed to scan duplicate folders." : "Duplikaatkaustade skannimine ebaõnnestus.",
+    "Scan duplicate folders" : "Skanni duplikaatkaustu",
+    "Duplicate folders ({count})" : "Duplikaatkaustad ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "100% identse failipuuga kaustad. Jäta üks kaust alles, et kustutada vastavad koopiad teistest kaustadest. Kaitstud algkaustad ja Live Photos jäävad kaitstuks.",
+    "No identical duplicate folders were found." : "Identseid duplikaatkaustu ei leitud.",
+    "Identical folder group" : "Identsete kaustade grupp",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} faili, {size} kausta kohta, {reclaimable} vabastatav",
+    "Keep this folder" : "Säilita see kaust",
+    "Keep this folder and delete duplicate copies?" : "Kas säilitada see kaust ja kustutada duplikaatkoopiad?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Kas säilitada \"{folder}\" ja kustutada {count} duplikaatfaili ({size}) teistest identsetest kaustadest? Algkaustade ja Live Photo kaitsed jäävad jõusse.",
+    "Delete duplicate copies" : "Kustuta duplikaatkoopiad",
+    "Hide ignored ({count})" : "Peida eiratud ({count})",
+    "Ignore folder in future scans" : "Eira kausta tulevastes skannimistes",
+    "Ignore selected ({count})" : "Eira valitud ({count})",
+    "Restore folder to cleanup list" : "Taasta kaust puhastusloendisse",
+    "Show ignored ({count})" : "Kuva eiratud ({count})"
 },
 "nplurals=2; plural=(n != 1);");

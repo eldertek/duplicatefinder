@@ -530,6 +530,17 @@
     "Failed to load project duplicates" : "Duplikáty projektu sa nepodarilo načítať",
     "Failed to scan for empty folders." : "Nepodarilo sa vyhľadať prázdne priečinky.",
     "Failed to delete empty folders." : "Nepodarilo sa odstrániť prázdne priečinky.",
-    "The viewer is not available" : "Prehliadač nie je dostupný"
+    "The viewer is not available" : "Prehliadač nie je dostupný",
+    "Failed to scan duplicate folders." : "Nepodarilo sa prehľadať duplicitné priečinky.",
+    "Scan duplicate folders" : "Hľadať duplicitné priečinky",
+    "Duplicate folders ({count})" : "Duplicitné priečinky ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Priečinky so 100% zhodnou štruktúrou súborov. Ponechajte jeden priečinok a odstráňte zodpovedajúce kópie z ostatných. Chránené pôvodné priečinky a Live Photos zostávajú chránené.",
+    "No identical duplicate folders were found." : "Nenašli sa žiadne zhodné duplicitné priečinky.",
+    "Identical folder group" : "Skupina zhodných priečinkov",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} súborov, {size} na priečinok, {reclaimable} na uvoľnenie",
+    "Keep this folder" : "Ponechať tento priečinok",
+    "Keep this folder and delete duplicate copies?" : "Ponechať tento priečinok a odstrániť duplicitné kópie?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Ponechať \"{folder}\" a odstrániť {count} duplicitných súborov ({size}) z ostatných zhodných priečinkov? Ochrana pôvodných priečinkov a Live Photos zostáva aktívna.",
+    "Delete duplicate copies" : "Odstrániť duplicitné kópie"
 },"pluralForm" :"nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);"
 }

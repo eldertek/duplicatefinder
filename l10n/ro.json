@@ -462,6 +462,23 @@
     "Project scan initiated" : "Scanarea proiectului a început",
     "Failed to initiate project scan" : "Scanarea proiectului nu a putut fi pornită",
     "Failed to load project duplicates" : "Duplicatele proiectului nu au putut fi încărcate",
-    "The viewer is not available" : "Vizualizatorul nu este disponibil"
+    "The viewer is not available" : "Vizualizatorul nu este disponibil",
+    "Failed to scan duplicate folders." : "Scanarea folderelor duplicate a eșuat.",
+    "Scan duplicate folders" : "Scanează folderele duplicate",
+    "Duplicate folders ({count})" : "Foldere duplicate ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Foldere cu structură de fișiere 100% identică. Păstrați un folder pentru a șterge copiile corespunzătoare din celelalte. Folderele sursă protejate și Live Photos rămân protejate.",
+    "No identical duplicate folders were found." : "Nu au fost găsite foldere duplicate identice.",
+    "Identical folder group" : "Grup de foldere identice",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} fișiere, {size} per folder, {reclaimable} recuperabili",
+    "Keep this folder" : "Păstrează acest folder",
+    "Keep this folder and delete duplicate copies?" : "Păstrați acest folder și ștergeți copiile duplicate?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Păstrați \"{folder}\" și ștergeți {count} fișiere duplicate ({size}) din celelalte foldere identice? Protecțiile pentru folderele sursă și Live Photos rămân active.",
+    "Delete duplicate copies" : "Șterge copiile duplicate",
+    "Hide ignored ({count})" : "Ascunde ignorate ({count})",
+    "Ignore folder in future scans" : "Ignoră dosarul la scanările viitoare",
+    "Ignore selected ({count})" : "Ignoră selecția ({count})",
+    "Restore all" : "Restaurează tot",
+    "Restore folder to cleanup list" : "Restaurează dosarul în lista de curățare",
+    "Show ignored ({count})" : "Afișează ignorate ({count})"
 },"pluralForm" :"nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));"
 }

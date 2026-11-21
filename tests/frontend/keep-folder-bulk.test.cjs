@@ -1,3 +1,6 @@
+const { readFileSync, readdirSync, existsSync } = require('node:fs')
+const { resolve, basename } = require('node:path')
+const vm = require('node:vm')
 const { describe, test } = require('node:test')
 const assert = require('node:assert/strict')
 const { Vue, loadComponent, loadModule, settle } = require('./helpers.cjs')
@@ -331,5 +334,111 @@ describe('Issue 193 (Level 2): Duplicate folders view and one-click Keep this fo
 		)
 
 		vm.$destroy()
+	})
+
+	test('Issue 193 runtime l10n/*.json and l10n/*.js contain all duplicate folder strings across matching locales with zero U+2013/U+2014', () => {
+		const root = resolve(__dirname, '../..')
+		const issue193Keys = [
+			'Failed to scan duplicate folders.',
+			'Scan duplicate folders',
+			'Duplicate folders ({count})',
+			'Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.',
+			'No identical duplicate folders were found.',
+			'Identical folder group',
+			'{files} files, {size} per folder, {reclaimable} reclaimable',
+			'Protected',
+			'Keep this folder',
+			'Keep this folder and delete duplicate copies?',
+			'Keep "{folder}" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.',
+			'Delete duplicate copies',
+		]
+
+		const frJson = JSON.parse(readFileSync(resolve(root, 'l10n/fr.json'), 'utf8')).translations
+		let frJsTranslations = null
+		const frJsRaw = readFileSync(resolve(root, 'l10n/fr.js'), 'utf8')
+		vm.runInNewContext(frJsRaw, {
+			OC: {
+				L10N: {
+					register(appId, translations) {
+						assert.equal(appId, 'duplicatefinder')
+						frJsTranslations = translations
+					},
+				},
+			},
+		})
+		assert.ok(frJsTranslations, 'l10n/fr.js must call OC.L10N.register')
+		assert.equal(frJson['Scan duplicate folders'], 'Analyser les dossiers en doublon')
+		assert.equal(frJson['Keep this folder'], 'Conserver ce dossier')
+		assert.equal(frJson['Duplicate folders ({count})'], 'Dossiers en doublon ({count})')
+		assert.equal(frJson['Identical folder group'], 'Groupe de dossiers identiques')
+		assert.equal(frJson.Protected, 'Protégé')
+
+		for (const key of issue193Keys) {
+			assert.ok(typeof frJson[key] === 'string' && frJson[key].trim().length > 0, `l10n/fr.json missing "${key}"`)
+			assert.equal(frJsTranslations[key], frJson[key], `l10n/fr.js out of sync with l10n/fr.json for "${key}"`)
+		}
+
+		const fallbackFiles = readdirSync(resolve(root, 'l10n-fallback')).filter(name => name.endsWith('.json'))
+		for (const fileName of fallbackFiles) {
+			const locale = basename(fileName, '.json')
+			const l10nJsonPath = resolve(root, `l10n/${locale}.json`)
+			const l10nJsPath = resolve(root, `l10n/${locale}.js`)
+			if (!existsSync(l10nJsonPath) || !existsSync(l10nJsPath)) {
+				continue
+			}
+
+			const rawJson = readFileSync(l10nJsonPath, 'utf8')
+			const rawJs = readFileSync(l10nJsPath, 'utf8')
+
+			const parsedJson = JSON.parse(rawJson).translations
+			let parsedJs = null
+			vm.runInNewContext(rawJs, {
+				OC: {
+					L10N: {
+						register(appId, translations) {
+							assert.equal(appId, 'duplicatefinder')
+							parsedJs = translations
+						},
+					},
+				},
+			})
+			assert.ok(parsedJs, `l10n/${locale}.js must register translations`)
+
+			for (const key of issue193Keys) {
+				assert.ok(
+					typeof parsedJson[key] === 'string' && parsedJson[key].trim().length > 0,
+					`l10n/${locale}.json missing Issue 193 key "${key}"`
+				)
+				assert.equal(
+					/[\u2013\u2014]/.test(parsedJson[key]),
+					false,
+					`l10n/${locale}.json Issue 193 key "${key}" must not contain U+2013/U+2014`
+				)
+				assert.equal(
+					parsedJs[key],
+					parsedJson[key],
+					`l10n/${locale}.js missing/mismatched Issue 193 key "${key}"`
+				)
+			}
+		}
+	})
+
+	test('origin-badge enforces WCAG AA readable contrast on light/dark Nextcloud themes and focus-visible outlines', () => {
+		const root = resolve(__dirname, '../..')
+		const vueSource = readFileSync(resolve(root, 'src/components/BulkDeletionSettings.vue'), 'utf8')
+
+		assert.equal(/[\u2013\u2014]/.test(vueSource), false, 'BulkDeletionSettings.vue must not contain U+2013/U+2014')
+		const badgeMatch = /\.origin-badge\s*\{([\s\S]*?)\}/.exec(vueSource)
+		assert.ok(badgeMatch, 'BulkDeletionSettings.vue must define .origin-badge style')
+		const badgeCss = badgeMatch[1]
+
+		assert.match(badgeCss, /background-color:\s*var\(--color-primary-element-light/)
+		assert.match(badgeCss, /color:\s*var\(--color-primary-element-light-text,\s*var\(--color-main-text/)
+		assert.equal(
+			badgeCss.includes('--color-primary-element-text-dark'),
+			false,
+			'.origin-badge must never pair --color-primary-element-text-dark with --color-primary-element-light'
+		)
+		assert.match(vueSource, /\.keep-duplicate-folder-button:focus-visible/)
 	})
 })

@@ -1447,6 +1447,7 @@ export default {
 
 .duplicate-folder-row {
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -1455,7 +1456,7 @@ export default {
 }
 
 .duplicate-folder-info {
-  flex: 1 1 auto;
+  flex: 1 1 220px;
 }
 
 .origin-badge {
@@ -1463,15 +1464,23 @@ export default {
   align-items: center;
   padding: 2px 8px;
   border-radius: 999px;
+  border: 1px solid var(--color-primary-element, #00679e);
   font-size: 0.78rem;
   font-weight: 600;
-  background-color: var(--color-primary-element-light);
-  color: var(--color-primary-element-text-dark, var(--color-main-text));
+  background-color: var(--color-primary-element-light, #e5eff5);
+  color: var(--color-primary-element-light-text, var(--color-main-text, #222222));
   white-space: nowrap;
 }
 
 .keep-duplicate-folder-button {
   flex-shrink: 0;
+}
+
+.scan-duplicate-folders-button:focus-visible,
+.keep-duplicate-folder-button:focus-visible,
+.dismiss-duplicate-folders-button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #00679e);
+  outline-offset: 2px;
 }
 
 .empty-folders-header {
