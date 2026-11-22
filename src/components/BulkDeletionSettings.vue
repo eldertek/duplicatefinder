@@ -411,13 +411,13 @@
                       @update:checked="toggleFile(hash, index)"
                       type="checkbox">
                       <div class="file-info" :title="cleanFilePath(file.path)">
-                        <span class="file-path-label" v-html="file.humanizedPath"></span>
+                        <span class="file-path-label"><span v-if="file.humanizedDirectory" class="path-directory">{{ file.humanizedDirectory }}/</span><span class="path-filename">{{ file.humanizedFileName }}</span></span>
                         <span class="file-size">{{ formatBytes(file.size) }}</span>
                       </div>
                     </NcCheckboxRadioSwitch>
                   </div>
                 </div>
-                <div class="group-actions">
+                <div v-if="group.filesToDelete.length > 0" class="group-actions">
                   <NcButton type="tertiary" @click="previewGroupMerge(hash)" class="preview-button">
                     {{ t('duplicatefinder', 'Preview') }}
                   </NcButton>
@@ -574,8 +574,11 @@ export default {
       if (!this.previewResults) return 0
       return Object.entries(this.selectedFiles).reduce((total, [hash, selectedIndexes]) => {
         const group = this.previewResults.duplicateGroups[hash]
+        if (!group || !Array.isArray(group.filesToDelete)) {
+          return total
+        }
         return total + selectedIndexes.reduce((sum, index) =>
-          sum + group.filesToDelete[index].size, 0)
+          sum + (group.filesToDelete[index]?.size || 0), 0)
       }, 0)
     },
     hasProtectedFiles() {
@@ -586,8 +589,11 @@ export default {
     },
     isAllSelected() {
       if (!this.previewResults) return false
-      return Object.values(this.previewResults.duplicateGroups).every(group =>
-        this.selectedFiles[group.hash]?.length === group.filesToDelete.length
+      const selectableGroups = Object.values(this.previewResults.duplicateGroups)
+        .filter(group => Array.isArray(group.filesToDelete) && group.filesToDelete.length > 0)
+      if (selectableGroups.length === 0) return false
+      return selectableGroups.every(group =>
+        (this.selectedFiles[group.hash]?.length || 0) === group.filesToDelete.length
       )
     },
     sortButtonLabel() {
@@ -679,21 +685,15 @@ export default {
     cleanFilePath(path) {
       return String(path || '').replace(/^\/[^/]+\/files\//, '/')
     },
-    humanizePath(path) {
-      // Remove /admin/files/ prefix
-      let humanized = path.replace(/^\/[^/]+\/files\//, '/')
-
-      // Split path into directory and filename
+    humanizePathParts(path) {
+      const humanized = this.cleanFilePath(path)
       const parts = humanized.split('/')
-      const fileName = parts.pop()
+      const fileName = parts.pop() || ''
       const directory = parts.join('/')
-
-      // If there's a directory path, show it in a lighter color
-      if (directory) {
-        return `<span class="path-directory">${directory}/</span><span class="path-filename">${fileName}</span>`
+      return {
+        directory,
+        fileName
       }
-
-      return `<span class="path-filename">${fileName}</span>`
     },
     async loadPage(page) {
       try {
@@ -713,15 +713,22 @@ export default {
         })
 
         response.entities.forEach(entity => {
+          const files = Array.isArray(entity.files) ? entity.files : []
           duplicateGroups[entity.hash] = {
             hash: entity.hash,
-            filesToDelete: entity.files.map(file => ({
-              path: file.path,
-              humanizedPath: this.humanizePath(file.path),
-              size: file.size,
-              nodeId: file.nodeId,
-              mimetype: file.mimetype || 'application/octet-stream'
-            }))
+            protectedFileCount: Number(entity.protectedFileCount) || 0,
+            hasOnlyProtectedFiles: Boolean(entity.hasOnlyProtectedFiles),
+            filesToDelete: files.map(file => {
+              const humanized = this.humanizePathParts(file.path)
+              return {
+                path: file.path,
+                humanizedDirectory: humanized.directory,
+                humanizedFileName: humanized.fileName,
+                size: file.size,
+                nodeId: file.nodeId,
+                mimetype: file.mimetype || 'application/octet-stream'
+              }
+            })
           }
         })
 
@@ -859,14 +866,23 @@ export default {
 
       const filesToDelete = Object.entries(this.selectedFiles).flatMap(([hash, selectedIndexes]) => {
         const group = this.previewResults.duplicateGroups[hash]
-        return selectedIndexes.map(index => ({
-          path: group.filesToDelete[index].path,
-          size: group.filesToDelete[index].size,
-          // The server uses them to find the exact file and to keep the last copy of the group
-          nodeId: group.filesToDelete[index].nodeId,
-          fileHash: hash
-        }))
+        if (!group || !Array.isArray(group.filesToDelete)) {
+          return []
+        }
+        return selectedIndexes
+          .filter(index => group.filesToDelete[index])
+          .map(index => ({
+            path: group.filesToDelete[index].path,
+            size: group.filesToDelete[index].size,
+            // The server uses them to find the exact file and to keep the last copy of the group
+            nodeId: group.filesToDelete[index].nodeId,
+            fileHash: hash
+          }))
       })
+
+      if (filesToDelete.length === 0) {
+        return
+      }
 
       this.isLoading = true
       try {
@@ -1268,6 +1284,7 @@ export default {
 .summary-actions {
   margin-top: 10px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
 }
@@ -1280,6 +1297,7 @@ export default {
 
 .file-display {
   width: calc(100% - 20px);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   margin-bottom: 10px;
@@ -1289,6 +1307,7 @@ export default {
   padding: 10px;
   border-radius: var(--border-radius);
   position: relative;
+  min-width: 0;
   transition: all 0.2s ease;
 }
 
@@ -1362,13 +1381,28 @@ export default {
 }
 
 @media (max-width: 800px) {
+  .preview-section,
+  .empty-folders-section,
+  .duplicate-folders-section {
+    padding: 12px;
+  }
+
+  .group-content {
+    margin-inline-start: 8px;
+  }
+
+  .file-display {
+    width: 100%;
+    margin-inline: 0;
+  }
+
   .file-info {
     flex-direction: column;
     align-items: flex-start;
   }
 
   .file-size {
-    margin-left: 20px;
+    margin-inline-start: 0;
   }
 }
 
@@ -1549,10 +1583,14 @@ export default {
   outline: none !important;
 }
 
-.empty-folder-checkbox:focus,
-.empty-folder-checkbox:focus-visible {
+.empty-folder-checkbox:focus {
   outline: none !important;
   box-shadow: none !important;
+}
+
+.empty-folder-checkbox:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9) !important;
+  outline-offset: 2px;
 }
 
 .empty-folder-checkbox:checked {
@@ -1610,6 +1648,11 @@ export default {
 .empty-folder-ignore-button:hover {
   background-color: var(--color-background-hover) !important;
   color: var(--color-main-text);
+}
+
+.empty-folder-ignore-button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9) !important;
+  outline-offset: 2px;
 }
 
 .empty-folder-ignore-button.is-ignored {
