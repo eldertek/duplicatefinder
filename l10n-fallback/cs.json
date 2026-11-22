@@ -101,7 +101,19 @@
             "Nepodařilo se odstranit %n souborů"
         ],
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} souborů ({percent}%)",
-        "{scanned} files scanned": "Naskenováno {scanned} souborů"
+        "{scanned} files scanned": "Naskenováno {scanned} souborů",
+        "Failed to scan duplicate folders.": "Nepodařilo se prohledat duplicitní složky.",
+        "Scan duplicate folders": "Hledat duplicitní složky",
+        "Duplicate folders ({count})": "Duplicitní složky ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Složky se 100% shodnou strukturou souborů. Ponechte jednu složku a odstraňte odpovídající kopie z ostatních. Chráněné zdrojové složky a Live Photos zůstávají chráněny.",
+        "No identical duplicate folders were found.": "Nebyly nalezeny žádné shodné duplicitní složky.",
+        "Identical folder group": "Skupina shodných složek",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} souborů, {size} na složku, {reclaimable} k uvolnění",
+        "Protected": "Chráněná",
+        "Keep this folder": "Ponechat tuto složku",
+        "Keep this folder and delete duplicate copies?": "Ponechat tuto složku a odstranit duplicitní kopie?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Ponechat \"{folder}\" a odstranit {count} duplicitních souborů ({size}) z ostatních shodných složek? Ochrana zdrojových složek a Live Photos zůstává aktivní.",
+        "Delete duplicate copies": "Odstranit duplicitní kopie"
     },
     "pluralForm": "nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;"
 }

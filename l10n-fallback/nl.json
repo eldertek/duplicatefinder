@@ -486,6 +486,17 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} bestanden ({percent}%)",
         "{scanned} files scanned": "{scanned} bestanden gescand",
         "{selected} of {total} files selected": "{selected} van {total} bestanden geselecteerd",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Begin met eenvoudig zoeken voor basiszoekopdrachten<br>• Gebruik jokertekens als u een deel van het bestandsnaampatroon kent<br>• Schakel over naar regex voor complexe patroonherkenning<br>• Combineer met filters om resultaten te verfijnen<br>• Raadpleeg het helpvenster voor patroonvoorbeelden<br>• Houd er rekening mee dat zoeken niet hoofdlettergevoelig is"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Begin met eenvoudig zoeken voor basiszoekopdrachten<br>• Gebruik jokertekens als u een deel van het bestandsnaampatroon kent<br>• Schakel over naar regex voor complexe patroonherkenning<br>• Combineer met filters om resultaten te verfijnen<br>• Raadpleeg het helpvenster voor patroonvoorbeelden<br>• Houd er rekening mee dat zoeken niet hoofdlettergevoelig is",
+        "Failed to scan duplicate folders.": "Kan dubbele mappen niet scannen.",
+        "Scan duplicate folders": "Dubbele mappen scannen",
+        "Duplicate folders ({count})": "Dubbele mappen ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Mappen met 100% identieke bestandsstructuren. Behoud één map om overeenkomende kopieën uit de andere te verwijderen. Beschermde oorspronkelijke mappen en Live Photos blijven beschermd.",
+        "No identical duplicate folders were found.": "Geen identieke dubbele mappen gevonden.",
+        "Identical folder group": "Groep identieke mappen",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} bestanden, {size} per map, {reclaimable} vrij te maken",
+        "Keep this folder": "Deze map behouden",
+        "Keep this folder and delete duplicate copies?": "Deze map behouden en dubbele kopieën verwijderen?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "\"{folder}\" behouden en {count} dubbele bestanden ({size}) uit de andere identieke mappen verwijderen? Beveiliging van oorspronkelijke mappen en Live Photos blijft van kracht.",
+        "Delete duplicate copies": "Dubbele kopieën verwijderen"
     }
 }

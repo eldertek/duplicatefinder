@@ -87,7 +87,19 @@
             "Gagal menghapus %n berkas"
         ],
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} berkas ({percent}%)",
-        "{scanned} files scanned": "{scanned} berkas dipindai"
+        "{scanned} files scanned": "{scanned} berkas dipindai",
+        "Failed to scan duplicate folders.": "Gagal memindai folder duplikat.",
+        "Scan duplicate folders": "Pindai folder duplikat",
+        "Duplicate folders ({count})": "Folder duplikat ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Folder dengan struktur berkas 100% identik. Simpan satu folder untuk menghapus salinan yang cocok dari folder lainnya. Folder asal yang dilindungi dan Live Photos tetap terlindungi.",
+        "No identical duplicate folders were found.": "Tidak ditemukan folder duplikat yang identik.",
+        "Identical folder group": "Grup folder identik",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} berkas, {size} per folder, {reclaimable} dapat dihemat",
+        "Protected": "Dilindungi",
+        "Keep this folder": "Pertahankan folder ini",
+        "Keep this folder and delete duplicate copies?": "Pertahankan folder ini dan hapus salinan duplikat?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Pertahankan \"{folder}\" dan hapus {count} berkas duplikat ({size}) dari folder identik lainnya? Perlindungan folder asal dan Live Photo tetap diberlakukan.",
+        "Delete duplicate copies": "Hapus salinan duplikat"
     },
     "pluralForm": "nplurals=1; plural=0;"
 }

@@ -503,7 +503,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} fájl ({percent}%)",
         "{scanned} files scanned": "{scanned} fájl megvizsgálva",
         "{selected} of {total} files selected": "{selected} / {total} fájl kijelölve",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Alapvető lekérdezésekhez kezdjen egyszerű kereséssel<br>• Használjon helyettesítő karaktereket, ha ismeri a fájlnévminta egy részét<br>• Összetett mintákhoz váltson reguláris kifejezésekre<br>• Szűkítse az eredményeket szűrőkkel<br>• Tekintse meg a súgóablak mintapéldáit<br>• A keresés nem különbözteti meg a kis- és nagybetűket"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Alapvető lekérdezésekhez kezdjen egyszerű kereséssel<br>• Használjon helyettesítő karaktereket, ha ismeri a fájlnévminta egy részét<br>• Összetett mintákhoz váltson reguláris kifejezésekre<br>• Szűkítse az eredményeket szűrőkkel<br>• Tekintse meg a súgóablak mintapéldáit<br>• A keresés nem különbözteti meg a kis- és nagybetűket",
+        "Failed to scan duplicate folders.": "Nem sikerült a duplikált mappák keresése.",
+        "Scan duplicate folders": "Duplikált mappák keresése",
+        "Duplicate folders ({count})": "Duplikált mappák ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "100%-ban azonos fájlszerkezetű mappák. Tartson meg egy mappát a többi mappa megfelelő másolatainak törléséhez. A védett forrásmappák és a Live Photos védettek maradnak.",
+        "No identical duplicate folders were found.": "Nem található azonos duplikált mappa.",
+        "Identical folder group": "Azonos mappák csoportja",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} fájl, {size} mappánként, {reclaimable} felszabadítható",
+        "Keep this folder": "Mappa megtartása",
+        "Keep this folder and delete duplicate copies?": "Megtartja ezt a mappát és törli a duplikált másolatokat?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Megtartja a(z) \"{folder}\" mappát, és töröl {count} duplikált fájlt ({size}) a többi azonos mappából? A forrásmappák és a Live Photos védelme továbbra is érvényben marad.",
+        "Delete duplicate copies": "Duplikált másolatok törlése"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

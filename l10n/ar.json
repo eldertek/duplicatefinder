@@ -329,6 +329,23 @@
     "Failed to add filter" : "تعذّرت إضافة الفلتر",
     "Filter removed successfully" : "تمّ بنجاح حذف الفلتر",
     "Failed to remove filter" : "تعذّر حذف الفلتر",
-    "The viewer is not available" : "العارض غير موجود"
+    "The viewer is not available" : "العارض غير موجود",
+    "Failed to scan duplicate folders." : "فشل فحص المجلدات المكررة.",
+    "Scan duplicate folders" : "فحص المجلدات المكررة",
+    "Duplicate folders ({count})" : "المجلدات المكررة ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "مجلدات ذات بنية ملفات متطابقة بنسبة 100%. احتفظ بمجلد واحد لحذف النسخ المطابقة من المجلدات الأخرى. تظل المجلدات الأصلية المحمية وصور Live Photos محمية.",
+    "No identical duplicate folders were found." : "لم يتم العثور على مجلدات مكررة متطابقة.",
+    "Identical folder group" : "مجموعة مجلدات متطابقة",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} ملفات، {size} لكل مجلد، {reclaimable} قابلة للاسترداد",
+    "Keep this folder" : "الاحتفاظ بهذا المجلد",
+    "Keep this folder and delete duplicate copies?" : "هل تريد الاحتفاظ بهذا المجلد وحذف النسخ المكررة؟",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "هل تريد الاحتفاظ بـ \"{folder}\" وحذف {count} ملفات مكررة ({size}) من المجلدات المتطابقة الأخرى؟ تظل حماية المجلدات الأصلية وصور Live Photos سارية.",
+    "Delete duplicate copies" : "حذف النسخ المكررة",
+    "Hide ignored ({count})" : "إخفاء المتجاهل ({count})",
+    "Ignore folder in future scans" : "تجاهل المجلد في عمليات الفحص المستقبلية",
+    "Ignore selected ({count})" : "تجاهل المحدد ({count})",
+    "Restore all" : "استعادة الكل",
+    "Restore folder to cleanup list" : "استعادة المجلد إلى قائمة التنظيف",
+    "Show ignored ({count})" : "إظهار المتجاهل ({count})"
 },"pluralForm" :"nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;"
 }

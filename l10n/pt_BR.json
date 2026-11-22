@@ -520,6 +520,20 @@
     "Failed to load project duplicates" : "Falha ao carregar duplicatas de projeto",
     "Failed to scan for empty folders." : "Não foi possível verificar se há pastas vazias.",
     "Failed to delete empty folders." : "Não foi possível excluir pastas vazias.",
-    "The viewer is not available" : "O visualizador não está disponível"
+    "The viewer is not available" : "O visualizador não está disponível",
+    "Failed to scan duplicate folders." : "Falha ao verificar pastas duplicadas.",
+    "Scan duplicate folders" : "Verificar pastas duplicadas",
+    "Duplicate folders ({count})" : "Pastas duplicadas ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Pastas com árvores de arquivos 100% idênticas. Mantenha uma pasta para excluir as cópias correspondentes das outras. Pastas de origem protegidas e Live Photos permanecem protegidas.",
+    "No identical duplicate folders were found." : "Nenhuma pasta duplicada idêntica foi encontrada.",
+    "Identical folder group" : "Grupo de pastas idênticas",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} arquivos, {size} por pasta, {reclaimable} recuperáveis",
+    "Keep this folder" : "Manter esta pasta",
+    "Keep this folder and delete duplicate copies?" : "Manter esta pasta e excluir cópias duplicadas?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Manter \"{folder}\" e excluir {count} arquivos duplicados ({size}) das outras pastas idênticas? As proteções de pastas de origem e Live Photos continuam ativas.",
+    "Delete duplicate copies" : "Excluir cópias duplicadas",
+    "Ignore folder in future scans" : "Ignorar pasta em varreduras futuras",
+    "Restore all" : "Restaurar tudo",
+    "Restore folder to cleanup list" : "Restaurar pasta para a lista de limpeza"
 },"pluralForm" :"nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
 }

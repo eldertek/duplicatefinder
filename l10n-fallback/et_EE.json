@@ -218,7 +218,19 @@
         "configure automatic scanning interval": "seadista automaatse skannimise intervall",
         "exclude external storage from scanning": "välista väline salvestusruum skannimisest",
         "turn off automatic scanning on file changes": "lülita automaatne skannimine failimuudatuste korral välja",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Alusta lihtsate päringute jaoks lihtotsinguga<br>• Kasuta metamärke, kui tead osa failinime mustrist<br>• Keerukamate mustrite jaoks lülitu regulaaravaldistele<br>• Kitsenda tulemusi koos filtritega<br>• Vaata mustrinäiteid abiakanst<br>• Pea meeles, et otsing ei ole tõstutundlik"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Alusta lihtsate päringute jaoks lihtotsinguga<br>• Kasuta metamärke, kui tead osa failinime mustrist<br>• Keerukamate mustrite jaoks lülitu regulaaravaldistele<br>• Kitsenda tulemusi koos filtritega<br>• Vaata mustrinäiteid abiakanst<br>• Pea meeles, et otsing ei ole tõstutundlik",
+        "Failed to scan duplicate folders.": "Duplikaatkaustade skannimine ebaõnnestus.",
+        "Scan duplicate folders": "Skanni duplikaatkaustu",
+        "Duplicate folders ({count})": "Duplikaatkaustad ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "100% identse failipuuga kaustad. Jäta üks kaust alles, et kustutada vastavad koopiad teistest kaustadest. Kaitstud algkaustad ja Live Photos jäävad kaitstuks.",
+        "No identical duplicate folders were found.": "Identseid duplikaatkaustu ei leitud.",
+        "Identical folder group": "Identsete kaustade grupp",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} faili, {size} kausta kohta, {reclaimable} vabastatav",
+        "Protected": "Kaitstud",
+        "Keep this folder": "Säilita see kaust",
+        "Keep this folder and delete duplicate copies?": "Kas säilitada see kaust ja kustutada duplikaatkoopiad?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Kas säilitada \"{folder}\" ja kustutada {count} duplikaatfaili ({size}) teistest identsetest kaustadest? Algkaustade ja Live Photo kaitsed jäävad jõusse.",
+        "Delete duplicate copies": "Kustuta duplikaatkoopiad"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

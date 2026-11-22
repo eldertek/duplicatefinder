@@ -330,7 +330,7 @@
         "Projects allow you to scan specific folders for duplicates instead of your entire storage. This is useful when you want to focus on cleaning up duplicates in particular areas of your Nextcloud.": "Projekti ļauj skenēt konkrētas mapes dublikātu meklēšanai, nevis visu krātuvi. Tas noder, ja vēlaties sakārtot atsevišķas Nextcloud sadaļas.",
         "Projects allow you to scan specific folders for duplicates instead of your entire storage. To use projects:\n\n1. Go to Settings → Projects\n2. Create a new project with a name\n3. Select the folders you want to include in the scan\n4. Start the scan and view results\n\nProjects are perfect for focusing on cleaning up specific areas of your storage without scanning everything.": "Projekti ļauj skenēt konkrētas mapes, nevis visu krātuvi. Kā tos izmantot:\n\n1. Atveriet Iestatījumi → Projekti\n2. Izveidojiet jaunu projektu ar nosaukumu\n3. Izvēlieties skenējamās mapes\n4. Sāciet skenēšanu un skatiet rezultātus\n\nProjekti ir lieliski piemēroti konkrētu apgabalu tīrīšanai, neskenējot visu.",
         "Projects allow you to scan specific folders for duplicates instead of your entire storage:": "Projekti ļauj skenēt konkrētas mapes dublikātu meklēšanai, nevis visu krātuvi:",
-        "Protected": "Aizsargāts",
+        "Protected": "Aizsargāta",
         "Protected Folders (Origin Folders)": "Aizsargātās mapes (izcelsmes mapes)",
         "Protected origin folders, excluded folders, and external mounts are automatically skipped.": "Aizsargātās izcelsmes mapes, izslēgtās mapes un ārējās krātuves tiek izlaistas automātiski.",
         "Provides real-time duplicate detection": "Nodrošina reāllaika dublikātu noteikšanu",
@@ -523,7 +523,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} datnes ({percent}%)",
         "{scanned} files scanned": "Skenētas {scanned} datnes",
         "{selected} of {total} files selected": "Atlasītas {selected} no {total} datnēm",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Pamata vaicājumiem sāciet ar vienkāršo meklēšanu<br>• Izmantojiet aizstājējzīmes, ja zināt daļu datnes nosaukuma šablona<br>• Sarežģītākiem šabloniem pārslēdzieties uz regex<br>• Apvienojiet ar filtriem rezultātu sašaurināšanai<br>• Skatiet šablonu piemērus palīdzības logā<br>• Atcerieties, ka meklēšana ir reģistrnejutīga"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Pamata vaicājumiem sāciet ar vienkāršo meklēšanu<br>• Izmantojiet aizstājējzīmes, ja zināt daļu datnes nosaukuma šablona<br>• Sarežģītākiem šabloniem pārslēdzieties uz regex<br>• Apvienojiet ar filtriem rezultātu sašaurināšanai<br>• Skatiet šablonu piemērus palīdzības logā<br>• Atcerieties, ka meklēšana ir reģistrnejutīga",
+        "Failed to scan duplicate folders.": "Neizdevās skenēt dublētās mapes.",
+        "Scan duplicate folders": "Skenēt dublētās mapes",
+        "Duplicate folders ({count})": "Dublētās mapes ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Mapes ar 100% identisku failu koku. Saglabājiet vienu mapi, lai dzēstu atbilstošās kopijas no pārējām. Aizsargātās sākotnējās mapes un Live Photos paliek aizsargātas.",
+        "No identical duplicate folders were found.": "Identiskas dublētās mapes netika atrastas.",
+        "Identical folder group": "Identisko mapju grupa",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} faili, {size} mapē, {reclaimable} atbrīvojams",
+        "Keep this folder": "Saglabāt šo mapi",
+        "Keep this folder and delete duplicate copies?": "Saglabāt šo mapi un dzēst dublētās kopijas?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Saglabāt \"{folder}\" un dzēst {count} dublētus failus ({size}) no citām identiskajām mapēm? Sākotnējo mapju un Live Photos aizsardzība joprojām ir spēkā.",
+        "Delete duplicate copies": "Dzēst dublētās kopijas"
     },
     "pluralForm": "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);"
 }

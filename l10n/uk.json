@@ -453,6 +453,23 @@
     "Project scan initiated" : "Розпочато сканування проекту",
     "Failed to initiate project scan" : "Не вдалося запустити сканування проекту",
     "Failed to load project duplicates" : "Не вдалося завантажити дублікати проекту",
-    "The viewer is not available" : "Засіб перегляду недоступний"
+    "The viewer is not available" : "Засіб перегляду недоступний",
+    "Failed to scan duplicate folders." : "Не вдалося просканувати дублікати тек.",
+    "Scan duplicate folders" : "Сканувати дублікати тек",
+    "Duplicate folders ({count})" : "Дублікати тек ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Теки зі 100% ідентичною структурою файлів. Залиште одну теку, щоб видалити відповідні копії з інших. Захищені вихідні теки та Live Photos залишаються захищеними.",
+    "No identical duplicate folders were found." : "Ідентичних дублікатів тек не знайдено.",
+    "Identical folder group" : "Група ідентичних тек",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} файлів, {size} на теку, {reclaimable} можна звільнити",
+    "Keep this folder" : "Залишити цю теку",
+    "Keep this folder and delete duplicate copies?" : "Залишити цю теку та видалити дублікати?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Залишити \"{folder}\" та видалити {count} дублікатів файлів ({size}) з інших ідентичних тек? Захист вихідних тек і Live Photos продовжує діяти.",
+    "Delete duplicate copies" : "Видалити дублікати",
+    "Hide ignored ({count})" : "Сховати ігноровані ({count})",
+    "Ignore folder in future scans" : "Ігнорувати теку в майбутніх скануваннях",
+    "Ignore selected ({count})" : "Ігнорувати вибране ({count})",
+    "Restore all" : "Відновити все",
+    "Restore folder to cleanup list" : "Відновити теку до списку очищення",
+    "Show ignored ({count})" : "Показати ігноровані ({count})"
 },"pluralForm" :"nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % 100 >=11 && n % 100 <=14 )) ? 2: 3);"
 }

@@ -74,6 +74,24 @@
     "Error unacknowledging duplicate." : "Feil ved ikke anerkjennelse av duplikat.",
     "File deleted successfully." : "Fil slettet.",
     "File not found" : "Finner ikke filen",
-    "The viewer is not available" : "Fremviseren er ikke tilgjengelig"
+    "The viewer is not available" : "Fremviseren er ikke tilgjengelig",
+    "Failed to scan duplicate folders." : "Kunne ikke skanne dupliserte mapper.",
+    "Scan duplicate folders" : "Skann dupliserte mapper",
+    "Duplicate folders ({count})" : "Dupliserte mapper ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Mapper med 100% identisk filtre. Behold én mappe for å slette tilsvarende kopier fra de andre. Beskyttede opprinnelsesmapper og Live Photos forblir beskyttet.",
+    "No identical duplicate folders were found." : "Ingen identiske dupliserte mapper funnet.",
+    "Identical folder group" : "Gruppe med identiske mapper",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} filer, {size} per mappe, {reclaimable} kan frigjøres",
+    "Protected" : "Beskyttet",
+    "Keep this folder" : "Behold denne mappen",
+    "Keep this folder and delete duplicate copies?" : "Beholde denne mappen og slette dupliserte kopier?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Beholde \"{folder}\" og slette {count} dupliserte filer ({size}) fra de andre identiske mappene? Beskyttelse av opprinnelsesmapper og Live Photos gjelder fortsatt.",
+    "Delete duplicate copies" : "Slett dupliserte kopier",
+    "Hide ignored ({count})" : "Skjul ignorerte ({count})",
+    "Ignore folder in future scans" : "Ignorer mappe i fremtidige skann",
+    "Ignore selected ({count})" : "Ignorer valgte ({count})",
+    "Restore all" : "Gjenopprett alle",
+    "Restore folder to cleanup list" : "Gjenopprett mappe til oppryddingslisten",
+    "Show ignored ({count})" : "Vis ignorerte ({count})"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

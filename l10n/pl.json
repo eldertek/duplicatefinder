@@ -212,6 +212,23 @@
     "Next" : "Następna",
     "Advanced Settings" : "Ustawienia zaawansowane",
     "Note:" : "Notatka:",
-    "File not found" : "Nie odnaleziono pliku"
+    "File not found" : "Nie odnaleziono pliku",
+    "Failed to scan duplicate folders." : "Nie udało się przeskanować zduplikowanych folderów.",
+    "Scan duplicate folders" : "Skanuj zduplikowane foldery",
+    "Duplicate folders ({count})" : "Zduplikowane foldery ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Foldery o w 100% identycznej strukturze plików. Zachowaj jeden folder, aby usunąć pasujące kopie z pozostałych. Chronione foldery źródłowe i zdjęcia Live Photos pozostają chronione.",
+    "No identical duplicate folders were found." : "Nie znaleziono identycznych zduplikowanych folderów.",
+    "Identical folder group" : "Grupa identycznych folderów",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} plików, {size} na folder, {reclaimable} do odzyskania",
+    "Keep this folder" : "Zachowaj ten folder",
+    "Keep this folder and delete duplicate copies?" : "Zachować ten folder i usunąć duplikaty?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Zachować \"{folder}\" i usunąć {count} zduplikowanych plików ({size}) z pozostałych identycznych folderów? Ochrona folderów źródłowych i Live Photos pozostaje aktywna.",
+    "Delete duplicate copies" : "Usuń zduplikowane kopie",
+    "Hide ignored ({count})" : "Ukryj ignorowane ({count})",
+    "Ignore folder in future scans" : "Ignoruj folder w przyszłych skanowaniach",
+    "Ignore selected ({count})" : "Ignoruj zaznaczone ({count})",
+    "Restore all" : "Przywróć wszystko",
+    "Restore folder to cleanup list" : "Przywróć folder na listę oczyszczania",
+    "Show ignored ({count})" : "Pokaż ignorowane ({count})"
 },"pluralForm" :"nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);"
 }

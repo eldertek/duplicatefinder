@@ -534,6 +534,17 @@
     "_%n empty folder deleted_::_%n empty folders deleted_" : ["%n пустая папка удалена","%n пустые папки удалены","%n пустых папок удалено","%n пустые папки удалены"],
     "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_" : ["Не удалось удалить %n пустую папку","Не удалось удалить %n пустые папки","Не удалось удалить %n пустых папок","Не удалось удалить %n пустые папки"],
     "Failed to delete empty folders." : "Не удалось удалить пустые папки.",
-    "The viewer is not available" : "Программа просмотра недоступна"
+    "The viewer is not available" : "Программа просмотра недоступна",
+    "Failed to scan duplicate folders." : "Не удалось просканировать дублирующиеся папки.",
+    "Scan duplicate folders" : "Сканировать дублирующиеся папки",
+    "Duplicate folders ({count})" : "Дублирующиеся папки ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "Папки со 100% идентичной структурой файлов. Сохраните одну папку, чтобы удалить соответствующие копии из остальных. Защищённые исходные папки и Live Photos остаются под защитой.",
+    "No identical duplicate folders were found." : "Идентичные дублирующиеся папки не найдены.",
+    "Identical folder group" : "Группа идентичных папок",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} файлов, {size} на папку, {reclaimable} можно освободить",
+    "Keep this folder" : "Сохранить эту папку",
+    "Keep this folder and delete duplicate copies?" : "Сохранить эту папку и удалить дубликаты?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "Сохранить «{folder}» и удалить {count} дублирующихся файлов ({size}) из других идентичных папок? Защита исходных папок и Live Photos сохраняется.",
+    "Delete duplicate copies" : "Удалить дубликаты"
 },"pluralForm" :"nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);"
 }

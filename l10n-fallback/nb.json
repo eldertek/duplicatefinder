@@ -477,7 +477,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} filer ({percent}%)",
         "{scanned} files scanned": "{scanned} filer skannet",
         "{selected} of {total} files selected": "{selected} av {total} filer valgt",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Start med enkelt søk for enkle spørringer<br>• Bruk jokertegn når du kjenner deler av filnavnmønsteret<br>• Bytt til regex for komplekse mønstre<br>• Kombiner med filtre for å snevre inn resultatene<br>• Sjekk hjelpevinduet for mønstereksempler<br>• Husk at søk ikke skiller mellom store og små bokstaver"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• Start med enkelt søk for enkle spørringer<br>• Bruk jokertegn når du kjenner deler av filnavnmønsteret<br>• Bytt til regex for komplekse mønstre<br>• Kombiner med filtre for å snevre inn resultatene<br>• Sjekk hjelpevinduet for mønstereksempler<br>• Husk at søk ikke skiller mellom store og små bokstaver",
+        "Failed to scan duplicate folders.": "Kunne ikke skanne dupliserte mapper.",
+        "Scan duplicate folders": "Skann dupliserte mapper",
+        "Duplicate folders ({count})": "Dupliserte mapper ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Mapper med 100% identisk filtre. Behold én mappe for å slette tilsvarende kopier fra de andre. Beskyttede opprinnelsesmapper og Live Photos forblir beskyttet.",
+        "No identical duplicate folders were found.": "Ingen identiske dupliserte mapper funnet.",
+        "Identical folder group": "Gruppe med identiske mapper",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} filer, {size} per mappe, {reclaimable} kan frigjøres",
+        "Keep this folder": "Behold denne mappen",
+        "Keep this folder and delete duplicate copies?": "Beholde denne mappen og slette dupliserte kopier?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Beholde \"{folder}\" og slette {count} dupliserte filer ({size}) fra de andre identiske mappene? Beskyttelse av opprinnelsesmapper og Live Photos gjelder fortsatt.",
+        "Delete duplicate copies": "Slett dupliserte kopier"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -99,7 +99,19 @@
             "Nepavyko ištrinti %n failų"
         ],
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} failų ({percent}%)",
-        "{scanned} files scanned": "Nuskaityta failų: {scanned}"
+        "{scanned} files scanned": "Nuskaityta failų: {scanned}",
+        "Failed to scan duplicate folders.": "Nepavyko nuskaityti pasikartojančių aplankų.",
+        "Scan duplicate folders": "Nuskaityti pasikartojančius aplankus",
+        "Duplicate folders ({count})": "Pasikartojantys aplankai ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Aplankai su 100% identišku failų medžiu. Palikite vieną aplanką, kad pašalintumėte atitinkančias kopijas iš kitų. Apsaugoti pradiniai aplankai ir Live Photos lieka apsaugoti.",
+        "No identical duplicate folders were found.": "Identiškų pasikartojančių aplankų nerasta.",
+        "Identical folder group": "Identiškų aplankų grupė",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} failų, {size} aplanke, {reclaimable} atlaisvinama",
+        "Protected": "Apsaugotas",
+        "Keep this folder": "Palikti šį aplanką",
+        "Keep this folder and delete duplicate copies?": "Palikti šį aplanką ir ištrinti pasikartojančias kopijas?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Palikti \"{folder}\" ir ištrinti {count} pasikartojančius failus ({size}) iš kitų identiškų aplankų? Pradinių aplankų ir Live Photos apsauga lieka galioti.",
+        "Delete duplicate copies": "Ištrinti pasikartojančias kopijas"
     },
     "pluralForm": "nplurals=4; plural=(n % 10 == 1 && (n % 100 > 19 || n % 100 < 11) ? 0 : (n % 10 >= 2 && n % 10 <=9) && (n % 100 > 19 || n % 100 < 11) ? 1 : n % 1 != 0 ? 2: 3);"
 }

@@ -529,7 +529,18 @@
         "{scanned} / {total} files ({percent}%)": "{scanned} / {total} קבצים ({percent}%)",
         "{scanned} files scanned": "{scanned} קבצים נסרקו",
         "{selected} of {total} files selected": "{selected} מתוך {total} קבצים נבחרו",
-        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• התחילו בחיפוש פשוט לשאילתות בסיסיות<br>• השתמשו בתווים כלליים כאשר ידוע לכם חלק מתבנית שם הקובץ<br>• עברו לביטויים רגולריים לצורכי התאמה מורכבים<br>• שלבו עם מסננים כדי לצמצם את התוצאות<br>• עיינו בחלון העזרה לדוגמאות של תבניות<br>• זכרו שהחיפוש אינו תלוי רישיות"
+        "• Start with simple search for basic queries<br>• Use wildcards when you know part of the filename pattern<br>• Switch to regex for complex pattern matching needs<br>• Combine with filters to narrow down results<br>• Check the help modal for pattern examples<br>• Remember that search is case-insensitive": "• התחילו בחיפוש פשוט לשאילתות בסיסיות<br>• השתמשו בתווים כלליים כאשר ידוע לכם חלק מתבנית שם הקובץ<br>• עברו לביטויים רגולריים לצורכי התאמה מורכבים<br>• שלבו עם מסננים כדי לצמצם את התוצאות<br>• עיינו בחלון העזרה לדוגמאות של תבניות<br>• זכרו שהחיפוש אינו תלוי רישיות",
+        "Failed to scan duplicate folders.": "סריקת תיקיות כפולות נכשלה.",
+        "Scan duplicate folders": "סרוק תיקיות כפולות",
+        "Duplicate folders ({count})": "תיקיות כפולות ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "תיקיות בעלות עץ קבצים זהה ב-100%. שמור תיקייה אחת כדי למחוק עותקים תואמים מהאחרות. תיקיות מקור מוגנות ו-Live Photos נותרות מוגנות.",
+        "No identical duplicate folders were found.": "לא נמצאו תיקיות כפולות זהות.",
+        "Identical folder group": "קבוצת תיקיות זהות",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} קבצים, {size} לתיקייה, {reclaimable} זמין לפינוי",
+        "Keep this folder": "שמור תיקייה זו",
+        "Keep this folder and delete duplicate copies?": "לשמור תיקייה זו ולמחוק עותקים כפולים?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "לשמור את \"{folder}\" ולמחוק {count} קבצים כפולים ({size}) משאר התיקיות הזהות? הגנות תיקיות המקור ו-Live Photos ממשיכות להיאכף.",
+        "Delete duplicate copies": "מחק עותקים כפולים"
     },
     "pluralForm": "nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: 2;"
 }

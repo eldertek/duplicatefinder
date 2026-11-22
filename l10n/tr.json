@@ -530,6 +530,17 @@
     "Failed to load project duplicates" : "Proje çift dosyaları yüklenemedi",
     "Failed to scan for empty folders." : "Boş klasörler taranamadı.",
     "Failed to delete empty folders." : "Boş klasörler silinemedi.",
-    "The viewer is not available" : "Görüntüleyici kullanılamıyor"
+    "The viewer is not available" : "Görüntüleyici kullanılamıyor",
+    "Failed to scan duplicate folders." : "Yinelenen klasörler taranamadı.",
+    "Scan duplicate folders" : "Yinelenen klasörleri tara",
+    "Duplicate folders ({count})" : "Yinelenen klasörler ({count})",
+    "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected." : "%100 aynı dosya ağacına sahip klasörler. Diğer klasörlerdeki eşleşen kopyaları silmek için bir klasörü koruyun. Korunan kaynak klasörler ve Live Photos korunmaya devam eder.",
+    "No identical duplicate folders were found." : "Birebir aynı yinelenen klasör bulunamadı.",
+    "Identical folder group" : "Aynı klasör grubu",
+    "{files} files, {size} per folder, {reclaimable} reclaimable" : "{files} dosya, klasör başına {size}, {reclaimable} geri kazanılabilir",
+    "Keep this folder" : "Bu klasörü koru",
+    "Keep this folder and delete duplicate copies?" : "Bu klasörü koruyup yinelenen kopyalar silinsin mi?",
+    "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced." : "\"{folder}\" klasörü korunup diğer aynı klasörlerden {count} yinelenen dosya ({size}) silinsin mi? Kaynak klasör ve Live Photo korumaları uygulanmaya devam eder.",
+    "Delete duplicate copies" : "Yinelenen kopyaları sil"
 },"pluralForm" :"nplurals=2; plural=(n > 1);"
 }

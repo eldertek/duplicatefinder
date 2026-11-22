@@ -64,7 +64,19 @@
         "_Failed to delete %n file_::_Failed to delete %n files_": [
             "Kunde inte ta bort %n fil",
             "Kunde inte ta bort %n filer"
-        ]
+        ],
+        "Failed to scan duplicate folders.": "Det gick inte att skanna dubblettmappar.",
+        "Scan duplicate folders": "Skanna dubblettmappar",
+        "Duplicate folders ({count})": "Dubblettmappar ({count})",
+        "Folders with 100% identical file trees. Keep one folder to delete matching copies from the others. Protected origin folders and Live Photos remain protected.": "Mappar med 100 % identiska filträd. Behåll en mapp för att ta bort matchande kopior från de andra. Skyddade ursprungsmappar och Live Photos förblir skyddade.",
+        "No identical duplicate folders were found.": "Inga identiska dubblettmappar hittades.",
+        "Identical folder group": "Grupp med identiska mappar",
+        "{files} files, {size} per folder, {reclaimable} reclaimable": "{files} filer, {size} per mapp, {reclaimable} kan frigöras",
+        "Protected": "Skyddad",
+        "Keep this folder": "Behåll den här mappen",
+        "Keep this folder and delete duplicate copies?": "Behåll den här mappen och ta bort dubblettkopior?",
+        "Keep \"{folder}\" and delete {count} duplicate files ({size}) from the other identical folders? Protected origin folders and Live Photo safeguards remain enforced.": "Behåll \"{folder}\" och ta bort {count} dubblettfiler ({size}) från de andra identiska mapparna? Skydd för ursprungsmappar och Live Photos gäller fortfarande.",
+        "Delete duplicate copies": "Ta bort dubblettkopior"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
