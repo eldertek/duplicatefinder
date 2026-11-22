@@ -1,3 +1,10 @@
+## 1.10.21 - 2026-11-22
+### Added
+- **Duplicate Folders report API and "Keep this folder" bulk UI** ([#193](https://github.com/eldertek/duplicatefinder/issues/193)). Added `GET /api/duplicates/folders` (`DuplicateApiController::listFolders`) backed by `FolderDuplicateService::findFolderDuplicatesReport()` and `fetchDuplicateFolders()` in `src/tools/api.js`, along with a `Scan duplicate folders` workflow in `BulkDeletionSettings.vue` to inspect identical folder groups, highlight protected origin folders, and keep one folder while deleting matching duplicate files from the other identical folders (preserving origin folder protections, kept node IDs, Live Photo deletion ordering, and optional post-delete empty-folder detection).
+
+### Fixed
+- **Duplicate folder pagination, reclaimable size calculation, and accessibility/i18n polish** ([#193](https://github.com/eldertek/duplicatefinder/issues/193)). Preserved exact pagination offsets when scanning all user duplicates for folder analysis, capped reclaimable folder size accounting across shared/protected folders, synced runtime `l10n/` and `l10n-fallback/` translations, and ensured WCAG AA contrast on the protected origin badge.
+
 ## 1.10.20 - 2026-11-20
 ### Fixed
 - **Nextcloud App Store `info.xml` XSD validation for Portuguese locale**. Changed `lang="pt-pt"` on `<summary>` and `<description>` in `appinfo/info.xml` to `lang="pt"` (matching the official `l10n-code` enumeration in Nextcloud `info.xsd`, while keeping `l10n/pt_PT.*` untouched) and enforced `info.xsd` language code validation in `StoreMetadataAndBulkContrastTest`.
