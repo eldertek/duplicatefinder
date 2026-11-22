@@ -11,10 +11,12 @@ use OCA\DuplicateFinder\Service\FolderService;
 use OCA\DuplicateFinder\Service\ShareService;
 use OCA\DuplicateFinder\Utils\ScannerUtil;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\DB\Exception as DBException;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\IDBConnection;
+use OCP\IUser;
 use OCP\Lock\ILockingProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -100,5 +102,107 @@ class FileInfoServiceSaveTest extends TestCase
         } catch (\Throwable $e) {
             // the stubbed node cannot answer everything; the insert is what is checked
         }
+    }
+
+    public function testUpdateFailureDoesNotFallBackToInsert(): void
+    {
+        $path = '/userA/files/existing.bin';
+        $existing = new FileInfo($path, 'userA');
+        $existing->setId(11);
+
+        $owner = $this->createMock(IUser::class);
+        $owner->method('getUID')->willReturn('userA');
+        $node = $this->createMock(Node::class);
+        $node->method('getSize')->willReturn(123);
+        $node->method('getMimetype')->willReturn('application/octet-stream');
+        $node->method('getOwner')->willReturn($owner);
+
+        $this->mapper->method('find')->willReturn($existing);
+        $this->folderService->method('getNodeByFileInfo')->willReturn($node);
+        $this->mapper->method('update')->willThrowException(new \RuntimeException('transient write failure'));
+        $this->mapper->expects($this->never())->method('insert');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('transient write failure');
+
+        $this->service->save($path, 'userA');
+    }
+
+    public function testConcurrentInsertUniqueConstraintFallsBackToUpdate(): void
+    {
+        $path = '/userA/files/race.bin';
+        $winner = new FileInfo($path, 'userA');
+        $winner->setId(42);
+
+        $owner = $this->createMock(IUser::class);
+        $owner->method('getUID')->willReturn('userA');
+        $node = $this->createMock(Node::class);
+        $node->method('getSize')->willReturn(456);
+        $node->method('getMimetype')->willReturn('application/octet-stream');
+        $node->method('getOwner')->willReturn($owner);
+
+        $findCalls = 0;
+        $this->mapper->method('find')->willReturnCallback(function () use (&$findCalls, $winner) {
+            $findCalls++;
+            if ($findCalls <= 2) {
+                throw new DoesNotExistException('FileInfo not found');
+            }
+
+            return $winner;
+        });
+        $this->folderService->method('getNodeByFileInfo')->willReturn($node);
+
+        $uniqueError = new class ('Duplicate entry for path_hash') extends DBException {
+            public function getReason(): ?int
+            {
+                return DBException::REASON_UNIQUE_CONSTRAINT_VIOLATION;
+            }
+        };
+        $this->mapper->expects($this->once())->method('insert')->willThrowException($uniqueError);
+        $this->mapper->expects($this->once())->method('update')->willReturnArgument(0);
+
+        $saved = $this->service->save($path, 'userA');
+        $this->assertSame(42, $saved->getId());
+    }
+
+    public function testUpdateOverwritingExistingPathDeletesStaleRowAndRetries(): void
+    {
+        $targetPath = '/userA/files/target.bin';
+        $moving = new FileInfo($targetPath, 'userA');
+        $moving->setId(99);
+
+        $owner = $this->createMock(IUser::class);
+        $owner->method('getUID')->willReturn('userA');
+        $node = $this->createMock(Node::class);
+        $node->method('getSize')->willReturn(789);
+        $node->method('getMimetype')->willReturn('application/octet-stream');
+        $node->method('getOwner')->willReturn($owner);
+
+        $this->folderService->method('getNodeByFileInfo')->willReturn($node);
+
+        $uniqueError = new class ('Duplicate entry for path_hash') extends DBException {
+            public function getReason(): ?int
+            {
+                return DBException::REASON_UNIQUE_CONSTRAINT_VIOLATION;
+            }
+        };
+        $updateAttempt = 0;
+        $this->mapper->expects($this->exactly(2))
+            ->method('update')
+            ->willReturnCallback(function (FileInfo $entity) use (&$updateAttempt, $uniqueError) {
+                $updateAttempt++;
+                if ($updateAttempt === 1) {
+                    throw $uniqueError;
+                }
+
+                return $entity;
+            });
+        $this->mapper->expects($this->once())
+            ->method('deleteOtherByPathHash')
+            ->with(sha1($targetPath), 99)
+            ->willReturn(1);
+
+        $updated = $this->service->update($moving, 'userA');
+        $this->assertSame(99, $updated->getId());
     }
 }

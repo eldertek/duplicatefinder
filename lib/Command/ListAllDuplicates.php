@@ -210,24 +210,40 @@ class ListAllDuplicates extends Command
         $copies = $this->fileInfoMapper->findCopiesOfHashes(array_column($batch, 'hash'), $includeShared);
         foreach ($batch as $group) {
             $rawFiles = $copies[$group['hash']] ?? [];
-            if (!$includeShared && $this->shareService !== null && $rawFiles !== []) {
-                $filteredFiles = array_values(array_filter(
-                    $rawFiles,
-                    function (array $file): bool {
-                        return !$this->isPathInReceivedShare((string)($file['path'] ?? ''), (string)($file['owner'] ?? ''));
-                    }
-                ));
-                if (count($filteredFiles) < count($rawFiles)) {
-                    if (count($filteredFiles) <= 1) {
+            if ($rawFiles !== []) {
+                $dedupedFiles = [];
+                $seenPaths = [];
+                foreach ($rawFiles as $file) {
+                    $path = (string)($file['path'] ?? '');
+                    if ($path !== '' && isset($seenPaths[$path])) {
                         continue;
                     }
-                    $group['files'] = $filteredFiles;
-                    $group['copies'] = count($filteredFiles);
-                    $group['wasted'] = ($group['copies'] - 1) * (int)$group['size'];
-                    yield $group;
+                    if ($path !== '') {
+                        $seenPaths[$path] = true;
+                    }
+                    $dedupedFiles[] = $file;
+                }
 
+                if (!$includeShared && $this->shareService !== null) {
+                    $dedupedFiles = array_values(array_filter(
+                        $dedupedFiles,
+                        function (array $file): bool {
+                            return !$this->isPathInReceivedShare((string)($file['path'] ?? ''), (string)($file['owner'] ?? ''));
+                        }
+                    ));
+                }
+
+                if (count($dedupedFiles) <= 1) {
                     continue;
                 }
+                if (count($dedupedFiles) !== count($rawFiles)) {
+                    $group['copies'] = count($dedupedFiles);
+                    $group['wasted'] = ($group['copies'] - 1) * (int)$group['size'];
+                }
+                $group['files'] = $dedupedFiles;
+                yield $group;
+
+                continue;
             }
             $group['files'] = $rawFiles;
             yield $group;

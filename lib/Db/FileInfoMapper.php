@@ -372,10 +372,26 @@ class FileInfoMapper extends EQBMapper
     }
 
     /**
-     * Delete the surplus rows of an id window: the rows whose path hash and owner are already held by a row with a
-     * lower id, so that the oldest row of each file stays (nothing prevents several rows from sharing a path and an
-     * owner, and concurrent events used to insert the same file twice). A missing owner counts as an empty one, and
-     * rows without a path hash are left alone.
+     * Delete any other row holding the same path_hash except the row being kept/updated.
+     */
+    public function deleteOtherByPathHash(string $pathHash, int $keepId): int
+    {
+        if ($pathHash === '') {
+            return 0;
+        }
+
+        $qb = $this->db->getQueryBuilder();
+        $qb->delete($this->getTableName())
+            ->where($qb->expr()->eq('path_hash', $qb->createNamedParameter($pathHash)))
+            ->andWhere($qb->expr()->neq('id', $qb->createNamedParameter($keepId, IQueryBuilder::PARAM_INT)));
+
+        return $qb->executeStatement();
+    }
+
+    /**
+     * Delete the surplus rows of an id window: the rows whose path hash is already held by a row with a lower id,
+     * so that the oldest row of each path stays (a path is unique in the file tree, regardless of any stale or
+     * differing owner stored by older versions). Rows without a path hash are left alone.
      *
      * The window bounds the work of the query (the rows of the window and, for each of them, one look at the index of
      * path hashes), so that the table is never loaded in memory and no statement runs for long (issue 182).
@@ -395,10 +411,6 @@ class FileInfoMapper extends EQBMapper
         $older->select('k.id')
             ->from($this->getTableName(), 'k')
             ->where($older->expr()->eq('k.path_hash', 'd.path_hash'))
-            ->andWhere($older->expr()->eq(
-                $older->createFunction('COALESCE(' . $older->getColumnName('owner', 'k') . ", '')"),
-                $older->createFunction('COALESCE(' . $older->getColumnName('owner', 'd') . ", '')")
-            ))
             ->andWhere($older->expr()->lt('k.id', 'd.id'));
 
         $qb = $this->db->getQueryBuilder();
@@ -406,6 +418,7 @@ class FileInfoMapper extends EQBMapper
             ->from($this->getTableName(), 'd')
             ->where($qb->expr()->gt('d.id', $qb->createNamedParameter($afterId, IQueryBuilder::PARAM_INT)))
             ->andWhere($qb->expr()->lte('d.id', $qb->createNamedParameter($untilId, IQueryBuilder::PARAM_INT)))
+            ->andWhere($qb->expr()->isNotNull('d.path_hash'))
             ->andWhere($qb->expr()->neq('d.path_hash', $qb->createNamedParameter('')))
             ->andWhere($qb->createFunction('EXISTS (' . $older->getSQL() . ')'))
             ->orderBy('d.id', 'ASC');
@@ -414,7 +427,8 @@ class FileInfoMapper extends EQBMapper
         $result->closeCursor();
 
         $removed = 0;
-        foreach (array_chunk($ids, max(1, $batchSize)) as $chunk) {
+        $chunkSize = min(500, max(1, $batchSize));
+        foreach (array_chunk($ids, $chunkSize) as $chunk) {
             $delete = $this->db->getQueryBuilder();
             $delete->delete($this->getTableName())
                 ->where($delete->expr()->in('id', $delete->createNamedParameter($chunk, IQueryBuilder::PARAM_INT_ARRAY)));
@@ -460,8 +474,8 @@ class FileInfoMapper extends EQBMapper
         $qb = $this->db->getQueryBuilder();
         $qb->select('file_hash')
             ->selectAlias($qb->createFunction('MAX(size)'), 'group_size')
-            ->selectAlias($qb->createFunction('COUNT(*)'), 'copies')
-            ->selectAlias($qb->createFunction('(COUNT(*) - 1) * MAX(size)'), 'wasted')
+            ->selectAlias($qb->createFunction('COUNT(DISTINCT path)'), 'copies')
+            ->selectAlias($qb->createFunction('(COUNT(DISTINCT path) - 1) * MAX(size)'), 'wasted')
             ->from($this->getTableName())
             ->where($qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)))
             ->andWhere($qb->expr()->isNotNull('file_hash'))
@@ -471,7 +485,7 @@ class FileInfoMapper extends EQBMapper
             $qb->andWhere($this->isNotSharedView($qb));
         }
         $qb->groupBy('file_hash')
-            ->having($qb->createFunction('COUNT(*) > 1'))
+            ->having($qb->createFunction('COUNT(DISTINCT path) > 1'))
             ->orderBy('wasted', 'DESC')
             ->addOrderBy('file_hash', 'ASC');
         if ($limit > 0) {
@@ -504,7 +518,7 @@ class FileInfoMapper extends EQBMapper
      */
     public function findCopiesOfHashes(array $hashes, bool $includeShared = false): array
     {
-        $copies = [];
+        $copiesByPath = [];
         foreach (array_chunk(array_values(array_unique($hashes)), 500) as $chunk) {
             $qb = $this->db->getQueryBuilder();
             $qb->select('file_hash', 'owner', 'path')
@@ -519,12 +533,24 @@ class FileInfoMapper extends EQBMapper
                 ->addOrderBy('path', 'ASC');
             $result = $qb->executeQuery();
             while ($row = $result->fetch()) {
-                $copies[(string)$row['file_hash']][] = [
-                    'owner' => (string)($row['owner'] ?? ''),
-                    'path' => (string)$row['path'],
-                ];
+                $fileHash = (string)$row['file_hash'];
+                $path = (string)$row['path'];
+                $owner = (string)($row['owner'] ?? '');
+                if (!isset($copiesByPath[$fileHash][$path])) {
+                    $copiesByPath[$fileHash][$path] = [
+                        'owner' => $owner,
+                        'path' => $path,
+                    ];
+                } elseif ($copiesByPath[$fileHash][$path]['owner'] === '' && $owner !== '') {
+                    $copiesByPath[$fileHash][$path]['owner'] = $owner;
+                }
             }
             $result->closeCursor();
+        }
+
+        $copies = [];
+        foreach ($copiesByPath as $fileHash => $byPath) {
+            $copies[$fileHash] = array_values($byPath);
         }
 
         return $copies;

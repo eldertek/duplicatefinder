@@ -318,4 +318,35 @@ class ListAllDuplicatesTest extends TestCase
         $this->assertCount(2, $data['groups'][0]['files']);
         $this->assertSame(['groups' => 1, 'copies' => 2, 'wasted' => 1000], $data['totals']);
     }
+
+    public function testDuplicatePathsUnderSameHashAreDeduplicatedAndFalseSinglesOmitted(): void
+    {
+        $this->usersAre(['alice', 'bob']);
+        $this->mapper->method('findOwners')->willReturn(['alice', 'bob']);
+        $this->mapper->method('findDuplicateGroupsAcrossUsers')->willReturn(self::rows([
+            $this->group('false_single', 5000, 2),
+            $this->group('real_with_dup_row', 2000, 3),
+        ]));
+        $this->mapper->method('findCopiesOfHashes')->with(['false_single', 'real_with_dup_row'], false)->willReturn([
+            'false_single' => [
+                ['owner' => 'alice', 'path' => '/alice/files/Video.mkv'],
+                ['owner' => 'alice', 'path' => '/alice/files/Video.mkv'],
+            ],
+            'real_with_dup_row' => [
+                ['owner' => 'alice', 'path' => '/alice/files/Archive/data.iso'],
+                ['owner' => 'alice', 'path' => '/alice/files/Archive/data.iso'],
+                ['owner' => 'bob', 'path' => '/bob/files/Backup/data.iso'],
+            ],
+        ]);
+
+        $this->assertSame(0, $this->tester->execute(['--output' => 'json']));
+        $data = json_decode($this->tester->getDisplay(), true);
+
+        $this->assertCount(1, $data['groups']);
+        $this->assertSame('real_with_dup_row', $data['groups'][0]['hash']);
+        $this->assertSame(2, $data['groups'][0]['copies']);
+        $this->assertSame(2000, $data['groups'][0]['wasted']);
+        $this->assertCount(2, $data['groups'][0]['files']);
+        $this->assertSame(['groups' => 1, 'copies' => 2, 'wasted' => 2000], $data['totals']);
+    }
 }

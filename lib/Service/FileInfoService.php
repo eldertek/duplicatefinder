@@ -2,6 +2,7 @@
 
 namespace OCA\DuplicateFinder\Service;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\FileInfo;
 use OCA\DuplicateFinder\Db\FileInfoMapper;
@@ -12,6 +13,7 @@ use OCA\DuplicateFinder\Exception\UnableToCalculateHash;
 use OCA\DuplicateFinder\Utils\CMDUtils;
 use OCA\DuplicateFinder\Utils\ScannerUtil;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\DB\Exception as DBException;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -281,7 +283,20 @@ class FileInfoService
     {
         $fileInfo = $this->updateFileMeta($fileInfo, $fallbackUID);
         $fileInfo->setKeepAsPrimary(true);
-        $fileInfo = $this->mapper->update($fileInfo);
+
+        try {
+            $fileInfo = $this->mapper->update($fileInfo);
+        } catch (\Throwable $e) {
+            if (!$this->isUniqueConstraintViolation($e) || $fileInfo->getId() === null || $fileInfo->getPathHash() === '') {
+                $fileInfo->setKeepAsPrimary(false);
+
+                throw $e;
+            }
+            // A target path already had a row (e.g. file moved or renamed over an existing path):
+            // remove the overwritten row and retry the update.
+            $this->mapper->deleteOtherByPathHash((string)$fileInfo->getPathHash(), (int)$fileInfo->getId());
+            $fileInfo = $this->mapper->update($fileInfo);
+        }
         $fileInfo->setKeepAsPrimary(false);
 
         return $fileInfo;
@@ -299,7 +314,7 @@ class FileInfoService
     {
         try {
             return $this->mapper->find($path, $fallbackUID);
-        } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+        } catch (DoesNotExistException $e) {
             if ($fallbackUID === null) {
                 throw $e;
             }
@@ -312,19 +327,57 @@ class FileInfoService
     {
         try {
             $fileInfo = $this->findForSave($path, $fallbackUID);
-            $fileInfo = $this->update($fileInfo, $fallbackUID);
-            $this->eventDispatcher->dispatchTyped(new UpdatedFileInfoEvent($fileInfo, $fallbackUID));
-        } catch (\Exception $e) {
-            $fileInfo = new FileInfo($path);
-            $fileInfo = $this->updateFileMeta($fileInfo, $fallbackUID);
-            $fileInfo->setKeepAsPrimary(true);
-            $fileInfo = $this->mapper->insert($fileInfo);
-            $fileInfo->setKeepAsPrimary(false);
-
-            $this->eventDispatcher->dispatchTyped(new NewFileInfoEvent($fileInfo, $fallbackUID));
+        } catch (DoesNotExistException $e) {
+            return $this->insertOrUpdateOnConflict($path, $fallbackUID);
         }
 
+        $fileInfo = $this->update($fileInfo, $fallbackUID);
+        $this->eventDispatcher->dispatchTyped(new UpdatedFileInfoEvent($fileInfo, $fallbackUID));
+
         return $fileInfo;
+    }
+
+    private function insertOrUpdateOnConflict(string $path, ?string $fallbackUID): FileInfo
+    {
+        $fileInfo = new FileInfo($path);
+        $fileInfo = $this->updateFileMeta($fileInfo, $fallbackUID);
+        $fileInfo->setKeepAsPrimary(true);
+
+        try {
+            $fileInfo = $this->mapper->insert($fileInfo);
+        } catch (\Throwable $e) {
+            $fileInfo->setKeepAsPrimary(false);
+            if (!$this->isUniqueConstraintViolation($e)) {
+                throw $e;
+            }
+
+            // Another concurrent scan or filesystem event inserted this path first: update that row instead
+            $existing = $this->findForSave($path, $fallbackUID);
+            $existing = $this->update($existing, $fallbackUID);
+            $this->eventDispatcher->dispatchTyped(new UpdatedFileInfoEvent($existing, $fallbackUID));
+
+            return $existing;
+        }
+        $fileInfo->setKeepAsPrimary(false);
+        $this->eventDispatcher->dispatchTyped(new NewFileInfoEvent($fileInfo, $fallbackUID));
+
+        return $fileInfo;
+    }
+
+    private function isUniqueConstraintViolation(\Throwable $e): bool
+    {
+        $current = $e;
+        for ($depth = 0; $current !== null && $depth < 6; $depth++) {
+            if (
+                ($current instanceof DBException && $current->getReason() === DBException::REASON_UNIQUE_CONSTRAINT_VIOLATION)
+                || $current instanceof UniqueConstraintViolationException
+            ) {
+                return true;
+            }
+            $current = $current->getPrevious();
+        }
+
+        return false;
     }
 
     public function delete(FileInfo $fileInfo): FileInfo
