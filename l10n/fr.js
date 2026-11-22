@@ -486,6 +486,8 @@ OC.L10N.register(
     "Permission denied to delete file" : "Autorisation refusée pour supprimer le fichier",
     "File is currently locked. Please try again later." : "Le fichier est actuellement verrouillé. Veuillez réessayer plus tard.",
     "Error deleting file" : "Erreur de suppression du fichier",
+    "_%n file deleted_::_%n files deleted_" : ["%n fichier supprimé","%n fichiers supprimés","%n fichiers supprimés"],
+    "_Failed to delete %n file_::_Failed to delete %n files_" : ["Échec de la suppression de %n fichier","Échec de la suppression de %n fichiers","Échec de la suppression de %n fichiers"],
     "Some folders could not be saved:\n{errors}" : "Certains dossiers n'ont pas pu être enregistrés :\n{errors}",
     "Origin folders saved successfully" : "Dossiers d'origine enregistrés avec succès",
     "Failed to save origin folders" : "Impossible d'enregistrer les Dossiers d'origine",
@@ -513,6 +515,7 @@ OC.L10N.register(
     "Failed to initiate project scan" : "Impossible de lancer l'analyse du projet",
     "Failed to load project duplicates" : "Échec du chargement des doublons du projet",
     "Failed to scan for empty folders." : "Échec du scan des dossiers vides.",
+    "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_" : ["Échec de la suppression de %n dossier vide","Échec de la suppression de %n dossiers vides","Échec de la suppression de %n dossiers vides"],
     "Failed to delete empty folders." : "Échec de la suppression des dossiers vides.",
     "The viewer is not available" : "La visionneuse n'est pas disponible"
 },
