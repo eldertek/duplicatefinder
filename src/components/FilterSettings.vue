@@ -192,7 +192,7 @@ export default {
 }
 
 .filter-value {
-    margin-left: 10px;
+    margin-inline-start: 10px;
     flex-grow: 1;
     word-break: break-all;
 }

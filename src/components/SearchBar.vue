@@ -7,29 +7,52 @@
           type="text"
           class="search-input"
           :placeholder="searchPlaceholder"
+          :aria-label="searchPlaceholder"
           @input="onSearch" />
-        <div class="search-type-toggle" @click="showTypeSelector = !showTypeSelector">
+        <button
+          type="button"
+          class="search-type-toggle"
+          :title="t('duplicatefinder', 'Search type')"
+          :aria-label="t('duplicatefinder', 'Search type')"
+          :aria-expanded="showTypeSelector ? 'true' : 'false'"
+          aria-haspopup="listbox"
+          @click="showTypeSelector = !showTypeSelector"
+          @keydown.esc="showTypeSelector = false">
           <ChevronDown :size="16" />
-        </div>
-        <div v-if="showTypeSelector" class="search-type-dropdown">
-          <div 
-            class="search-type-option" 
+        </button>
+        <div
+          v-if="showTypeSelector"
+          class="search-type-dropdown"
+          role="listbox"
+          :aria-label="t('duplicatefinder', 'Search type')"
+          @keydown.esc="showTypeSelector = false">
+          <button
+            type="button"
+            role="option"
+            class="search-type-option"
             :class="{ active: searchType === 'simple' }"
+            :aria-selected="searchType === 'simple' ? 'true' : 'false'"
             @click="selectSearchType('simple')">
             {{ t('duplicatefinder', 'Simple search') }}
-          </div>
-          <div 
-            class="search-type-option" 
+          </button>
+          <button
+            type="button"
+            role="option"
+            class="search-type-option"
             :class="{ active: searchType === 'wildcard' }"
+            :aria-selected="searchType === 'wildcard' ? 'true' : 'false'"
             @click="selectSearchType('wildcard')">
             {{ t('duplicatefinder', 'Wildcard search (*, ?)') }}
-          </div>
-          <div 
-            class="search-type-option" 
+          </button>
+          <button
+            type="button"
+            role="option"
+            class="search-type-option"
             :class="{ active: searchType === 'regex' }"
+            :aria-selected="searchType === 'regex' ? 'true' : 'false'"
             @click="selectSearchType('regex')">
             {{ t('duplicatefinder', 'Regular expression') }}
-          </div>
+          </button>
         </div>
       </div>
     </div>
@@ -123,7 +146,9 @@ export default {
 .search-input {
   width: 100%;
   height: 44px;
-  padding: 0 34px 0 12px;
+  box-sizing: border-box;
+  padding-block: 0;
+  padding-inline: 12px 44px;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-pill);
   background-color: var(--color-main-background);
@@ -137,17 +162,28 @@ export default {
   outline: none;
 }
 
+.search-input:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
+}
+
 .search-type-toggle {
   position: absolute;
-  right: 12px;
+  inset-inline-end: 2px;
   top: 50%;
   transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: transparent;
   cursor: pointer;
   color: var(--color-text-maxcontrast);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 0;
   border-radius: 50%;
   transition: background-color 0.2s ease;
 }
@@ -156,20 +192,36 @@ export default {
   background-color: var(--color-background-hover);
 }
 
+.search-type-toggle:focus-visible,
+.search-type-option:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: -2px;
+}
+
 .search-type-dropdown {
   position: absolute;
   top: calc(100% + 4px);
-  right: 0;
+  inset-inline-end: 0;
   background-color: var(--color-main-background);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-large);
   box-shadow: 0 2px 8px var(--color-box-shadow);
   z-index: 9999;
   min-width: 200px;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
 }
 
 .search-type-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
   padding: 8px 12px;
+  border: none;
+  background: transparent;
+  text-align: start;
+  font-size: inherit;
   cursor: pointer;
   color: var(--color-main-text);
   transition: background-color 0.2s ease;

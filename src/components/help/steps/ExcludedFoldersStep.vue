@@ -106,14 +106,14 @@ export default {
 
 .info-block ul {
   margin: 0;
-  padding-left: 24px;
+  padding-inline-start: 24px;
 }
 
 .info-block li {
   margin: 16px 0;
   position: relative;
   list-style: none;
-  padding-left: 28px;
+  padding-inline-start: 28px;
   line-height: 1.5;
   color: var(--color-text-light);
 }
@@ -122,7 +122,7 @@ export default {
   content: "•";
   color: var(--color-primary-element);
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   font-weight: bold;
   font-size: 20px;
 }
@@ -179,13 +179,13 @@ export default {
 .setting-desc {
   color: var(--color-text-maxcontrast);
   font-size: 14px;
-  margin-left: 16px;
+  margin-inline-start: 16px;
   line-height: 1.4;
 }
 
 .note {
   background: var(--color-background-dark);
-  border-left: 4px solid var(--color-warning);
+  border-inline-start: 4px solid var(--color-warning);
   padding: 20px 24px;
   margin-top: 32px;
   border-radius: var(--border-radius);
@@ -196,6 +196,6 @@ export default {
 
 .note strong {
   color: var(--color-warning);
-  margin-right: 8px;
+  margin-inline-end: 8px;
 }
 </style> 

@@ -2,9 +2,14 @@
   <div class="file-info-container">
     <div
       class="thumbnail"
+      role="button"
+      tabindex="0"
       :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"
       :title="t('duplicatefinder', 'Open File')"
-      @click="openInNewWindow">
+      :aria-label="t('duplicatefinder', 'Open File')"
+      @click="openInNewWindow"
+      @keydown.enter.prevent="openInNewWindow"
+      @keydown.space.prevent="openInNewWindow">
     </div>
 
     <div class="file-details" :title="normalizedPath">
@@ -198,8 +203,7 @@ export default {
 .thumbnail {
   width: 56px;
   height: 56px;
-  margin-left: 12px;
-  margin-right: 24px;
+  margin-inline: 12px 24px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -212,14 +216,20 @@ export default {
   box-sizing: border-box;
 }
 
-.thumbnail:hover {
+.thumbnail:hover,
+.thumbnail:focus-visible {
   border-color: var(--color-primary-element);
+}
+
+.thumbnail:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
 }
 
 .file-details {
   flex: 1 1 220px;
   min-width: 0;
-  padding-left: 12px;
+  padding-inline-start: 12px;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -263,7 +273,7 @@ export default {
 .file-size-column {
   width: 108px;
   flex-shrink: 0;
-  padding-left: 12px;
+  padding-inline-start: 12px;
   font-size: 0.88rem;
   font-variant-numeric: tabular-nums;
   color: var(--color-main-text);
@@ -274,7 +284,7 @@ export default {
 .file-status-column {
   width: 118px;
   flex-shrink: 0;
-  padding-left: 12px;
+  padding-inline-start: 12px;
   box-sizing: border-box;
 }
 
@@ -304,9 +314,9 @@ export default {
   align-items: center;
   justify-content: flex-start;
   width: 172px;
-  padding-left: 12px;
+  padding-inline-start: 12px;
   flex-shrink: 0;
-  margin-left: auto;
+  margin-inline-start: auto;
   box-sizing: border-box;
 }
 
@@ -379,6 +389,13 @@ export default {
   opacity: 0.65;
 }
 
+.action-button:focus-visible,
+.delete-button:focus-visible,
+.protected-button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
+}
+
 /* Mobile styles */
 @media (max-width: 800px) {
   .file-info-container {
@@ -387,8 +404,11 @@ export default {
   }
 
   .thumbnail {
-    margin-left: 0;
-    margin-right: 0;
+    margin-inline: 0;
+  }
+
+  .file-name-badge {
+    max-width: 100%;
   }
 
   .file-details,
@@ -396,15 +416,24 @@ export default {
   .file-status-column {
     width: 100%;
     flex-basis: auto;
-    padding-left: 0;
+    padding-inline-start: 0;
   }
 
-  .action-buttons {
+  .action-buttons,
+  .action-buttons.is-compact {
     width: 100%;
+    flex-wrap: wrap;
     justify-content: flex-start;
-    padding-left: 0;
-    margin-left: 0;
+    padding-inline-start: 0;
+    margin-inline-start: 0;
     margin-top: 6px;
+  }
+
+  .action-button,
+  .delete-button,
+  .protected-button {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 </style>

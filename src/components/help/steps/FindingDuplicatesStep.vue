@@ -87,20 +87,20 @@ export default {
   width: 4px;
   height: 24px;
   background: var(--color-primary-element);
-  margin-right: 12px;
+  margin-inline-end: 12px;
   border-radius: var(--border-radius);
 }
 
 .info-block ul {
   margin: 0;
-  padding-left: 24px;
+  padding-inline-start: 24px;
 }
 
 .info-block li {
   margin: 16px 0;
   position: relative;
   list-style: none;
-  padding-left: 28px;
+  padding-inline-start: 28px;
   line-height: 1.5;
   color: var(--color-text-light);
 }
@@ -109,7 +109,7 @@ export default {
   content: "•";
   color: var(--color-primary-element);
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   font-weight: bold;
   font-size: 20px;
 }
@@ -123,6 +123,6 @@ export default {
 
 .tip-box strong {
   color: var(--color-primary-element);
-  margin-right: 8px;
+  margin-inline-end: 8px;
 }
 </style> 

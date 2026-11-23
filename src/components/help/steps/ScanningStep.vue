@@ -107,7 +107,7 @@ export default {
 
 .code-label {
   color: var(--color-text-maxcontrast);
-  margin-right: 12px;
+  margin-inline-end: 12px;
   min-width: 140px;
 }
 
@@ -146,7 +146,7 @@ export default {
 .setting-desc {
   color: var(--color-text-maxcontrast);
   font-size: 14px;
-  margin-left: 16px;
+  margin-inline-start: 16px;
   line-height: 1.4;
 }
 </style> 

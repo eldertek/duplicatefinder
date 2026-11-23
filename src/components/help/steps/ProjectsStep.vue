@@ -121,7 +121,7 @@ export default {
   background: var(--color-background-hover);
   padding: 24px;
   border-radius: var(--border-radius-large);
-  border-left: 4px solid var(--color-primary-element);
+  border-inline-start: 4px solid var(--color-primary-element);
 }
 
 .info-block h3 {
@@ -156,33 +156,33 @@ export default {
   width: 4px;
   height: 18px;
   background: var(--color-primary-element);
-  margin-right: 12px;
+  margin-inline-end: 12px;
   border-radius: var(--border-radius);
 }
 
 .steps-list {
   margin: 0;
-  padding-left: 24px;
+  padding-inline-start: 24px;
 }
 
 .steps-list li {
   margin: 12px 0;
   position: relative;
-  padding-left: 8px;
+  padding-inline-start: 8px;
   line-height: 1.5;
   color: var(--color-text-light);
 }
 
 .feature-list {
   margin: 16px 0;
-  padding-left: 24px;
+  padding-inline-start: 24px;
 }
 
 .feature-list li {
   margin: 12px 0;
   position: relative;
   list-style: none;
-  padding-left: 28px;
+  padding-inline-start: 28px;
   line-height: 1.5;
   color: var(--color-text-light);
 }
@@ -191,14 +191,14 @@ export default {
   content: "•";
   color: var(--color-primary-element);
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   font-weight: bold;
   font-size: 20px;
 }
 
 .note {
   background: var(--color-background-dark);
-  border-left: 4px solid var(--color-primary-element);
+  border-inline-start: 4px solid var(--color-primary-element);
   padding: 16px 20px;
   margin-top: 16px;
   border-radius: var(--border-radius);
@@ -228,7 +228,7 @@ export default {
   width: 4px;
   height: 18px;
   background: var(--color-primary-element);
-  margin-right: 12px;
+  margin-inline-end: 12px;
   border-radius: var(--border-radius);
 }
 
@@ -237,7 +237,7 @@ export default {
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 16px;
 }
 

@@ -83,12 +83,14 @@
                 <span>{{ t('duplicatefinder', 'Preview') }}</span>
               </button>
 
-              <div class="dropdown">
+              <div class="dropdown" @keydown.esc="showDropdown = false">
                 <button
                   type="button"
                   class="dropdown-toggle has-tooltip"
                   :title="t('duplicatefinder', 'More actions')"
                   :aria-label="t('duplicatefinder', 'More actions')"
+                  :aria-expanded="showDropdown ? 'true' : 'false'"
+                  aria-haspopup="true"
                   :data-tooltip="t('duplicatefinder', 'More actions')"
                   @click="toggleDropdown">
                   <span class="arrow-down"></span>
@@ -135,6 +137,7 @@
                 class="file-row-checkbox"
                 :value="file"
                 :disabled="file.isInOriginFolder"
+                :aria-label="t('duplicatefinder', 'Select {file}', { file: file.path })"
               />
               <DuplicateFileDisplay
                 :file="file"
@@ -147,14 +150,14 @@
             </div>
           </div>
         </div>
-        <div v-else class="emptycontent">
+        <div v-else class="emptycontent" role="status" aria-live="polite">
           <div class="icon-file" />
           <div>
             <h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
             <p>{{ t('duplicatefinder', 'You can adjust settings or run a new scan to find duplicates.') }}</p>
             <div class="action-buttons">
-              <button @click="openSettings" class="primary">{{ t('duplicatefinder', 'Open Settings') }}</button>
-              <button @click="findDuplicates" :disabled="isScanning">
+              <button type="button" @click="openSettings" class="primary">{{ t('duplicatefinder', 'Open Settings') }}</button>
+              <button type="button" @click="findDuplicates" :disabled="isScanning">
                 {{ isScanning ? t('duplicatefinder', 'Scanning...') : t('duplicatefinder', 'Find Duplicates') }}
               </button>
             </div>
@@ -677,45 +680,45 @@ export default {
 .col-preview {
   width: 92px;
   flex-shrink: 0;
-  padding-left: 12px;
-  border-left: 1px solid var(--color-border);
-  text-align: left;
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--color-border);
+  text-align: start;
   box-sizing: border-box;
 }
 
 .col-name {
   flex: 1 1 220px;
   min-width: 0;
-  padding-left: 12px;
-  border-left: 1px solid var(--color-border);
-  text-align: left;
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--color-border);
+  text-align: start;
   box-sizing: border-box;
 }
 
 .col-size {
   width: 108px;
   flex-shrink: 0;
-  padding-left: 12px;
-  border-left: 1px solid var(--color-border);
-  text-align: left;
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--color-border);
+  text-align: start;
   box-sizing: border-box;
 }
 
 .col-status {
   width: 118px;
   flex-shrink: 0;
-  padding-left: 12px;
-  border-left: 1px solid var(--color-border);
-  text-align: left;
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--color-border);
+  text-align: start;
   box-sizing: border-box;
 }
 
 .col-actions {
   width: 172px;
   flex-shrink: 0;
-  padding-left: 12px;
-  border-left: 1px solid var(--color-border);
-  text-align: left;
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--color-border);
+  text-align: start;
   box-sizing: border-box;
 }
 
@@ -779,11 +782,15 @@ export default {
 }
 
 .file-row-checkbox:focus,
-.file-row-checkbox:focus-visible,
-.file-header-checkbox:focus,
-.file-header-checkbox:focus-visible {
+.file-header-checkbox:focus {
   outline: none !important;
   box-shadow: none !important;
+}
+
+.file-row-checkbox:focus-visible,
+.file-header-checkbox:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9) !important;
+  outline-offset: 2px;
 }
 
 .file-row-checkbox:checked,
@@ -815,7 +822,7 @@ export default {
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + 7px);
-  right: 0;
+  inset-inline-end: 0;
   padding: 5px 9px;
   border-radius: 6px;
   background-color: #1f2328;
@@ -846,6 +853,26 @@ export default {
     padding: 14px 12px 24px;
   }
 
+  .summary-actions {
+    width: 100%;
+  }
+
+  .toolbar-button,
+  .dropdown-menu button,
+  .action-buttons button,
+  .nc-confirm-dialog__button {
+    min-height: 44px;
+  }
+
+  .dropdown-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+
   .files-table-header {
     display: none;
   }
@@ -859,7 +886,7 @@ export default {
 .loading-overlay {
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 100%;
   height: 100%;
   background: rgba(255, 255, 255, 0.8);
@@ -918,9 +945,19 @@ button:disabled *,
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-.dropdown-toggle:hover {
+.dropdown-toggle:hover,
+.dropdown-toggle:focus-visible {
   background-color: var(--color-background-dark);
   border-color: var(--color-primary-element, #ffffff);
+}
+
+.toolbar-button:focus-visible,
+.dropdown-toggle:focus-visible,
+.dropdown-menu button:focus-visible,
+.action-buttons button:focus-visible,
+.nc-confirm-dialog__button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
 }
 
 .arrow-down {
@@ -928,15 +965,15 @@ button:disabled *,
   width: 0;
   height: 0;
   margin: auto !important;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
+  border-inline-start: 5px solid transparent;
+  border-inline-end: 5px solid transparent;
   border-top: 6px solid var(--color-main-text);
   pointer-events: none;
 }
 
 .dropdown-menu {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: calc(100% + 4px);
   background-color: var(--color-main-background, #ffffff);
   background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
@@ -952,7 +989,7 @@ button:disabled *,
   display: block;
   width: 100%;
   padding: 9px 14px;
-  text-align: left;
+  text-align: start;
   background: none;
   border: none;
   color: var(--color-main-text);

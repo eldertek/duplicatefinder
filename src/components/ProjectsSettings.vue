@@ -390,7 +390,7 @@ export default {
 
 .project-folders ul {
     margin: 0;
-    padding-left: 20px;
+    padding-inline-start: 20px;
 }
 
 .empty-state {

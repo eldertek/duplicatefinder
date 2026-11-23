@@ -108,6 +108,11 @@ export default {
     font-weight: 600;
 }
 
+:deep(.app-navigation-entry .app-navigation-entry-link:focus-visible) {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: -2px;
+}
+
 .is-active .file-size {
     color: var(--color-primary-element-light-text, var(--color-text-maxcontrast));
     font-weight: 600;
@@ -120,13 +125,13 @@ export default {
     background-position: center;
     border-radius: 4px;
     display: inline-block;
-    margin-right: 8px;
+    margin-inline-end: 8px;
 }
 
 .file-size {
     font-size: 0.8rem;
     color: var(--color-text-maxcontrast);
     white-space: nowrap;
-    margin-left: 4px;
+    margin-inline-start: 4px;
 }
 </style>

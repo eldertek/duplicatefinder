@@ -84,7 +84,7 @@
             </nav>
         </div>
 
-        <div v-else class="empty-state">
+        <div v-else class="empty-state" role="status" aria-live="polite">
             <div class="icon-search"></div>
             <h3>{{ t('duplicatefinder', 'No duplicates found') }}</h3>
             <p>{{ t('duplicatefinder', 'No duplicate files were found in the selected folders.') }}</p>
@@ -296,6 +296,7 @@ export default {
 
 .project-meta {
     display: flex;
+    flex-wrap: wrap;
     gap: 15px;
     color: var(--color-text-maxcontrast);
     font-size: 14px;
@@ -326,8 +327,10 @@ export default {
 
 .duplicate-header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     margin-bottom: 15px;
 }
 
@@ -368,6 +371,7 @@ export default {
 
 .file-info {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
 }
 

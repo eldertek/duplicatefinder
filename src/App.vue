@@ -1491,8 +1491,10 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	flex-wrap: wrap;
 	gap: 12px;
-	padding: 12px 20px 12px 56px;
+	padding-block: 12px;
+	padding-inline: 56px 20px;
 	min-height: 56px;
 	box-sizing: border-box;
 	border-bottom: 1px solid var(--color-border);
@@ -1507,6 +1509,7 @@ export default {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
+	min-width: 0;
 }
 
 .topbar-title {
@@ -1542,9 +1545,9 @@ export default {
 .topbar-count-tooltip {
 	position: absolute;
 	top: calc(100% + 8px);
-	left: 0;
+	inset-inline-start: 0;
 	min-width: 280px;
-	max-width: 360px;
+	max-width: min(360px, calc(100vw - 32px));
 	padding: 10px 12px;
 	border-radius: var(--border-radius-large, 8px);
 	border: 1px solid var(--color-border-dark, var(--color-border));
@@ -1578,7 +1581,7 @@ export default {
 
 .topbar-count-tooltip__list {
 	margin: 0;
-	padding-left: 16px;
+	padding-inline-start: 16px;
 	list-style: disc;
 }
 
@@ -1589,8 +1592,10 @@ export default {
 .topbar-actions {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 8px;
-	margin-left: auto;
+	margin-inline-start: auto;
+	min-width: 0;
 }
 
 .app-content-topbar .topbar-scan-button,
@@ -1814,7 +1819,7 @@ export default {
 }
 
 .empty-folders-modal__toolbar-right {
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 
 @media (max-width: 580px) {
@@ -1822,6 +1827,38 @@ export default {
 	.empty-folders-modal__toolbar-left,
 	.empty-folders-modal__toolbar-right {
 		flex-wrap: wrap;
+	}
+}
+
+@media (max-width: 768px) {
+	.app-content-topbar {
+		padding-block: 10px;
+		padding-inline: 52px 12px;
+	}
+
+	.topbar-actions {
+		width: 100%;
+		margin-inline-start: 0;
+	}
+
+	.app-content-topbar .topbar-scan-button,
+	.app-content-topbar .topbar-empty-folders-button,
+	.app-content-topbar .topbar-bulk-delete-button {
+		min-height: 44px;
+	}
+
+	.topbar-count-tooltip {
+		min-width: 0;
+		width: min(320px, calc(100vw - 32px));
+	}
+
+	.empty-folder-ignore-button {
+		min-width: 44px;
+		min-height: 44px;
+	}
+
+	.nc-confirm-dialog__button {
+		min-height: 44px !important;
 	}
 }
 
@@ -2035,10 +2072,14 @@ export default {
 	outline: none !important;
 }
 
-.empty-folder-checkbox:focus,
-.empty-folder-checkbox:focus-visible {
+.empty-folder-checkbox:focus {
 	outline: none !important;
 	box-shadow: none !important;
+}
+
+.empty-folder-checkbox:focus-visible {
+	outline: 2px solid var(--color-primary-element, #0082c9) !important;
+	outline-offset: 2px;
 }
 
 .empty-folder-checkbox:checked {
@@ -2104,6 +2145,16 @@ export default {
 .empty-folder-ignore-button:hover {
 	background-color: var(--color-background-hover) !important;
 	color: var(--color-main-text);
+}
+
+.empty-folder-ignore-button:focus-visible,
+.topbar-count-help:focus-visible,
+.app-content-topbar .topbar-scan-button:focus-visible,
+.app-content-topbar .topbar-empty-folders-button:focus-visible,
+.app-content-topbar .topbar-bulk-delete-button:focus-visible,
+.nc-confirm-dialog__button:focus-visible {
+	outline: 2px solid var(--color-primary-element, #0082c9) !important;
+	outline-offset: 2px;
 }
 
 .empty-folder-ignore-button.is-ignored {

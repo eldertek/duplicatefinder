@@ -132,7 +132,7 @@ export default {
 
 .action-icon {
   font-size: 32px;
-  margin-right: 20px;
+  margin-inline-end: 20px;
   min-width: 48px;
   text-align: center;
 }
@@ -185,7 +185,7 @@ export default {
 
 .resources-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
   gap: 16px;
 }
 
@@ -209,7 +209,7 @@ export default {
 
 .resource-icon {
   font-size: 24px;
-  margin-right: 16px;
+  margin-inline-end: 16px;
   min-width: 32px;
   text-align: center;
 }

@@ -340,7 +340,7 @@ export default {
   width: 4px;
   height: 20px;
   background: var(--color-primary-element);
-  margin-right: 12px;
+  margin-inline-end: 12px;
   border-radius: var(--border-radius);
 }
 
@@ -362,7 +362,7 @@ export default {
 
 .code-label {
   color: var(--color-text-maxcontrast);
-  margin-right: 12px;
+  margin-inline-end: 12px;
   min-width: 120px;
 }
 
@@ -402,21 +402,21 @@ export default {
 .setting-desc {
   color: var(--color-text-maxcontrast);
   font-size: 14px;
-  margin-left: 16px;
+  margin-inline-start: 16px;
   line-height: 1.4;
 }
 
 /* Feature List Styles */
 .feature-list {
   margin: 16px 0;
-  padding-left: 24px;
+  padding-inline-start: 24px;
 }
 
 .feature-list li {
   margin: 12px 0;
   position: relative;
   list-style: none;
-  padding-left: 28px;
+  padding-inline-start: 28px;
   line-height: 1.5;
   color: var(--color-text-light);
 }
@@ -425,7 +425,7 @@ export default {
   content: "•";
   color: var(--color-primary-element);
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   font-weight: bold;
   font-size: 20px;
 }
@@ -433,7 +433,7 @@ export default {
 /* Note Block Styles */
 .note {
   background: var(--color-background-dark);
-  border-left: 4px solid var(--color-primary-element);
+  border-inline-start: 4px solid var(--color-primary-element);
   padding: 16px 20px;
   margin-top: 16px;
   border-radius: var(--border-radius);
@@ -444,7 +444,7 @@ export default {
 
 .note strong {
   color: var(--color-primary-element);
-  margin-right: 8px;
+  margin-inline-end: 8px;
 }
 
 /* Managing Filters Styles */
@@ -484,7 +484,7 @@ export default {
 .managing-filters-step-details {
   font-size: 14px;
   color: var(--color-text-maxcontrast);
-  margin-left: 16px;
+  margin-inline-start: 16px;
   line-height: 1.4;
 }
 </style>

@@ -1301,8 +1301,7 @@ export default {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
-  margin-left: 10px;
-  margin-right: 10px;
+  margin-inline: 10px;
   border: 1px solid var(--color-border);
   padding: 10px;
   border-radius: var(--border-radius);
@@ -1333,7 +1332,7 @@ export default {
 }
 
 .group-content {
-  margin-left: 20px;
+  margin-inline-start: 20px;
 }
 
 .path-directory {
@@ -1403,6 +1402,11 @@ export default {
   .file-size {
     margin-inline-start: 0;
   }
+
+  .empty-folder-ignore-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .loading-info {
@@ -1439,7 +1443,7 @@ export default {
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 
 .preview-button {

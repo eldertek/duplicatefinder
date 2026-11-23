@@ -4,14 +4,17 @@
             <!-- Search Bar and Sort in One Line -->
             <div class="search-sort-container">
                 <SearchBar @search="handleSearch" />
-                <div class="sort-dropdown">
+                <div class="sort-dropdown" @keydown.esc="showSortMenu = false">
                     <button
                         type="button"
                         class="icon-only-button"
                         :class="{ 'has-active-filter': hasActiveSortOrFilter }"
                         :title="t('duplicatefinder', 'Sort and filter by size')"
+                        :aria-label="t('duplicatefinder', 'Sort and filter by size')"
+                        :aria-expanded="showSortMenu ? 'true' : 'false'"
+                        aria-haspopup="true"
                         @click="toggleSortMenu">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M11 9h9"></path>
                             <path d="M6 9h2"></path>
                             <path d="M4 19h16"></path>
@@ -24,36 +27,44 @@
                         <div class="sort-menu-section-title">
                             {{ t('duplicatefinder', 'Sort order') }}
                         </div>
-                        <div
+                        <button
+                            type="button"
                             class="sort-option"
                             :class="{ 'active': sortOption === 'none' }"
+                            :aria-pressed="sortOption === 'none' ? 'true' : 'false'"
                             @click="setSortOption('none'); toggleSortMenu()">
                             {{ t('duplicatefinder', 'Default') }}
-                        </div>
-                        <div
+                        </button>
+                        <button
+                            type="button"
                             class="sort-option"
                             :class="{ 'active': sortOption === 'size-desc' }"
+                            :aria-pressed="sortOption === 'size-desc' ? 'true' : 'false'"
                             @click="setSortOption('size-desc'); toggleSortMenu()">
                             {{ t('duplicatefinder', 'Size (largest first)') }}
-                        </div>
-                        <div
+                        </button>
+                        <button
+                            type="button"
                             class="sort-option"
                             :class="{ 'active': sortOption === 'size-asc' }"
+                            :aria-pressed="sortOption === 'size-asc' ? 'true' : 'false'"
                             @click="setSortOption('size-asc'); toggleSortMenu()">
                             {{ t('duplicatefinder', 'Size (smallest first)') }}
-                        </div>
+                        </button>
                         <div class="sort-menu-divider"></div>
                         <div class="sort-menu-section-title">
                             {{ t('duplicatefinder', 'Minimum file size') }}
                         </div>
-                        <div
+                        <button
                             v-for="preset in minSizePresets"
                             :key="preset.bytes"
+                            type="button"
                             class="sort-option"
                             :class="{ 'active': minSizeBytes === preset.bytes }"
+                            :aria-pressed="minSizeBytes === preset.bytes ? 'true' : 'false'"
                             @click="setMinSizeBytes(preset.bytes); toggleSortMenu()">
                             {{ preset.label }}
-                        </div>
+                        </button>
                         <div class="custom-size-row" @click.stop>
                             <input
                                 v-model="customMinSizeMb"
@@ -62,6 +73,7 @@
                                 step="any"
                                 class="custom-size-input"
                                 :placeholder="t('duplicatefinder', 'Min MB')"
+                                :aria-label="t('duplicatefinder', 'Min MB')"
                                 @keyup.enter="applyCustomMinSize" />
                             <button type="button" class="custom-size-apply" @click="applyCustomMinSize">
                                 {{ t('duplicatefinder', 'Apply') }}
@@ -74,36 +86,44 @@
             <!-- Main Navigation Items -->
             <div class="main-nav-items">
                 <!-- Projects Button -->
-                <button class="fixed-nav-button" @click="toggleProjectsMenu">
+                <button
+                    type="button"
+                    class="fixed-nav-button"
+                    :aria-expanded="showProjectsMenu ? 'true' : 'false'"
+                    @click="toggleProjectsMenu">
                     <FolderMultiple :size="20" />
                     <span class="button-label">{{ t('duplicatefinder', 'Projects') }}</span>
                 </button>
                 
                 <!-- Settings Button -->
-                <button class="fixed-nav-button" @click="$emit('open-settings')">
+                <button type="button" class="fixed-nav-button" @click="$emit('open-settings')">
                     <Cog :size="20" />
                     <span class="button-label">{{ t('duplicatefinder', 'Settings') }}</span>
                 </button>
                 
                 <!-- Help Button -->
-                <button class="fixed-nav-button" @click="toggleHelpMenu">
+                <button
+                    type="button"
+                    class="fixed-nav-button"
+                    :aria-expanded="showHelpMenu ? 'true' : 'false'"
+                    @click="toggleHelpMenu">
                     <HelpCircle :size="20" />
                     <span class="button-label">{{ t('duplicatefinder', 'Help') }}</span>
                 </button>
             </div>
 
             <!-- Projects Menu (only shown when toggleProjectsMenu is clicked) -->
-            <div v-if="showProjectsMenu" class="fixed-menu projects-menu">
+            <div v-if="showProjectsMenu" class="fixed-menu projects-menu" @keydown.esc="toggleProjectsMenu">
                 <div class="menu-header">
                     <FolderMultiple :size="18" />
                     <span>{{ t('duplicatefinder', 'Projects') }}</span>
                 </div>
                 
                 <div class="menu-action">
-                    <div class="menu-item action-item" @click="$emit('open-projects')">
+                    <button type="button" class="menu-item action-item" @click="$emit('open-projects')">
                         <FolderCog :size="16" />
                         <span>{{ t('duplicatefinder', 'Manage Projects') }}</span>
-                    </div>
+                    </button>
                 </div>
                 
                 <div class="menu-section-title" v-if="projects.length > 0">
@@ -111,58 +131,61 @@
                 </div>
                 
                 <div v-if="projects.length > 0" class="menu-items-list">
-                    <div v-for="project in projects" :key="project.id" 
-                         class="menu-item" 
+                    <button
+                         v-for="project in projects"
+                         :key="project.id"
+                         type="button"
+                         class="menu-item"
                          :class="{'active': activeView === 'project' && activeProject === project.id}"
                          @click="$emit('view-project', project.id); toggleProjectsMenu()">
                         <Folder :size="16" />
                         <span>{{ project.name }}</span>
-                    </div>
+                    </button>
                 </div>
                 <div v-else class="empty-projects-message">
                     {{ t('duplicatefinder', 'No projects yet') }}
                     <div class="empty-action">
-                        <button class="action-button" @click="$emit('open-projects'); toggleProjectsMenu()">
+                        <button type="button" class="action-button" @click="$emit('open-projects'); toggleProjectsMenu()">
                             {{ t('duplicatefinder', 'Create your first project') }}
                         </button>
                     </div>
                 </div>
                 <div class="menu-footer">
-                    <button class="menu-close-button" @click="toggleProjectsMenu">
+                    <button type="button" class="menu-close-button" @click="toggleProjectsMenu">
                         {{ t('duplicatefinder', 'Close') }}
                     </button>
                 </div>
             </div>
 
             <!-- Help Menu (only shown when toggleHelpMenu is clicked) -->
-            <div v-if="showHelpMenu" class="fixed-menu help-menu">
+            <div v-if="showHelpMenu" class="fixed-menu help-menu" @keydown.esc="toggleHelpMenu">
                 <div class="menu-header">
                     <HelpCircle :size="18" />
                     <span>{{ t('duplicatefinder', 'Help') }}</span>
                 </div>
                 
                 <div class="menu-section">
-                    <div class="menu-item" @click="$emit('show-help', 'guide'); toggleHelpMenu()">
+                    <button type="button" class="menu-item" @click="$emit('show-help', 'guide'); toggleHelpMenu()">
                         <School :size="16" />
                         <span>{{ t('duplicatefinder', 'Getting Started') }}</span>
                         <span class="menu-item-description">{{ t('duplicatefinder', 'Learn the basics of using the app') }}</span>
-                    </div>
+                    </button>
                     
-                    <div class="menu-item" @click="$emit('show-help', 'examples'); toggleHelpMenu()">
+                    <button type="button" class="menu-item" @click="$emit('show-help', 'examples'); toggleHelpMenu()">
                         <PlayCircle :size="16" />
                         <span>{{ t('duplicatefinder', 'Usage Examples') }}</span>
                         <span class="menu-item-description">{{ t('duplicatefinder', 'See practical examples of finding and managing duplicates') }}</span>
-                    </div>
+                    </button>
                     
-                    <div class="menu-item" @click="$emit('show-help', 'faq'); toggleHelpMenu()">
+                    <button type="button" class="menu-item" @click="$emit('show-help', 'faq'); toggleHelpMenu()">
                         <FrequentlyAskedQuestions :size="16" />
                         <span>{{ t('duplicatefinder', 'FAQ') }}</span>
                         <span class="menu-item-description">{{ t('duplicatefinder', 'Find answers to common questions') }}</span>
-                    </div>
+                    </button>
                 </div>
                 
                 <div class="menu-footer">
-                    <button class="menu-close-button" @click="toggleHelpMenu">
+                    <button type="button" class="menu-close-button" @click="toggleHelpMenu">
                         {{ t('duplicatefinder', 'Close') }}
                     </button>
                 </div>
@@ -189,7 +212,7 @@
                                 @duplicate-resolved="handleDuplicateResolved" />
                         </div>
                     </div>
-                    <div v-show="filteredAcknowledgedDuplicates.length === 0">
+                    <div v-show="filteredAcknowledgedDuplicates.length === 0" role="status" aria-live="polite">
                         <p>{{ t('duplicatefinder', 'No acknowledged duplicates found.') }}</p>
                     </div>
                     <div
@@ -228,7 +251,7 @@
                                 @duplicate-resolved="handleDuplicateResolved" />
                         </div>
                     </div>
-                    <div v-show="filteredUnacknowledgedDuplicates.length === 0">
+                    <div v-show="filteredUnacknowledgedDuplicates.length === 0" role="status" aria-live="polite">
                         <p>{{ t('duplicatefinder', 'No unacknowledged duplicates found.') }}</p>
                     </div>
                     <div
@@ -1012,7 +1035,7 @@ export default {
 .sort-dropdown {
     position: relative;
     z-index: 2000;
-    margin-left: 8px;
+    margin-inline-start: 8px;
 }
 
 .icon-only-button {
@@ -1020,10 +1043,10 @@ export default {
     background: transparent;
     border: none;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1 !important;
@@ -1048,10 +1071,23 @@ export default {
     background-color: var(--color-background-hover);
 }
 
+.icon-only-button:focus-visible,
+.sort-option:focus-visible,
+.custom-size-input:focus-visible,
+.custom-size-apply:focus-visible,
+.fixed-nav-button:focus-visible,
+.menu-item:focus-visible,
+.action-button:focus-visible,
+.menu-close-button:focus-visible,
+.load-more-button:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
+}
+
 .active-filter-dot {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 6px;
+    inset-inline-end: 6px;
     width: 7px;
     height: 7px;
     border-radius: 50%;
@@ -1060,7 +1096,7 @@ export default {
 
 .sort-menu {
     position: absolute;
-    right: 0;
+    inset-inline-end: 0;
     top: calc(100% + 4px);
     background-color: var(--color-main-background, #ffffff);
     background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
@@ -1069,6 +1105,7 @@ export default {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
     z-index: 2000;
     min-width: 220px;
+    max-width: calc(100vw - 24px);
     padding: 6px 0;
     opacity: 1;
     backdrop-filter: none;
@@ -1091,7 +1128,15 @@ export default {
 }
 
 .sort-option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
     padding: 7px 12px;
+    border: none;
+    background: transparent;
+    color: var(--color-main-text);
+    text-align: start;
     cursor: pointer;
     transition: background-color 0.2s;
     font-size: 0.9rem;
@@ -1147,6 +1192,9 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
     background: transparent;
     border: none;
     border-radius: 8px;
@@ -1207,13 +1255,20 @@ export default {
 }
 
 .menu-item {
+    width: 100%;
+    min-height: 44px;
     padding: 10px 16px;
     display: flex;
     align-items: flex-start;
+    text-align: start;
+    background: transparent;
+    border-block: none;
+    border-inline-end: none;
+    border-inline-start: 3px solid transparent;
+    color: var(--color-main-text);
     cursor: pointer;
     transition: background-color 0.2s;
     flex-wrap: wrap;
-    border-left: 3px solid transparent;
 }
 
 .action-item {
@@ -1221,11 +1276,11 @@ export default {
 }
 
 .menu-item span {
-    margin-left: 10px;
+    margin-inline-start: 10px;
 }
 
 .menu-item-description {
-    margin-left: 26px !important;
+    margin-inline-start: 26px !important;
     font-size: 0.8rem;
     color: var(--color-text-maxcontrast);
     width: 100%;
@@ -1234,7 +1289,7 @@ export default {
 
 .menu-item:hover, .menu-item.active {
     background-color: var(--color-background-hover);
-    border-left-color: var(--color-primary-element);
+    border-inline-start-color: var(--color-primary-element);
 }
 
 .menu-items-list {
@@ -1293,7 +1348,8 @@ export default {
 
 .load-more-button {
     margin: 8px;
-    padding: 6px 12px;
+    padding: 8px 12px;
+    min-height: 44px;
     background-color: var(--color-primary-element);
     color: var(--color-primary-text);
     border: none;
