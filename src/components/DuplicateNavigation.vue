@@ -232,6 +232,47 @@
                         }) }}
                     </span>
                 </div>
+                <div
+                    v-if="extensionBreakdown.length > 0"
+                    class="extension-insights-bar"
+                    role="group"
+                    :aria-label="t('duplicatefinder', 'Top duplicate file extensions by reclaimable space')">
+                    <div class="extension-insights-header">
+                        <span class="extension-insights-label">
+                            {{ t('duplicatefinder', 'Top extensions') }}
+                        </span>
+                        <button
+                            v-if="largestDuplicateGroup"
+                            type="button"
+                            class="largest-group-jump-button"
+                            :class="{ 'active': currentDuplicateId === largestDuplicateGroup.id }"
+                            :title="t('duplicatefinder', 'Jump to largest duplicate group ({size})', { size: largestDuplicateFormattedSize })"
+                            :aria-label="t('duplicatefinder', 'Jump to largest duplicate group ({size})', { size: largestDuplicateFormattedSize })"
+                            @click="openDuplicate(largestDuplicateGroup)">
+                            {{ t('duplicatefinder', 'Largest: {size}', { size: largestDuplicateFormattedSize }) }}
+                        </button>
+                    </div>
+                    <div class="extension-insights-list">
+                        <button
+                            v-for="item in extensionBreakdown"
+                            :key="item.ext"
+                            type="button"
+                            class="extension-insight-chip"
+                            :class="{ 'active': selectedExtension === item.ext }"
+                            :aria-pressed="selectedExtension === item.ext ? 'true' : 'false'"
+                            :title="t('duplicatefinder', '{ext}: {size} reclaimable ({pct}%, {groups} groups)', {
+                                ext: item.ext,
+                                size: item.reclaimableFormatted,
+                                pct: item.sharePct,
+                                groups: item.groupCount,
+                            })"
+                            @click="toggleExtensionFilter(item.ext)">
+                            <span class="extension-insight-ext">{{ item.ext }}</span>
+                            <span class="extension-insight-size">{{ item.reclaimableFormatted }}</span>
+                            <span class="extension-insight-pct">{{ item.sharePct }}%</span>
+                        </button>
+                    </div>
+                </div>
                 <div class="quick-filter-actions">
                     <button
                         v-if="hasActiveFilters"
@@ -404,6 +445,13 @@ import {
     saveTriagePreferences,
 } from '@/tools/duplicatePreferences';
 import { downloadDuplicatesCsv } from '@/tools/duplicateSelectionAndExport';
+import {
+    computeExtensionBreakdown,
+    computeGroupReclaimableBytes,
+    findLargestDuplicateGroup,
+    formatBytes,
+    matchesDuplicateExtension,
+} from '@/tools/duplicateStats';
 
 export default {
     components: {
@@ -492,6 +540,7 @@ export default {
             showProjectsMenu: false,
             showHelpMenu: false,
             selectedCategory: 'all',
+            selectedExtension: '',
             folderQuery: '',
             acknowledgedOpen: savedPreferences.acknowledgedOpen,
             unacknowledgedOpen: savedPreferences.unacknowledgedOpen,
@@ -578,6 +627,7 @@ export default {
         },
         hasActiveFilters() {
             return this.selectedCategory !== 'all'
+                || this.selectedExtension !== ''
                 || this.folderQuery.trim() !== ''
                 || this.minSizeBytes > 0
                 || this.sortOption !== 'none'
@@ -653,6 +703,30 @@ export default {
                 ? this.filteredAcknowledgedDuplicates
                 : [];
             return computeReclaimableSummary([...unacknowledged, ...acknowledged]);
+        },
+        baseFilteredDuplicatesForStats() {
+            const unacknowledged = Array.isArray(this.unacknowledgedDuplicates)
+                ? this.unacknowledgedDuplicates
+                : [];
+            const acknowledged = Array.isArray(this.acknowledgedDuplicates)
+                ? this.acknowledgedDuplicates
+                : [];
+            const combined = [...unacknowledged, ...acknowledged].filter(duplicate => {
+                return this.filterDuplicate(duplicate, { ignoreExtension: true });
+            });
+            return filterDuplicatesByFolderPrefix(combined, this.folderQuery);
+        },
+        extensionBreakdown() {
+            return computeExtensionBreakdown(this.baseFilteredDuplicatesForStats, 3);
+        },
+        largestDuplicateGroup() {
+            return findLargestDuplicateGroup(this.filteredDuplicatesForExport);
+        },
+        largestDuplicateFormattedSize() {
+            if (!this.largestDuplicateGroup) {
+                return '';
+            }
+            return formatBytes(computeGroupReclaimableBytes(this.largestDuplicateGroup));
         },
         filteredDuplicatesForExport() {
             const unacknowledged = Array.isArray(this.filteredUnacknowledgedDuplicates)
@@ -776,6 +850,7 @@ export default {
         resetFilters() {
             const queryOptionsChanged = this.sortOption !== 'none' || this.minSizeBytes > 0;
             this.selectedCategory = 'all';
+            this.selectedExtension = '';
             this.folderQuery = '';
             this.sortOption = 'none';
             this.minSizeBytes = 0;
@@ -873,9 +948,16 @@ export default {
         },
         setCategoryFilter(category) {
             this.selectedCategory = DUPLICATE_FILTER_CATEGORIES.includes(category) ? category : 'all';
+            this.selectedExtension = '';
             this.persistTriagePreferences();
         },
-        filterDuplicate(duplicate) {
+        toggleExtensionFilter(ext) {
+            if (typeof ext !== 'string' || !ext.trim()) {
+                return;
+            }
+            this.selectedExtension = this.selectedExtension === ext ? '' : ext;
+        },
+        filterDuplicate(duplicate, options = {}) {
             if (this.minSizeBytes > 0) {
                 const hasLargeEnoughCopy = Array.isArray(duplicate.files)
                     && duplicate.files.some(file => Number(file.size) >= this.minSizeBytes);
@@ -885,6 +967,10 @@ export default {
             }
 
             if (this.selectedCategory !== 'all' && !matchesDuplicateCategory(duplicate, this.selectedCategory)) {
+                return false;
+            }
+
+            if (!options.ignoreExtension && this.selectedExtension && !matchesDuplicateExtension(duplicate, this.selectedExtension)) {
                 return false;
             }
 
@@ -1744,6 +1830,138 @@ export default {
 .reclaimable-summary-meta {
     color: var(--color-text-maxcontrast);
     font-size: 0.78rem;
+}
+
+.extension-insights-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-block: 6px;
+    padding-inline: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: var(--color-main-background);
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.extension-insights-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 8px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.extension-insights-label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--color-text-maxcontrast);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.largest-group-jump-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 4px;
+    padding-inline: 10px;
+    margin-block: 0;
+    margin-inline: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background-color: var(--color-background-hover);
+    color: var(--color-main-text);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.largest-group-jump-button:hover,
+.largest-group-jump-button.active {
+    border-color: var(--color-primary-element, #0082c9);
+    background-color: var(--color-primary-element-light);
+    color: var(--color-primary-element);
+}
+
+.largest-group-jump-button:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
+}
+
+.extension-insights-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.extension-insight-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    gap: 5px;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    max-inline-size: 100%;
+    padding-block: 6px;
+    padding-inline: 10px;
+    margin-block: 0;
+    margin-inline: 0;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 6px;
+    background-color: var(--color-background-hover);
+    color: var(--color-main-text);
+    font-size: 0.8rem;
+    line-height: 1.2;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.extension-insight-chip:hover {
+    border-color: var(--color-primary-element, #0082c9);
+}
+
+.extension-insight-chip.active {
+    background-color: var(--color-primary-element);
+    border-color: var(--color-primary-element);
+    color: var(--color-primary-text);
+    font-weight: 600;
+}
+
+.extension-insight-chip:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
+}
+
+.extension-insight-ext {
+    font-weight: 700;
+}
+
+.extension-insight-size {
+    font-weight: 500;
+}
+
+.extension-insight-pct {
+    font-size: 0.74rem;
+    color: var(--color-text-maxcontrast);
+}
+
+.extension-insight-chip.active .extension-insight-pct {
+    color: var(--color-primary-text);
 }
 
 .quick-filter-actions {

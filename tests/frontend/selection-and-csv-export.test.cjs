@@ -37,6 +37,7 @@ function createDetailsComponent() {
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
+		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 		'@/tools/duplicateMetadataBadges': metadataBadges,
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
@@ -99,6 +100,7 @@ function createNavigationComponent() {
 		'@/tools/duplicateFilters': duplicateFilters,
 		'@/tools/duplicatePreferences': loadModule('src/tools/duplicatePreferences.js'),
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
+		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 		'@/tools/duplicateMetadataBadges': metadataBadges,
 	})
 }

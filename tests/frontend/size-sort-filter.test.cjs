@@ -56,6 +56,7 @@ function navigationImports(fetchDuplicates) {
 		'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
 		'@/tools/duplicatePreferences': loadModule('src/tools/duplicatePreferences.js'),
 		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
+		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 	}
 }
 
