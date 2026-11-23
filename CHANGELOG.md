@@ -1,3 +1,7 @@
+## 1.10.42 - 2026-11-23
+### Added
+- **Export filtered JSON report keyboard shortcut (`x`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `x` (`export-json-report`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` (`exportFilteredJsonReport()` via `exportFilteredReport('exportFilteredJson')`) to invoke `DuplicateNavigation.vue` (`exportFilteredJson()`) for structured `duplicatefinder.report.v1` JSON export when `filteredDuplicatesForExport` is non-empty and `x` is pressed outside editable controls and open modal dialogs, and annotated `.export-json-button` with `aria-keyshortcuts="x"`.
+
 ## 1.10.41 - 2026-11-23
 ### Added
 - **Export filtered CSV report keyboard shortcut (`e`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `e` (`export-csv-report`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` (`exportFilteredCsvReport()`) to invoke `DuplicateNavigation.vue` (`exportFilteredCsv()`) for CWE-1236-safe CSV export when `filteredDuplicatesForExport` is non-empty and `e` is pressed outside editable controls and open modal dialogs, and annotated `.export-csv-button` with `aria-keyshortcuts="e"`.
