@@ -450,6 +450,7 @@ describe('Cycle 135: Near-Duplicate Document Fuzzy Diff & Version Lineage Workbe
 			'./components/PhotoPerceptualWorkbench.vue': { __esModule: true, default: stub('photo-perceptual') },
 			'./components/BrokenMediaQuarantineWorkbench.vue': { __esModule: true, default: stub('broken-quarantine') },
 './components/RetentionAgeWorkbench.vue': { __esModule: true, default: stub('retention-pruner') },
+			'./components/FilenameCollisionWorkbench.vue': { __esModule: true, default: stub('filename-collisions') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

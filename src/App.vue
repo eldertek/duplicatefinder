@@ -712,6 +712,33 @@
 							<span>{{ t('duplicatefinder', 'Retention') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-filename-collisions-button"
+							:class="{ 'is-active': filenameCollisionsOpen }"
+							:aria-pressed="filenameCollisionsOpen ? 'true' : 'false'"
+							aria-keyshortcuts="="
+							:title="t('duplicatefinder', 'Toggle filename normalization and Unicode collision inspector')"
+							@click="toggleFilenameCollisions">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M5 9h14" />
+								<path d="M5 15h14" />
+								<path d="M9 5l-3 14" />
+								<path d="M18 5l-3 14" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Collisions') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -980,6 +1007,16 @@
 						@retention-delete-completed="onRetentionDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="retentionPrunerOpen = false" />
+					<FilenameCollisionWorkbench
+						v-if="filenameCollisionsOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onFilenameCollisionSelectDuplicate"
+						@compare-duplicate="onFilenameCollisionCompareDuplicate"
+						@collision-delete-completed="onFilenameCollisionDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="filenameCollisionsOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1432,6 +1469,7 @@ import DocumentLineageWorkbench from './components/DocumentLineageWorkbench.vue'
 import PhotoPerceptualWorkbench from './components/PhotoPerceptualWorkbench.vue'
 import BrokenMediaQuarantineWorkbench from './components/BrokenMediaQuarantineWorkbench.vue'
 import RetentionAgeWorkbench from './components/RetentionAgeWorkbench.vue'
+import FilenameCollisionWorkbench from './components/FilenameCollisionWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1513,6 +1551,7 @@ export default {
 		PhotoPerceptualWorkbench,
 		BrokenMediaQuarantineWorkbench,
 		RetentionAgeWorkbench,
+		FilenameCollisionWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1561,6 +1600,7 @@ export default {
 			photoPerceptualOpen: false,
 			brokenQuarantineOpen: false,
 			retentionPrunerOpen: false,
+			filenameCollisionsOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1753,6 +1793,7 @@ export default {
 				'toggle-photo-perceptual': t('duplicatefinder', 'Toggle similar-photo perceptual pHash, EXIF sharpness and crop comparator workbench'),
 				'toggle-broken-quarantine': t('duplicatefinder', 'Toggle broken, zero-byte, truncated media and corrupted header quarantine workbench'),
 				'toggle-retention-pruner': t('duplicatefinder', 'Toggle retention age, cold-storage and stale artifact pruner workbench'),
+				'toggle-filename-collisions': t('duplicatefinder', 'Toggle filename normalization and Locale/Unicode collision inspector'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2301,6 +2342,25 @@ export default {
 		onRetentionDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleFilenameCollisions() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.filenameCollisionsOpen = !this.filenameCollisionsOpen
+			return true
+		},
+		onFilenameCollisionSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onFilenameCollisionCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onFilenameCollisionDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -2792,6 +2852,13 @@ export default {
 
 			if (action === 'toggle-retention-pruner') {
 				if (this.toggleRetentionPruner() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-filename-collisions') {
+				if (this.toggleFilenameCollisions() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3715,7 +3782,8 @@ export default {
 .app-content-topbar .topbar-document-lineage-button,
 .app-content-topbar .topbar-photo-perceptual-button,
 .app-content-topbar .topbar-broken-quarantine-button,
-.app-content-topbar .topbar-retention-pruner-button {
+.app-content-topbar .topbar-retention-pruner-button,
+.app-content-topbar .topbar-filename-collisions-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3755,7 +3823,8 @@ export default {
 .app-content-topbar .topbar-document-lineage-button svg,
 .app-content-topbar .topbar-photo-perceptual-button svg,
 .app-content-topbar .topbar-broken-quarantine-button svg,
-.app-content-topbar .topbar-retention-pruner-button svg {
+.app-content-topbar .topbar-retention-pruner-button svg,
+.app-content-topbar .topbar-filename-collisions-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3801,7 +3870,9 @@ export default {
 .app-content-topbar .topbar-broken-quarantine-button:hover:not(:disabled),
 .app-content-topbar .topbar-broken-quarantine-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-retention-pruner-button:hover:not(:disabled),
-.app-content-topbar .topbar-retention-pruner-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-retention-pruner-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-filename-collisions-button:hover:not(:disabled),
+.app-content-topbar .topbar-filename-collisions-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3824,7 +3895,8 @@ export default {
 .app-content-topbar .topbar-document-lineage-button.is-active,
 .app-content-topbar .topbar-photo-perceptual-button.is-active,
 .app-content-topbar .topbar-broken-quarantine-button.is-active,
-.app-content-topbar .topbar-retention-pruner-button.is-active {
+.app-content-topbar .topbar-retention-pruner-button.is-active,
+.app-content-topbar .topbar-filename-collisions-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -3990,6 +4062,7 @@ export default {
 .app-content-topbar .topbar-photo-perceptual-button > *,
 .app-content-topbar .topbar-broken-quarantine-button > *,
 .app-content-topbar .topbar-retention-pruner-button > *,
+.app-content-topbar .topbar-filename-collisions-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -4094,6 +4167,7 @@ export default {
 	.app-content-topbar .topbar-photo-perceptual-button,
 	.app-content-topbar .topbar-broken-quarantine-button,
 	.app-content-topbar .topbar-retention-pruner-button,
+	.app-content-topbar .topbar-filename-collisions-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
