@@ -144,6 +144,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-rule-profiles',
 	},
 	{
+		id: 'toggle-document-lineage',
+		keys: ['6'],
+		action: 'toggle-document-lineage',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -211,6 +216,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	3: 'toggle-video-workbench',
 	4: 'toggle-sidecar-sweep',
 	5: 'toggle-rule-profiles',
+	6: 'toggle-document-lineage',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',

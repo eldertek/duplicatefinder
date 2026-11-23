@@ -369,6 +369,7 @@ describe('Cycle 134: Cleanup Rule Profiles, Regex Exclusion Presets & Batch Audi
 			'./components/VideoSceneWorkbench.vue': { __esModule: true, default: stub('video-workbench') },
 			'./components/SidecarSweepWorkbench.vue': { __esModule: true, default: stub('sidecar-sweep') },
 			'./components/RuleProfilesWorkbench.vue': { __esModule: true, default: Workbench },
+			'./components/DocumentLineageWorkbench.vue': { __esModule: true, default: stub('document-lineage') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

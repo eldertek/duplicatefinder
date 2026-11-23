@@ -581,6 +581,41 @@
 							<span>{{ t('duplicatefinder', 'Rule Profiles') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-document-lineage-button"
+							:class="{ 'is-active': documentLineageOpen }"
+							:aria-pressed="documentLineageOpen ? 'true' : 'false'"
+							aria-keyshortcuts="6"
+							:title="t('duplicatefinder', 'Toggle near-duplicate document fuzzy diff and version lineage workbench')"
+							@click="toggleDocumentLineage">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+								<polyline points="14 2 14 8 20 8" />
+								<line
+									x1="8"
+									y1="13"
+									x2="16"
+									y2="13" />
+								<line
+									x1="8"
+									y1="17"
+									x2="13"
+									y2="17" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Doc Lineage') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -809,6 +844,16 @@
 						@rule-delete-completed="onRuleProfilesDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="ruleProfilesOpen = false" />
+					<DocumentLineageWorkbench
+						v-if="documentLineageOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onDocumentLineageSelectDuplicate"
+						@compare-duplicate="onDocumentLineageCompareDuplicate"
+						@doc-delete-completed="onDocumentLineageDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="documentLineageOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1257,6 +1302,7 @@ import AudioTagWorkbench from './components/AudioTagWorkbench.vue'
 import VideoSceneWorkbench from './components/VideoSceneWorkbench.vue'
 import SidecarSweepWorkbench from './components/SidecarSweepWorkbench.vue'
 import RuleProfilesWorkbench from './components/RuleProfilesWorkbench.vue'
+import DocumentLineageWorkbench from './components/DocumentLineageWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1334,6 +1380,7 @@ export default {
 		VideoSceneWorkbench,
 		SidecarSweepWorkbench,
 		RuleProfilesWorkbench,
+		DocumentLineageWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1378,6 +1425,7 @@ export default {
 			videoWorkbenchOpen: false,
 			sidecarSweepOpen: false,
 			ruleProfilesOpen: false,
+			documentLineageOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1566,6 +1614,7 @@ export default {
 				'toggle-video-workbench': t('duplicatefinder', 'Toggle video frame fingerprint, codec quality and duration tolerance inspector'),
 				'toggle-sidecar-sweep': t('duplicatefinder', 'Toggle orphaned sidecar and post-cleanup empty-folder sweep inspector'),
 				'toggle-rule-profiles': t('duplicatefinder', 'Toggle cleanup rule profiles, regex exclusions and batch audit log'),
+				'toggle-document-lineage': t('duplicatefinder', 'Toggle near-duplicate document fuzzy diff and version lineage workbench'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2038,6 +2087,25 @@ export default {
 		onRuleProfilesDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleDocumentLineage() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.documentLineageOpen = !this.documentLineageOpen
+			return true
+		},
+		onDocumentLineageSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onDocumentLineageCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onDocumentLineageDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -2501,6 +2569,13 @@ export default {
 
 			if (action === 'toggle-rule-profiles') {
 				if (this.toggleRuleProfiles() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-document-lineage') {
+				if (this.toggleDocumentLineage() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3420,7 +3495,8 @@ export default {
 .app-content-topbar .topbar-audio-workbench-button,
 .app-content-topbar .topbar-video-workbench-button,
 .app-content-topbar .topbar-sidecar-sweep-button,
-.app-content-topbar .topbar-rule-profiles-button {
+.app-content-topbar .topbar-rule-profiles-button,
+.app-content-topbar .topbar-document-lineage-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3456,7 +3532,8 @@ export default {
 .app-content-topbar .topbar-audio-workbench-button svg,
 .app-content-topbar .topbar-video-workbench-button svg,
 .app-content-topbar .topbar-sidecar-sweep-button svg,
-.app-content-topbar .topbar-rule-profiles-button svg {
+.app-content-topbar .topbar-rule-profiles-button svg,
+.app-content-topbar .topbar-document-lineage-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3494,7 +3571,9 @@ export default {
 .app-content-topbar .topbar-sidecar-sweep-button:hover:not(:disabled),
 .app-content-topbar .topbar-sidecar-sweep-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-rule-profiles-button:hover:not(:disabled),
-.app-content-topbar .topbar-rule-profiles-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-rule-profiles-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-document-lineage-button:hover:not(:disabled),
+.app-content-topbar .topbar-document-lineage-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3513,7 +3592,8 @@ export default {
 .app-content-topbar .topbar-audio-workbench-button.is-active,
 .app-content-topbar .topbar-video-workbench-button.is-active,
 .app-content-topbar .topbar-sidecar-sweep-button.is-active,
-.app-content-topbar .topbar-rule-profiles-button.is-active {
+.app-content-topbar .topbar-rule-profiles-button.is-active,
+.app-content-topbar .topbar-document-lineage-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -3675,6 +3755,7 @@ export default {
 .app-content-topbar .topbar-video-workbench-button > *,
 .app-content-topbar .topbar-sidecar-sweep-button > *,
 .app-content-topbar .topbar-rule-profiles-button > *,
+.app-content-topbar .topbar-document-lineage-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3775,6 +3856,7 @@ export default {
 	.app-content-topbar .topbar-video-workbench-button,
 	.app-content-topbar .topbar-sidecar-sweep-button,
 	.app-content-topbar .topbar-rule-profiles-button,
+	.app-content-topbar .topbar-document-lineage-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
