@@ -199,6 +199,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-metadata-consolidation',
 	},
 	{
+		id: 'toggle-forensic-verifier',
+		keys: ['.'],
+		action: 'toggle-forensic-verifier',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -277,6 +282,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	'\\': 'toggle-backup-drift',
 	';': 'toggle-automation-rulebook',
 	',': 'toggle-metadata-consolidation',
+	'.': 'toggle-forensic-verifier',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
