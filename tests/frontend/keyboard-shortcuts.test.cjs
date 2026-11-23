@@ -69,6 +69,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [] } = {}) {
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
+		'@/tools/duplicatePreferences': loadModule('src/tools/duplicatePreferences.js'),
 		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 	})
 

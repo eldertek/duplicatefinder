@@ -162,6 +162,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 			},
 			'@/tools/utils': utils,
 			'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
+			'@/tools/duplicatePreferences': loadModule('src/tools/duplicatePreferences.js'),
 			'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 			'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
 		})

@@ -95,6 +95,7 @@ function createNavigationComponent() {
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateFilters': duplicateFilters,
+		'@/tools/duplicatePreferences': loadModule('src/tools/duplicatePreferences.js'),
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
 		'@/tools/duplicateMetadataBadges': metadataBadges,
 	})

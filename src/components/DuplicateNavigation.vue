@@ -208,6 +208,15 @@
                         {{ chip.label }}
                     </button>
                 </div>
+                <div class="folder-filter-row">
+                    <input
+                        v-model="folderQuery"
+                        type="text"
+                        class="folder-filter-input"
+                        :placeholder="t('duplicatefinder', 'Folder filter (/Photos or !/Backups)')"
+                        :aria-label="t('duplicatefinder', 'Filter by folder prefix (e.g. /Photos or !/Backups)')"
+                        @keydown.esc="folderQuery = ''" />
+                </div>
                 <div
                     class="reclaimable-summary-badge"
                     role="status"
@@ -223,20 +232,31 @@
                         }) }}
                     </span>
                 </div>
-                <button
-                    type="button"
-                    class="export-csv-button"
-                    :disabled="filteredDuplicatesForExport.length === 0"
-                    :title="t('duplicatefinder', 'Export filtered duplicates as CSV')"
-                    :aria-label="t('duplicatefinder', 'Export CSV')"
-                    @click="exportFilteredCsv">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    <span>{{ t('duplicatefinder', 'Export CSV') }}</span>
-                </button>
+                <div class="quick-filter-actions">
+                    <button
+                        v-if="hasActiveFilters"
+                        type="button"
+                        class="reset-filters-button"
+                        :title="t('duplicatefinder', 'Reset all active filters and sorting')"
+                        :aria-label="t('duplicatefinder', 'Reset filters')"
+                        @click="resetFilters">
+                        {{ t('duplicatefinder', 'Reset filters') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="export-csv-button"
+                        :disabled="filteredDuplicatesForExport.length === 0"
+                        :title="t('duplicatefinder', 'Export filtered duplicates as CSV')"
+                        :aria-label="t('duplicatefinder', 'Export CSV')"
+                        @click="exportFilteredCsv">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>{{ t('duplicatefinder', 'Export CSV') }}</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Navigation for Acknowledged Duplicates -->
@@ -341,6 +361,12 @@ import {
     computeReclaimableSummary,
     matchesDuplicateCategory,
 } from '@/tools/duplicateFilters';
+import {
+    DEFAULT_ALLOWED_SORT_KEYS,
+    filterDuplicatesByFolderPrefix,
+    loadTriagePreferences,
+    saveTriagePreferences,
+} from '@/tools/duplicatePreferences';
 import { downloadDuplicatesCsv } from '@/tools/duplicateSelectionAndExport';
 
 export default {
@@ -430,12 +456,14 @@ export default {
             showProjectsMenu: false,
             showHelpMenu: false,
             selectedCategory: 'all',
+            folderQuery: '',
             acknowledgedOpen: savedPreferences.acknowledgedOpen,
             unacknowledgedOpen: savedPreferences.unacknowledgedOpen,
             activeSection: 'unacknowledged',
         };
     },
     created() {
+        this.restoreTriagePreferences();
         this.syncActiveSectionWithDuplicate(this.currentDuplicateId);
     },
     mounted() {
@@ -512,6 +540,13 @@ export default {
         hasActiveSortOrFilter() {
             return this.sortOption !== 'none' || this.minSizeBytes > 0;
         },
+        hasActiveFilters() {
+            return this.selectedCategory !== 'all'
+                || this.folderQuery.trim() !== ''
+                || this.minSizeBytes > 0
+                || this.sortOption !== 'none'
+                || Boolean(this.searchPattern);
+        },
         categoryFilterChips() {
             return [
                 { id: 'all', label: t('duplicatefinder', 'All') },
@@ -561,22 +596,18 @@ export default {
             return currentPage < totalPages;
         },
         filteredUnacknowledgedDuplicates() {
-            // First filter by search pattern
             const filtered = this.unacknowledgedDuplicates.filter(duplicate => {
                 return this.filterDuplicate(duplicate);
             });
-
-            // Then apply sorting if needed
-            return this.sortDuplicates(filtered);
+            const byFolder = filterDuplicatesByFolderPrefix(filtered, this.folderQuery);
+            return this.sortDuplicates(byFolder);
         },
         filteredAcknowledgedDuplicates() {
-            // First filter by search pattern
             const filtered = this.acknowledgedDuplicates.filter(duplicate => {
                 return this.filterDuplicate(duplicate);
             });
-
-            // Then apply sorting if needed
-            return this.sortDuplicates(filtered);
+            const byFolder = filterDuplicatesByFolderPrefix(filtered, this.folderQuery);
+            return this.sortDuplicates(byFolder);
         },
         reclaimableSummary() {
             const unacknowledged = Array.isArray(this.filteredUnacknowledgedDuplicates)
@@ -650,11 +681,68 @@ export default {
                 this.showProjectsMenu = false;
             }
         },
+        getSafeLocalStorage() {
+            try {
+                return typeof window !== 'undefined' ? window.localStorage : null;
+            } catch (error) {
+                return null;
+            }
+        },
+        restoreTriagePreferences() {
+            const restored = loadTriagePreferences(this.getSafeLocalStorage(), {
+                allowedCategories: DUPLICATE_FILTER_CATEGORIES,
+                allowedSortKeys: DEFAULT_ALLOWED_SORT_KEYS,
+            });
+            this.selectedCategory = restored.category;
+            if (!this.initialSortOption || this.initialSortOption === 'none') {
+                this.sortOption = restored.sortKey;
+            }
+        },
+        persistTriagePreferences() {
+            saveTriagePreferences(
+                this.getSafeLocalStorage(),
+                {
+                    category: this.selectedCategory,
+                    sortKey: this.sortOption,
+                },
+                {
+                    allowedCategories: DUPLICATE_FILTER_CATEGORIES,
+                    allowedSortKeys: DEFAULT_ALLOWED_SORT_KEYS,
+                },
+            );
+        },
+        resetFilters() {
+            const queryOptionsChanged = this.sortOption !== 'none' || this.minSizeBytes > 0;
+            this.selectedCategory = 'all';
+            this.folderQuery = '';
+            this.sortOption = 'none';
+            this.minSizeBytes = 0;
+            this.customMinSizeMb = '';
+            this.searchPattern = '';
+            if (this.$refs.searchBar && typeof this.$refs.searchBar.clear === 'function') {
+                this.$refs.searchBar.clear();
+            } else if (this.$refs.searchBar && 'searchQuery' in this.$refs.searchBar) {
+                this.$refs.searchBar.searchQuery = '';
+            }
+            this.persistTriagePreferences();
+            if (queryOptionsChanged) {
+                this.acknowledgedPage = 1;
+                this.unacknowledgedPage = 1;
+                this.exhaustedAcknowledged = false;
+                this.exhaustedUnacknowledged = false;
+                this.$emit('query-options-changed', {
+                    sortBy: 'none',
+                    minSize: 0,
+                });
+            }
+        },
         setSortOption(option) {
-            if (this.sortOption === option) {
+            const normalized = DEFAULT_ALLOWED_SORT_KEYS.includes(option) ? option : 'none';
+            if (this.sortOption === normalized) {
                 return;
             }
-            this.sortOption = option;
+            this.sortOption = normalized;
+            this.persistTriagePreferences();
             this.acknowledgedPage = 1;
             this.unacknowledgedPage = 1;
             this.exhaustedAcknowledged = false;
@@ -723,6 +811,7 @@ export default {
         },
         setCategoryFilter(category) {
             this.selectedCategory = DUPLICATE_FILTER_CATEGORIES.includes(category) ? category : 'all';
+            this.persistTriagePreferences();
         },
         filterDuplicate(duplicate) {
             if (this.minSizeBytes > 0) {
@@ -1537,6 +1626,36 @@ export default {
     border-color: var(--color-primary-element-hover);
 }
 
+.folder-filter-row {
+    display: flex;
+    align-items: center;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.folder-filter-input {
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding-block: 6px;
+    padding-inline: 10px;
+    margin: 0;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 6px;
+    background-color: var(--color-main-background);
+    color: var(--color-main-text);
+    font-size: 0.85rem;
+    line-height: 1.3;
+    box-sizing: border-box;
+}
+
+.folder-filter-input:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
+}
+
 .reclaimable-summary-badge {
     display: flex;
     flex-wrap: wrap;
@@ -1565,11 +1684,54 @@ export default {
     font-size: 0.78rem;
 }
 
+.quick-filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.reset-filters-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 110px;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 6px;
+    padding-inline: 12px;
+    margin: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: transparent;
+    color: var(--color-text-maxcontrast);
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.reset-filters-button:hover {
+    background-color: var(--color-background-hover);
+    color: var(--color-main-text);
+    border-color: var(--color-border-dark, var(--color-border));
+}
+
+.reset-filters-button:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
+}
+
 .export-csv-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
+    flex: 1 1 120px;
     inline-size: 100%;
     min-inline-size: 44px;
     min-block-size: 44px;
