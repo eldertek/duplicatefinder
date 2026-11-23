@@ -163,6 +163,7 @@
                 :index="index"
                 :duplicate-acknowledged="duplicate.acknowledged"
                 :has-other-folders="hasFilesInOtherFolders(file)"
+                :metadata-badges="fileMetadataBadges[index] || null"
                 @keepFolder="selectDuplicatesOutsideFolder(file)"
                 @fileDeleted="removeFileFromListAndUpdate(file, $event)">
               </DuplicateFileDisplay>
@@ -239,6 +240,7 @@
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates } from '@/tools/api';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
 import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport';
+import { annotateDuplicateMetadataBadges } from '@/tools/duplicateMetadataBadges';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -314,6 +316,12 @@ export default {
         return false;
       }
       return this.duplicate.files.some(file => this.hasFilesInOtherFolders(file));
+    },
+    fileMetadataBadges() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return [];
+      }
+      return annotateDuplicateMetadataBadges(this.duplicate.files);
     }
   },
   methods: {

@@ -20,6 +20,49 @@
         <span v-if="fileName" class="file-name-badge" :title="fileName">{{ fileName }}</span>
       </div>
       <p class="file-path" :title="normalizedPath"><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizedPath }}</p>
+      <div v-if="hasMetadataBadges" class="file-metadata-badges">
+        <span
+          v-if="resolvedBadges.isProtectedOrigin"
+          class="metadata-badge metadata-badge--protected">
+          {{ t('duplicatefinder', 'Protected origin') }}
+        </span>
+        <span
+          v-if="resolvedBadges.isOldest"
+          class="metadata-badge metadata-badge--oldest">
+          {{ t('duplicatefinder', 'Oldest') }}
+        </span>
+        <span
+          v-if="resolvedBadges.isNewest"
+          class="metadata-badge metadata-badge--newest">
+          {{ t('duplicatefinder', 'Newest') }}
+        </span>
+        <span
+          v-if="resolvedBadges.isShortestPath"
+          class="metadata-badge metadata-badge--shortest">
+          {{ t('duplicatefinder', 'Shortest path') }}
+        </span>
+        <span
+          v-if="resolvedBadges.folderLabel"
+          class="metadata-badge metadata-badge--folder"
+          :title="t('duplicatefinder', 'Folder: {folder}', { folder: resolvedBadges.folderLabel })"
+          :aria-label="t('duplicatefinder', 'Folder: {folder}', { folder: resolvedBadges.folderLabel })">
+          <svg
+            class="metadata-badge__icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="metadata-badge__text">{{ resolvedBadges.folderLabel }}</span>
+        </span>
+      </div>
       <span v-if="file.isLivePhotoVideoMissing" class="file-status-badge is-duplicate">
         {{ t('duplicatefinder', 'Live Photo video is missing') }}
       </span>
@@ -130,9 +173,35 @@ export default {
     hasOtherFolders: {
       type: Boolean,
       default: false
+    },
+    metadataBadges: {
+      type: Object,
+      default: null
     }
   },
   computed: {
+    resolvedBadges() {
+      if (this.metadataBadges && typeof this.metadataBadges === 'object') {
+        return this.metadataBadges;
+      }
+      return {
+        isOldest: false,
+        isNewest: false,
+        isShortestPath: false,
+        isProtectedOrigin: Boolean(this.file && this.file.isInOriginFolder),
+        folderLabel: this.file && this.file.path ? getParentFolderPath(this.file.path) : ''
+      };
+    },
+    hasMetadataBadges() {
+      const badges = this.resolvedBadges;
+      return Boolean(
+        badges.isProtectedOrigin ||
+        badges.isOldest ||
+        badges.isNewest ||
+        badges.isShortestPath ||
+        badges.folderLabel
+      );
+    },
     normalizedPath() {
       return this.normalizeItemPath(this.file.path);
     },
@@ -268,6 +337,74 @@ export default {
   white-space: normal;
   overflow-wrap: anywhere;
   line-height: 1.4;
+}
+
+.file-metadata-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-block-start: 6px;
+  max-inline-size: 100%;
+}
+
+.metadata-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-block: 2px;
+  padding-inline: 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  background-color: var(--color-background-hover);
+  color: var(--color-main-text);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.35;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+
+.metadata-badge--protected {
+  background-color: var(--color-primary-element-light, #e5eff5);
+  border-color: var(--color-primary-element, #00679e);
+  color: var(--color-primary-element-light-text, var(--color-main-text, #222222));
+}
+
+.metadata-badge--oldest {
+  background-color: rgba(46, 125, 50, 0.14);
+  border-color: rgba(46, 125, 50, 0.48);
+  color: var(--color-main-text);
+}
+
+.metadata-badge--newest {
+  background-color: rgba(2, 119, 189, 0.14);
+  border-color: rgba(2, 119, 189, 0.45);
+  color: var(--color-main-text);
+}
+
+.metadata-badge--shortest {
+  background-color: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.48);
+  color: var(--color-main-text);
+}
+
+.metadata-badge--folder {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-border-dark, var(--color-border));
+  color: var(--color-text-maxcontrast, var(--color-main-text));
+  min-inline-size: 0;
+}
+
+.metadata-badge__icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.metadata-badge__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .file-size-column {

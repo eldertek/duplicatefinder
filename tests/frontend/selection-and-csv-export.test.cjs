@@ -17,6 +17,7 @@ function createDetailsComponent() {
 		'./notifications': { showErrorNotification: () => {} },
 	})
 	const selectionAndExport = loadModule('src/tools/duplicateSelectionAndExport.js')
+	const metadataBadges = loadModule('src/tools/duplicateMetadataBadges.js')
 
 	const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 		'@/tools/api': { deleteFile: async () => true },
@@ -35,6 +36,7 @@ function createDetailsComponent() {
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
+		'@/tools/duplicateMetadataBadges': metadataBadges,
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
@@ -46,6 +48,7 @@ function createNavigationComponent() {
 	})
 	const duplicateFilters = loadModule('src/tools/duplicateFilters.js')
 	const selectionAndExport = loadModule('src/tools/duplicateSelectionAndExport.js')
+	const metadataBadges = loadModule('src/tools/duplicateMetadataBadges.js')
 	const icon = slotBox('span')
 
 	const DuplicateListItem = {
@@ -93,6 +96,7 @@ function createNavigationComponent() {
 		'@/tools/utils': utils,
 		'@/tools/duplicateFilters': duplicateFilters,
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
+		'@/tools/duplicateMetadataBadges': metadataBadges,
 	})
 }
 
