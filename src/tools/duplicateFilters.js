@@ -208,6 +208,63 @@ export function filterDuplicatesByCategory(duplicates, category = 'all') {
 }
 
 /**
+ * Compute exact duplicate group counts for each quick filter category.
+ * A group with files spanning multiple categories or exceeding the large-file
+ * threshold increments each matching category once.
+ *
+ * @param {Array} duplicates - Array of duplicate group objects.
+ * @return {{ all: number, images: number, videos: number, audio: number, documents: number, archives: number, large: number }} Group counts per category.
+ */
+export function computeCategoryCounts(duplicates) {
+	const counts = {
+		all: 0,
+		images: 0,
+		videos: 0,
+		audio: 0,
+		documents: 0,
+		archives: 0,
+		large: 0,
+	}
+	if (!Array.isArray(duplicates) || duplicates.length === 0) {
+		return counts
+	}
+
+	for (const duplicate of duplicates) {
+		if (!duplicate || typeof duplicate !== 'object') {
+			continue
+		}
+		counts.all += 1
+
+		const files = Array.isArray(duplicate.files) ? duplicate.files : []
+		if (files.length === 0) {
+			continue
+		}
+
+		let hasLarge = false
+		const matchedCategories = new Set()
+
+		for (const file of files) {
+			if (!hasLarge && isLargeFile(file)) {
+				hasLarge = true
+			}
+			const category = classifyFileCategory(file)
+			if (category !== 'other' && Object.prototype.hasOwnProperty.call(counts, category)) {
+				matchedCategories.add(category)
+			}
+		}
+
+		if (hasLarge) {
+			counts.large += 1
+		}
+		for (const category of matchedCategories) {
+			counts[category] += 1
+		}
+	}
+
+	return counts
+}
+
+/**
  * Format a byte count into a concise readable string using B, KB, MB, or GB.
  *
  * @param {number} bytes - Byte count to format.

@@ -213,7 +213,8 @@
                         :class="{ 'active': selectedCategory === chip.id }"
                         :aria-pressed="selectedCategory === chip.id ? 'true' : 'false'"
                         @click="setCategoryFilter(chip.id)">
-                        {{ chip.label }}
+                        <span class="filter-chip-label">{{ chip.label }}</span>
+                        <span class="filter-chip-count">({{ chip.count }})</span>
                     </button>
                 </div>
                 <div class="folder-filter-row">
@@ -443,6 +444,7 @@ import { fetchDuplicates } from '@/tools/api';
 import { getTotalSizeOfDuplicate, loadUiPreferences, saveUiPreferences } from '@/tools/utils';
 import {
     DUPLICATE_FILTER_CATEGORIES,
+    computeCategoryCounts,
     computeReclaimableSummary,
     matchesDuplicateCategory,
 } from '@/tools/duplicateFilters';
@@ -642,15 +644,34 @@ export default {
                 || this.sortOption !== 'none'
                 || Boolean(this.searchPattern);
         },
+        baseDuplicatesForCategoryCounts() {
+            const unacknowledged = Array.isArray(this.unacknowledgedDuplicates)
+                ? this.unacknowledgedDuplicates
+                : [];
+            const acknowledged = Array.isArray(this.acknowledgedDuplicates)
+                ? this.acknowledgedDuplicates
+                : [];
+            const combined = [...unacknowledged, ...acknowledged].filter(duplicate => {
+                return this.filterDuplicate(duplicate, {
+                    ignoreCategory: true,
+                    ignoreExtension: true,
+                });
+            });
+            return filterDuplicatesByFolderPrefix(combined, this.folderQuery);
+        },
+        categoryCounts() {
+            return computeCategoryCounts(this.baseDuplicatesForCategoryCounts);
+        },
         categoryFilterChips() {
+            const counts = this.categoryCounts;
             return [
-                { id: 'all', label: t('duplicatefinder', 'All') },
-                { id: 'images', label: t('duplicatefinder', 'Images') },
-                { id: 'videos', label: t('duplicatefinder', 'Videos') },
-                { id: 'audio', label: t('duplicatefinder', 'Audio') },
-                { id: 'documents', label: t('duplicatefinder', 'Documents') },
-                { id: 'archives', label: t('duplicatefinder', 'Archives') },
-                { id: 'large', label: t('duplicatefinder', '> 10 MB') },
+                { id: 'all', label: t('duplicatefinder', 'All'), count: counts.all },
+                { id: 'images', label: t('duplicatefinder', 'Images'), count: counts.images },
+                { id: 'videos', label: t('duplicatefinder', 'Videos'), count: counts.videos },
+                { id: 'audio', label: t('duplicatefinder', 'Audio'), count: counts.audio },
+                { id: 'documents', label: t('duplicatefinder', 'Documents'), count: counts.documents },
+                { id: 'archives', label: t('duplicatefinder', 'Archives'), count: counts.archives },
+                { id: 'large', label: t('duplicatefinder', '> 10 MB'), count: counts.large },
             ];
         },
         minSizePresets() {
@@ -982,7 +1003,7 @@ export default {
                 }
             }
 
-            if (this.selectedCategory !== 'all' && !matchesDuplicateCategory(duplicate, this.selectedCategory)) {
+            if (!options.ignoreCategory && this.selectedCategory !== 'all' && !matchesDuplicateCategory(duplicate, this.selectedCategory)) {
                 return false;
             }
 
@@ -1768,6 +1789,8 @@ export default {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 4px;
+    max-inline-size: 100%;
     min-inline-size: 44px;
     min-block-size: 44px;
     padding-block: 6px;
@@ -1782,6 +1805,16 @@ export default {
     cursor: pointer;
     transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     box-sizing: border-box;
+}
+
+.filter-chip-count {
+    font-size: 0.78em;
+    color: var(--color-text-maxcontrast);
+    font-variant-numeric: tabular-nums;
+}
+
+.filter-chip.active .filter-chip-count {
+    color: var(--color-primary-text);
 }
 
 .filter-chip:hover {

@@ -288,7 +288,212 @@ describe('Cycle 37: duplicate file-type filters & reclaimable space summary', ()
 		assert.ok(filterCssBlock.includes('min-inline-size: 44px'))
 		assert.ok(filterCssBlock.includes('min-block-size: 44px'))
 		assert.ok(filterCssBlock.includes('flex-wrap: wrap'))
+		assert.ok(filterCssBlock.includes('.filter-chip-count'))
 		assert.ok(navSource.includes('.filter-chip:focus-visible'))
 		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS must use logical properties only')
+	})
+})
+
+describe('Cycle 62: computeCategoryCounts & live chip counts in DuplicateNavigation', () => {
+	test('computeCategoryCounts returns zeroed counts for empty, null, or malformed inputs', () => {
+		const { computeCategoryCounts } = loadModule('src/tools/duplicateFilters.js')
+
+		const zeroCounts = {
+			all: 0,
+			images: 0,
+			videos: 0,
+			audio: 0,
+			documents: 0,
+			archives: 0,
+			large: 0,
+		}
+
+		assert.deepEqual(computeCategoryCounts([]), zeroCounts)
+		assert.deepEqual(computeCategoryCounts(null), zeroCounts)
+		assert.deepEqual(computeCategoryCounts(undefined), zeroCounts)
+		assert.deepEqual(computeCategoryCounts([null, undefined, 'invalid']), zeroCounts)
+		assert.deepEqual(computeCategoryCounts([{ id: 1, files: [] }]), {
+			...zeroCounts,
+			all: 1,
+		})
+	})
+
+	test('computeCategoryCounts counts multi-extension files and > 10 MB groups accurately without double-counting', () => {
+		const {
+			LARGE_FILE_THRESHOLD_BYTES,
+			computeCategoryCounts,
+		} = loadModule('src/tools/duplicateFilters.js')
+
+		const groups = [
+			{
+				id: 1,
+				files: [
+					{ path: '/u/files/holiday.backup.JPG', size: 2048 },
+					{ path: '/u/files/holiday.copy.png', size: 2048 },
+				],
+			},
+			{
+				id: 2,
+				files: [
+					{ path: '/u/files/clip.v1.mp4', size: LARGE_FILE_THRESHOLD_BYTES },
+					{ path: '/u/files/clip.v2.mkv', size: LARGE_FILE_THRESHOLD_BYTES },
+				],
+			},
+			{
+				id: 3,
+				files: [
+					{ path: '/u/files/podcast.2026.mp3', size: 1024 },
+					{ path: '/u/files/podcast.edit.flac', size: 1024 },
+				],
+			},
+			{
+				id: 4,
+				files: [
+					{ path: '/u/files/spec.final.v2.pdf', size: 5000 },
+					{ path: '/u/files/spec.draft.docx', size: 5000 },
+				],
+			},
+			{
+				id: 5,
+				files: [
+					{ path: '/u/files/db.dump.tar.gz', size: LARGE_FILE_THRESHOLD_BYTES + 1 },
+					{ path: '/u/files/db.mirror.tar.bz2', size: LARGE_FILE_THRESHOLD_BYTES + 1 },
+				],
+			},
+			{
+				id: 6,
+				files: [
+					{ path: '/u/files/mixed.preview.jpg', size: 12 * 1024 * 1024 },
+					{ path: '/u/files/mixed.notes.md', size: 12 * 1024 * 1024 },
+				],
+			},
+			{
+				id: 7,
+				files: [
+					{ path: '/u/files/blob.unknown', size: 512 },
+					{ path: '/u/files/blob2.unknown', size: 512 },
+				],
+			},
+		]
+
+		assert.deepEqual(computeCategoryCounts(groups), {
+			all: 7,
+			images: 2,
+			videos: 1,
+			audio: 1,
+			documents: 2,
+			archives: 1,
+			large: 2,
+		})
+	})
+
+	test('DuplicateNavigation renders live (N) category counts and updates them reactively', async () => {
+		const DuplicateNavigation = createNavigationComponent()
+		const twoMb = 2 * 1024 * 1024
+		const fifteenMb = 15 * 1024 * 1024
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [
+							{
+								id: 100,
+								hash: 'ack-doc',
+								files: [
+									{ id: 1, path: '/Photos/a.pdf', mimetype: 'application/pdf', size: 1024 },
+									{ id: 2, path: '/Backups/b.pdf', mimetype: 'application/pdf', size: 1024 },
+								],
+							},
+						],
+						unacknowledgedDuplicates: [
+							{
+								id: 1,
+								hash: 'img-dup',
+								files: [
+									{ id: 11, path: '/Photos/photo1.backup.jpg', mimetype: 'image/jpeg', size: twoMb },
+									{ id: 12, path: '/Photos/photo2.jpg', mimetype: 'image/jpeg', size: twoMb },
+								],
+							},
+							{
+								id: 2,
+								hash: 'archive-dup',
+								files: [
+									{ id: 21, path: '/Backups/backup1.tar.gz', mimetype: 'application/gzip', size: fifteenMb },
+									{ id: 22, path: '/Backups/backup2.tar.gz', mimetype: 'application/gzip', size: fifteenMb },
+								],
+							},
+						],
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const nav = vm.$refs.nav
+		const readChipTexts = () => Array.from(vm.$el.querySelectorAll('button.filter-chip'))
+			.map(btn => btn.textContent.replace(/\s+/g, ' ').trim())
+
+		assert.deepEqual(readChipTexts(), [
+			'All (3)',
+			'Images (1)',
+			'Videos (0)',
+			'Audio (0)',
+			'Documents (1)',
+			'Archives (1)',
+			'> 10 MB (1)',
+		])
+
+		// Selecting a category keeps all category chip counts intact for quick switching
+		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
+		chips[1].click()
+		await settle()
+		assert.equal(nav.selectedCategory, 'images')
+		assert.deepEqual(readChipTexts(), [
+			'All (3)',
+			'Images (1)',
+			'Videos (0)',
+			'Audio (0)',
+			'Documents (1)',
+			'Archives (1)',
+			'> 10 MB (1)',
+		])
+
+		// Applying a folder prefix filter updates chip counts live
+		nav.folderQuery = '/Backups'
+		await settle()
+		assert.deepEqual(readChipTexts(), [
+			'All (2)',
+			'Images (0)',
+			'Videos (0)',
+			'Audio (0)',
+			'Documents (1)',
+			'Archives (1)',
+			'> 10 MB (1)',
+		])
+
+		// Applying minSizeBytes updates chip counts live
+		nav.folderQuery = ''
+		nav.setMinSizeBytes(10 * 1024 * 1024)
+		await settle()
+		assert.deepEqual(readChipTexts(), [
+			'All (1)',
+			'Images (0)',
+			'Videos (0)',
+			'Audio (0)',
+			'Documents (0)',
+			'Archives (1)',
+			'> 10 MB (1)',
+		])
+
+		const filtersSource = readFileSync(resolve(root, 'src/tools/duplicateFilters.js'), 'utf8')
+		const navSource = readFileSync(resolve(root, 'src/components/DuplicateNavigation.vue'), 'utf8')
+		for (const content of [filtersSource, navSource]) {
+			assert.ok(!/[\u2013\u2014]/.test(content), 'no U+2013/U+2014 dashes allowed')
+			assert.ok(!/v-html|innerHTML|outerHTML|document\.write/.test(content), 'no DOM XSS sinks allowed')
+		}
+
+		vm.$destroy()
 	})
 })
