@@ -80,6 +80,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 
 	const DuplicateListItem = loadComponent('src/components/DuplicateListItem.vue', {
 		'@nextcloud/vue': { NcAppNavigationItem: NcAppNavigationItemStub },
+		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 		'@/tools/utils': utils,
 	})
 

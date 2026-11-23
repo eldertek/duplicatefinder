@@ -2,29 +2,97 @@
     <NcAppNavigationItem
         :name="getDisplayName"
         :title="getFullPathsTitle"
-        :class="{ 'is-active': isActive }"
+        :class="['duplicate-list-item', { 'is-active': isActive, 'has-protected-origin': itemMetrics.hasProtectedOrigin }]"
         @click="handleClick">
         <template #icon>
-            <div class="nav-thumbnail" :style="{ backgroundImage: 'url(' + getPreviewImage(duplicate.files[0]) + ')' }">
+            <div class="nav-thumbnail" :style="thumbnailStyle">
             </div>
         </template>
         <template #extra>
-            <div class="file-size">{{ getFormattedSize }}</div>
+            <div class="duplicate-item-meta">
+                <div class="duplicate-item-stats">
+                    <span
+                        v-if="itemMetrics.hasProtectedOrigin"
+                        class="duplicate-protected-badge"
+                        :title="t('duplicatefinder', 'Contains protected origin')"
+                        :aria-label="t('duplicatefinder', 'Contains protected origin')">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="10" rx="2" ry="2" />
+                            <path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11" />
+                        </svg>
+                    </span>
+                    <span
+                        v-if="itemMetrics.copyCount > 1"
+                        class="duplicate-copy-count"
+                        :title="reclaimableTooltip">
+                        {{ itemMetrics.copyCount }}x
+                    </span>
+                    <div class="file-size" :title="reclaimableTooltip">
+                        {{ getFormattedSize }}
+                    </div>
+                </div>
+                <div
+                    v-if="itemMetrics.wastePercent > 0"
+                    class="duplicate-waste-track"
+                    aria-hidden="true">
+                    <div
+                        class="duplicate-waste-fill"
+                        :style="{ width: `${itemMetrics.wastePercent}%` }" />
+                </div>
+            </div>
         </template>
     </NcAppNavigationItem>
 </template>
 
 <script>
 import { NcAppNavigationItem } from '@nextcloud/vue';
+import { computeListItemMetrics } from '@/tools/duplicateStats';
 import { getFormattedSizeOfCurrentDuplicate, normalizeItemPath } from '@/tools/utils';
 
 export default {
     components: { NcAppNavigationItem },
     props: {
         duplicate: Object,
-        isActive: Boolean
+        isActive: Boolean,
+        maxReclaimableBytes: {
+            type: Number,
+            default: 0
+        }
     },
     computed: {
+        itemMetrics() {
+            return computeListItemMetrics(this.duplicate, this.maxReclaimableBytes);
+        },
+        reclaimableTooltip() {
+            if (this.itemMetrics.copyCount <= 1) {
+                return '';
+            }
+            return this.t('duplicatefinder', '{count} copies ({reclaimable} reclaimable)', {
+                count: this.itemMetrics.copyCount,
+                reclaimable: this.itemMetrics.reclaimableFormatted
+            });
+        },
+        thumbnailStyle() {
+            const firstFile = this.duplicate && Array.isArray(this.duplicate.files)
+                ? this.duplicate.files[0]
+                : null;
+            if (!firstFile) {
+                return {};
+            }
+            return {
+                backgroundImage: 'url(' + this.getPreviewImage(firstFile) + ')'
+            };
+        },
         getDisplayName() {
             // Get all filenames from the duplicate files
             const filenames = this.duplicate.files.map(file => {
@@ -118,6 +186,20 @@ export default {
     font-weight: 600;
 }
 
+.is-active .duplicate-copy-count {
+    background-color: var(--color-main-background);
+    border-color: var(--color-primary-element, #0082c9);
+    color: var(--color-primary-element-light-text, var(--color-main-text));
+}
+
+.is-active .duplicate-protected-badge {
+    color: var(--color-primary-element-light-text, var(--color-main-text));
+}
+
+.is-active .duplicate-waste-fill {
+    background-color: var(--color-primary-element-light-text, var(--color-primary-element, #0082c9));
+}
+
 .nav-thumbnail {
     width: 20px;
     height: 20px;
@@ -128,10 +210,76 @@ export default {
     margin-inline-end: 8px;
 }
 
+.duplicate-item-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    margin-inline-start: 6px;
+}
+
+.duplicate-item-stats {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    max-inline-size: 100%;
+}
+
+.duplicate-protected-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary-element, #0082c9);
+    flex-shrink: 0;
+}
+
+.duplicate-protected-badge svg {
+    display: block;
+    pointer-events: none;
+}
+
+.duplicate-copy-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: 1px;
+    padding-inline: 5px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    background-color: var(--color-background-dark);
+    color: var(--color-main-text);
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
 .file-size {
     font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
     color: var(--color-text-maxcontrast);
     white-space: nowrap;
-    margin-inline-start: 4px;
+    margin-inline-start: 2px;
+}
+
+.duplicate-waste-track {
+    inline-size: 100%;
+    min-inline-size: 48px;
+    block-size: 3px;
+    border-radius: 999px;
+    background-color: var(--color-background-dark);
+    overflow: hidden;
+}
+
+.duplicate-waste-fill {
+    block-size: 100%;
+    min-inline-size: 4px;
+    border-radius: 999px;
+    background-color: var(--color-primary-element, #0082c9);
+    transition: inline-size 0.15s ease;
 }
 </style>

@@ -409,11 +409,20 @@
                 <template #icon>
                     <CheckCircle :size="20" />
                 </template>
+                <template #extra>
+                    <span
+                        v-if="filteredAcknowledgedDuplicates.length > 0"
+                        class="section-group-count"
+                        :aria-label="t('duplicatefinder', '{count} groups', { count: filteredAcknowledgedDuplicates.length })">
+                        {{ filteredAcknowledgedDuplicates.length }}
+                    </span>
+                </template>
                     <div v-show="acknowledgedEmptyState === 'populated'">
                         <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
                             <DuplicateListItem
                                 :duplicate="duplicate"
                                 :isActive="currentDuplicateId === duplicate.id"
+                                :max-reclaimable-bytes="maxVisibleReclaimableBytes"
                                 @duplicate-selected="openDuplicate"
                                 @duplicate-resolved="handleDuplicateResolved" />
                         </div>
@@ -467,11 +476,20 @@
                 <template #icon>
                     <CloseCircle :size="20" />
                 </template>
+                <template #extra>
+                    <span
+                        v-if="filteredUnacknowledgedDuplicates.length > 0"
+                        class="section-group-count"
+                        :aria-label="t('duplicatefinder', '{count} groups', { count: filteredUnacknowledgedDuplicates.length })">
+                        {{ filteredUnacknowledgedDuplicates.length }}
+                    </span>
+                </template>
                     <div v-show="unacknowledgedEmptyState === 'populated'">
                         <div v-for="duplicate in filteredUnacknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
                             <DuplicateListItem
                                 :duplicate="duplicate"
                                 :isActive="currentDuplicateId === duplicate.id"
+                                :max-reclaimable-bytes="maxVisibleReclaimableBytes"
                                 @duplicate-selected="openDuplicate"
                                 @duplicate-resolved="handleDuplicateResolved" />
                         </div>
@@ -555,6 +573,7 @@ import { sortDuplicatesDeterministically } from '@/tools/duplicateSortHelper';
 import {
     computeExtensionBreakdown,
     computeGroupReclaimableBytes,
+    computeMaxReclaimableBytes,
     findLargestDuplicateGroup,
     formatBytes,
     matchesDuplicateExtension,
@@ -921,6 +940,9 @@ export default {
         },
         largestDuplicateGroup() {
             return findLargestDuplicateGroup(this.filteredDuplicatesForExport);
+        },
+        maxVisibleReclaimableBytes() {
+            return computeMaxReclaimableBytes(this.filteredDuplicatesForExport);
         },
         largestDuplicateFormattedSize() {
             if (!this.largestDuplicateGroup) {
@@ -2581,6 +2603,31 @@ export default {
 .duplicate-section-nav :deep(.app-navigation-entry:not(.active) .button-vue.icon-collapse:focus-visible) {
     background-color: var(--color-primary-element-light);
     color: var(--color-primary-element);
+}
+
+.section-group-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 22px;
+    padding-block: 1px;
+    padding-inline: 6px;
+    margin-inline-start: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    background-color: var(--color-background-dark);
+    color: var(--color-main-text);
+    font-size: 0.74rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.duplicate-section-nav :deep(.app-navigation-entry.active) .section-group-count {
+    background-color: transparent;
+    border-color: currentcolor;
+    color: var(--color-primary-element-text);
 }
 
 .sr-only {
