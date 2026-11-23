@@ -3133,3 +3133,269 @@ describe('Cycle 105: keyboard shortcut a (select-duplicate-copies)', () => {
 		}
 	})
 })
+
+describe('Cycle 108: keyboard shortcut b (toggle-bulk-delete-view)', () => {
+	test('resolveShortcutAction maps b to toggle-bulk-delete-view, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const toggleBulkDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'toggle-bulk-delete-view')
+		assert.deepEqual(toggleBulkDef, {
+			id: 'toggle-bulk-delete-view',
+			keys: ['b'],
+			action: 'toggle-bulk-delete-view',
+		})
+
+		assert.equal(resolveShortcutAction({ key: 'b' }), 'toggle-bulk-delete-view')
+
+		// Modifiers and Shift+B must never trigger toggle-bulk-delete-view
+		assert.equal(resolveShortcutAction({ key: 'b', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'b', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'b', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'B', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: 'b' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'b' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: 'b', target }), null)
+		}
+	})
+
+	test('App.vue toggles between details and bulk-delete on b, sets aria-keyshortcuts="b", documents it in ? dialog, and guards against modals/editable/modifiers', async () => {
+		window.localStorage.clear()
+		const dup1 = makeDuplicate(801, 'alpha.pdf')
+		const dup2 = makeDuplicate(802, 'beta.pdf')
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [dup1, dup2],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalSelect = document.createElement('select')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		const externalAlertDialog = document.createElement('div')
+		externalAlertDialog.setAttribute('role', 'alertdialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalSelect)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(navVm)
+			assert.ok(detailsVm)
+			assert.equal(vm.activeView, 'details')
+			assert.equal(vm.currentDuplicate.id, 801)
+
+			// 1. Topbar Bulk Delete button exposes aria-keyshortcuts="b"
+			const topBulkBtn = vm.$el.querySelector('.topbar-bulk-delete-button')
+			assert.ok(topBulkBtn, 'Bulk Delete button is rendered in details view')
+			assert.equal(topBulkBtn.getAttribute('aria-keyshortcuts'), 'b')
+
+			// 2. Typing b inside editable fields must NOT toggle view
+			const searchInput = navVm.$el.querySelector('input.search-input')
+			const folderInput = navVm.$el.querySelector('input.folder-filter-input')
+			assert.ok(searchInput)
+			assert.ok(folderInput)
+			for (const field of [searchInput, folderInput, externalTextarea, externalSelect, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.equal(vm.activeView, 'details')
+
+			// 3. Modifiers (Ctrl+b / Cmd+b / Alt+b / Shift+B) must NOT trigger or preventDefault
+			for (const init of [
+				{ key: 'b', ctrlKey: true },
+				{ key: 'b', metaKey: true },
+				{ key: 'b', altKey: true },
+				{ key: 'B', shiftKey: true },
+			]) {
+				const modEvent = new window.KeyboardEvent('keydown', { ...init, bubbles: true, cancelable: true })
+				window.dispatchEvent(modEvent)
+				assert.equal(modEvent.defaultPrevented, false)
+			}
+			await settle()
+			assert.equal(vm.activeView, 'details')
+
+			// 4. ? help <dialog> documents b ("Toggle Bulk Delete view") and blocks b while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('b'), 'help dialog documents b shortcut')
+			assert.ok(helpDialog.textContent.includes('Toggle Bulk Delete view'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(vm.activeView, 'details')
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 5. Blocking modals (external <dialog open>, settingsOpen, delete confirm dialog) block b
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(vm.activeView, 'details')
+			externalDialog.removeAttribute('open')
+
+			vm.settingsOpen = true
+			await settle()
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(vm.activeView, 'details')
+			vm.settingsOpen = false
+			await settle()
+
+			detailsVm.showDeleteConfirmDialog = true
+			await settle()
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(vm.activeView, 'details')
+			detailsVm.showDeleteConfirmDialog = false
+			await settle()
+
+			// 6. Pressing b in details view switches cleanly to bulk-delete (without auto-deletion)
+			const enterBulkEvent = new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })
+			window.dispatchEvent(enterBulkEvent)
+			await settle()
+			assert.equal(enterBulkEvent.defaultPrevented, true)
+			assert.equal(vm.activeView, 'bulk-delete')
+			assert.equal(vm.currentDuplicate, null)
+			assert.ok(vm.$el.querySelector('.stub-bulk'), 'BulkDeletionSettings view is mounted')
+			const backBtn = vm.$el.querySelector('.topbar-back-button')
+			assert.ok(backBtn, 'Back to duplicates button is rendered')
+			assert.equal(backBtn.getAttribute('aria-keyshortcuts'), 'b')
+
+			// 7. An open [role="alertdialog"] inside bulk-delete blocks b
+			document.body.appendChild(externalAlertDialog)
+			const blockedInBulkEvent = new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })
+			window.dispatchEvent(blockedInBulkEvent)
+			await settle()
+			assert.equal(blockedInBulkEvent.defaultPrevented, false)
+			assert.equal(vm.activeView, 'bulk-delete')
+			externalAlertDialog.remove()
+
+			// 8. Pressing b again in bulk-delete returns cleanly to details view and restores first duplicate
+			const exitBulkEvent = new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })
+			window.dispatchEvent(exitBulkEvent)
+			await settle()
+			assert.equal(exitBulkEvent.defaultPrevented, true)
+			assert.equal(vm.activeView, 'details')
+			assert.equal(vm.currentDuplicate.id, 801)
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalSelect.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+			externalAlertDialog.remove()
+		}
+	})
+
+	test('b shortcut enforces empty-list and non-details-view safety guards', async () => {
+		window.localStorage.clear()
+
+		// Empty duplicate lists -> safe no-op without preventDefault in details view
+		const { App: EmptyApp } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [],
+		})
+		const emptyMount = document.createElement('div')
+		document.body.appendChild(emptyMount)
+		const emptyVm = new Vue(EmptyApp).$mount(emptyMount)
+		try {
+			await settle()
+			assert.equal(emptyVm.hasDuplicates, false)
+			const emptyB = new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })
+			window.dispatchEvent(emptyB)
+			await settle()
+			assert.equal(emptyB.defaultPrevented, false)
+			assert.equal(emptyVm.activeView, 'details')
+
+			// Even if somehow in bulk-delete with 0 duplicates, b safely exits back to details
+			emptyVm.openBulkDelete()
+			await settle()
+			assert.equal(emptyVm.activeView, 'bulk-delete')
+			const exitEmptyB = new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })
+			window.dispatchEvent(exitEmptyB)
+			await settle()
+			assert.equal(exitEmptyB.defaultPrevented, true)
+			assert.equal(emptyVm.activeView, 'details')
+		} finally {
+			emptyVm.$destroy()
+			emptyMount.remove()
+		}
+
+		// Project and project-duplicate views -> safe no-op without preventDefault
+		const dup = makeDuplicate(811, 'project-file.txt')
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [dup],
+		})
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			vm.viewProject(12)
+			await settle()
+			assert.equal(vm.activeView, 'project')
+			const projectB = new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })
+			window.dispatchEvent(projectB)
+			await settle()
+			assert.equal(projectB.defaultPrevented, false)
+			assert.equal(vm.activeView, 'project')
+
+			vm.viewProjectDuplicate(dup)
+			await settle()
+			assert.equal(vm.activeView, 'project-duplicate')
+			const projectDupB = new window.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })
+			window.dispatchEvent(projectDupB)
+			await settle()
+			assert.equal(projectDupB.defaultPrevented, false)
+			assert.equal(vm.activeView, 'project-duplicate')
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('Cycle 108 touched files preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of [
+			'src/tools/keyboardShortcuts.js',
+			'src/App.vue',
+		]) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})

@@ -140,6 +140,7 @@
 							:title="hasDuplicates
 								? t('duplicatefinder', 'Preview and delete multiple duplicates at once')
 								: t('duplicatefinder', 'No duplicates available for bulk deletion')"
+							aria-keyshortcuts="b"
 							@click="openBulkDelete">
 							<Delete :size="18" />
 							<span>{{ t('duplicatefinder', 'Bulk Delete') }}</span>
@@ -148,6 +149,7 @@
 							v-else-if="activeView === 'bulk-delete'"
 							type="secondary"
 							class="topbar-back-button"
+							aria-keyshortcuts="b"
 							@click="closeBulkDelete">
 							{{ t('duplicatefinder', 'Back to duplicates') }}
 						</NcButton>
@@ -864,6 +866,7 @@ export default {
 				'copy-group-hash': t('duplicatefinder', 'Copy active group hash'),
 				'export-csv-report': t('duplicatefinder', 'Export current duplicate report (CSV)'),
 				'export-json-report': t('duplicatefinder', 'Export current duplicate report (JSON)'),
+				'toggle-bulk-delete-view': t('duplicatefinder', 'Toggle Bulk Delete view'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'reset-filters': t('duplicatefinder', 'Reset all active filters and sorting'),
 				'reset-all-filters': t('duplicatefinder', 'Reset all active filters'),
@@ -1027,6 +1030,22 @@ export default {
 		exportFilteredJsonReport() {
 			return this.exportFilteredReport('exportFilteredJson')
 		},
+		/**
+		 * Toggles between the details triage view and the bulk-delete view.
+		 * Never triggers any deletion automatically.
+		 * @returns {boolean} True when the active view switched.
+		 */
+		toggleBulkDeleteView() {
+			if (this.activeView === 'bulk-delete') {
+				this.closeBulkDelete()
+				return true
+			}
+			if (this.activeView === 'details' && this.hasDuplicates) {
+				this.openBulkDelete()
+				return true
+			}
+			return false
+		},
 		openShortcutsDialog() {
 			this.lastFocusedBeforeShortcuts = typeof document !== 'undefined' ? document.activeElement : null
 			this.shortcutsDialogOpen = true
@@ -1178,6 +1197,13 @@ export default {
 
 			if (action === 'export-json-report') {
 				if (this.exportFilteredJsonReport() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-bulk-delete-view') {
+				if (this.toggleBulkDeleteView() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
