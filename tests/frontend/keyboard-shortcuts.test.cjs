@@ -3399,3 +3399,285 @@ describe('Cycle 108: keyboard shortcut b (toggle-bulk-delete-view)', () => {
 		}
 	})
 })
+
+describe('Cycle 111: keyboard shortcut m (cycle-min-size-filter)', () => {
+	test('resolveShortcutAction maps m to cycle-min-size-filter, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const cycleMinSizeDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'cycle-min-size-filter')
+		assert.deepEqual(cycleMinSizeDef, {
+			id: 'cycle-min-size-filter',
+			keys: ['m'],
+			action: 'cycle-min-size-filter',
+		})
+
+		assert.equal(resolveShortcutAction({ key: 'm' }), 'cycle-min-size-filter')
+
+		// Modifiers and Shift+M must never trigger cycle-min-size-filter
+		assert.equal(resolveShortcutAction({ key: 'm', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'm', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'm', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'M', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: 'm' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'm' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: 'm', target }), null)
+		}
+	})
+
+	test('App.vue -> DuplicateNavigation.vue cycles min-size filter (All -> >= 1 MB -> >= 10 MB -> >= 100 MB -> All) on m, sets aria-keyshortcuts="m", documents it in ? dialog, and guards against modals/editable/modifiers', async () => {
+		window.localStorage.clear()
+		const smallGroup = {
+			id: 901,
+			hash: 'hash-901',
+			acknowledged: false,
+			files: [
+				{ id: 9011, nodeId: 9011, path: '/alice/files/small-a.txt', size: 512 * 1024, mtime: 1000, mimetype: 'text/plain' },
+				{ id: 9012, nodeId: 9012, path: '/alice/files/small-b.txt', size: 512 * 1024, mtime: 2000, mimetype: 'text/plain' },
+			],
+		}
+		const mediumGroup = {
+			id: 902,
+			hash: 'hash-902',
+			acknowledged: false,
+			files: [
+				{ id: 9021, nodeId: 9021, path: '/alice/files/medium-a.bin', size: 2 * 1024 * 1024, mtime: 1000, mimetype: 'application/octet-stream' },
+				{ id: 9022, nodeId: 9022, path: '/alice/files/medium-b.bin', size: 2 * 1024 * 1024, mtime: 2000, mimetype: 'application/octet-stream' },
+			],
+		}
+		const largeGroup = {
+			id: 903,
+			hash: 'hash-903',
+			acknowledged: false,
+			files: [
+				{ id: 9031, nodeId: 9031, path: '/alice/files/large-a.iso', size: 20 * 1024 * 1024, mtime: 1000, mimetype: 'application/octet-stream' },
+				{ id: 9032, nodeId: 9032, path: '/alice/files/large-b.iso', size: 20 * 1024 * 1024, mtime: 2000, mimetype: 'application/octet-stream' },
+			],
+		}
+		const hugeGroup = {
+			id: 904,
+			hash: 'hash-904',
+			acknowledged: false,
+			files: [
+				{ id: 9041, nodeId: 9041, path: '/alice/files/huge-a.mkv', size: 150 * 1024 * 1024, mtime: 1000, mimetype: 'video/x-matroska' },
+				{ id: 9042, nodeId: 9042, path: '/alice/files/huge-b.mkv', size: 150 * 1024 * 1024, mtime: 2000, mimetype: 'video/x-matroska' },
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [smallGroup, mediumGroup, largeGroup, hugeGroup],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalSelect = document.createElement('select')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalSelect)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(navVm)
+			assert.ok(detailsVm)
+			assert.equal(vm.activeView, 'details')
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+			assert.equal(navVm.minSizeBytes, 0)
+			assert.equal(navVm.filteredUnacknowledgedDuplicates.length, 4)
+
+			// 1. Min-size selector exposes aria-keyshortcuts="m"
+			const minSizeSelect = navVm.$el.querySelector('select#duplicate-min-size-select')
+			assert.ok(minSizeSelect, 'Min-size select control is rendered')
+			assert.equal(minSizeSelect.getAttribute('aria-keyshortcuts'), 'm')
+			assert.equal(minSizeSelect.value, 'any')
+
+			// 2. Typing m inside editable fields must NOT cycle min-size filter
+			const searchInput = navVm.$el.querySelector('input.search-input')
+			const folderInput = navVm.$el.querySelector('input.folder-filter-input')
+			for (const field of [searchInput, folderInput, minSizeSelect, externalTextarea, externalSelect, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+			assert.equal(navVm.minSizeBytes, 0)
+
+			// 3. Modifiers (Ctrl+m / Cmd+m / Alt+m / Shift+M) must NOT trigger or preventDefault
+			for (const init of [
+				{ key: 'm', ctrlKey: true },
+				{ key: 'm', metaKey: true },
+				{ key: 'm', altKey: true },
+				{ key: 'M', shiftKey: true },
+			]) {
+				const modEvent = new window.KeyboardEvent('keydown', { ...init, bubbles: true, cancelable: true })
+				window.dispatchEvent(modEvent)
+				assert.equal(modEvent.defaultPrevented, false)
+			}
+			await settle()
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+
+			// 4. ? help <dialog> documents m ("Cycle minimum file size filter") and blocks m while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('m'), 'help dialog documents m shortcut')
+			assert.ok(helpDialog.textContent.includes('Cycle minimum file size filter'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 5. Blocking modals (external <dialog open>, settingsOpen, delete confirm dialog) block m
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+			externalDialog.removeAttribute('open')
+
+			vm.settingsOpen = true
+			await settle()
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+			vm.settingsOpen = false
+			await settle()
+
+			detailsVm.showDeleteConfirmDialog = true
+			await settle()
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+			detailsVm.showDeleteConfirmDialog = false
+			await settle()
+
+			// 6. Pressing m cycles All -> >= 1 MB -> >= 10 MB -> >= 100 MB -> All
+			const expectedCycle = [
+				{ preset: '1mb', bytes: 1024 * 1024, count: 3 },
+				{ preset: '10mb', bytes: 10 * 1024 * 1024, count: 2 },
+				{ preset: '100mb', bytes: 100 * 1024 * 1024, count: 1 },
+				{ preset: 'any', bytes: 0, count: 4 },
+			]
+
+			for (const step of expectedCycle) {
+				const mEvent = new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true })
+				window.dispatchEvent(mEvent)
+				await settle()
+				assert.equal(mEvent.defaultPrevented, true)
+				assert.equal(navVm.selectedMinSizePreset, step.preset)
+				assert.equal(navVm.minSizeBytes, step.bytes)
+				assert.equal(vm.minSizeBytes, step.bytes)
+				assert.equal(minSizeSelect.value, step.preset)
+				assert.equal(navVm.filteredUnacknowledgedDuplicates.length, step.count)
+			}
+
+			// 7. Custom min-size value cleanly cycles back to All ('any') on m
+			navVm.setMinSizeBytes(5 * 1024 * 1024)
+			await settle()
+			assert.equal(navVm.selectedMinSizePreset, 'custom')
+			const fromCustomEvent = new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true })
+			window.dispatchEvent(fromCustomEvent)
+			await settle()
+			assert.equal(fromCustomEvent.defaultPrevented, true)
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+			assert.equal(navVm.minSizeBytes, 0)
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalSelect.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+		}
+	})
+
+	test('m shortcut is ignored outside details view (bulk-delete, project, project-duplicate)', async () => {
+		window.localStorage.clear()
+		const dup = makeDuplicate(911, 'guarded-file.txt')
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [dup],
+		})
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+
+			vm.openBulkDelete()
+			await settle()
+			assert.equal(vm.activeView, 'bulk-delete')
+			const bulkM = new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkM)
+			await settle()
+			assert.equal(bulkM.defaultPrevented, false)
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+
+			vm.viewProject(5)
+			await settle()
+			assert.equal(vm.activeView, 'project')
+			const projectM = new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true })
+			window.dispatchEvent(projectM)
+			await settle()
+			assert.equal(projectM.defaultPrevented, false)
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+
+			vm.viewProjectDuplicate(dup)
+			await settle()
+			assert.equal(vm.activeView, 'project-duplicate')
+			const projectDupM = new window.KeyboardEvent('keydown', { key: 'm', bubbles: true, cancelable: true })
+			window.dispatchEvent(projectDupM)
+			await settle()
+			assert.equal(projectDupM.defaultPrevented, false)
+			assert.equal(navVm.selectedMinSizePreset, 'any')
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('Cycle 111 touched files preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of [
+			'src/tools/keyboardShortcuts.js',
+			'src/components/DuplicateNavigation.vue',
+			'src/App.vue',
+		]) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})

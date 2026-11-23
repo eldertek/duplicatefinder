@@ -69,6 +69,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'focus-search',
 	},
 	{
+		id: 'cycle-min-size-filter',
+		keys: ['m'],
+		action: 'cycle-min-size-filter',
+	},
+	{
 		id: 'reset-filters',
 		keys: ['r'],
 		action: 'reset-filters',
@@ -105,6 +110,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	e: 'export-csv-report',
 	x: 'export-json-report',
 	b: 'toggle-bulk-delete-view',
+	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
 	'0': 'reset-all-filters',
 })

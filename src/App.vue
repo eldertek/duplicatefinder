@@ -868,6 +868,7 @@ export default {
 				'export-json-report': t('duplicatefinder', 'Export current duplicate report (JSON)'),
 				'toggle-bulk-delete-view': t('duplicatefinder', 'Toggle Bulk Delete view'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
+				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
 				'reset-filters': t('duplicatefinder', 'Reset all active filters and sorting'),
 				'reset-all-filters': t('duplicatefinder', 'Reset all active filters'),
 				'toggle-help': t('duplicatefinder', 'Toggle keyboard shortcuts help'),
@@ -973,6 +974,20 @@ export default {
 			if (navigation && navigation.hasActiveFilters && typeof navigation.resetFilters === 'function') {
 				navigation.resetFilters()
 				return true
+			}
+			return false
+		},
+		/**
+		 * Cycles the minimum file size filter in details view.
+		 * @returns {boolean} True when the minimum file size filter was cycled.
+		 */
+		cycleMinSizeFilter() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			const navigation = this.$refs.duplicateNavigation
+			if (navigation && typeof navigation.cycleMinSizeFilter === 'function') {
+				return Boolean(navigation.cycleMinSizeFilter())
 			}
 			return false
 		},
@@ -1176,6 +1191,13 @@ export default {
 
 			if (action === 'reset-filters' || action === 'reset-all-filters') {
 				if (this.resetNavigationFilters() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'cycle-min-size-filter') {
+				if (this.cycleMinSizeFilter() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return

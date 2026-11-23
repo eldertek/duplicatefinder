@@ -236,7 +236,8 @@
                         id="duplicate-min-size-select"
                         v-model="selectedMinSizePreset"
                         class="min-size-filter-select"
-                        :aria-label="t('duplicatefinder', 'Minimum file size')">
+                        :aria-label="t('duplicatefinder', 'Minimum file size')"
+                        aria-keyshortcuts="m">
                         <option
                             v-for="option in minSizeSelectOptions"
                             :key="option.id"
@@ -1159,6 +1160,20 @@ export default {
             if (typeof preset === 'string' && Object.prototype.hasOwnProperty.call(MIN_SIZE_PRESETS, preset)) {
                 this.setMinSizeBytes(MIN_SIZE_PRESETS[preset]);
             }
+        },
+        /**
+         * Cycles the minimum file size filter across presets:
+         * All ('any') -> >= 1 MB ('1mb') -> >= 10 MB ('10mb') -> >= 100 MB ('100mb') -> All ('any').
+         * @returns {boolean} True when the preset was cycled.
+         */
+        cycleMinSizeFilter() {
+            const cycleOrder = ['any', '1mb', '10mb', '100mb'];
+            const currentIndex = cycleOrder.indexOf(this.selectedMinSizePreset);
+            const nextPreset = currentIndex === -1
+                ? cycleOrder[0]
+                : cycleOrder[(currentIndex + 1) % cycleOrder.length];
+            this.setMinSizePreset(nextPreset);
+            return true;
         },
         setMinCopiesPreset(preset) {
             const normalized = typeof preset === 'string'
