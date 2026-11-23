@@ -589,15 +589,6 @@ import OnboardingGuide from './components/help/OnboardingGuide.vue';
 import UsageExamples from './components/help/UsageExamples.vue';
 import FAQ from './components/help/FAQ.vue';
 import * as api from '@/tools/api';
-const {
-	fetchDuplicates,
-	fetchProjects,
-	fetchScanStatus,
-	startUserScan,
-	notifyScanStarted,
-	notifyScanCompleted,
-	notifyScanFailed,
-} = api;
 import {
 	removeDuplicateFromList,
 	loadUiPreferences,
@@ -609,8 +600,17 @@ import FolderRemove from 'vue-material-design-icons/FolderRemove';
 import FolderMultiple from 'vue-material-design-icons/FolderMultiple';
 import Delete from 'vue-material-design-icons/Delete';
 import FilterOutline from 'vue-material-design-icons/FilterOutline';
-import SearchBar from './components/SearchBar.vue'
 import FilterSettings from './components/FilterSettings.vue';
+
+const {
+	fetchDuplicates,
+	fetchProjects,
+	fetchScanStatus,
+	startUserScan,
+	notifyScanStarted,
+	notifyScanCompleted,
+	notifyScanFailed,
+} = api;
 
 export default {
 	name: 'DuplicateFinder',
@@ -637,7 +637,6 @@ export default {
 		OnboardingGuide,
 		UsageExamples,
 		FAQ,
-		SearchBar,
 		FilterSettings
 	},
 	data() {
@@ -949,7 +948,7 @@ export default {
 			}
 		},
 		moveToNext(duplicate) {
-			let currentList = duplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates;
+			const currentList = duplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates;
 			const currentIndex = currentList.findIndex(d => d.id === duplicate.id);
 			if (currentIndex !== -1 && currentIndex < currentList.length - 1) {
 				this.currentDuplicate = currentList[currentIndex + 1];
@@ -2060,7 +2059,6 @@ export default {
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow-wrap: anywhere;
-	word-break: break-word;
 	color: var(--color-main-text);
 }
 

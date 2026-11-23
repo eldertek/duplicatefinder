@@ -86,29 +86,29 @@ export default {
   methods: {
     saveSettings(key, value) {
       axios.post(generateUrl(`/apps/duplicatefinder/api/settings/${key}/${value}`))
-        .then(response => {
+        .then(() => {
           showSuccess(t('duplicatefinder', 'Settings saved'));
         })
-        .catch(error => {
+        .catch(() => {
           showError(t('duplicatefinder', 'Could not save settings'));
         });
     },
     clearAllDuplicates() {
       axios.post(generateUrl('/apps/duplicatefinder/api/duplicates/clear'))
-        .then(response => {
+        .then(() => {
           showSuccess(t('duplicatefinder', 'All duplicates cleared'));
         })
-        .catch(error => {
+        .catch(() => {
           showError(t('duplicatefinder', 'Could not clear duplicates'));
         });
     },
     findAllDuplicates() {
       showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while)'));
       axios.post(generateUrl('/apps/duplicatefinder/api/duplicates/find'))
-        .then(response => {
+        .then(() => {
           showSuccess(t('duplicatefinder', 'All duplicates found'));
         })
-        .catch(error => {
+        .catch(() => {
           showError(t('duplicatefinder', 'Could not initiate duplicate search'));
         });
     }
@@ -122,6 +122,7 @@ export default {
   width: 100%;
   overflow-y: auto;
 }
+
 .buttons-container {
   display: flex;
   gap: 10px;

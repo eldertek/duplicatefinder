@@ -180,7 +180,6 @@
                 <template #icon>
                     <CheckCircle :size="20" />
                 </template>
-                <template>
                     <div v-show="filteredAcknowledgedDuplicates.length > 0">
                         <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
                             <DuplicateListItem
@@ -206,7 +205,6 @@
                         @click="loadMoreAcknowledgedDuplicates()">
                         {{ t('duplicatefinder', 'Load More') }}
                     </button>
-                </template>
             </NcAppNavigationItem>
 
             <!-- Navigation for Unacknowledged Duplicates -->
@@ -221,7 +219,6 @@
                 <template #icon>
                     <CloseCircle :size="20" />
                 </template>
-                <template>
                     <div v-show="filteredUnacknowledgedDuplicates.length > 0">
                         <div v-for="duplicate in filteredUnacknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
                             <DuplicateListItem
@@ -247,20 +244,18 @@
                         @click="loadMoreUnacknowledgedDuplicates()">
                         {{ t('duplicatefinder', 'Load More') }}
                     </button>
-                </template>
             </NcAppNavigationItem>
         </template>
     </NcAppNavigation>
 </template>
 
 <script>
-import { NcAppNavigation, NcAppNavigationItem, NcButton } from '@nextcloud/vue';
+import { NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue';
 import DuplicateListItem from './DuplicateListItem.vue';
 import SearchBar from './SearchBar.vue';
 import CloseCircle from 'vue-material-design-icons/CloseCircle';
 import CheckCircle from 'vue-material-design-icons/CheckCircle';
 import Cog from 'vue-material-design-icons/Cog';
-import Delete from 'vue-material-design-icons/Delete';
 import HelpCircle from 'vue-material-design-icons/HelpCircle';
 import School from 'vue-material-design-icons/School';
 import PlayCircle from 'vue-material-design-icons/PlayCircle';
@@ -277,11 +272,9 @@ export default {
         SearchBar,
         NcAppNavigation,
         NcAppNavigationItem,
-        NcButton,
         CheckCircle,
         CloseCircle,
         Cog,
-        Delete,
         HelpCircle,
         School,
         PlayCircle,

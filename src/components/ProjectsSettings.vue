@@ -148,8 +148,7 @@
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { getFilePickerBuilder } from '@nextcloud/dialogs'
+import { getFilePickerBuilder, showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcModal, NcInputField } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete'
 import Plus from 'vue-material-design-icons/Plus'

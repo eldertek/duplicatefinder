@@ -37,13 +37,11 @@
 </template>
 
 <script>
-import { NcTextField } from '@nextcloud/vue'
 import ChevronDown from 'vue-material-design-icons/ChevronDown'
 
 export default {
   name: 'SearchBar',
   components: {
-    NcTextField,
     ChevronDown
   },
   data() {
@@ -80,7 +78,7 @@ export default {
 
       if (this.searchType !== 'simple') {
         try {
-          new RegExp(processedQuery)
+          RegExp(processedQuery)
         } catch (e) {
           processedQuery = this.escapeRegex(this.searchQuery)
         }

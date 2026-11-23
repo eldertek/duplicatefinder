@@ -31,19 +31,34 @@
           <div v-for="(qa, qaIndex) in section.items"
                :key="qaIndex"
                class="qa-item"
-               :class="{ 'expanded': expandedItems.includes(qa.id) }"
-               @click="toggleItem(qa.id)">
+               :class="{ 'expanded': expandedItems.includes(qa.id) }">
 
-            <div class="question">
+            <button
+              type="button"
+              class="question"
+              :aria-expanded="expandedItems.includes(qa.id) ? 'true' : 'false'"
+              :aria-controls="`faq-answer-${qa.id}`"
+              @click="toggleItem(qa.id)">
               <span class="question-text">{{ qa.question }}</span>
               <ChevronDown :size="20"
                           class="expand-icon"
                           :class="{ 'rotated': expandedItems.includes(qa.id) }" />
-            </div>
+            </button>
 
             <div v-show="expandedItems.includes(qa.id)"
-                 class="answer"
-                 v-html="qa.answer">
+                 :id="`faq-answer-${qa.id}`"
+                 class="answer">
+              <template v-for="(part, partIndex) in parseAnswer(qa.answer)">
+                <br v-if="part.type === 'br'" :key="`br-${partIndex}`">
+                <strong v-else-if="part.type === 'strong'" :key="`strong-${partIndex}`">{{ part.text }}</strong>
+                <a
+                  v-else-if="part.type === 'link'"
+                  :key="`link-${partIndex}`"
+                  :href="part.href"
+                  target="_blank"
+                  rel="noopener noreferrer">{{ part.text }}</a>
+                <template v-else>{{ part.text }}</template>
+              </template>
             </div>
           </div>
         </div>
@@ -56,6 +71,7 @@
 import { NcTextField } from '@nextcloud/vue'
 import Magnify from 'vue-material-design-icons/Magnify'
 import ChevronDown from 'vue-material-design-icons/ChevronDown'
+import { extractFaqPlainText, parseFaqAnswer } from '@/tools/faqParser'
 
 export default {
   name: 'FAQ',
@@ -219,17 +235,11 @@ export default {
         return text.toLowerCase().includes(query)
       }
 
-      const stripHtml = (html) => {
-        const tmp = document.createElement('div')
-        tmp.innerHTML = html
-        return tmp.textContent || tmp.innerText || ''
-      }
-
       return this.sections
         .map(section => {
           const matchedItems = section.items.filter(item => {
             return searchInText(item.question) ||
-                   searchInText(stripHtml(item.answer))
+                   searchInText(extractFaqPlainText(item.answer))
           })
 
           if (matchedItems.length === 0) {
@@ -245,6 +255,9 @@ export default {
     }
   },
   methods: {
+    parseAnswer(answer) {
+      return parseFaqAnswer(answer)
+    },
     updateSearch(value) {
       // Ensure we're working with a string
       this.searchQuery = typeof value === 'string' ? value : ''
@@ -313,12 +326,22 @@ export default {
 }
 
 .question {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  text-align: start;
+  font: inherit;
+  min-height: 44px;
   padding: 20px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  user-select: none;
+}
+
+.question:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: -2px;
 }
 
 .question-text {
@@ -326,7 +349,7 @@ export default {
   color: var(--color-main-text);
   font-size: 16px;
   line-height: 1.5;
-  padding-right: 24px;
+  padding-inline-end: 24px;
 }
 
 .expand-icon {
@@ -346,7 +369,7 @@ export default {
   font-size: 15px;
 }
 
-.answer :deep(a) {
+.answer a {
   color: var(--color-primary-element);
   text-decoration: none;
   font-weight: bold;
@@ -355,8 +378,9 @@ export default {
   transition: background-color 0.2s ease;
 }
 
-.answer :deep(a:hover) {
-  text-decoration: none;
+.answer a:hover,
+.answer a:focus-visible {
+  text-decoration: underline;
   background-color: var(--color-primary-element-light);
 }
 

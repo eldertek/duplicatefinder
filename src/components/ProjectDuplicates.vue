@@ -60,14 +60,28 @@
                 </div>
             </div>
 
-            <div class="pagination" v-if="pagination.totalPages > 1">
-                <NcPagination
-                    :page="pagination.currentPage"
-                    :total-items="pagination.totalItems"
-                    :limit="limit"
-                    @update:page="changePage"
-                />
-            </div>
+            <nav
+                v-if="pagination.totalPages > 1"
+                class="pagination"
+                :aria-label="t('duplicatefinder', 'Pagination')">
+                <NcButton
+                    type="secondary"
+                    class="pagination-button"
+                    :disabled="pagination.currentPage <= 1 || isLoading"
+                    @click="changePage(pagination.currentPage - 1)">
+                    {{ t('duplicatefinder', 'Previous') }}
+                </NcButton>
+                <span class="pagination-status" aria-live="polite">
+                    {{ pagination.currentPage }} / {{ pagination.totalPages }}
+                </span>
+                <NcButton
+                    type="secondary"
+                    class="pagination-button"
+                    :disabled="pagination.currentPage >= pagination.totalPages || isLoading"
+                    @click="changePage(pagination.currentPage + 1)">
+                    {{ t('duplicatefinder', 'Next') }}
+                </NcButton>
+            </nav>
         </div>
 
         <div v-else class="empty-state">
@@ -82,7 +96,7 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcPagination } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 import Refresh from 'vue-material-design-icons/Refresh'
 import { fetchProject, fetchProjectDuplicates, scanProject } from '@/tools/api'
@@ -93,7 +107,6 @@ export default {
     components: {
         NcButton,
         NcLoadingIcon,
-        NcPagination,
 
         Refresh
     },
@@ -204,6 +217,9 @@ export default {
         },
 
         changePage(page) {
+            if (page < 1 || page > this.pagination.totalPages || page === this.pagination.currentPage) {
+                return
+            }
             this.pagination.currentPage = page
             this.loadDuplicates()
         },
@@ -321,7 +337,7 @@ export default {
 }
 
 .file-count {
-    margin-left: 10px;
+    margin-inline-start: 10px;
     font-weight: normal;
     font-size: 14px;
     color: var(--color-text-maxcontrast);
@@ -385,6 +401,21 @@ export default {
     margin-top: 20px;
     display: flex;
     justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pagination-button {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.pagination-status {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-main-text);
+    font-variant-numeric: tabular-nums;
 }
 
 .empty-state {

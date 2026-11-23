@@ -1,4 +1,4 @@
-import { showErrorNotification } from "./notifications";
+import { showErrorNotification } from './notifications';
 
 /**
  * Normalize the item path to extract the relative path within the user's files.

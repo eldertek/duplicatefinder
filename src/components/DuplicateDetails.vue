@@ -215,7 +215,7 @@
 
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates } from '@/tools/api';
-import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, normalizeItemPath, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
+import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -359,9 +359,6 @@ export default {
 
     async deleteSelectedDuplicates() {
       try {
-        const fileHashes = this.selectedFiles.map(file => file.hash);
-        const allInstances = this.duplicate.files.filter(file => fileHashes.includes(file.hash));
-
         // Verify whether protected files are selected
         const hasProtectedFiles = this.selectedFiles.some(file => file.isInOriginFolder);
         if (hasProtectedFiles) {
@@ -379,7 +376,7 @@ export default {
           allowLastCopy = true;
         }
 
-        const { success, errors, deletedNodeIds = [] } = await deleteFiles(this.selectedFiles, { allowLastCopy });
+        const { success, deletedNodeIds = [] } = await deleteFiles(this.selectedFiles, { allowLastCopy });
         if (success.length > 0) {
           this.$emit('folders-touched', success.map(file => file && file.path).filter(Boolean));
           if (deletedNodeIds.length > 1) {
@@ -506,7 +503,7 @@ export default {
   font-weight: 700;
   color: var(--color-main-text);
   line-height: 1.3;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .group-status-pill {
@@ -875,6 +872,7 @@ export default {
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.5s;
 }
+
 .fade-enter, .fade-leave-to {
   opacity: 0;
 }

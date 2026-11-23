@@ -257,7 +257,6 @@ export default {
   color: var(--color-text-maxcontrast);
   white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
   line-height: 1.4;
 }
 

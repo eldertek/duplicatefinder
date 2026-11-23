@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { generateUrl } from '@nextcloud/router';
 import { showSuccessNotification, showErrorNotification } from '@/tools/notifications';
 import { normalizeItemPath } from '@/tools/utils';
 
@@ -130,7 +129,7 @@ export const deleteFile = async (file, options = {}) => {
         }
         console.error(`Error deleting file with path ${file.path}:`, error);
 
-        switch(errorData?.error) {
+        switch (errorData?.error) {
             case 'ORIGIN_FOLDER_PROTECTED':
                 showErrorNotification(t('duplicatefinder', 'Cannot delete file as it is in an origin folder'));
                 break;
@@ -202,7 +201,7 @@ export const deleteFiles = async (files, options = {}) => {
 
     return {
         success: results,
-        errors: errors,
+        errors,
         ...(deletedNodeIds.size > 1 ? { deletedNodeIds: Array.from(deletedNodeIds) } : {})
     };
 };

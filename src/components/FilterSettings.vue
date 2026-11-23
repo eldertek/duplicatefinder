@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError } from '@nextcloud/dialogs'
 import { NcButton, NcTextField } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete'
 import Plus from 'vue-material-design-icons/Plus'
