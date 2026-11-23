@@ -84,6 +84,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-similarity-inspector',
 	},
 	{
+		id: 'toggle-batch-auto-select',
+		keys: ['w'],
+		action: 'toggle-batch-auto-select',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -139,6 +144,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	t: 'toggle-treemap',
 	h: 'toggle-reclamation-history',
 	f: 'toggle-similarity-inspector',
+	w: 'toggle-batch-auto-select',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',

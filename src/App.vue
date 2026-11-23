@@ -224,6 +224,32 @@
 							<span>{{ t('duplicatefinder', 'Similarity') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-batch-rules-button"
+							:class="{ 'is-active': batchAutoSelectOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="batchAutoSelectOpen ? 'true' : 'false'"
+							aria-keyshortcuts="w"
+							:title="t('duplicatefinder', 'Toggle cross-group batch auto-select rules')"
+							@click="toggleBatchAutoSelect">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<polyline points="9 11 12 14 22 4" />
+								<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Batch Rules') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -325,6 +351,17 @@
 						@compare-duplicate="onSimilarityCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="similarityOpen = false" />
+					<BatchAutoSelectWorkbench
+						v-if="batchAutoSelectOpen"
+						:filtered-duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onBatchSelectDuplicate"
+						@compare-duplicate="onBatchCompareDuplicate"
+						@start-scan="triggerScan"
+						@batch-delete-completed="onBatchDeleteCompleted"
+						@batch-acknowledge-completed="onBatchAcknowledgeCompleted"
+						@close="batchAutoSelectOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -761,6 +798,7 @@ import DuplicateDetails from './components/DuplicateDetails.vue';
 import DuplicateTreemap from './components/DuplicateTreemap.vue';
 import SpaceReclamationTimeline from './components/SpaceReclamationTimeline.vue';
 import SimilarityInspector from './components/SimilarityInspector.vue';
+import BatchAutoSelectWorkbench from './components/BatchAutoSelectWorkbench.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -826,6 +864,7 @@ export default {
 		DuplicateTreemap,
 		SpaceReclamationTimeline,
 		SimilarityInspector,
+		BatchAutoSelectWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -858,6 +897,7 @@ export default {
 			treemapOpen: false,
 			historyOpen: false,
 			similarityOpen: false,
+			batchAutoSelectOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1033,6 +1073,7 @@ export default {
 				'toggle-treemap': t('duplicatefinder', 'Toggle interactive storage treemap'),
 				'toggle-reclamation-history': t('duplicatefinder', 'Toggle scan history and reclamation timeline'),
 				'toggle-similarity-inspector': t('duplicatefinder', 'Toggle similarity threshold and fuzzy match inspector'),
+				'toggle-batch-auto-select': t('duplicatefinder', 'Toggle cross-group batch auto-select rules'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1266,6 +1307,132 @@ export default {
 					detailsComponent.openCompareMode()
 				}
 			})
+		},
+		toggleBatchAutoSelect() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.batchAutoSelectOpen = !this.batchAutoSelectOpen
+			return true
+		},
+		onBatchSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onBatchCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onBatchDeleteCompleted({
+			deletedFiles = [],
+			deletedNodeIds = [],
+			bytesReclaimed = 0,
+			groupsResolved = 0,
+			sampleLabel = '',
+		} = {}) {
+			if (!Array.isArray(deletedFiles) || deletedFiles.length === 0) {
+				return
+			}
+			this.recordTouchedFolders(deletedFiles.map(file => file && file.path).filter(Boolean))
+			const deletedKeySet = new Set(
+				deletedFiles.map(file => (file && file.id !== undefined && file.id !== null && file.id !== ''
+					? `id:${file.id}`
+					: `path:${file && file.path ? file.path : ''}`))
+			)
+			const deletedNodeSet = new Set(
+				(Array.isArray(deletedNodeIds) ? deletedNodeIds : []).map(Number).filter(Number.isFinite)
+			)
+			const isDeletedFile = file => {
+				if (!file || typeof file !== 'object') {
+					return false
+				}
+				if (file.nodeId !== undefined && file.nodeId !== null && deletedNodeSet.has(Number(file.nodeId))) {
+					return true
+				}
+				const key = file.id !== undefined && file.id !== null && file.id !== ''
+					? `id:${file.id}`
+					: `path:${file.path || ''}`
+				return deletedKeySet.has(key)
+			}
+
+			const pruneList = list => {
+				const next = []
+				let resolvedCount = 0
+				for (const group of Array.isArray(list) ? list : []) {
+					const remainingFiles = (Array.isArray(group.files) ? group.files : []).filter(file => !isDeletedFile(file))
+					if (remainingFiles.length <= 1) {
+						resolvedCount += 1
+						continue
+					}
+					next.push({
+						...group,
+						files: remainingFiles,
+					})
+				}
+				return { next, resolvedCount }
+			}
+
+			const unackResult = pruneList(this.unacknowledgedDuplicates)
+			const ackResult = pruneList(this.acknowledgedDuplicates)
+			this.unacknowledgedDuplicates = unackResult.next
+			this.acknowledgedDuplicates = ackResult.next
+			if (unackResult.resolvedCount > 0) {
+				this.adjustSectionPagination('unacknowledged', -unackResult.resolvedCount)
+			}
+			if (ackResult.resolvedCount > 0) {
+				this.adjustSectionPagination('acknowledged', -ackResult.resolvedCount)
+			}
+
+			const actualResolved = unackResult.resolvedCount + ackResult.resolvedCount
+			this.onReclamationRecorded({
+				bytesReclaimed,
+				filesDeleted: deletedFiles.length,
+				groupsResolved: actualResolved > 0 ? actualResolved : groupsResolved,
+				source: 'bulk',
+				sampleLabel,
+			})
+
+			if (this.currentDuplicate) {
+				const stillExists = [...this.unacknowledgedDuplicates, ...this.acknowledgedDuplicates]
+					.find(group => group.id === this.currentDuplicate.id)
+				this.currentDuplicate = stillExists
+					|| this.unacknowledgedDuplicates[0]
+					|| this.acknowledgedDuplicates[0]
+					|| null
+			}
+
+			if (deletedNodeIds.length > deletedFiles.length) {
+				this.refreshDuplicates({ silent: true })
+			}
+		},
+		onBatchAcknowledgeCompleted({ groups = [] } = {}) {
+			if (!Array.isArray(groups) || groups.length === 0) {
+				return
+			}
+			const hashSet = new Set(groups.map(group => group && group.hash).filter(Boolean))
+			const moved = []
+			const remainingUnack = []
+			for (const group of this.unacknowledgedDuplicates) {
+				if (group && hashSet.has(group.hash)) {
+					moved.push({ ...group, acknowledged: true })
+				} else {
+					remainingUnack.push(group)
+				}
+			}
+			if (moved.length === 0) {
+				return
+			}
+			this.unacknowledgedDuplicates = remainingUnack
+			this.acknowledgedDuplicates = [...this.acknowledgedDuplicates, ...moved]
+			this.adjustSectionPagination('unacknowledged', -moved.length)
+			this.adjustSectionPagination('acknowledged', moved.length)
+			if (this.currentDuplicate && hashSet.has(this.currentDuplicate.hash)) {
+				const updated = moved.find(item => item.hash === this.currentDuplicate.hash)
+				if (updated) {
+					this.currentDuplicate = updated
+				}
+			}
 		},
 		recordCurrentScanSnapshot(trigger = 'sync') {
 			const updated = recordScanSnapshot(
@@ -1521,6 +1688,13 @@ export default {
 
 			if (action === 'toggle-similarity-inspector') {
 				if (this.toggleSimilarityInspector() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-batch-auto-select') {
+				if (this.toggleBatchAutoSelect() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -2428,7 +2602,8 @@ export default {
 .app-content-topbar .topbar-empty-folders-button,
 .app-content-topbar .topbar-treemap-button,
 .app-content-topbar .topbar-history-button,
-.app-content-topbar .topbar-similarity-button {
+.app-content-topbar .topbar-similarity-button,
+.app-content-topbar .topbar-batch-rules-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -2452,7 +2627,8 @@ export default {
 .app-content-topbar .topbar-empty-folders-button svg,
 .app-content-topbar .topbar-treemap-button svg,
 .app-content-topbar .topbar-history-button svg,
-.app-content-topbar .topbar-similarity-button svg {
+.app-content-topbar .topbar-similarity-button svg,
+.app-content-topbar .topbar-batch-rules-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -2466,21 +2642,25 @@ export default {
 .app-content-topbar .topbar-history-button:hover:not(:disabled),
 .app-content-topbar .topbar-history-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-similarity-button:hover:not(:disabled),
-.app-content-topbar .topbar-similarity-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-similarity-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-batch-rules-button:hover:not(:disabled),
+.app-content-topbar .topbar-batch-rules-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
 
 .app-content-topbar .topbar-treemap-button.is-active,
 .app-content-topbar .topbar-history-button.is-active,
-.app-content-topbar .topbar-similarity-button.is-active {
+.app-content-topbar .topbar-similarity-button.is-active,
+.app-content-topbar .topbar-batch-rules-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
 }
 
 .app-content-topbar .topbar-treemap-button:disabled,
-.app-content-topbar .topbar-similarity-button:disabled {
+.app-content-topbar .topbar-similarity-button:disabled,
+.app-content-topbar .topbar-batch-rules-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -2613,6 +2793,7 @@ export default {
 .app-content-topbar .topbar-treemap-button > *,
 .app-content-topbar .topbar-history-button > *,
 .app-content-topbar .topbar-similarity-button > *,
+.app-content-topbar .topbar-batch-rules-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -2701,6 +2882,7 @@ export default {
 	.app-content-topbar .topbar-treemap-button,
 	.app-content-topbar .topbar-history-button,
 	.app-content-topbar .topbar-similarity-button,
+	.app-content-topbar .topbar-batch-rules-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
@@ -3012,6 +3194,7 @@ export default {
 .app-content-topbar .topbar-treemap-button:focus-visible,
 .app-content-topbar .topbar-history-button:focus-visible,
 .app-content-topbar .topbar-similarity-button:focus-visible,
+.app-content-topbar .topbar-batch-rules-button:focus-visible,
 .app-content-topbar .topbar-bulk-delete-button:focus-visible,
 .nc-confirm-dialog__button:focus-visible {
 	outline: 2px solid var(--color-primary-element, #0082c9) !important;
