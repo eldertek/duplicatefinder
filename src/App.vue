@@ -860,6 +860,7 @@ export default {
 				'keep-shortest-path': t('duplicatefinder', 'Keep shortest path copy in active group'),
 				'clear-selection': t('duplicatefinder', 'Clear current selection'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
+				'reset-filters': t('duplicatefinder', 'Reset all active filters and sorting'),
 				'toggle-help': t('duplicatefinder', 'Toggle keyboard shortcuts help'),
 				'close-help': t('duplicatefinder', 'Close keyboard shortcuts dialog'),
 			}
@@ -948,6 +949,20 @@ export default {
 				: null
 			if (fallbackInput && typeof fallbackInput.focus === 'function') {
 				fallbackInput.focus()
+				return true
+			}
+			return false
+		},
+		resetNavigationFilters() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			const navigation = this.$refs.duplicateNavigation
+			if (navigation && typeof navigation.resetActiveFilters === 'function') {
+				return navigation.resetActiveFilters()
+			}
+			if (navigation && navigation.hasActiveFilters && typeof navigation.resetFilters === 'function') {
+				navigation.resetFilters()
 				return true
 			}
 			return false
@@ -1077,6 +1092,13 @@ export default {
 					event.preventDefault()
 				}
 				this.focusSearchBar()
+				return
+			}
+
+			if (action === 'reset-filters') {
+				if (this.resetNavigationFilters() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
 				return
 			}
 

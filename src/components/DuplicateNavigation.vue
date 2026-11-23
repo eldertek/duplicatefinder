@@ -348,6 +348,7 @@
                         v-if="hasActiveFilters"
                         type="button"
                         class="reset-filters-button"
+                        aria-keyshortcuts="r"
                         :title="t('duplicatefinder', 'Reset all active filters and sorting')"
                         :aria-label="resetFiltersButtonLabel"
                         aria-live="polite"
@@ -418,6 +419,7 @@
                             <button
                                 type="button"
                                 class="empty-state-reset-button"
+                                aria-keyshortcuts="r"
                                 :aria-label="t('duplicatefinder', 'Reset filters')"
                                 @click="resetFilters">
                                 {{ t('duplicatefinder', 'Reset filters') }}
@@ -475,6 +477,7 @@
                             <button
                                 type="button"
                                 class="empty-state-reset-button"
+                                aria-keyshortcuts="r"
                                 :aria-label="t('duplicatefinder', 'Reset filters')"
                                 @click="resetFilters">
                                 {{ t('duplicatefinder', 'Reset filters') }}
@@ -1072,6 +1075,13 @@ export default {
             if (key === 'search') {
                 this.clearSearchFilter();
             }
+        },
+        resetActiveFilters() {
+            if (!this.hasActiveFilters) {
+                return false;
+            }
+            this.resetFilters();
+            return true;
         },
         resetFilters() {
             const queryOptionsChanged = this.sortOption !== 'none' || this.minSizeBytes > 0;

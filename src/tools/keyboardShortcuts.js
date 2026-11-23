@@ -39,6 +39,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'focus-search',
 	},
 	{
+		id: 'reset-filters',
+		keys: ['r'],
+		action: 'reset-filters',
+	},
+	{
 		id: 'toggle-help',
 		keys: ['?'],
 		action: 'toggle-help',
@@ -59,6 +64,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	n: 'keep-newest',
 	s: 'keep-shortest-path',
 	c: 'clear-selection',
+	r: 'reset-filters',
 })
 
 /**
