@@ -380,13 +380,113 @@ describe('Cycle 42: triage preferences persistence, folder prefix filter, and re
 
 		assert.ok(navSource.includes('.folder-filter-input:focus-visible'))
 		assert.ok(navSource.includes('.reset-filters-button:focus-visible'))
+		assert.ok(navSource.includes('.empty-state-reset-button:focus-visible'))
 
 		const filterCssStart = navSource.indexOf('/* Quick File-Type Filter Chips & Live Reclaimable Summary */')
 		const filterCssEnd = navSource.indexOf('/* Consistent highlighting')
 		const filterCssBlock = navSource.slice(filterCssStart, filterCssEnd)
 		assert.ok(filterCssBlock.includes('.reset-filters-button'))
+		assert.ok(filterCssBlock.includes('.empty-state-reset-button'))
 		assert.ok(filterCssBlock.includes('min-block-size: 44px'))
 		assert.ok(filterCssBlock.includes('min-inline-size: 44px'))
 		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS uses logical properties only')
+	})
+
+	test('DuplicateNavigation State A: shows filtered empty message and Reset filters button when duplicates exist but filters match none', async () => {
+		const DuplicateNavigation = createNavigationComponent()
+		const unacknowledged = [
+			{
+				id: 101,
+				hash: 'photo-only',
+				files: [
+					{ id: 1011, path: '/alice/files/Photos/holiday.jpg', mimetype: 'image/jpeg', size: 1024 },
+					{ id: 1012, path: '/alice/files/Downloads/holiday.jpg', mimetype: 'image/jpeg', size: 1024 },
+				],
+			},
+		]
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [],
+						unacknowledgedDuplicates: unacknowledged,
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const nav = vm.$refs.nav
+		assert.equal(nav.unacknowledgedEmptyState, 'populated')
+		assert.equal(nav.acknowledgedEmptyState, 'initial-empty')
+
+		// Filter to Documents so unacknowledged raw list (> 0) becomes filtered-empty (State A)
+		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
+		chips[4].click() // Documents
+		await settle()
+
+		assert.equal(nav.unacknowledgedEmptyState, 'filtered-empty')
+		const unackSection = vm.$el.querySelector('.duplicate-section-unacknowledged')
+		const ackSection = vm.$el.querySelector('.duplicate-section-acknowledged')
+		assert.ok(unackSection.textContent.includes('No duplicates match the current filters'))
+		assert.ok(ackSection.textContent.includes('No duplicates found yet'))
+		assert.equal(ackSection.querySelector('button.empty-state-reset-button'), null)
+
+		const emptyResetBtn = unackSection.querySelector('button.empty-state-reset-button')
+		assert.ok(emptyResetBtn, 'State A renders accessible Reset filters button inside empty section')
+		assert.ok(emptyResetBtn.textContent.includes('Reset filters'))
+
+		// Clicking State A Reset filters restores populated list and removes empty state
+		emptyResetBtn.click()
+		await settle()
+
+		assert.equal(nav.selectedCategory, 'all')
+		assert.equal(nav.unacknowledgedEmptyState, 'populated')
+		assert.equal(unackSection.querySelector('button.empty-state-reset-button'), null)
+
+		vm.$destroy()
+	})
+
+	test('DuplicateNavigation State B: shows sober No duplicates found yet message when duplicates.length === 0', async () => {
+		const DuplicateNavigation = createNavigationComponent()
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [],
+						unacknowledgedDuplicates: [],
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const nav = vm.$refs.nav
+		assert.equal(nav.acknowledgedEmptyState, 'initial-empty')
+		assert.equal(nav.unacknowledgedEmptyState, 'initial-empty')
+		assert.equal(vm.$el.querySelector('button.empty-state-reset-button'), null)
+
+		const ackSection = vm.$el.querySelector('.duplicate-section-acknowledged')
+		const unackSection = vm.$el.querySelector('.duplicate-section-unacknowledged')
+		assert.ok(ackSection.textContent.includes('No duplicates found yet'))
+		assert.ok(unackSection.textContent.includes('No duplicates found yet'))
+		assert.equal(vm.$el.textContent.includes('No duplicates match the current filters'), false)
+
+		// Even with an active folder filter, raw length 0 stays in State B
+		const folderInput = vm.$el.querySelector('input.folder-filter-input')
+		folderInput.value = '/Photos'
+		folderInput.dispatchEvent(new window.Event('input'))
+		await settle()
+
+		assert.equal(nav.acknowledgedEmptyState, 'initial-empty')
+		assert.equal(nav.unacknowledgedEmptyState, 'initial-empty')
+		assert.equal(vm.$el.querySelector('button.empty-state-reset-button'), null)
+		assert.equal(vm.$el.textContent.includes('No duplicates match the current filters'), false)
+
+		vm.$destroy()
 	})
 })

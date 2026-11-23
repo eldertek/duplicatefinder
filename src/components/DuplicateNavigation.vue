@@ -271,7 +271,7 @@
                 <template #icon>
                     <CheckCircle :size="20" />
                 </template>
-                    <div v-show="filteredAcknowledgedDuplicates.length > 0">
+                    <div v-show="acknowledgedEmptyState === 'populated'">
                         <div v-for="duplicate in filteredAcknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
                             <DuplicateListItem
                                 :duplicate="duplicate"
@@ -280,8 +280,26 @@
                                 @duplicate-resolved="handleDuplicateResolved" />
                         </div>
                     </div>
-                    <div v-show="filteredAcknowledgedDuplicates.length === 0" role="status" aria-live="polite">
-                        <p>{{ t('duplicatefinder', 'No acknowledged duplicates found.') }}</p>
+                    <div
+                        v-if="acknowledgedEmptyState !== 'populated'"
+                        class="empty-duplicates-state"
+                        role="status"
+                        aria-live="polite">
+                        <template v-if="acknowledgedEmptyState === 'filtered-empty'">
+                            <p class="empty-state-message">
+                                {{ t('duplicatefinder', 'No duplicates match the current filters') }}
+                            </p>
+                            <button
+                                type="button"
+                                class="empty-state-reset-button"
+                                :aria-label="t('duplicatefinder', 'Reset filters')"
+                                @click="resetFilters">
+                                {{ t('duplicatefinder', 'Reset filters') }}
+                            </button>
+                        </template>
+                        <p v-else class="empty-state-message">
+                            {{ t('duplicatefinder', 'No duplicates found yet') }}
+                        </p>
                     </div>
                     <div
                         v-if="hasMoreAcknowledged"
@@ -310,7 +328,7 @@
                 <template #icon>
                     <CloseCircle :size="20" />
                 </template>
-                    <div v-show="filteredUnacknowledgedDuplicates.length > 0">
+                    <div v-show="unacknowledgedEmptyState === 'populated'">
                         <div v-for="duplicate in filteredUnacknowledgedDuplicates" :key="duplicate.id" class="duplicate-item">
                             <DuplicateListItem
                                 :duplicate="duplicate"
@@ -319,8 +337,26 @@
                                 @duplicate-resolved="handleDuplicateResolved" />
                         </div>
                     </div>
-                    <div v-show="filteredUnacknowledgedDuplicates.length === 0" role="status" aria-live="polite">
-                        <p>{{ t('duplicatefinder', 'No unacknowledged duplicates found.') }}</p>
+                    <div
+                        v-if="unacknowledgedEmptyState !== 'populated'"
+                        class="empty-duplicates-state"
+                        role="status"
+                        aria-live="polite">
+                        <template v-if="unacknowledgedEmptyState === 'filtered-empty'">
+                            <p class="empty-state-message">
+                                {{ t('duplicatefinder', 'No duplicates match the current filters') }}
+                            </p>
+                            <button
+                                type="button"
+                                class="empty-state-reset-button"
+                                :aria-label="t('duplicatefinder', 'Reset filters')"
+                                @click="resetFilters">
+                                {{ t('duplicatefinder', 'Reset filters') }}
+                            </button>
+                        </template>
+                        <p v-else class="empty-state-message">
+                            {{ t('duplicatefinder', 'No duplicates found yet') }}
+                        </p>
                     </div>
                     <div
                         v-if="hasMoreUnacknowledged"
@@ -626,9 +662,35 @@ export default {
                 ? this.filteredAcknowledgedDuplicates
                 : [];
             return [...unacknowledged, ...acknowledged];
+        },
+        acknowledgedEmptyState() {
+            return this.resolveSectionEmptyState(
+                this.acknowledgedDuplicates,
+                this.filteredAcknowledgedDuplicates,
+            );
+        },
+        unacknowledgedEmptyState() {
+            return this.resolveSectionEmptyState(
+                this.unacknowledgedDuplicates,
+                this.filteredUnacknowledgedDuplicates,
+            );
         }
     },
     methods: {
+        /**
+         * Determine deterministic display state for a duplicate navigation section.
+         * @param {Array} rawDuplicates Unfiltered duplicates passed to the section.
+         * @param {Array} filteredDuplicates Duplicates remaining after active filters.
+         * @returns {'populated'|'filtered-empty'|'initial-empty'}
+         */
+        resolveSectionEmptyState(rawDuplicates, filteredDuplicates) {
+            const filteredCount = Array.isArray(filteredDuplicates) ? filteredDuplicates.length : 0;
+            if (filteredCount > 0) {
+                return 'populated';
+            }
+            const rawCount = Array.isArray(rawDuplicates) ? rawDuplicates.length : 0;
+            return rawCount > 0 ? 'filtered-empty' : 'initial-empty';
+        },
         exportFilteredCsv() {
             if (this.filteredDuplicatesForExport.length === 0) {
                 return false;
@@ -1768,6 +1830,58 @@ export default {
 .export-csv-button:disabled {
     opacity: 0.45;
     cursor: not-allowed;
+}
+
+.empty-duplicates-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    padding-block: 10px;
+    padding-inline: 12px;
+    box-sizing: border-box;
+}
+
+.empty-state-message {
+    margin-block: 0;
+    margin-inline: 0;
+    color: var(--color-text-maxcontrast);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.empty-state-reset-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 8px;
+    padding-inline: 14px;
+    margin-block: 0;
+    margin-inline: 0;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 6px;
+    background-color: var(--color-main-background);
+    color: var(--color-main-text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.empty-state-reset-button:hover {
+    background-color: var(--color-background-hover);
+    border-color: var(--color-primary-element, #0082c9);
+}
+
+.empty-state-reset-button:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
 }
 
 /* Consistent highlighting and full-row clickability for Acknowledged / Unacknowledged sections */
