@@ -1,3 +1,7 @@
+## 1.10.38 - 2026-11-23
+### Added
+- **Copy active group hash keyboard shortcut (`y`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateDetails.vue`, `src/App.vue`). Registered the `y` (`copy-group-hash`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` to invoke `copyGroupHash()` on the active `DuplicateDetails` group (when multiple copies and a valid `fullGroupHash` are present, suppressed inside editable controls and open modal dialogs), and annotated the `Copy hash` button with `aria-keyshortcuts="y"`.
+
 ## 1.10.37 - 2026-11-23
 ### Added
 - **1-click `Copy hash` button and short hash formatting in group header** (`src/tools/duplicateHashHelper.js`, `src/components/DuplicateDetails.vue`). Added the pure `formatShortHash` helper (12-char lowercase hex prefix) and a 44x44px-compliant `Copy hash` action in the group header summary banner using `copyTextSafely`, complete with `aria-live="polite"` feedback (`Copied` / `Copy failed`).
