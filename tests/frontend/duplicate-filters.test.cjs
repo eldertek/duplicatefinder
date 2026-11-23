@@ -497,3 +497,245 @@ describe('Cycle 62: computeCategoryCounts & live chip counts in DuplicateNavigat
 		vm.$destroy()
 	})
 })
+
+describe('Cycle 65: MIN_SIZE_PRESETS, filterDuplicatesByMinSize, and accessible minimum size selector', () => {
+	test('MIN_SIZE_PRESETS exposes frozen byte thresholds and filterDuplicatesByMinSize filters purely without mutation', () => {
+		const { MIN_SIZE_PRESETS, filterDuplicatesByMinSize } = loadModule('src/tools/duplicateFilters.js')
+
+		assert.deepEqual(MIN_SIZE_PRESETS, {
+			any: 0,
+			'1mb': 1048576,
+			'10mb': 10485760,
+			'100mb': 104857600,
+		})
+		assert.equal(Object.isFrozen(MIN_SIZE_PRESETS), true)
+
+		const smallGroup = Object.freeze({
+			id: 1,
+			files: Object.freeze([
+				Object.freeze({ path: '/u/files/small.txt', size: 1048575 }),
+			]),
+		})
+		const exactOneMbGroup = Object.freeze({
+			id: 2,
+			files: Object.freeze([
+				Object.freeze({ path: '/u/files/one-mb.png', size: 1048576 }),
+			]),
+		})
+		const exactTenMbGroup = Object.freeze({
+			id: 3,
+			files: Object.freeze([
+				Object.freeze({ path: '/u/files/ten-mb.mp4', size: 10485760 }),
+			]),
+		})
+		const hundredMbGroup = Object.freeze({
+			id: 4,
+			files: Object.freeze([
+				Object.freeze({ path: '/u/files/archive.tar.gz', size: 104857600 }),
+			]),
+		})
+		const invalidSizeGroup = Object.freeze({
+			id: 5,
+			files: Object.freeze([
+				Object.freeze({ path: '/u/files/broken.bin', size: null }),
+				Object.freeze({ path: '/u/files/empty.bin', size: '' }),
+			]),
+		})
+		const groupSizeFallback = Object.freeze({
+			id: 6,
+			size: 15 * 1024 * 1024,
+		})
+
+		const frozenInput = Object.freeze([
+			smallGroup,
+			exactOneMbGroup,
+			exactTenMbGroup,
+			hundredMbGroup,
+			invalidSizeGroup,
+			groupSizeFallback,
+		])
+
+		const anyResult = filterDuplicatesByMinSize(frozenInput, 'any')
+		assert.notEqual(anyResult, frozenInput)
+		assert.deepEqual(anyResult.map(g => g.id), [1, 2, 3, 4, 5, 6])
+
+		assert.deepEqual(filterDuplicatesByMinSize(frozenInput, '1mb').map(g => g.id), [2, 3, 4, 6])
+		assert.deepEqual(filterDuplicatesByMinSize(frozenInput, '10mb').map(g => g.id), [3, 4, 6])
+		assert.deepEqual(filterDuplicatesByMinSize(frozenInput, '100mb').map(g => g.id), [4])
+
+		// Unknown, null, undefined presets fall back to 'any'; non-array input returns []
+		assert.deepEqual(filterDuplicatesByMinSize(frozenInput, 'unknown').map(g => g.id), [1, 2, 3, 4, 5, 6])
+		assert.deepEqual(filterDuplicatesByMinSize(frozenInput, null).map(g => g.id), [1, 2, 3, 4, 5, 6])
+		assert.deepEqual(filterDuplicatesByMinSize(undefined, '10mb'), [])
+		assert.deepEqual(filterDuplicatesByMinSize(null, '10mb'), [])
+	})
+
+	test('DuplicateNavigation renders accessible minimum size select, filters duplicates, and resets via Reset filters', async () => {
+		window.localStorage.clear()
+		const DuplicateNavigation = createNavigationComponent()
+		const emittedQueryChanges = []
+		const twoHundredKb = 200 * 1024
+		const twoMb = 2 * 1024 * 1024
+		const fifteenMb = 15 * 1024 * 1024
+		const oneTwentyMb = 120 * 1024 * 1024
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [
+							{
+								id: 100,
+								hash: 'ack-big',
+								files: [
+									{ id: 1, path: '/u/files/ack-video.mp4', mimetype: 'video/mp4', size: fifteenMb },
+									{ id: 2, path: '/u/files/ack-video-copy.mp4', mimetype: 'video/mp4', size: fifteenMb },
+								],
+							},
+						],
+						unacknowledgedDuplicates: [
+							{
+								id: 1,
+								hash: 'small-doc',
+								files: [
+									{ id: 11, path: '/u/files/note.pdf', mimetype: 'application/pdf', size: twoHundredKb },
+									{ id: 12, path: '/u/files/note-copy.pdf', mimetype: 'application/pdf', size: twoHundredKb },
+								],
+							},
+							{
+								id: 2,
+								hash: 'mid-img',
+								files: [
+									{ id: 21, path: '/u/files/img.jpg', mimetype: 'image/jpeg', size: twoMb },
+									{ id: 22, path: '/u/files/img-copy.jpg', mimetype: 'image/jpeg', size: twoMb },
+								],
+							},
+							{
+								id: 3,
+								hash: 'huge-iso',
+								files: [
+									{ id: 31, path: '/u/files/distro.zip', mimetype: 'application/zip', size: oneTwentyMb },
+									{ id: 32, path: '/u/files/distro-copy.zip', mimetype: 'application/zip', size: oneTwentyMb },
+								],
+							},
+						],
+					},
+					on: {
+						'query-options-changed': payload => emittedQueryChanges.push(payload),
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const nav = vm.$refs.nav
+		const select = vm.$el.querySelector('select.min-size-filter-select')
+		const label = vm.$el.querySelector('label.min-size-filter-label')
+		assert.ok(select, 'minimum size select is rendered')
+		assert.ok(label, 'minimum size label is rendered')
+		assert.equal(label.getAttribute('for'), select.getAttribute('id'))
+		assert.ok(select.getAttribute('aria-label'))
+		assert.equal(select.value, 'any')
+		assert.deepEqual(
+			Array.from(select.querySelectorAll('option')).map(o => o.value),
+			['any', '1mb', '10mb', '100mb'],
+		)
+
+		// Change to >= 10 MB via DOM select event
+		select.value = '10mb'
+		select.dispatchEvent(new window.Event('change'))
+		await settle()
+
+		assert.equal(nav.selectedMinSizePreset, '10mb')
+		assert.equal(nav.minSizeBytes, 10485760)
+		assert.deepEqual(nav.filteredUnacknowledgedDuplicates.map(d => d.id), [3])
+		assert.deepEqual(nav.filteredAcknowledgedDuplicates.map(d => d.id), [100])
+		assert.deepEqual(emittedQueryChanges[emittedQueryChanges.length - 1], {
+			sortBy: 'none',
+			minSize: 10485760,
+		})
+
+		// Reset filters button is visible and resets select back to 'any'
+		const resetBtn = vm.$el.querySelector('button.reset-filters-button')
+		assert.ok(resetBtn, 'Reset filters button appears when minSize preset is active')
+		resetBtn.click()
+		await settle()
+
+		assert.equal(nav.minSizeBytes, 0)
+		assert.equal(nav.selectedMinSizePreset, 'any')
+		assert.equal(select.value, 'any')
+		assert.deepEqual(nav.filteredUnacknowledgedDuplicates.map(d => d.id), [1, 2, 3])
+		assert.deepEqual(emittedQueryChanges[emittedQueryChanges.length - 1], {
+			sortBy: 'none',
+			minSize: 0,
+		})
+
+		vm.$destroy()
+	})
+
+	test('DuplicateNavigation reflects custom initialMinSizeBytes cleanly in select and resets to any', async () => {
+		window.localStorage.clear()
+		const DuplicateNavigation = createNavigationComponent()
+		const fiveMb = 5 * 1024 * 1024
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [],
+						unacknowledgedDuplicates: [
+							{
+								id: 1,
+								hash: 'small',
+								files: [{ id: 1, path: '/u/files/a.txt', size: 1024 }],
+							},
+							{
+								id: 2,
+								hash: 'six-mb',
+								files: [{ id: 2, path: '/u/files/b.zip', size: 6 * 1024 * 1024 }],
+							},
+						],
+						initialMinSizeBytes: fiveMb,
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const select = vm.$el.querySelector('select.min-size-filter-select')
+		assert.equal(vm.$refs.nav.selectedMinSizePreset, 'custom')
+		assert.equal(select.value, 'custom')
+		assert.deepEqual(vm.$refs.nav.filteredUnacknowledgedDuplicates.map(d => d.id), [2])
+
+		// Selecting 1mb preset switches cleanly out of custom mode
+		select.value = '1mb'
+		select.dispatchEvent(new window.Event('change'))
+		await settle()
+		assert.equal(vm.$refs.nav.minSizeBytes, 1048576)
+		assert.equal(vm.$refs.nav.selectedMinSizePreset, '1mb')
+
+		vm.$destroy()
+	})
+
+	test('DuplicateNavigation min-size select CSS enforces >= 44px touch targets, :focus-visible, logical properties, and zero XSS/dashes', () => {
+		const filtersSource = readFileSync(resolve(root, 'src/tools/duplicateFilters.js'), 'utf8')
+		const navSource = readFileSync(resolve(root, 'src/components/DuplicateNavigation.vue'), 'utf8')
+
+		for (const content of [filtersSource, navSource]) {
+			assert.ok(!/[\u2013\u2014]/.test(content), 'no U+2013/U+2014 dashes allowed')
+			assert.ok(!/v-html|innerHTML|outerHTML|document\.write/.test(content), 'no DOM XSS sinks allowed')
+		}
+
+		const filterCssStart = navSource.indexOf('/* Quick File-Type Filter Chips & Live Reclaimable Summary */')
+		const filterCssEnd = navSource.indexOf('/* Consistent highlighting')
+		const filterCssBlock = navSource.slice(filterCssStart, filterCssEnd)
+
+		assert.ok(filterCssBlock.includes('.min-size-filter-select'))
+		assert.ok(filterCssBlock.includes('.min-size-filter-select:focus-visible'))
+		assert.ok(filterCssBlock.includes('min-inline-size: 44px'))
+		assert.ok(filterCssBlock.includes('min-block-size: 44px'))
+		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS must use logical properties only')
+	})
+})

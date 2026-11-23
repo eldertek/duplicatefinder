@@ -5,6 +5,13 @@
 
 export const LARGE_FILE_THRESHOLD_BYTES = 10 * 1024 * 1024
 
+export const MIN_SIZE_PRESETS = Object.freeze({
+	any: 0,
+	'1mb': 1024 * 1024,
+	'10mb': 10 * 1024 * 1024,
+	'100mb': 100 * 1024 * 1024,
+})
+
 export const DUPLICATE_FILTER_CATEGORIES = Object.freeze([
 	'all',
 	'images',
@@ -205,6 +212,60 @@ export function filterDuplicatesByCategory(duplicates, category = 'all') {
 		return duplicates.filter(Boolean)
 	}
 	return duplicates.filter(duplicate => matchesDuplicateCategory(duplicate, category))
+}
+
+/**
+ * Parse a numeric byte size strictly from a raw size value.
+ *
+ * @param {*} rawSize - Candidate size value.
+ * @return {number} Finite non-negative byte size, or NaN when invalid.
+ */
+function parseValidByteSize(rawSize) {
+	if (rawSize === null || rawSize === undefined || rawSize === '' || typeof rawSize === 'boolean') {
+		return Number.NaN
+	}
+	const numeric = Number(rawSize)
+	return Number.isFinite(numeric) && numeric >= 0 ? numeric : Number.NaN
+}
+
+/**
+ * Filter duplicate groups by minimum file size preset without mutating the input array.
+ *
+ * @param {Array} duplicates - Array of duplicate group objects.
+ * @param {string} [minSizePreset='any'] - Size preset key ('any', '1mb', '10mb', '100mb').
+ * @return {Array} New filtered array of duplicate groups.
+ */
+export function filterDuplicatesByMinSize(duplicates, minSizePreset = 'any') {
+	if (!Array.isArray(duplicates)) {
+		return []
+	}
+	const normalizedPreset = typeof minSizePreset === 'string'
+		? minSizePreset.trim().toLowerCase()
+		: ''
+	const thresholdBytes = Object.prototype.hasOwnProperty.call(MIN_SIZE_PRESETS, normalizedPreset)
+		? MIN_SIZE_PRESETS[normalizedPreset]
+		: 0
+
+	if (thresholdBytes <= 0) {
+		return duplicates.filter(Boolean)
+	}
+
+	return duplicates.filter(duplicate => {
+		if (!duplicate || typeof duplicate !== 'object') {
+			return false
+		}
+		if (Array.isArray(duplicate.files)) {
+			return duplicate.files.some(file => {
+				if (!file || typeof file !== 'object') {
+					return false
+				}
+				const fileSize = parseValidByteSize(file.size)
+				return Number.isFinite(fileSize) && fileSize >= thresholdBytes
+			})
+		}
+		const groupSize = parseValidByteSize(duplicate.size)
+		return Number.isFinite(groupSize) && groupSize >= thresholdBytes
+	})
 }
 
 /**

@@ -226,6 +226,30 @@
                         :aria-label="t('duplicatefinder', 'Filter by folder prefix (e.g. /Photos or !/Backups)')"
                         @keydown.esc="folderQuery = ''" />
                 </div>
+                <div class="min-size-filter-row">
+                    <label
+                        for="duplicate-min-size-select"
+                        class="min-size-filter-label">
+                        {{ t('duplicatefinder', 'Minimum file size') }}
+                    </label>
+                    <select
+                        id="duplicate-min-size-select"
+                        v-model="selectedMinSizePreset"
+                        class="min-size-filter-select"
+                        :aria-label="t('duplicatefinder', 'Minimum file size')">
+                        <option
+                            v-for="option in minSizeSelectOptions"
+                            :key="option.id"
+                            :value="option.id">
+                            {{ option.label }}
+                        </option>
+                        <option
+                            v-if="selectedMinSizePreset === 'custom'"
+                            value="custom">
+                            {{ customMinSizeOptionLabel }}
+                        </option>
+                    </select>
+                </div>
                 <div
                     class="reclaimable-summary-badge"
                     role="status"
@@ -444,8 +468,10 @@ import { fetchDuplicates } from '@/tools/api';
 import { getTotalSizeOfDuplicate, loadUiPreferences, saveUiPreferences } from '@/tools/utils';
 import {
     DUPLICATE_FILTER_CATEGORIES,
+    MIN_SIZE_PRESETS,
     computeCategoryCounts,
     computeReclaimableSummary,
+    filterDuplicatesByMinSize,
     matchesDuplicateCategory,
 } from '@/tools/duplicateFilters';
 import {
@@ -651,10 +677,15 @@ export default {
             const acknowledged = Array.isArray(this.acknowledgedDuplicates)
                 ? this.acknowledgedDuplicates
                 : [];
-            const combined = [...unacknowledged, ...acknowledged].filter(duplicate => {
+            const combinedRaw = [...unacknowledged, ...acknowledged];
+            const byMinSize = this.selectedMinSizePreset === 'custom'
+                ? combinedRaw
+                : filterDuplicatesByMinSize(combinedRaw, this.selectedMinSizePreset);
+            const combined = byMinSize.filter(duplicate => {
                 return this.filterDuplicate(duplicate, {
                     ignoreCategory: true,
                     ignoreExtension: true,
+                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
                 });
             });
             return filterDuplicatesByFolderPrefix(combined, this.folderQuery);
@@ -674,12 +705,36 @@ export default {
                 { id: 'large', label: t('duplicatefinder', '> 10 MB'), count: counts.large },
             ];
         },
+        selectedMinSizePreset: {
+            get() {
+                for (const [key, bytes] of Object.entries(MIN_SIZE_PRESETS)) {
+                    if (this.minSizeBytes === bytes) {
+                        return key;
+                    }
+                }
+                return 'custom';
+            },
+            set(preset) {
+                this.setMinSizePreset(preset);
+            },
+        },
+        minSizeSelectOptions() {
+            return [
+                { id: 'any', bytes: MIN_SIZE_PRESETS.any, label: t('duplicatefinder', 'Any size') },
+                { id: '1mb', bytes: MIN_SIZE_PRESETS['1mb'], label: '>= 1 MB' },
+                { id: '10mb', bytes: MIN_SIZE_PRESETS['10mb'], label: '>= 10 MB' },
+                { id: '100mb', bytes: MIN_SIZE_PRESETS['100mb'], label: '>= 100 MB' },
+            ];
+        },
+        customMinSizeOptionLabel() {
+            return `>= ${formatBytes(this.minSizeBytes)}`;
+        },
         minSizePresets() {
             return [
-                { bytes: 0, label: t('duplicatefinder', 'All sizes') },
-                { bytes: 1024 * 1024, label: '>= 1 MB' },
-                { bytes: 10 * 1024 * 1024, label: '>= 10 MB' },
-                { bytes: 100 * 1024 * 1024, label: '>= 100 MB' },
+                { bytes: MIN_SIZE_PRESETS.any, label: t('duplicatefinder', 'All sizes') },
+                { bytes: MIN_SIZE_PRESETS['1mb'], label: '>= 1 MB' },
+                { bytes: MIN_SIZE_PRESETS['10mb'], label: '>= 10 MB' },
+                { bytes: MIN_SIZE_PRESETS['100mb'], label: '>= 100 MB' },
                 { bytes: 1024 * 1024 * 1024, label: '>= 1 GB' },
             ];
         },
@@ -712,15 +767,25 @@ export default {
             return currentPage < totalPages;
         },
         filteredUnacknowledgedDuplicates() {
-            const filtered = this.unacknowledgedDuplicates.filter(duplicate => {
-                return this.filterDuplicate(duplicate);
+            const byMinSize = this.selectedMinSizePreset === 'custom'
+                ? this.unacknowledgedDuplicates
+                : filterDuplicatesByMinSize(this.unacknowledgedDuplicates, this.selectedMinSizePreset);
+            const filtered = byMinSize.filter(duplicate => {
+                return this.filterDuplicate(duplicate, {
+                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
+                });
             });
             const byFolder = filterDuplicatesByFolderPrefix(filtered, this.folderQuery);
             return this.sortDuplicates(byFolder);
         },
         filteredAcknowledgedDuplicates() {
-            const filtered = this.acknowledgedDuplicates.filter(duplicate => {
-                return this.filterDuplicate(duplicate);
+            const byMinSize = this.selectedMinSizePreset === 'custom'
+                ? this.acknowledgedDuplicates
+                : filterDuplicatesByMinSize(this.acknowledgedDuplicates, this.selectedMinSizePreset);
+            const filtered = byMinSize.filter(duplicate => {
+                return this.filterDuplicate(duplicate, {
+                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
+                });
             });
             const byFolder = filterDuplicatesByFolderPrefix(filtered, this.folderQuery);
             return this.sortDuplicates(byFolder);
@@ -741,8 +806,15 @@ export default {
             const acknowledged = Array.isArray(this.acknowledgedDuplicates)
                 ? this.acknowledgedDuplicates
                 : [];
-            const combined = [...unacknowledged, ...acknowledged].filter(duplicate => {
-                return this.filterDuplicate(duplicate, { ignoreExtension: true });
+            const combinedRaw = [...unacknowledged, ...acknowledged];
+            const byMinSize = this.selectedMinSizePreset === 'custom'
+                ? combinedRaw
+                : filterDuplicatesByMinSize(combinedRaw, this.selectedMinSizePreset);
+            const combined = byMinSize.filter(duplicate => {
+                return this.filterDuplicate(duplicate, {
+                    ignoreExtension: true,
+                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
+                });
             });
             return filterDuplicatesByFolderPrefix(combined, this.folderQuery);
         },
@@ -919,6 +991,11 @@ export default {
                 minSize: this.minSizeBytes,
             });
         },
+        setMinSizePreset(preset) {
+            if (typeof preset === 'string' && Object.prototype.hasOwnProperty.call(MIN_SIZE_PRESETS, preset)) {
+                this.setMinSizeBytes(MIN_SIZE_PRESETS[preset]);
+            }
+        },
         setMinSizeBytes(bytes) {
             const normalized = Number(bytes) > 0 ? Math.floor(Number(bytes)) : 0;
             if (this.minSizeBytes === normalized) {
@@ -995,7 +1072,7 @@ export default {
             this.selectedExtension = this.selectedExtension === ext ? '' : ext;
         },
         filterDuplicate(duplicate, options = {}) {
-            if (this.minSizeBytes > 0) {
+            if (!options.ignoreMinSize && this.minSizeBytes > 0) {
                 const hasLargeEnoughCopy = Array.isArray(duplicate.files)
                     && duplicate.files.some(file => Number(file.size) >= this.minSizeBytes);
                 if (!hasLargeEnoughCopy) {
@@ -1859,6 +1936,53 @@ export default {
 }
 
 .folder-filter-input:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
+}
+
+.min-size-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.min-size-filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-maxcontrast);
+    line-height: 1.3;
+    margin-block: 0;
+    margin-inline: 0;
+}
+
+.min-size-filter-select {
+    flex: 1 1 140px;
+    max-inline-size: 100%;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 6px;
+    padding-inline: 10px;
+    margin-block: 0;
+    margin-inline: 0;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 6px;
+    background-color: var(--color-main-background);
+    color: var(--color-main-text);
+    font-size: 0.85rem;
+    line-height: 1.3;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.min-size-filter-select:hover {
+    border-color: var(--color-primary-element, #0082c9);
+}
+
+.min-size-filter-select:focus-visible {
     outline: 2px solid var(--color-primary-element, #0082c9);
     outline-offset: 2px;
 }
