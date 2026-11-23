@@ -14,6 +14,30 @@
             </span>
           </div>
 
+          <div
+            class="group-header-summary"
+            role="region"
+            :aria-label="t('duplicatefinder', 'Group summary')">
+            <span class="group-header-summary__item group-header-summary__item--copies">
+              {{ t('duplicatefinder', '{totalCopies} copies ({redundantCopies} redundant)', {
+                totalCopies: groupHeaderSummary.totalCopies,
+                redundantCopies: groupHeaderSummary.redundantCopies
+              }) }}
+            </span>
+            <span class="group-header-summary__item group-header-summary__item--reclaimable">
+              {{ t('duplicatefinder', '{reclaimableFormatted} reclaimable', {
+                reclaimableFormatted: groupHeaderSummary.reclaimableFormatted
+              }) }}
+            </span>
+            <span
+              v-if="groupHeaderSummary.protectedCount > 0"
+              class="group-header-summary__item group-header-summary__item--protected">
+              {{ t('duplicatefinder', '{protectedCount} protected', {
+                protectedCount: groupHeaderSummary.protectedCount
+              }) }}
+            </span>
+          </div>
+
           <div class="summary-section">
             <div class="summary-info">
               <p class="summary-text">{{ t('duplicatefinder',
@@ -311,6 +335,7 @@ import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromLis
 import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport';
 import { annotateDuplicateMetadataBadges } from '@/tools/duplicateMetadataBadges';
 import { evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
+import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -393,6 +418,12 @@ export default {
         return [];
       }
       return annotateDuplicateMetadataBadges(this.duplicate.files);
+    },
+    groupHeaderSummary() {
+      const files = this.duplicate && Array.isArray(this.duplicate.files)
+        ? this.duplicate.files
+        : [];
+      return computeGroupHeaderSummary(files);
     },
     deletionSafetyPlan() {
       const files = this.duplicate && Array.isArray(this.duplicate.files)
@@ -737,6 +768,54 @@ export default {
   background-color: var(--color-background-dark);
   color: var(--color-text-maxcontrast);
   border: 1px solid var(--color-border-dark, var(--color-border));
+}
+
+.group-header-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  margin-block-start: 0;
+  margin-block-end: 14px;
+  padding-block: 8px;
+  padding-inline: 12px;
+  border-radius: var(--border-radius-large, 8px);
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  background-color: var(--color-main-background);
+  box-sizing: border-box;
+}
+
+.group-header-summary__item {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 26px;
+  max-inline-size: 100%;
+  padding-block: 3px;
+  padding-inline: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-dark, var(--color-border));
+  background-color: var(--color-background-hover);
+  color: var(--color-main-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+
+.group-header-summary__item--reclaimable {
+  background-color: rgba(46, 125, 50, 0.14);
+  border-color: rgba(46, 125, 50, 0.48);
+  color: var(--color-main-text);
+}
+
+.group-header-summary__item--protected {
+  background-color: var(--color-primary-element-light, #e5eff5);
+  border-color: var(--color-primary-element, #00679e);
+  color: var(--color-primary-element-light-text, var(--color-main-text, #222222));
 }
 
 .summary-section {

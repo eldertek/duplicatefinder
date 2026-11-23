@@ -41,6 +41,7 @@ function createDetailsComponent() {
 		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 		'@/tools/duplicateMetadataBadges': metadataBadges,
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
+		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
