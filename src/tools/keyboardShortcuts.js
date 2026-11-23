@@ -34,6 +34,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'keep-shortest-path',
 	},
 	{
+		id: 'select-duplicate-copies',
+		keys: ['a'],
+		action: 'select-duplicate-copies',
+	},
+	{
 		id: 'clear-selection',
 		keys: ['c'],
 		action: 'clear-selection',
@@ -89,6 +94,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	o: 'keep-oldest',
 	n: 'keep-newest',
 	s: 'keep-shortest-path',
+	a: 'select-duplicate-copies',
 	c: 'clear-selection',
 	y: 'copy-group-hash',
 	e: 'export-csv-report',

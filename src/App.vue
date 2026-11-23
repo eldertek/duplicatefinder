@@ -859,6 +859,7 @@ export default {
 				'keep-oldest': t('duplicatefinder', 'Keep oldest copy in active group'),
 				'keep-newest': t('duplicatefinder', 'Keep newest copy in active group'),
 				'keep-shortest-path': t('duplicatefinder', 'Keep shortest path copy in active group'),
+				'select-duplicate-copies': t('duplicatefinder', 'Select safe duplicate copies (keep oldest)'),
 				'clear-selection': t('duplicatefinder', 'Clear current selection'),
 				'copy-group-hash': t('duplicatefinder', 'Copy active group hash'),
 				'export-csv-report': t('duplicatefinder', 'Export current duplicate report (CSV)'),
@@ -1198,6 +1199,23 @@ export default {
 					event.preventDefault()
 				}
 				detailsComponent.applyKeepRule(keepRule)
+				return
+			}
+
+			if (action === 'select-duplicate-copies') {
+				const detailsComponent = this.getActiveDuplicateDetailsComponent()
+				if (
+					!detailsComponent
+					|| typeof detailsComponent.selectAllFiles !== 'function'
+					|| !detailsComponent.duplicate
+					|| !Array.isArray(detailsComponent.duplicate.files)
+					|| detailsComponent.duplicate.files.length <= 1
+				) {
+					return
+				}
+				if (detailsComponent.selectAllFiles() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
 				return
 			}
 

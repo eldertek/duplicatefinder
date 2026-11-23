@@ -2718,3 +2718,418 @@ describe('Cycle 102: keyboard shortcut x (export-json-report)', () => {
 		}
 	})
 })
+
+describe('Cycle 105: keyboard shortcut a (select-duplicate-copies)', () => {
+	test('resolveShortcutAction maps a to select-duplicate-copies, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const selectCopiesDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'select-duplicate-copies')
+		assert.deepEqual(selectCopiesDef, {
+			id: 'select-duplicate-copies',
+			keys: ['a'],
+			action: 'select-duplicate-copies',
+		})
+
+		assert.equal(resolveShortcutAction({ key: 'a' }), 'select-duplicate-copies')
+
+		// Browser Select All and modifiers must never be hijacked (Ctrl+a / Cmd+a / Alt+a / Shift+A)
+		assert.equal(resolveShortcutAction({ key: 'a', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'a', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'a', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'A', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: 'a' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'a' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: 'a', target }), null)
+		}
+	})
+
+	test('App.vue -> DuplicateDetails.vue toggles safe duplicate copy selection on a, sets aria-keyshortcuts="a", updates help <dialog>, and ignores editable fields or open <dialog>', async () => {
+		window.localStorage.clear()
+		const mixedGroup = {
+			id: 701,
+			hash: 'hash-701',
+			acknowledged: false,
+			files: [
+				{
+					id: 7011,
+					nodeId: 7011,
+					path: '/alice/files/Origin/photo.jpg',
+					size: 2048,
+					mtime: 3000,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: true,
+				},
+				{
+					id: 7012,
+					nodeId: 7012,
+					path: '/alice/files/Archive/photo.jpg',
+					size: 2048,
+					mtime: 1000,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: false,
+				},
+				{
+					id: 7013,
+					nodeId: 7013,
+					path: '/alice/files/Inbox/photo.jpg',
+					size: 2048,
+					mtime: 2000,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: false,
+				},
+			],
+		}
+		const regularGroup = {
+			id: 702,
+			hash: 'hash-702',
+			acknowledged: false,
+			files: [
+				{
+					id: 7021,
+					nodeId: 7021,
+					path: '/alice/files/First/doc.pdf',
+					size: 4096,
+					mtime: 3000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+				{
+					id: 7022,
+					nodeId: 7022,
+					path: '/alice/files/Second/doc.pdf',
+					size: 4096,
+					mtime: 1000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+				{
+					id: 7023,
+					nodeId: 7023,
+					path: '/alice/files/Third/doc.pdf',
+					size: 4096,
+					mtime: 2000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [mixedGroup, regularGroup],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalSelect = document.createElement('select')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalSelect)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(navVm, 'DuplicateNavigation ref is mounted')
+			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
+
+			const selectAllBtn = detailsVm.$el.querySelector('button.select-all-button')
+			assert.ok(selectAllBtn, 'Select All button is rendered')
+			assert.equal(selectAllBtn.getAttribute('aria-keyshortcuts'), 'a')
+			assert.equal(
+				detailsVm.$el.querySelector('button.group-header-summary__copy-hash-button').getAttribute('aria-keyshortcuts'),
+				'y',
+			)
+
+			// 1. Typing a inside editable fields must NOT select anything
+			const searchInput = navVm.$el.querySelector('input.search-input')
+			const folderInput = navVm.$el.querySelector('input.folder-filter-input')
+			assert.ok(searchInput)
+			assert.ok(folderInput)
+			for (const field of [searchInput, folderInput, externalTextarea, externalSelect, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles, [])
+
+			// 2. Modifiers (Ctrl+a / Cmd+a / Alt+a / Shift+A) must NOT trigger or preventDefault
+			for (const init of [
+				{ key: 'a', ctrlKey: true },
+				{ key: 'a', metaKey: true },
+				{ key: 'a', altKey: true },
+				{ key: 'A', shiftKey: true },
+			]) {
+				const modEvent = new window.KeyboardEvent('keydown', { ...init, bubbles: true, cancelable: true })
+				window.dispatchEvent(modEvent)
+				assert.equal(modEvent.defaultPrevented, false)
+			}
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles, [])
+
+			// 3. ? help <dialog> documents a ("Select safe duplicate copies (keep oldest)") and blocks a while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('a'), 'help dialog documents a shortcut')
+			assert.ok(helpDialog.textContent.includes('Select safe duplicate copies (keep oldest)'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles, [])
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 4. Pressing a selects all non-protected copies (skips Origin id=7011, selects 7012 & 7013, strictly < files.length)
+			const aSelectEvent = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(aSelectEvent)
+			await settle()
+			assert.equal(aSelectEvent.defaultPrevented, true)
+			assert.ok(detailsVm.selectedFiles.length < mixedGroup.files.length)
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [7012, 7013])
+
+			// 5. Delete confirmation <dialog> and external <dialog open> block a while selection is active
+			detailsVm.$el.querySelector('button.delete-selected-button').click()
+			await settle()
+			assert.equal(detailsVm.showDeleteConfirmDialog, true)
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [7012, 7013])
+			detailsVm.resolveDeleteConfirm(false)
+			await settle()
+
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [7012, 7013])
+			externalDialog.removeAttribute('open')
+
+			// 6. Pressing a again toggles safe selection off
+			const aToggleOffEvent = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(aToggleOffEvent)
+			await settle()
+			assert.equal(aToggleOffEvent.defaultPrevented, true)
+			assert.deepEqual(detailsVm.selectedFiles, [])
+
+			// 7. Navigate to regular group without origin-protected files: a keeps 1 master and selects remaining copies
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'j', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(vm.currentDuplicate.id, 702)
+
+			const aRegularEvent = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(aRegularEvent)
+			await settle()
+			assert.equal(aRegularEvent.defaultPrevented, true)
+			assert.equal(detailsVm.selectedFiles.length, 2)
+			assert.ok(detailsVm.selectedFiles.length < regularGroup.files.length)
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [7022, 7023])
+
+			// Pressing a again toggles off
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles, [])
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalSelect.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+		}
+	})
+
+	test('a shortcut enforces safety guards on empty, single-file, protected-only, bulk-delete, and works in project-duplicate view', async () => {
+		window.localStorage.clear()
+
+		// Empty duplicate lists -> safe no-op without preventDefault
+		const { App: EmptyApp } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [],
+			useRealDetails: true,
+		})
+		const emptyMount = document.createElement('div')
+		document.body.appendChild(emptyMount)
+		const emptyVm = new Vue(EmptyApp).$mount(emptyMount)
+		try {
+			await settle()
+			const emptyA = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(emptyA)
+			await settle()
+			assert.equal(emptyA.defaultPrevented, false)
+		} finally {
+			emptyVm.$destroy()
+			emptyMount.remove()
+		}
+
+		const protectedOnlyGroup = {
+			id: 711,
+			hash: 'hash-711',
+			acknowledged: false,
+			files: [
+				{
+					id: 7111,
+					nodeId: 7111,
+					path: '/alice/files/OriginA/doc.pdf',
+					size: 1024,
+					mtime: 1000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: true,
+				},
+				{
+					id: 7112,
+					nodeId: 7112,
+					path: '/alice/files/OriginB/doc.pdf',
+					size: 1024,
+					mtime: 2000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: true,
+				},
+			],
+		}
+		const singleFileGroup = {
+			id: 712,
+			hash: 'hash-712',
+			acknowledged: false,
+			files: [
+				{
+					id: 7121,
+					nodeId: 7121,
+					path: '/alice/files/Solo/doc.pdf',
+					size: 1024,
+					mtime: 1000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+			],
+		}
+		const projectGroup = {
+			id: 713,
+			hash: 'hash-713',
+			acknowledged: false,
+			files: [
+				{
+					id: 7131,
+					nodeId: 7131,
+					path: '/alice/files/Alpha/report.pdf',
+					size: 4096,
+					mtime: 1000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+				{
+					id: 7132,
+					nodeId: 7132,
+					path: '/alice/files/Beta/report.pdf',
+					size: 4096,
+					mtime: 2000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [protectedOnlyGroup, singleFileGroup],
+			useRealDetails: true,
+		})
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(detailsVm)
+
+			// Protected-only group: button disabled, a is a safe no-op
+			const selectAllBtn = detailsVm.$el.querySelector('button.select-all-button')
+			assert.equal(selectAllBtn.disabled, true)
+			const protectedA = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(protectedA)
+			await settle()
+			assert.equal(protectedA.defaultPrevented, false)
+			assert.deepEqual(detailsVm.selectedFiles, [])
+
+			// Single-file group (files.length <= 1): a is a safe no-op
+			vm.openDuplicate(singleFileGroup)
+			await settle()
+			const singleA = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(singleA)
+			await settle()
+			assert.equal(singleA.defaultPrevented, false)
+			assert.deepEqual(detailsVm.selectedFiles, [])
+
+			// Bulk-delete view -> ignored
+			vm.openBulkDelete()
+			await settle()
+			const bulkA = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkA)
+			await settle()
+			assert.equal(bulkA.defaultPrevented, false)
+			assert.equal(vm.activeView, 'bulk-delete')
+
+			// Project-duplicate view -> a selects safe copies and toggles off
+			vm.viewProjectDuplicate(projectGroup)
+			await settle()
+			const projectDetailsVm = vm.$refs.projectDuplicateDetails
+			assert.ok(projectDetailsVm, 'projectDuplicateDetails ref is mounted')
+
+			const projectA1 = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(projectA1)
+			await settle()
+			assert.equal(projectA1.defaultPrevented, true)
+			assert.ok(projectDetailsVm.selectedFiles.length < projectGroup.files.length)
+			assert.deepEqual(projectDetailsVm.selectedFiles.map(file => file.id), [7132])
+
+			const projectA2 = new window.KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+			window.dispatchEvent(projectA2)
+			await settle()
+			assert.equal(projectA2.defaultPrevented, true)
+			assert.deepEqual(projectDetailsVm.selectedFiles, [])
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('Cycle 105 touched files preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of [
+			'src/tools/keyboardShortcuts.js',
+			'src/App.vue',
+			'src/components/DuplicateDetails.vue',
+		]) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})

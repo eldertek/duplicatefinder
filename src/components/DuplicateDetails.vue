@@ -109,6 +109,8 @@
               <button
                 type="button"
                 class="toolbar-button select-all-button"
+                :disabled="defaultSelectAllTargetFiles.length === 0"
+                aria-keyshortcuts="a"
                 @click="selectAllFiles">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="9 11 12 14 22 4"></polyline>
@@ -690,12 +692,24 @@ export default {
       return true;
     },
     selectAllFiles() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+        return false;
+      }
+      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+        return false;
+      }
+      if (this.defaultSelectAllTargetFiles.length === 0) {
+        this.selectedFiles = [];
+        this.activeKeepRule = null;
+        return false;
+      }
       this.activeKeepRule = null;
       if (this.isAllFilesSelected) {
         this.selectedFiles = [];
       } else {
         this.selectedFiles = [...this.defaultSelectAllTargetFiles];
       }
+      return true;
     },
     clearSelection(options = {}) {
       if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
