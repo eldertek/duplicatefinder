@@ -1,3 +1,7 @@
+## 1.10.37 - 2026-11-23
+### Added
+- **1-click `Copy hash` button and short hash formatting in group header** (`src/tools/duplicateHashHelper.js`, `src/components/DuplicateDetails.vue`). Added the pure `formatShortHash` helper (12-char lowercase hex prefix) and a 44x44px-compliant `Copy hash` action in the group header summary banner using `copyTextSafely`, complete with `aria-live="polite"` feedback (`Copied` / `Copy failed`).
+
 ## 1.10.36 - 2026-11-23
 ### Added
 - **Reset all active filters keyboard shortcut (`r`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `r` (`reset-filters`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `resetNavigationFilters()` / `resetActiveFilters()` to clear all active filters and sorting when `hasActiveFilters` is true (suppressed inside editable controls and open modal dialogs), and annotated the reset filter buttons with `aria-keyshortcuts="r"`.
