@@ -112,6 +112,7 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 		'./components/RuleProfilesWorkbench.vue': { __esModule: true, default: stub('rule-profiles') },
 		'./components/DocumentLineageWorkbench.vue': { __esModule: true, default: stub('document-lineage') },
 		'./components/PhotoPerceptualWorkbench.vue': { __esModule: true, default: stub('photo-perceptual') },
+		'./components/BrokenMediaQuarantineWorkbench.vue': { __esModule: true, default: stub('broken-quarantine') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

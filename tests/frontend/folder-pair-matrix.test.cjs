@@ -358,6 +358,7 @@ describe('Cycle 125: Directory Folder Pair Overlap Matrix & Side-by-Side Folder 
 			'./components/RuleProfilesWorkbench.vue': { __esModule: true, default: stub('rule-profiles') },
 			'./components/DocumentLineageWorkbench.vue': { __esModule: true, default: stub('document-lineage') },
 			'./components/PhotoPerceptualWorkbench.vue': { __esModule: true, default: stub('photo-perceptual') },
+			'./components/BrokenMediaQuarantineWorkbench.vue': { __esModule: true, default: stub('broken-quarantine') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

@@ -154,6 +154,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-photo-perceptual',
 	},
 	{
+		id: 'toggle-broken-quarantine',
+		keys: ['8'],
+		action: 'toggle-broken-quarantine',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -223,6 +228,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	5: 'toggle-rule-profiles',
 	6: 'toggle-document-lineage',
 	7: 'toggle-photo-perceptual',
+	8: 'toggle-broken-quarantine',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
