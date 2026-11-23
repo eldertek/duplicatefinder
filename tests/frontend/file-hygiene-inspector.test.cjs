@@ -375,6 +375,7 @@ describe('Cycle 123: File Hygiene, Bad-Extension & Sync-Artifact Inspector', () 
 			'./components/BrokenMediaQuarantineWorkbench.vue': { __esModule: true, default: stub('broken-quarantine') },
 './components/RetentionAgeWorkbench.vue': { __esModule: true, default: stub('retention-pruner') },
 			'./components/FilenameCollisionWorkbench.vue': { __esModule: true, default: stub('filename-collisions') },
+			'./components/QuotaAttributionWorkbench.vue': { __esModule: true, default: stub('quota-attribution') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

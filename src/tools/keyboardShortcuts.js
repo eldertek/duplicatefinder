@@ -169,6 +169,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-filename-collisions',
 	},
 	{
+		id: 'toggle-quota-attribution',
+		keys: ['-'],
+		action: 'toggle-quota-attribution',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -241,6 +246,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	8: 'toggle-broken-quarantine',
 	9: 'toggle-retention-pruner',
 	'=': 'toggle-filename-collisions',
+	'-': 'toggle-quota-attribution',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
