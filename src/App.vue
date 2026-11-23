@@ -276,6 +276,32 @@
 							<span>{{ t('duplicatefinder', 'Hygiene') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-link-simulator-button"
+							:class="{ 'is-active': linkSimulatorOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="linkSimulatorOpen ? 'true' : 'false'"
+							aria-keyshortcuts="l"
+							:title="t('duplicatefinder', 'Toggle hardlink and reference deduplication simulator')"
+							@click="toggleLinkSimulator">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+								<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Link Plan') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -398,6 +424,15 @@
 						@start-scan="triggerScan"
 						@hygiene-delete-completed="onHygieneDeleteCompleted"
 						@close="hygieneOpen = false" />
+					<LinkDeduplicationSimulator
+						v-if="linkSimulatorOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onLinkSimulatorSelectDuplicate"
+						@compare-duplicate="onLinkSimulatorCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="linkSimulatorOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -836,6 +871,7 @@ import SpaceReclamationTimeline from './components/SpaceReclamationTimeline.vue'
 import SimilarityInspector from './components/SimilarityInspector.vue';
 import BatchAutoSelectWorkbench from './components/BatchAutoSelectWorkbench.vue';
 import FileHygieneInspector from './components/FileHygieneInspector.vue';
+import LinkDeduplicationSimulator from './components/LinkDeduplicationSimulator.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -903,6 +939,7 @@ export default {
 		SimilarityInspector,
 		BatchAutoSelectWorkbench,
 		FileHygieneInspector,
+		LinkDeduplicationSimulator,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -937,6 +974,7 @@ export default {
 			similarityOpen: false,
 			batchAutoSelectOpen: false,
 			hygieneOpen: false,
+			linkSimulatorOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1114,6 +1152,7 @@ export default {
 				'toggle-similarity-inspector': t('duplicatefinder', 'Toggle similarity threshold and fuzzy match inspector'),
 				'toggle-batch-auto-select': t('duplicatefinder', 'Toggle cross-group batch auto-select rules'),
 				'toggle-file-hygiene': t('duplicatefinder', 'Toggle file hygiene and bad-extension inspector'),
+				'toggle-link-simulator': t('duplicatefinder', 'Toggle hardlink and reference deduplication simulator'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1382,6 +1421,22 @@ export default {
 		},
 		onHygieneDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
+		},
+		toggleLinkSimulator() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.linkSimulatorOpen = !this.linkSimulatorOpen
+			return true
+		},
+		onLinkSimulatorSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onLinkSimulatorCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
 		},
 		onBatchDeleteCompleted({
 			deletedFiles = [],
@@ -1761,6 +1816,13 @@ export default {
 
 			if (action === 'toggle-file-hygiene') {
 				if (this.toggleFileHygiene() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-link-simulator') {
+				if (this.toggleLinkSimulator() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -2670,7 +2732,8 @@ export default {
 .app-content-topbar .topbar-history-button,
 .app-content-topbar .topbar-similarity-button,
 .app-content-topbar .topbar-batch-rules-button,
-.app-content-topbar .topbar-hygiene-button {
+.app-content-topbar .topbar-hygiene-button,
+.app-content-topbar .topbar-link-simulator-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -2696,7 +2759,8 @@ export default {
 .app-content-topbar .topbar-history-button svg,
 .app-content-topbar .topbar-similarity-button svg,
 .app-content-topbar .topbar-batch-rules-button svg,
-.app-content-topbar .topbar-hygiene-button svg {
+.app-content-topbar .topbar-hygiene-button svg,
+.app-content-topbar .topbar-link-simulator-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -2714,7 +2778,9 @@ export default {
 .app-content-topbar .topbar-batch-rules-button:hover:not(:disabled),
 .app-content-topbar .topbar-batch-rules-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-hygiene-button:hover:not(:disabled),
-.app-content-topbar .topbar-hygiene-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-hygiene-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-link-simulator-button:hover:not(:disabled),
+.app-content-topbar .topbar-link-simulator-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -2723,7 +2789,8 @@ export default {
 .app-content-topbar .topbar-history-button.is-active,
 .app-content-topbar .topbar-similarity-button.is-active,
 .app-content-topbar .topbar-batch-rules-button.is-active,
-.app-content-topbar .topbar-hygiene-button.is-active {
+.app-content-topbar .topbar-hygiene-button.is-active,
+.app-content-topbar .topbar-link-simulator-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -2732,7 +2799,8 @@ export default {
 .app-content-topbar .topbar-treemap-button:disabled,
 .app-content-topbar .topbar-similarity-button:disabled,
 .app-content-topbar .topbar-batch-rules-button:disabled,
-.app-content-topbar .topbar-hygiene-button:disabled {
+.app-content-topbar .topbar-hygiene-button:disabled,
+.app-content-topbar .topbar-link-simulator-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -2867,6 +2935,7 @@ export default {
 .app-content-topbar .topbar-similarity-button > *,
 .app-content-topbar .topbar-batch-rules-button > *,
 .app-content-topbar .topbar-hygiene-button > *,
+.app-content-topbar .topbar-link-simulator-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -2957,6 +3026,7 @@ export default {
 	.app-content-topbar .topbar-similarity-button,
 	.app-content-topbar .topbar-batch-rules-button,
 	.app-content-topbar .topbar-hygiene-button,
+	.app-content-topbar .topbar-link-simulator-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

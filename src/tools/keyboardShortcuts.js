@@ -94,6 +94,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-file-hygiene',
 	},
 	{
+		id: 'toggle-link-simulator',
+		keys: ['l'],
+		action: 'toggle-link-simulator',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -151,6 +156,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	f: 'toggle-similarity-inspector',
 	w: 'toggle-batch-auto-select',
 	i: 'toggle-file-hygiene',
+	l: 'toggle-link-simulator',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
