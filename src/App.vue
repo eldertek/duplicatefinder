@@ -356,6 +356,43 @@
 							<span>{{ t('duplicatefinder', 'Footprint') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-photo-bursts-button"
+							:class="{ 'is-active': photoBurstsOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="photoBurstsOpen ? 'true' : 'false'"
+							aria-keyshortcuts="p"
+							:title="t('duplicatefinder', 'Toggle photo and media timeline bursts')"
+							@click="togglePhotoBursts">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="3"
+									y="4"
+									width="14"
+									height="14"
+									rx="2"
+									ry="2" />
+								<path d="M17 8h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-2" />
+								<circle
+									cx="8.5"
+									cy="9.5"
+									r="1.5" />
+								<polyline points="17 14 13 10 6 17" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Photo Bursts') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -509,6 +546,16 @@
 						@sync-extension-filter="onFootprintSyncExtensionFilter"
 						@start-scan="triggerScan"
 						@close="footprintAnalyzerOpen = false" />
+					<PhotoBurstTimeline
+						v-if="photoBurstsOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onPhotoBurstsSelectDuplicate"
+						@compare-duplicate="onPhotoBurstsCompareDuplicate"
+						@burst-delete-completed="onPhotoBurstsDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="photoBurstsOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -948,8 +995,9 @@ import SimilarityInspector from './components/SimilarityInspector.vue';
 import BatchAutoSelectWorkbench from './components/BatchAutoSelectWorkbench.vue';
 import FileHygieneInspector from './components/FileHygieneInspector.vue';
 import LinkDeduplicationSimulator from './components/LinkDeduplicationSimulator.vue';
-import FolderPairMatrix from './components/FolderPairMatrix.vue';
-import StorageFootprintAnalyzer from './components/StorageFootprintAnalyzer.vue';
+import FolderPairMatrix from './components/FolderPairMatrix.vue'
+import StorageFootprintAnalyzer from './components/StorageFootprintAnalyzer.vue'
+import PhotoBurstTimeline from './components/PhotoBurstTimeline.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1020,6 +1068,7 @@ export default {
 		LinkDeduplicationSimulator,
 		FolderPairMatrix,
 		StorageFootprintAnalyzer,
+		PhotoBurstTimeline,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1057,6 +1106,7 @@ export default {
 			linkSimulatorOpen: false,
 			folderMatrixOpen: false,
 			footprintAnalyzerOpen: false,
+			photoBurstsOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1238,6 +1288,7 @@ export default {
 				'toggle-link-simulator': t('duplicatefinder', 'Toggle hardlink and reference deduplication simulator'),
 				'toggle-folder-matrix': t('duplicatefinder', 'Toggle directory folder pair matrix'),
 				'toggle-storage-footprint': t('duplicatefinder', 'Toggle storage footprint and extension analyzer'),
+				'toggle-photo-bursts': t('duplicatefinder', 'Toggle photo and media timeline bursts'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1573,6 +1624,25 @@ export default {
 		},
 		onExtensionFilterChanged(ext) {
 			this.footprintSyncedExtension = typeof ext === 'string' ? ext.trim() : ''
+		},
+		togglePhotoBursts() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.photoBurstsOpen = !this.photoBurstsOpen
+			return true
+		},
+		onPhotoBurstsSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onPhotoBurstsCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onPhotoBurstsDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
 		},
 		onBatchDeleteCompleted({
 			deletedFiles = [],
@@ -1973,6 +2043,13 @@ export default {
 
 			if (action === 'toggle-storage-footprint') {
 				if (this.toggleFootprintAnalyzer() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-photo-bursts') {
+				if (this.togglePhotoBursts() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -2885,7 +2962,8 @@ export default {
 .app-content-topbar .topbar-hygiene-button,
 .app-content-topbar .topbar-link-simulator-button,
 .app-content-topbar .topbar-folder-matrix-button,
-.app-content-topbar .topbar-footprint-button {
+.app-content-topbar .topbar-footprint-button,
+.app-content-topbar .topbar-photo-bursts-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -2914,7 +2992,8 @@ export default {
 .app-content-topbar .topbar-hygiene-button svg,
 .app-content-topbar .topbar-link-simulator-button svg,
 .app-content-topbar .topbar-folder-matrix-button svg,
-.app-content-topbar .topbar-footprint-button svg {
+.app-content-topbar .topbar-footprint-button svg,
+.app-content-topbar .topbar-photo-bursts-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -2938,7 +3017,9 @@ export default {
 .app-content-topbar .topbar-folder-matrix-button:hover:not(:disabled),
 .app-content-topbar .topbar-folder-matrix-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-footprint-button:hover:not(:disabled),
-.app-content-topbar .topbar-footprint-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-footprint-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-photo-bursts-button:hover:not(:disabled),
+.app-content-topbar .topbar-photo-bursts-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -2950,7 +3031,8 @@ export default {
 .app-content-topbar .topbar-hygiene-button.is-active,
 .app-content-topbar .topbar-link-simulator-button.is-active,
 .app-content-topbar .topbar-folder-matrix-button.is-active,
-.app-content-topbar .topbar-footprint-button.is-active {
+.app-content-topbar .topbar-footprint-button.is-active,
+.app-content-topbar .topbar-photo-bursts-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -2962,7 +3044,8 @@ export default {
 .app-content-topbar .topbar-hygiene-button:disabled,
 .app-content-topbar .topbar-link-simulator-button:disabled,
 .app-content-topbar .topbar-folder-matrix-button:disabled,
-.app-content-topbar .topbar-footprint-button:disabled {
+.app-content-topbar .topbar-footprint-button:disabled,
+.app-content-topbar .topbar-photo-bursts-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -3100,6 +3183,7 @@ export default {
 .app-content-topbar .topbar-link-simulator-button > *,
 .app-content-topbar .topbar-folder-matrix-button > *,
 .app-content-topbar .topbar-footprint-button > *,
+.app-content-topbar .topbar-photo-bursts-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3193,6 +3277,7 @@ export default {
 	.app-content-topbar .topbar-link-simulator-button,
 	.app-content-topbar .topbar-folder-matrix-button,
 	.app-content-topbar .topbar-footprint-button,
+	.app-content-topbar .topbar-photo-bursts-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

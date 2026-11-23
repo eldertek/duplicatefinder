@@ -164,6 +164,7 @@ function createAppHarness(apiOverrides = {}) {
 		'./components/LinkDeduplicationSimulator.vue': { __esModule: true, default: stub('link-simulator') },
 		'./components/FolderPairMatrix.vue': { __esModule: true, default: stub('folder-matrix') },
 		'./components/StorageFootprintAnalyzer.vue': { __esModule: true, default: stub('storage-footprint') },
+		'./components/PhotoBurstTimeline.vue': { __esModule: true, default: stub('photo-bursts') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },
