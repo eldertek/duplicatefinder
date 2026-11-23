@@ -1,3 +1,7 @@
+## 1.10.40 - 2026-11-23
+### Added
+- **Jump to largest reclaimable group keyboard shortcut (`g`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `g` (`jump-to-largest-group`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` (`jumpToLargestDuplicateGroup()`) and `DuplicateNavigation.vue` (`jumpToLargestGroup()`) to select and scroll to `largestDuplicateGroup` when `g` is pressed outside editable controls and open modal dialogs, and annotated `.largest-group-jump-button` with `aria-keyshortcuts="g"`.
+
 ## 1.10.39 - 2026-11-23
 ### Added
 - **Reset all active filters keyboard shortcut (`0`) and polite `aria-live` filtered group announcement** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `0` (`reset-all-filters`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` to invoke `resetNavigationFilters()` when `0` is pressed outside editable controls and open modal dialogs, updated filter reset buttons with `aria-keyshortcuts="r 0"`, and added an `.sr-only` `role="status"` `aria-live="polite"` `aria-atomic="true"` region (`filteredGroupsAnnouncement`) in `DuplicateNavigation.vue` announcing filtered duplicate group counts.
