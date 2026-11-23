@@ -129,6 +129,7 @@ function createFullAppWithTimeline({
 		'./components/SpaceReclamationTimeline.vue': { __esModule: true, default: SpaceReclamationTimeline },
 		'./components/SimilarityInspector.vue': { __esModule: true, default: stub('similarity-inspector') },
 		'./components/BatchAutoSelectWorkbench.vue': { __esModule: true, default: stub('batch-auto-select') },
+		'./components/FileHygieneInspector.vue': { __esModule: true, default: stub('file-hygiene') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

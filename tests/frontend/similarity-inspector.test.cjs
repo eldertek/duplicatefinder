@@ -415,6 +415,7 @@ describe('Cycle 121: Interactive Similarity Threshold & Fuzzy Match Mode Inspect
 			'./components/SpaceReclamationTimeline.vue': { __esModule: true, default: stub('timeline') },
 			'./components/SimilarityInspector.vue': { __esModule: true, default: SimilarityInspector },
 			'./components/BatchAutoSelectWorkbench.vue': { __esModule: true, default: stub('batch-auto-select') },
+			'./components/FileHygieneInspector.vue': { __esModule: true, default: stub('file-hygiene') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
