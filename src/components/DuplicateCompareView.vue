@@ -288,6 +288,141 @@
 			</p>
 		</section>
 
+		<div
+			v-if="hasInspectableContent"
+			class="compare-content-bar"
+			role="toolbar"
+			:aria-label="t('duplicatefinder', 'Media and document inspection controls')">
+			<div class="compare-content-bar__status">
+				<span class="compare-content-bar__kind-badge">
+					{{ contentKindLabel }}
+				</span>
+				<span
+					v-if="contentQualityEvaluation.hasQualitySpread"
+					class="compare-content-bar__quality-note"
+					role="status"
+					aria-live="polite">
+					{{ contentQualityHintLabel }}
+				</span>
+				<span
+					v-else-if="contentFetchState === 'unavailable'"
+					class="compare-content-bar__fallback-note"
+					role="status"
+					aria-live="polite">
+					{{ t('duplicatefinder', 'Header inspection unavailable for this source') }}
+				</span>
+			</div>
+
+			<div class="compare-content-bar__tools">
+				<button
+					v-if="hasPlayableMediaPair"
+					type="button"
+					class="compare-toolbar__button compare-sync-media-button"
+					:class="{ 'is-active': syncMediaPlayback }"
+					:aria-pressed="syncMediaPlayback ? 'true' : 'false'"
+					@click="syncMediaPlayback = !syncMediaPlayback">
+					<span>{{ syncMediaPlayback
+						? t('duplicatefinder', 'Sync playback: On')
+						: t('duplicatefinder', 'Sync playback: Off') }}</span>
+				</button>
+				<button
+					v-if="textDiffResult && !textDiffResult.summary.identical"
+					type="button"
+					class="compare-toolbar__button compare-text-diffs-only-button"
+					:class="{ 'is-active': showOnlyTextDiffs }"
+					:aria-pressed="showOnlyTextDiffs ? 'true' : 'false'"
+					@click="showOnlyTextDiffs = !showOnlyTextDiffs">
+					<span>{{ t('duplicatefinder', 'Changed lines only') }}</span>
+				</button>
+				<button
+					type="button"
+					class="compare-toolbar__button compare-content-fetch-button"
+					:disabled="contentFetchState === 'loading' || !bothPanesHaveUrls"
+					@click="loadContentHeadersForCurrentPair">
+					<span>
+						{{ contentFetchState === 'loading'
+							? t('duplicatefinder', 'Inspecting file...')
+							: (contentFetchState === 'ready'
+								? t('duplicatefinder', 'Content inspected')
+								: t('duplicatefinder', 'Inspect media & content')) }}
+					</span>
+				</button>
+			</div>
+		</div>
+
+		<section
+			v-if="textDiffResult"
+			class="compare-text-diff-stage"
+			:aria-label="t('duplicatefinder', 'Side-by-side text content diff')">
+			<header class="compare-text-diff-stage__header">
+				<div class="compare-text-diff-stage__verdict-group">
+					<span
+						class="compare-text-diff-stage__badge"
+						:class="textDiffResult.summary.identical ? 'is-identical' : 'is-different'"
+						role="status"
+						aria-live="polite">
+						{{ textDiffSummaryLabel }}
+					</span>
+					<span
+						v-if="leftContentParsed && leftContentParsed.structuredSummary"
+						class="compare-text-diff-stage__meta-pill">
+						{{ leftContentParsed.structuredSummary }}
+					</span>
+				</div>
+				<div class="compare-text-diff-stage__counts">
+					<span>{{ t('duplicatefinder', '{equal} equal', { equal: textDiffResult.summary.equalLines }) }}</span>
+					<span>{{ t('duplicatefinder', '{changed} changed', { changed: textDiffResult.summary.changedLines }) }}</span>
+					<span>{{ t('duplicatefinder', '+{added} / -{removed}', {
+						added: textDiffResult.summary.addedLines,
+						removed: textDiffResult.summary.removedLines,
+					}) }}</span>
+				</div>
+			</header>
+
+			<div
+				v-if="visibleTextDiffRows.length > 0"
+				class="compare-text-diff-table-wrap">
+				<table class="compare-text-diff-table">
+					<thead>
+						<tr>
+							<th scope="col" class="compare-text-diff-table__num">
+								#
+							</th>
+							<th scope="col">
+								{{ leftPane ? (leftPane.meta.fileName || t('duplicatefinder', 'Left')) : t('duplicatefinder', 'Left') }}
+							</th>
+							<th scope="col" class="compare-text-diff-table__num">
+								#
+							</th>
+							<th scope="col">
+								{{ rightPane ? (rightPane.meta.fileName || t('duplicatefinder', 'Right')) : t('duplicatefinder', 'Right') }}
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="row in visibleTextDiffRows"
+							:key="'tdiff-' + row.rowNumber"
+							:class="'is-' + row.status">
+							<td class="compare-text-diff-table__num">
+								{{ row.leftLineNum || '' }}
+							</td>
+							<!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
+							<td class="compare-text-diff-table__code">{{ row.leftText }}</td>
+							<td class="compare-text-diff-table__num">
+								{{ row.rightLineNum || '' }}
+							</td>
+							<!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
+							<td class="compare-text-diff-table__code">{{ row.rightText }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<p v-else class="compare-text-diff-stage__empty">
+				{{ t('duplicatefinder', 'Both text copies are empty or contain no differing lines.') }}
+			</p>
+		</section>
+
 		<div class="compare-panes-grid">
 			<section
 				v-for="pane in panes"
@@ -330,8 +465,112 @@
 				</header>
 
 				<div class="compare-pane__preview">
+					<video
+						v-if="pane.contentKind === 'video' && pane.streamUrl && !mediaErrors[pane.key]"
+						:ref="'mediaPlayer-' + pane.side"
+						class="compare-pane__media-video"
+						controls
+						preload="metadata"
+						:poster="(!previewErrors[pane.key] && pane.previewUrl) ? pane.previewUrl : null"
+						:src="pane.streamUrl"
+						:aria-label="t('duplicatefinder', 'Video preview for {name}', { name: pane.meta.fileName || pane.meta.normalizedPath })"
+						@play="onMediaSyncEvent(pane.side, 'play')"
+						@pause="onMediaSyncEvent(pane.side, 'pause')"
+						@seeked="onMediaSyncEvent(pane.side, 'seeked')"
+						@loadedmetadata="onMediaElementLoaded(pane.side, pane.file, $event)"
+						@error="markMediaError(pane.key)" />
+					<div
+						v-else-if="pane.contentKind === 'video'"
+						class="compare-pane__doc-card">
+						<div class="compare-pane__doc-header">
+							<span class="compare-pane__doc-badge">{{ pane.contentParsed?.format || t('duplicatefinder', 'Video') }}</span>
+							<span v-if="pane.contentParsed?.durationFormatted" class="compare-pane__doc-stat">
+								{{ pane.contentParsed.durationFormatted }}
+							</span>
+						</div>
+						<p class="compare-pane__doc-hint">
+							{{ t('duplicatefinder', 'Inline video playback unavailable for this codec/source. Inspect video header metadata below.') }}
+						</p>
+					</div>
+					<div
+						v-else-if="pane.contentKind === 'audio'"
+						class="compare-pane__audio-card">
+						<div class="compare-pane__audio-header">
+							<span class="compare-pane__doc-badge">{{ pane.contentParsed?.format || t('duplicatefinder', 'Audio') }}</span>
+							<span v-if="pane.contentParsed?.durationFormatted" class="compare-pane__doc-stat">
+								{{ pane.contentParsed.durationFormatted }}
+							</span>
+							<span v-if="pane.contentParsed?.bitrateKbps" class="compare-pane__doc-stat">
+								{{ pane.contentParsed.bitrateKbps }} kbps
+							</span>
+						</div>
+						<audio
+							v-if="pane.streamUrl && !mediaErrors[pane.key]"
+							:ref="'mediaPlayer-' + pane.side"
+							class="compare-pane__media-audio"
+							controls
+							preload="metadata"
+							:src="pane.streamUrl"
+							:aria-label="t('duplicatefinder', 'Audio preview for {name}', { name: pane.meta.fileName || pane.meta.normalizedPath })"
+							@play="onMediaSyncEvent(pane.side, 'play')"
+							@pause="onMediaSyncEvent(pane.side, 'pause')"
+							@seeked="onMediaSyncEvent(pane.side, 'seeked')"
+							@loadedmetadata="onMediaElementLoaded(pane.side, pane.file, $event)"
+							@error="markMediaError(pane.key)" />
+						<p v-else class="compare-pane__doc-hint">
+							{{ t('duplicatefinder', 'Inline audio playback unavailable for this codec/source. Inspect audio stream metadata below.') }}
+						</p>
+					</div>
+					<div
+						v-else-if="pane.contentKind === 'pdf'"
+						class="compare-pane__doc-card">
+						<div class="compare-pane__doc-header">
+							<span class="compare-pane__doc-badge">
+								{{ pane.contentParsed?.format || 'PDF' }}
+							</span>
+							<span v-if="pane.contentParsed?.pageCount" class="compare-pane__doc-stat">
+								{{ t('duplicatefinder', '{count} pages', { count: pane.contentParsed.pageCount }) }}
+							</span>
+							<span
+								v-if="pane.contentParsed && typeof pane.contentParsed.encrypted === 'boolean'"
+								class="compare-pane__doc-stat">
+								{{ pane.contentParsed.encrypted
+									? t('duplicatefinder', 'Encrypted')
+									: t('duplicatefinder', 'Unencrypted') }}
+							</span>
+						</div>
+						<p v-if="pane.contentParsed?.title" class="compare-pane__doc-meta">
+							{{ pane.contentParsed.title }}
+						</p>
+						<p v-else class="compare-pane__doc-hint">
+							{{ pane.contentParsed
+								? t('duplicatefinder', 'PDF header inspected. Compare document metadata below.')
+								: t('duplicatefinder', 'Click Inspect media & content to parse PDF version, page count, and encryption.') }}
+						</p>
+					</div>
+					<div
+						v-else-if="pane.contentKind === 'text'"
+						class="compare-pane__doc-card">
+						<div class="compare-pane__doc-header">
+							<span class="compare-pane__doc-badge">
+								{{ pane.contentParsed?.format || t('duplicatefinder', 'Text / Code') }}
+							</span>
+							<span v-if="pane.contentParsed" class="compare-pane__doc-stat">
+								{{ t('duplicatefinder', '{lines} lines', { lines: pane.contentParsed.lineCount }) }}
+							</span>
+							<span v-if="pane.contentParsed?.structuredSummary" class="compare-pane__doc-stat">
+								{{ pane.contentParsed.structuredSummary }}
+							</span>
+						</div>
+						<pre
+							v-if="pane.contentParsed && pane.contentParsed.previewLines && pane.contentParsed.previewLines.length > 0"
+							class="compare-pane__text-excerpt">{{ formatTextExcerpt(pane.contentParsed.previewLines) }}</pre>
+						<p v-else class="compare-pane__doc-hint">
+							{{ t('duplicatefinder', 'Click Inspect media & content to view encoding, line count, and side-by-side text diff.') }}
+						</p>
+					</div>
 					<img
-						v-if="!previewErrors[pane.key] && pane.previewUrl"
+						v-else-if="!previewErrors[pane.key] && pane.previewUrl"
 						:ref="'previewImg-' + pane.side"
 						class="compare-pane__image"
 						:src="pane.previewUrl"
@@ -354,6 +593,21 @@
 					<div
 						v-if="hasPaneBadges(pane)"
 						class="compare-pane__badges">
+						<span
+							v-if="pane.contentQuality && pane.contentQuality.isQualityWinner"
+							class="metadata-badge metadata-badge--winner">
+							{{ t('duplicatefinder', 'Higher quality / metadata') }}
+						</span>
+						<span
+							v-if="pane.contentParsed && pane.contentParsed.format"
+							class="metadata-badge metadata-badge--dimensions">
+							{{ pane.contentParsed.format }}
+						</span>
+						<span
+							v-if="pane.contentParsed && pane.contentParsed.durationFormatted"
+							class="metadata-badge metadata-badge--megapixels">
+							{{ pane.contentParsed.durationFormatted }}
+						</span>
 						<span
 							v-if="pane.visual && pane.visual.isResolutionWinner"
 							class="metadata-badge metadata-badge--winner">
@@ -536,6 +790,19 @@ import {
 	resolveVisualFileKey,
 	selectLowerResolutionKeys,
 } from '../tools/visualMediaInspector'
+import {
+	buildContentInspectionDiffRows,
+	classifyInspectableContent,
+	computeTextLineDiff,
+	evaluateMediaContentQuality,
+	formatMediaDuration,
+	inspectTextContent,
+	isContentInspectableFile,
+	isPlayableMediaKind,
+	parseMediaOrDocumentHeader,
+	resolveContentInspectionKind,
+	sanitizeContentUrl,
+} from '../tools/mediaContentInspector'
 
 const INSPECTION_GRID_SIZE = 128
 
@@ -579,8 +846,13 @@ export default {
 			diffTolerance: 12,
 			inspectionState: 'idle',
 			exifFetchState: 'idle',
+			contentFetchState: 'idle',
+			syncMediaPlayback: true,
+			showOnlyTextDiffs: false,
+			isSyncingMediaEvent: false,
 			localDimensionsByKey: {},
 			parsedHeadersByKey: {},
+			contentParsedByKey: {},
 			dhashByKey: {},
 			loadedImagesBySide: {
 				left: null,
@@ -589,6 +861,7 @@ export default {
 			pixelMetrics: null,
 			diffHeatmapUrl: '',
 			previewErrors: {},
+			mediaErrors: {},
 			copyStates: {
 				left: 'idle',
 				right: 'idle',
@@ -627,6 +900,93 @@ export default {
 		},
 		hasInspectableImages() {
 			return isRasterImageMimetype(this.leftFile?.mimetype) || isRasterImageMimetype(this.rightFile?.mimetype)
+		},
+		hasInspectableContent() {
+			return isContentInspectableFile(this.leftFile) || isContentInspectableFile(this.rightFile)
+		},
+		activeContentKind() {
+			return resolveContentInspectionKind(this.leftFile, this.rightFile)
+		},
+		hasPlayableMediaPair() {
+			return isPlayableMediaKind(classifyInspectableContent(this.leftFile))
+				&& isPlayableMediaKind(classifyInspectableContent(this.rightFile))
+		},
+		contentKindLabel() {
+			const map = {
+				video: this.t('duplicatefinder', 'Video stream'),
+				audio: this.t('duplicatefinder', 'Audio stream'),
+				pdf: this.t('duplicatefinder', 'PDF document'),
+				text: this.t('duplicatefinder', 'Text & structured content'),
+			}
+			return map[this.activeContentKind] || this.t('duplicatefinder', 'Content inspector')
+		},
+		leftContentParsed() {
+			const key = resolveVisualFileKey(this.leftFile)
+			if (key !== null && this.contentParsedByKey[key]) {
+				return this.contentParsedByKey[key]
+			}
+			if (typeof this.leftFile?.inlineContent === 'string') {
+				return inspectTextContent(this.leftFile.inlineContent, this.leftFile)
+			}
+			return null
+		},
+		rightContentParsed() {
+			const key = resolveVisualFileKey(this.rightFile)
+			if (key !== null && this.contentParsedByKey[key]) {
+				return this.contentParsedByKey[key]
+			}
+			if (typeof this.rightFile?.inlineContent === 'string') {
+				return inspectTextContent(this.rightFile.inlineContent, this.rightFile)
+			}
+			return null
+		},
+		contentQualityEvaluation() {
+			return evaluateMediaContentQuality(this.files, this.contentParsedByKey)
+		},
+		contentQualityHintLabel() {
+			const reason = this.contentQualityEvaluation.reasonKey
+			if (reason === 'higher_bitrate') {
+				return this.t('duplicatefinder', 'Higher audio bitrate detected')
+			}
+			if (reason === 'higher_sample_rate') {
+				return this.t('duplicatefinder', 'Higher audio sample rate detected')
+			}
+			if (reason === 'higher_resolution') {
+				return this.t('duplicatefinder', 'Higher video resolution detected')
+			}
+			return this.t('duplicatefinder', 'Richer media metadata detected')
+		},
+		textDiffResult() {
+			const left = this.leftContentParsed
+			const right = this.rightContentParsed
+			if (!left && !right) {
+				return null
+			}
+			if ((left && left.kind !== 'text') || (right && right.kind !== 'text')) {
+				return null
+			}
+			if (classifyInspectableContent(this.leftFile) !== 'text' && classifyInspectableContent(this.rightFile) !== 'text') {
+				return null
+			}
+			return computeTextLineDiff(left?.rawText || '', right?.rawText || '')
+		},
+		visibleTextDiffRows() {
+			if (!this.textDiffResult) {
+				return []
+			}
+			if (!this.showOnlyTextDiffs) {
+				return this.textDiffResult.rows
+			}
+			return this.textDiffResult.rows.filter(row => row.status !== 'equal')
+		},
+		textDiffSummaryLabel() {
+			if (!this.textDiffResult) {
+				return ''
+			}
+			if (this.textDiffResult.summary.identical) {
+				return this.t('duplicatefinder', 'Identical text content')
+			}
+			return this.t('duplicatefinder', 'Text differences detected')
 		},
 		bothPanesHavePreview() {
 			return Boolean(
@@ -747,10 +1107,16 @@ export default {
 				unavailableLabel,
 			})
 
-			const mergedRows = [...baseDiff.rows, ...visualDiff.rows]
+			const contentDiff = buildContentInspectionDiffRows(this.leftFile, this.rightFile, {
+				leftParsed: this.leftContentParsed,
+				rightParsed: this.rightContentParsed,
+				unavailableLabel,
+			})
+
+			const mergedRows = [...baseDiff.rows, ...visualDiff.rows, ...contentDiff.rows]
 			return {
 				rows: mergedRows,
-				diffCount: baseDiff.diffCount + visualDiff.diffCount,
+				diffCount: baseDiff.diffCount + visualDiff.diffCount + contentDiff.diffCount,
 			}
 		},
 		visibleDiffRows() {
@@ -799,10 +1165,14 @@ export default {
 				}
 				if (!prevFiles || nextFiles !== prevFiles) {
 					this.previewErrors = {}
+					this.mediaErrors = {}
 					this.localDimensionsByKey = {}
 					this.parsedHeadersByKey = {}
+					this.contentParsedByKey = {}
 					this.dhashByKey = {}
 					this.exifFetchState = 'idle'
+					this.contentFetchState = 'idle'
+					this.showOnlyTextDiffs = false
 					this.pixelMetrics = null
 					this.diffHeatmapUrl = ''
 					this.inspectionState = 'idle'
@@ -847,7 +1217,10 @@ export default {
 				|| pane.visual?.isLowerResolution
 				|| pane.visual?.isExactDimensionMatch
 				|| pane.exif?.camera
-				|| pane.exif?.gpsPresent,
+				|| pane.exif?.gpsPresent
+				|| pane.contentParsed?.format
+				|| pane.contentParsed?.durationFormatted
+				|| pane.contentQuality?.isQualityWinner,
 			)
 		},
 		resolveQualityBadgeLabel(visualInfo) {
@@ -867,7 +1240,7 @@ export default {
 		},
 		onPaneImageLoad(side, file, event) {
 			const img = event?.target
-			if (!img || !file) {
+			if (!img || !file || !isRasterImageMimetype(file.mimetype)) {
 				return
 			}
 			const width = Number(img.naturalWidth)
@@ -1012,6 +1385,148 @@ export default {
 			}
 			this.exifFetchState = loadedAny ? 'ready' : 'unavailable'
 		},
+		resolveWebDavContentUrl(file) {
+			if (!file || typeof file !== 'object') {
+				return ''
+			}
+			if (typeof file.downloadUrl === 'string') {
+				const safeDownload = sanitizeContentUrl(file.downloadUrl)
+				if (safeDownload) {
+					return safeDownload
+				}
+			}
+			const relPath = typeof file.path === 'string' ? normalizeItemPath(file.path) : ''
+			const uid = typeof window !== 'undefined' && window.OC && typeof window.OC.getCurrentUser === 'function'
+				? window.OC.getCurrentUser()?.uid
+				: ''
+			if (relPath && uid && typeof window !== 'undefined' && window.OC && typeof window.OC.linkToRemoteBase === 'function') {
+				const encoded = relPath.split('/').map(seg => encodeURIComponent(seg)).join('/')
+				return sanitizeContentUrl(window.OC.linkToRemoteBase(`dav/files/${encodeURIComponent(uid)}${encoded}`))
+			}
+			return ''
+		},
+		async loadContentHeadersForCurrentPair() {
+			if (this.contentFetchState === 'loading') {
+				return
+			}
+			let loadedAny = false
+			const targets = [this.leftFile, this.rightFile].filter(Boolean)
+
+			for (const file of targets) {
+				const key = resolveVisualFileKey(file)
+				if (key === null) {
+					continue
+				}
+				if (typeof file.inlineContent === 'string') {
+					const parsedInline = inspectTextContent(file.inlineContent, file)
+					if (parsedInline) {
+						this.$set(this.contentParsedByKey, key, parsedInline)
+						loadedAny = true
+						continue
+					}
+				}
+				if (typeof fetch !== 'function') {
+					continue
+				}
+				const url = this.resolveWebDavContentUrl(file) || sanitizeContentUrl(this.resolveHeaderInspectionUrl(file))
+				if (!url) {
+					continue
+				}
+				this.contentFetchState = 'loading'
+				try {
+					const response = await fetch(url, {
+						headers: { Range: 'bytes=0-65535' },
+					})
+					if (!response || !response.ok) {
+						continue
+					}
+					let parsed = null
+					if (typeof response.arrayBuffer === 'function') {
+						const buffer = await response.arrayBuffer()
+						parsed = parseMediaOrDocumentHeader(buffer, file)
+					} else if (typeof response.text === 'function') {
+						const text = await response.text()
+						parsed = inspectTextContent(text, file)
+					}
+					if (parsed) {
+						this.$set(this.contentParsedByKey, key, parsed)
+						loadedAny = true
+					}
+				} catch (error) {
+					// Keep content inspection resilient when remote source blocks range requests
+				}
+			}
+
+			this.contentFetchState = loadedAny ? 'ready' : 'unavailable'
+		},
+		onMediaElementLoaded(side, file, event) {
+			const el = event?.target
+			const key = resolveVisualFileKey(file)
+			if (!el || key === null) {
+				return
+			}
+			const existing = this.contentParsedByKey[key] || {
+				kind: classifyInspectableContent(file),
+				format: (file.mimetype || '').split('/')[1]?.toUpperCase() || '',
+			}
+			const nextDuration = Number.isFinite(Number(el.duration)) && Number(el.duration) > 0
+				? Math.round(Number(el.duration) * 10) / 10
+				: (existing.durationSeconds || 0)
+			const nextWidth = Number(el.videoWidth) > 0 ? Math.round(Number(el.videoWidth)) : (existing.width || 0)
+			const nextHeight = Number(el.videoHeight) > 0 ? Math.round(Number(el.videoHeight)) : (existing.height || 0)
+			this.$set(this.contentParsedByKey, key, {
+				...existing,
+				durationSeconds: nextDuration,
+				durationFormatted: nextDuration > 0 ? formatMediaDuration(nextDuration) : (existing.durationFormatted || ''),
+				width: nextWidth,
+				height: nextHeight,
+			})
+		},
+		onMediaSyncEvent(sourceSide, eventName) {
+			if (!this.syncMediaPlayback || this.isSyncingMediaEvent) {
+				return
+			}
+			const targetSide = sourceSide === 'left' ? 'right' : 'left'
+			const sourceRef = this.$refs[`mediaPlayer-${sourceSide}`]
+			const targetRef = this.$refs[`mediaPlayer-${targetSide}`]
+			const sourceEl = Array.isArray(sourceRef) ? sourceRef[0] : sourceRef
+			const targetEl = Array.isArray(targetRef) ? targetRef[0] : targetRef
+			if (!sourceEl || !targetEl) {
+				return
+			}
+			this.isSyncingMediaEvent = true
+			try {
+				if (eventName === 'seeked' && Number.isFinite(sourceEl.currentTime)) {
+					targetEl.currentTime = sourceEl.currentTime
+				} else if (eventName === 'play' && typeof targetEl.play === 'function') {
+					if (Number.isFinite(sourceEl.currentTime)) {
+						targetEl.currentTime = sourceEl.currentTime
+					}
+					const maybePromise = targetEl.play()
+					if (maybePromise && typeof maybePromise.catch === 'function') {
+						maybePromise.catch(() => {})
+					}
+				} else if (eventName === 'pause' && typeof targetEl.pause === 'function') {
+					targetEl.pause()
+				}
+			} finally {
+				Promise.resolve().then(() => {
+					this.isSyncingMediaEvent = false
+				})
+			}
+		},
+		markMediaError(paneKey) {
+			this.$set(this.mediaErrors, paneKey, true)
+		},
+		formatTextExcerpt(previewLines) {
+			if (!Array.isArray(previewLines) || previewLines.length === 0) {
+				return ''
+			}
+			return previewLines
+				.slice(0, 8)
+				.map(line => `${String(line.lineNumber).padStart(2, ' ')} | ${line.text}`)
+				.join('\n')
+		},
 		selectLowerResolutionCopies() {
 			const keys = selectLowerResolutionKeys(this.files, this.mergedDimensionsByKey)
 			if (keys.length > 0) {
@@ -1069,6 +1584,12 @@ export default {
 			const key = resolveVisualFileKey(file)
 			const visual = this.resolutionEvaluation.perFile[index] || null
 			const exif = normalizeExifMetadata(file, key !== null ? this.parsedHeadersByKey[key] : null)
+			const contentKind = classifyInspectableContent(file)
+			const contentParsed = (key !== null && this.contentParsedByKey[key])
+				? this.contentParsedByKey[key]
+				: (typeof file.inlineContent === 'string' ? inspectTextContent(file.inlineContent, file) : null)
+			const contentQuality = this.contentQualityEvaluation.perFile[index] || null
+			const streamUrl = this.resolveWebDavContentUrl(file)
 			return {
 				side,
 				sideLabel,
@@ -1081,6 +1602,10 @@ export default {
 				statusKind: status.kind,
 				statusLabel: status.label,
 				previewUrl: getPreviewImage(file),
+				streamUrl,
+				contentKind,
+				contentParsed,
+				contentQuality,
 				badges: this.metadataBadgesByIndex[index] || null,
 				visual,
 				exif,
@@ -1112,6 +1637,13 @@ export default {
 				colorSpace: this.t('duplicatefinder', 'Color space'),
 				orientation: this.t('duplicatefinder', 'Orientation'),
 				gpsMetadata: this.t('duplicatefinder', 'GPS EXIF'),
+				contentFormat: this.t('duplicatefinder', 'Format / Encoding'),
+				duration: this.t('duplicatefinder', 'Duration'),
+				mediaDimensions: this.t('duplicatefinder', 'Video dimensions'),
+				audioStream: this.t('duplicatefinder', 'Audio stream'),
+				bitrate: this.t('duplicatefinder', 'Bitrate'),
+				mediaTags: this.t('duplicatefinder', 'Media / Document tags'),
+				documentStats: this.t('duplicatefinder', 'Document structure'),
 			}
 			return labels[key] || key
 		},
@@ -1971,6 +2503,276 @@ export default {
 
 	.compare-diff-row {
 		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.compare-content-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding-block: 10px;
+	padding-inline: 14px;
+	border-radius: var(--border-radius-large, 10px);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-color: var(--color-main-background);
+	box-sizing: border-box;
+}
+
+.compare-content-bar__status,
+.compare-content-bar__tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.compare-content-bar__kind-badge {
+	display: inline-flex;
+	align-items: center;
+	padding-block: 4px;
+	padding-inline: 10px;
+	border-radius: 999px;
+	background-color: rgba(0, 130, 201, 0.14);
+	border: 1px solid rgba(0, 130, 201, 0.44);
+	color: var(--color-main-text);
+	font-size: 0.8rem;
+	font-weight: 700;
+}
+
+.compare-content-bar__quality-note {
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.compare-content-bar__fallback-note {
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.compare-pane__media-video {
+	display: block;
+	inline-size: 100%;
+	max-block-size: 200px;
+	border-radius: 6px;
+	background-color: #000000;
+}
+
+.compare-pane__audio-card,
+.compare-pane__doc-card {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 10px;
+	inline-size: 100%;
+	block-size: 100%;
+	padding: 12px;
+	box-sizing: border-box;
+}
+
+.compare-pane__audio-header,
+.compare-pane__doc-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.compare-pane__doc-badge {
+	display: inline-flex;
+	align-items: center;
+	padding-block: 3px;
+	padding-inline: 8px;
+	border-radius: 999px;
+	background-color: rgba(0, 130, 201, 0.14);
+	border: 1px solid rgba(0, 130, 201, 0.45);
+	color: var(--color-main-text);
+	font-size: 0.76rem;
+	font-weight: 700;
+}
+
+.compare-pane__doc-stat {
+	display: inline-flex;
+	align-items: center;
+	padding-block: 3px;
+	padding-inline: 8px;
+	border-radius: 999px;
+	background-color: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	color: var(--color-main-text);
+	font-size: 0.76rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.compare-pane__media-audio {
+	inline-size: 100%;
+	min-block-size: 44px;
+}
+
+.compare-pane__doc-meta,
+.compare-pane__doc-hint {
+	margin: 0;
+	font-size: 0.82rem;
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast);
+	overflow-wrap: anywhere;
+}
+
+.compare-pane__text-excerpt {
+	margin: 0;
+	padding: 8px 10px;
+	max-block-size: 120px;
+	overflow: auto;
+	border-radius: 6px;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.76rem;
+	line-height: 1.4;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	text-align: start;
+}
+
+.compare-text-diff-stage {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px;
+	border-radius: var(--border-radius-large, 10px);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-color: var(--color-main-background);
+	box-sizing: border-box;
+}
+
+.compare-text-diff-stage__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.compare-text-diff-stage__verdict-group,
+.compare-text-diff-stage__counts {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-text-maxcontrast);
+}
+
+.compare-text-diff-stage__badge {
+	display: inline-flex;
+	align-items: center;
+	padding-block: 4px;
+	padding-inline: 10px;
+	border-radius: 999px;
+	font-size: 0.82rem;
+	font-weight: 700;
+	border: 1px solid var(--color-border);
+	color: var(--color-main-text);
+}
+
+.compare-text-diff-stage__badge.is-identical {
+	background-color: rgba(46, 125, 50, 0.14);
+	border-color: rgba(46, 125, 50, 0.48);
+}
+
+.compare-text-diff-stage__badge.is-different {
+	background-color: rgba(217, 119, 6, 0.14);
+	border-color: rgba(217, 119, 6, 0.48);
+}
+
+.compare-text-diff-stage__meta-pill {
+	padding-block: 3px;
+	padding-inline: 8px;
+	border-radius: 999px;
+	background-color: var(--color-background-hover);
+	border: 1px solid var(--color-border);
+	color: var(--color-main-text);
+}
+
+.compare-text-diff-table-wrap {
+	inline-size: 100%;
+	max-block-size: 320px;
+	overflow: auto;
+	border-radius: 8px;
+	border: 1px solid var(--color-border);
+}
+
+.compare-text-diff-table {
+	inline-size: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.78rem;
+	line-height: 1.45;
+}
+
+.compare-text-diff-table th {
+	position: sticky;
+	inset-block-start: 0;
+	padding-block: 6px;
+	padding-inline: 8px;
+	background-color: var(--color-background-hover);
+	border-bottom: 1px solid var(--color-border);
+	color: var(--color-main-text);
+	font-family: inherit;
+	font-weight: 700;
+	text-align: start;
+}
+
+.compare-text-diff-table td {
+	padding-block: 4px;
+	padding-inline: 8px;
+	border-bottom: 1px solid var(--color-border);
+	vertical-align: top;
+	color: var(--color-main-text);
+}
+
+.compare-text-diff-table__num {
+	inline-size: 42px;
+	color: var(--color-text-maxcontrast);
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+	user-select: none;
+}
+
+.compare-text-diff-table__code {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.compare-text-diff-table tr.is-changed {
+	background-color: rgba(217, 119, 6, 0.12);
+}
+
+.compare-text-diff-table tr.is-added {
+	background-color: rgba(46, 125, 50, 0.12);
+}
+
+.compare-text-diff-table tr.is-removed {
+	background-color: rgba(211, 47, 47, 0.12);
+}
+
+.compare-text-diff-stage__empty {
+	margin: 0;
+	font-size: 0.84rem;
+	color: var(--color-text-maxcontrast);
+}
+
+@media (max-width: 768px) {
+	.compare-content-bar .compare-toolbar__button {
+		min-block-size: 44px;
 	}
 }
 </style>

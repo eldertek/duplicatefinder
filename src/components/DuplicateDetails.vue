@@ -55,6 +55,13 @@
               @click="openVisualDiffCompare">
               {{ t('duplicatefinder', 'Inspect visual diff') }}
             </button>
+            <button
+              v-else-if="hasInspectableContent && duplicate.files.length >= 2"
+              type="button"
+              class="group-header-summary__inspect-button group-header-summary__inspect-content-button"
+              @click="openCompareMode">
+              {{ t('duplicatefinder', 'Inspect media & content') }}
+            </button>
             <div class="group-header-summary__hash-control">
               <button
                 type="button"
@@ -797,6 +804,29 @@ export default {
         return evaluateResolutionWinners([]);
       }
       return evaluateResolutionWinners(this.duplicate.files, this.inspectedDimensionsByKey);
+    },
+    hasInspectableContent() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return false;
+      }
+      const contentExts = /\.(mp3|wav|flac|ogg|opus|m4a|aac|mp4|mov|webm|mkv|avi|pdf|txt|md|markdown|json|csv|tsv|yml|yaml|xml|log|ini|conf|js|ts|vue|php|py|sh|css|scss|html|sql)$/i;
+      return this.duplicate.files.some(file => {
+        if (!file || typeof file !== 'object') {
+          return false;
+        }
+        const mime = typeof file.mimetype === 'string' ? file.mimetype.trim().toLowerCase() : '';
+        if (
+          mime.startsWith('audio/')
+          || mime.startsWith('video/')
+          || mime.startsWith('text/')
+          || mime === 'application/pdf'
+          || mime === 'application/json'
+          || mime === 'application/xml'
+        ) {
+          return true;
+        }
+        return typeof file.path === 'string' && contentExts.test(file.path.trim());
+      });
     },
     fileVisualBadges() {
       if (!this.duplicate || !Array.isArray(this.duplicate.files)) {

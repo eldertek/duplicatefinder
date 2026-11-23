@@ -33,6 +33,9 @@ function createDetailsWithCompare() {
 	})
 
 	const visualInspector = loadModule('src/tools/visualMediaInspector.js')
+	const mediaContentInspector = loadModule('src/tools/mediaContentInspector.js', {
+		'./visualMediaInspector': visualInspector,
+	})
 	const CompareView = loadComponent('src/components/DuplicateCompareView.vue', {
 		'@nextcloud/router': { generateUrl: url => url },
 		'../tools/clipboardHelper': clipboardHelper,
@@ -40,6 +43,7 @@ function createDetailsWithCompare() {
 		'../tools/duplicateStats': stats,
 		'../tools/utils': utils,
 		'../tools/visualMediaInspector': visualInspector,
+		'../tools/mediaContentInspector': mediaContentInspector,
 	})
 
 	Vue.component('NcLoadingSpinner', { render: h => h('span') })

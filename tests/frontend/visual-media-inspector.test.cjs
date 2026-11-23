@@ -136,6 +136,9 @@ function createDetailsWithVisualInspector() {
 		'./duplicatePathDiff': pathDiff,
 	})
 	const visualInspector = loadModule('src/tools/visualMediaInspector.js')
+	const mediaContentInspector = loadModule('src/tools/mediaContentInspector.js', {
+		'./visualMediaInspector': visualInspector,
+	})
 
 	const api = {
 		acknowledgeDuplicate: async () => {},
@@ -160,6 +163,7 @@ function createDetailsWithVisualInspector() {
 		'../tools/duplicateStats': stats,
 		'../tools/utils': utils,
 		'../tools/visualMediaInspector': visualInspector,
+		'../tools/mediaContentInspector': mediaContentInspector,
 	})
 
 	Vue.component('NcLoadingSpinner', { render: h => h('span') })

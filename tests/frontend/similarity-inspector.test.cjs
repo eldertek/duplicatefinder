@@ -286,6 +286,9 @@ describe('Cycle 121: Interactive Similarity Threshold & Fuzzy Match Mode Inspect
 			'./duplicatePathDiff': duplicatePathDiff,
 		})
 		const visualMediaInspector = loadModule('src/tools/visualMediaInspector.js')
+		const mediaContentInspector = loadModule('src/tools/mediaContentInspector.js', {
+			'./visualMediaInspector': visualMediaInspector,
+		})
 		const reclamationHistory = loadModule('src/tools/reclamationHistory.js', {
 			'./duplicateFilters': duplicateFilters,
 			'./duplicateStats': duplicateStats,
@@ -302,6 +305,7 @@ describe('Cycle 121: Interactive Similarity Threshold & Fuzzy Match Mode Inspect
 			'../tools/duplicateStats': duplicateStats,
 			'../tools/utils': utils,
 			'../tools/visualMediaInspector': visualMediaInspector,
+			'../tools/mediaContentInspector': mediaContentInspector,
 		})
 
 		const DuplicateDetails = loadComponent('src/components/DuplicateDetails.vue', {

@@ -36,13 +36,18 @@ function createRealDuplicateDetails(utils, clipboardImpl, apiOverrides = {}) {
 	const compareModule = loadModule('src/tools/duplicateCompare.js', {
 		'./duplicatePathDiff': pathDiffModule,
 	})
+	const visualMediaInspectorModule = loadModule('src/tools/visualMediaInspector.js')
+	const mediaContentInspectorModule = loadModule('src/tools/mediaContentInspector.js', {
+		'./visualMediaInspector': visualMediaInspectorModule,
+	})
 	const CompareView = loadComponent('src/components/DuplicateCompareView.vue', {
 		'@nextcloud/router': { generateUrl: url => url },
 		'../tools/clipboardHelper': clipboardDependency,
 		'../tools/duplicateCompare': compareModule,
 		'../tools/duplicateStats': statsModule,
 		'../tools/utils': utils,
-		'../tools/visualMediaInspector': loadModule('src/tools/visualMediaInspector.js'),
+		'../tools/visualMediaInspector': visualMediaInspectorModule,
+		'../tools/mediaContentInspector': mediaContentInspectorModule,
 	})
 
 	Vue.component('NcLoadingSpinner', { render: h => h('span') })
