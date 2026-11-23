@@ -1,3 +1,7 @@
+## 1.10.35 - 2026-11-23
+### Added
+- **Full keyboard keep-rule triage shortcuts (`n` Keep newest, `s` Keep shortest path)** (`src/tools/keyboardShortcuts.js`, `src/App.vue`). Completed the `o` / `n` / `s` / `c` duplicate triage shortcut suite by registering `n` (`keep-newest`) and `s` (`keep-shortest-path`) in `SHORTCUT_DEFINITIONS` and `SINGLE_KEY_ACTIONS`, and wiring `KEEP_SHORTCUT_RULES` in `App.vue` to invoke `applyKeepRule('newest')` and `applyKeepRule('shortest_path')` while staying suppressed inside editable inputs and open modal dialogs.
+
 ## 1.10.34 - 2026-11-23
 ### Added
 - **Structured JSON report export (`duplicatefinder.report.v1`)** (`src/tools/duplicateSelectionAndExport.js`, `src/components/DuplicateNavigation.vue`). Added `JSON_REPORT_SCHEMA`, `buildDuplicatesJson`, and `downloadDuplicatesJson` (sharing `triggerBlobDownload` with `downloadDuplicatesCsv`) to serialize filtered duplicate groups with export timestamp, group count, total reclaimable bytes, and per-file metadata, paired with an accessible `Export JSON` button (`exportFilteredJson`) in `DuplicateNavigation.vue`.
