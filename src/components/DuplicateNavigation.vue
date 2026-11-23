@@ -359,6 +359,7 @@
                     <button
                         type="button"
                         class="export-csv-button"
+                        aria-keyshortcuts="e"
                         :disabled="filteredDuplicatesForExport.length === 0"
                         :title="t('duplicatefinder', 'Export filtered duplicates as CSV')"
                         :aria-label="t('duplicatefinder', 'Export CSV')"

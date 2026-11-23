@@ -861,6 +861,7 @@ export default {
 				'keep-shortest-path': t('duplicatefinder', 'Keep shortest path copy in active group'),
 				'clear-selection': t('duplicatefinder', 'Clear current selection'),
 				'copy-group-hash': t('duplicatefinder', 'Copy active group hash'),
+				'export-csv-report': t('duplicatefinder', 'Export current duplicate report (CSV)'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'reset-filters': t('duplicatefinder', 'Reset all active filters and sorting'),
 				'reset-all-filters': t('duplicatefinder', 'Reset all active filters'),
@@ -985,6 +986,27 @@ export default {
 			if (navigation && navigation.largestDuplicateGroup) {
 				this.openDuplicate(navigation.largestDuplicateGroup)
 				return true
+			}
+			return false
+		},
+		/**
+		 * Export the currently filtered duplicate report as CSV in details view.
+		 * @returns {boolean} True when a non-empty CSV export was triggered.
+		 */
+		exportFilteredCsvReport() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			const navigation = this.$refs.duplicateNavigation
+			if (
+				!navigation
+				|| !Array.isArray(navigation.filteredDuplicatesForExport)
+				|| navigation.filteredDuplicatesForExport.length === 0
+			) {
+				return false
+			}
+			if (typeof navigation.exportFilteredCsv === 'function') {
+				return Boolean(navigation.exportFilteredCsv())
 			}
 			return false
 		},
@@ -1125,6 +1147,13 @@ export default {
 
 			if (action === 'jump-to-largest-group') {
 				if (this.jumpToLargestDuplicateGroup() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'export-csv-report') {
+				if (this.exportFilteredCsvReport() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return

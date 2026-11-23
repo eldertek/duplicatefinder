@@ -2079,3 +2079,318 @@ describe('Cycle 96: keyboard shortcut g (jump-to-largest-group)', () => {
 		}
 	})
 })
+
+describe('Cycle 99: keyboard shortcut e (export-csv-report)', () => {
+	test('resolveShortcutAction maps e to export-csv-report, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const exportCsvDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'export-csv-report')
+		assert.deepEqual(exportCsvDef, {
+			id: 'export-csv-report',
+			keys: ['e'],
+			action: 'export-csv-report',
+		})
+
+		assert.equal(resolveShortcutAction({ key: 'e' }), 'export-csv-report')
+
+		// Browser modifiers and Shift must never be hijacked (Ctrl+e / Cmd+e / Alt+e / Shift+E)
+		assert.equal(resolveShortcutAction({ key: 'e', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'e', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'e', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'E', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: 'e' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'e' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: 'e', target }), null)
+		}
+	})
+
+	test('App.vue -> DuplicateNavigation.vue triggers CWE-1236 safe CSV export on e, sets aria-keyshortcuts="e", updates help <dialog>, and ignores editable fields or open <dialog>', async () => {
+		window.localStorage.clear()
+		const MB = 1024 * 1024
+		const formulaDocGroup = {
+			id: 501,
+			hash: 'hash-501',
+			acknowledged: false,
+			files: [
+				{ id: 5011, nodeId: 5011, path: '=SUM(A1).txt', size: 1024, mtime: 1000, mimetype: 'text/plain' },
+				{ id: 5012, nodeId: 5012, path: '/alice/files/Copy/safe.txt', size: 1024, mtime: 2000, mimetype: 'text/plain' },
+			],
+		}
+		const videoGroup = {
+			id: 502,
+			hash: 'hash-502',
+			acknowledged: true,
+			files: [
+				{ id: 5021, nodeId: 5021, path: '/alice/files/Media/clipA.mp4', size: 2 * MB, mtime: 1000, mimetype: 'video/mp4' },
+				{ id: 5022, nodeId: 5022, path: '/alice/files/Media/clipB.mp4', size: 2 * MB, mtime: 2000, mimetype: 'video/mp4' },
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [videoGroup],
+			unacknowledged: [formulaDocGroup],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalSelect = document.createElement('select')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalSelect)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		const originalCreateObjectURL = global.URL.createObjectURL
+		const originalRevokeObjectURL = global.URL.revokeObjectURL
+		const originalAnchorClick = document.defaultView.HTMLAnchorElement.prototype.click
+		const capturedBlobs = []
+		const clickedLinks = []
+
+		global.URL.createObjectURL = blob => {
+			capturedBlobs.push(blob)
+			return 'blob:https://cloud.example.test/mock-csv-cycle99'
+		}
+		global.URL.revokeObjectURL = () => {}
+		document.defaultView.HTMLAnchorElement.prototype.click = function clickSpy() {
+			clickedLinks.push({
+				href: this.href,
+				download: this.getAttribute('download'),
+			})
+		}
+
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(navVm, 'DuplicateNavigation ref is mounted')
+			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
+
+			const exportCsvBtn = navVm.$el.querySelector('button.export-csv-button')
+			assert.ok(exportCsvBtn, 'Export CSV button is rendered')
+			assert.equal(exportCsvBtn.getAttribute('aria-keyshortcuts'), 'e')
+
+			// 1. Typing e inside editable fields must NOT export
+			const searchInput = navVm.$el.querySelector('input.search-input')
+			const folderInput = navVm.$el.querySelector('input.folder-filter-input')
+			assert.ok(searchInput)
+			assert.ok(folderInput)
+			for (const field of [searchInput, folderInput, externalTextarea, externalSelect, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.equal(capturedBlobs.length, 0)
+
+			// 2. Modifiers (Ctrl+e / Cmd+e / Alt+e / Shift+E) must NOT export or preventDefault
+			for (const init of [
+				{ key: 'e', ctrlKey: true },
+				{ key: 'e', metaKey: true },
+				{ key: 'e', altKey: true },
+				{ key: 'E', shiftKey: true },
+			]) {
+				const modEvent = new window.KeyboardEvent('keydown', { ...init, bubbles: true, cancelable: true })
+				window.dispatchEvent(modEvent)
+				assert.equal(modEvent.defaultPrevented, false)
+			}
+			await settle()
+			assert.equal(capturedBlobs.length, 0)
+
+			// 3. ? help <dialog> documents e ("Export current duplicate report (CSV)") and blocks e while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('e'), 'help dialog documents e shortcut')
+			assert.ok(helpDialog.textContent.includes('Export current duplicate report (CSV)'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(capturedBlobs.length, 0)
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 4. Delete confirmation <dialog> blocks e
+			detailsVm.applyKeepRule('oldest')
+			await settle()
+			detailsVm.$el.querySelector('button.delete-selected-button').click()
+			await settle()
+			assert.equal(detailsVm.showDeleteConfirmDialog, true)
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(capturedBlobs.length, 0)
+			detailsVm.resolveDeleteConfirm(false)
+			await settle()
+
+			// 5. External <dialog open> blocks e
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(capturedBlobs.length, 0)
+			externalDialog.removeAttribute('open')
+
+			// 6. Pressing e triggers secure CSV export (with CWE-1236 neutralization)
+			const eEvent = new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true })
+			window.dispatchEvent(eEvent)
+			await settle()
+			assert.equal(eEvent.defaultPrevented, true)
+			assert.equal(capturedBlobs.length, 1)
+			assert.equal(clickedLinks.length, 1)
+			assert.equal(clickedLinks[0].download, 'duplicates-export.csv')
+			assert.ok(clickedLinks[0].href.startsWith('blob:'))
+
+			const fullCsv = await capturedBlobs[0].text()
+			assert.ok(fullCsv.includes('hash-501'))
+			assert.ok(fullCsv.includes('hash-502'))
+			assert.ok(fullCsv.includes('"\'=SUM(A1).txt"'), 'CWE-1236 formula trigger is neutralized in exported CSV')
+
+			// 7. With category filter active ("videos"), e exports only filtered groups
+			navVm.setCategoryFilter('videos')
+			await settle()
+			const filteredEEvent = new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true })
+			window.dispatchEvent(filteredEEvent)
+			await settle()
+			assert.equal(filteredEEvent.defaultPrevented, true)
+			assert.equal(capturedBlobs.length, 2)
+			const filteredCsv = await capturedBlobs[1].text()
+			assert.ok(filteredCsv.includes('hash-502'))
+			assert.ok(!filteredCsv.includes('hash-501'))
+		} finally {
+			global.URL.createObjectURL = originalCreateObjectURL
+			global.URL.revokeObjectURL = originalRevokeObjectURL
+			document.defaultView.HTMLAnchorElement.prototype.click = originalAnchorClick
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalSelect.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+		}
+	})
+
+	test('e shortcut is a safe no-op when no groups are available or outside details view', async () => {
+		window.localStorage.clear()
+
+		const originalCreateObjectURL = global.URL.createObjectURL
+		let exportCount = 0
+		global.URL.createObjectURL = () => {
+			exportCount += 1
+			return 'blob:https://cloud.example.test/mock-csv-noop'
+		}
+
+		// Empty duplicate lists -> safe no-op without preventDefault
+		const { App: EmptyApp } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [],
+			useRealDetails: true,
+		})
+		const emptyMount = document.createElement('div')
+		document.body.appendChild(emptyMount)
+		const emptyVm = new Vue(EmptyApp).$mount(emptyMount)
+		try {
+			await settle()
+			const emptyE = new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true })
+			window.dispatchEvent(emptyE)
+			await settle()
+			assert.equal(emptyE.defaultPrevented, false)
+			assert.equal(exportCount, 0)
+		} finally {
+			emptyVm.$destroy()
+			emptyMount.remove()
+		}
+
+		// Non-details view (bulk-delete) and zero-match filter -> ignored; works again in details view
+		const group = makeDuplicate(510, 'report.txt')
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [group],
+			useRealDetails: true,
+		})
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		const originalRevokeObjectURL = global.URL.revokeObjectURL
+		const originalAnchorClick = document.defaultView.HTMLAnchorElement.prototype.click
+		global.URL.revokeObjectURL = () => {}
+		document.defaultView.HTMLAnchorElement.prototype.click = () => {}
+
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+
+			// Filtered to zero matches -> safe no-op
+			navVm.folderQuery = '/NoMatch'
+			await settle()
+			const noMatchE = new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true })
+			window.dispatchEvent(noMatchE)
+			await settle()
+			assert.equal(noMatchE.defaultPrevented, false)
+			assert.equal(exportCount, 0)
+
+			navVm.folderQuery = ''
+			await settle()
+
+			// Bulk-delete view -> ignored
+			vm.openBulkDelete()
+			await settle()
+			const bulkE = new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkE)
+			await settle()
+			assert.equal(bulkE.defaultPrevented, false)
+			assert.equal(vm.activeView, 'bulk-delete')
+			assert.equal(exportCount, 0)
+
+			// Return to details view -> e triggers export
+			vm.closeBulkDelete()
+			await settle()
+			const detailsE = new window.KeyboardEvent('keydown', { key: 'e', bubbles: true, cancelable: true })
+			window.dispatchEvent(detailsE)
+			await settle()
+			assert.equal(detailsE.defaultPrevented, true)
+			assert.equal(exportCount, 1)
+		} finally {
+			global.URL.createObjectURL = originalCreateObjectURL
+			global.URL.revokeObjectURL = originalRevokeObjectURL
+			document.defaultView.HTMLAnchorElement.prototype.click = originalAnchorClick
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('Cycle 99 touched files preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of [
+			'src/tools/keyboardShortcuts.js',
+			'src/App.vue',
+			'src/components/DuplicateNavigation.vue',
+		]) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})
