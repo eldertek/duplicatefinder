@@ -131,6 +131,7 @@ function createFullAppWithTreemap({ acknowledged = [], unacknowledged = [] } = {
 		'./components/DuplicateNavigation.vue': { __esModule: true, default: DuplicateNavigation },
 		'./components/DuplicateDetails.vue': { __esModule: true, default: stub('duplicate-details') },
 		'./components/DuplicateTreemap.vue': { __esModule: true, default: DuplicateTreemap },
+		'./components/SpaceReclamationTimeline.vue': { __esModule: true, default: stub('space-reclamation-timeline') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -154,6 +155,10 @@ function createFullAppWithTreemap({ acknowledged = [], unacknowledged = [] } = {
 		},
 		'@/tools/utils': utils,
 		'@/tools/keyboardShortcuts': keyboardShortcuts,
+		'@/tools/reclamationHistory': loadModule('src/tools/reclamationHistory.js', {
+			'./duplicateFilters': duplicateFilters,
+			'./duplicateStats': duplicateStats,
+		}),
 		'vue-material-design-icons/Folder': icon,
 		'vue-material-design-icons/FolderRemove': icon,
 		'vue-material-design-icons/FolderMultiple': icon,

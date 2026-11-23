@@ -959,6 +959,19 @@ export default {
 
         if (success.length > 0) {
           const deletedPaths = success.map(file => file && file.path).filter(Boolean)
+          const bytesReclaimed = success.reduce(
+            (sum, file) => sum + (Number(file && file.size) > 0 ? Math.floor(Number(file.size)) : 0),
+            0
+          )
+          const groupsResolved = new Set(success.map(file => file && file.fileHash).filter(Boolean)).size
+          const firstDeletedName = deletedPaths[0] ? deletedPaths[0].split('/').pop() : ''
+          this.$emit('reclamation-recorded', {
+            bytesReclaimed,
+            filesDeleted: success.length,
+            groupsResolved,
+            source: 'bulk',
+            sampleLabel: firstDeletedName
+          })
           this.$emit('folders-touched', deletedPaths)
           this.$emit('duplicates-deleted')
           this.previewResults = null
@@ -1310,6 +1323,19 @@ export default {
         const { success } = await deleteFiles(filesToDelete)
         if (success.length > 0) {
           const deletedPaths = success.map(file => file && file.path).filter(Boolean)
+          const bytesReclaimed = success.reduce(
+            (sum, file) => sum + (Number(file && file.size) > 0 ? Math.floor(Number(file.size)) : 0),
+            0
+          )
+          const groupsResolved = new Set(success.map(file => file && file.fileHash).filter(Boolean)).size
+          const firstDeletedName = deletedPaths[0] ? deletedPaths[0].split('/').pop() : ''
+          this.$emit('reclamation-recorded', {
+            bytesReclaimed,
+            filesDeleted: success.length,
+            groupsResolved,
+            source: 'folder',
+            sampleLabel: keptFolderPath
+          })
           this.$emit('folders-touched', deletedPaths)
           this.$emit('duplicates-deleted')
           if (this.detectEmptyFoldersAfterDelete && typeof api.scanEmptyFolders === 'function') {

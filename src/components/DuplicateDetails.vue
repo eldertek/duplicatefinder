@@ -894,7 +894,16 @@ export default {
       if (file && file.path) {
         this.$emit('folders-touched', [file.path]);
       }
+      const bytesReclaimed = Number(file && file.size) > 0 ? Math.floor(Number(file.size)) : 0;
+      const sampleLabel = file && typeof file.path === 'string' ? file.path.split('/').pop() : '';
       if (result.deletedNodeIds && result.deletedNodeIds.length > 1) {
+        this.$emit('reclamation-recorded', {
+          bytesReclaimed,
+          filesDeleted: result.deletedNodeIds.length,
+          groupsResolved: 1,
+          source: 'single',
+          sampleLabel
+        });
         this.$emit('duplicatesSearchCompleted');
         return;
       }
@@ -903,7 +912,16 @@ export default {
       this.selectedFiles = this.selectedFiles.filter(selected => !isSameFile(selected, file));
       console.log('DuplicateDetails: Files remaining:', this.duplicate.files.length);
 
-      if (this.duplicate.files.length <= 1) {
+      const isResolved = this.duplicate.files.length <= 1;
+      this.$emit('reclamation-recorded', {
+        bytesReclaimed,
+        filesDeleted: 1,
+        groupsResolved: isResolved ? 1 : 0,
+        source: 'single',
+        sampleLabel
+      });
+
+      if (isResolved) {
         console.log('DuplicateDetails: Emitting duplicate-resolved event');
         this.$emit('duplicate-resolved', {
           duplicate: {
@@ -949,14 +967,35 @@ export default {
       const { success, deletedNodeIds = [] } = await deleteFiles(this.selectedFiles, { allowLastCopy });
       if (success.length > 0) {
         this.$emit('folders-touched', success.map(file => file && file.path).filter(Boolean));
+        const bytesReclaimed = success.reduce(
+          (sum, item) => sum + (Number(item && item.size) > 0 ? Math.floor(Number(item.size)) : 0),
+          0
+        );
+        const sampleLabel = this.getGroupDisplayName(this.duplicate);
         if (deletedNodeIds.length > 1) {
+          this.$emit('reclamation-recorded', {
+            bytesReclaimed,
+            filesDeleted: success.length,
+            groupsResolved: 1,
+            source: 'group',
+            sampleLabel
+          });
           this.$emit('duplicatesSearchCompleted');
           return;
         }
         removeFilesFromList(success, this.duplicate.files);
         this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
 
-        if (this.duplicate.files.length <= 1) {
+        const isResolved = this.duplicate.files.length <= 1;
+        this.$emit('reclamation-recorded', {
+          bytesReclaimed,
+          filesDeleted: success.length,
+          groupsResolved: isResolved ? 1 : 0,
+          source: 'group',
+          sampleLabel
+        });
+
+        if (isResolved) {
           this.$emit('duplicate-resolved', {
             duplicate: this.duplicate,
             type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged'

@@ -169,6 +169,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 		'./components/DuplicateNavigation.vue': { __esModule: true, default: DuplicateNavigation },
 		'./components/DuplicateDetails.vue': { __esModule: true, default: detailsComponent },
 		'./components/DuplicateTreemap.vue': { __esModule: true, default: DuplicateTreemap },
+		'./components/SpaceReclamationTimeline.vue': { __esModule: true, default: stub('space-reclamation-timeline') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -192,6 +193,10 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 		},
 		'@/tools/utils': utils,
 		'@/tools/keyboardShortcuts': keyboardShortcuts,
+		'@/tools/reclamationHistory': loadModule('src/tools/reclamationHistory.js', {
+			'./duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
+			'./duplicateStats': statsModule,
+		}),
 		'vue-material-design-icons/Folder': icon,
 		'vue-material-design-icons/FolderRemove': icon,
 		'vue-material-design-icons/FolderMultiple': icon,

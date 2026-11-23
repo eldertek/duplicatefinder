@@ -163,6 +163,34 @@
 							<span>{{ t('duplicatefinder', 'Treemap') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-history-button"
+							:class="{ 'is-active': historyOpen }"
+							:aria-pressed="historyOpen ? 'true' : 'false'"
+							aria-keyshortcuts="h"
+							:title="t('duplicatefinder', 'Toggle scan history and space reclamation timeline')"
+							@click="toggleHistory">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle
+									cx="12"
+									cy="12"
+									r="9" />
+								<polyline points="12 7 12 12 15 15" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'History') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -229,6 +257,7 @@
 				<template v-if="activeView === 'bulk-delete'">
 					<BulkDeletionSettings
 						@duplicates-deleted="refreshDuplicates"
+						@reclamation-recorded="onReclamationRecorded"
 						@folders-touched="recordTouchedFolders" />
 				</template>
 				<template v-else-if="activeView === 'project'">
@@ -244,10 +273,17 @@
 						@duplicate-resolved="backToProject"
 						@duplicateUpdated="updateDuplicate"
 						@openSettings="settingsOpen = true"
+						@reclamation-recorded="onReclamationRecorded"
 						@folders-touched="recordTouchedFolders"
 						@duplicatesSearchCompleted="backToProject" />
 				</template>
 				<template v-else>
+					<SpaceReclamationTimeline
+						v-if="historyOpen"
+						:history-state="reclamationHistory"
+						:current-backlog="currentReclamationBacklog"
+						@clear-history="onClearReclamationHistory"
+						@close="historyOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -265,6 +301,7 @@
 						@duplicateUpdated="updateDuplicate"
 						@openSettings="settingsOpen = true"
 						@startScan="triggerScan"
+						@reclamation-recorded="onReclamationRecorded"
 						@folders-touched="recordTouchedFolders"
 						@duplicatesSearchCompleted="refreshDuplicates" />
 				</template>
@@ -681,6 +718,7 @@ import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSetti
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
 import DuplicateTreemap from './components/DuplicateTreemap.vue';
+import SpaceReclamationTimeline from './components/SpaceReclamationTimeline.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -702,6 +740,14 @@ import {
 	resolveShortcutAction,
 	stepDuplicateSelection,
 } from '@/tools/keyboardShortcuts';
+import {
+	clearReclamationHistory,
+	computeDuplicateBacklogSnapshot,
+	loadReclamationHistory,
+	recordCleanupBatch,
+	recordScanSnapshot,
+	saveReclamationHistory,
+} from '@/tools/reclamationHistory';
 import Folder from 'vue-material-design-icons/Folder';
 import FolderRemove from 'vue-material-design-icons/FolderRemove';
 import FolderMultiple from 'vue-material-design-icons/FolderMultiple';
@@ -736,6 +782,7 @@ export default {
 		DuplicateNavigation,
 		DuplicateDetails,
 		DuplicateTreemap,
+		SpaceReclamationTimeline,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -766,6 +813,8 @@ export default {
 			minSizeBytes: savedPreferences.minSizeBytes,
 			settingsOpen: false,
 			treemapOpen: false,
+			historyOpen: false,
+			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
 			activeView: 'details',
@@ -885,6 +934,16 @@ export default {
 			const ack = Array.isArray(this.acknowledgedDuplicates) ? this.acknowledgedDuplicates : []
 			return [...unack, ...ack]
 		},
+		currentReclamationBacklog() {
+			return computeDuplicateBacklogSnapshot(
+				this.allLoadedDuplicates,
+				{
+					unacknowledgedCount: this.unacknowledgedDuplicateCount,
+					acknowledgedCount: this.acknowledgedDuplicateCount,
+				},
+				this.scanStatus
+			)
+		},
 		duplicateCountTooltipText() {
 			return t(
 				'duplicatefinder',
@@ -928,6 +987,7 @@ export default {
 				'toggle-bulk-delete-view': t('duplicatefinder', 'Toggle Bulk Delete view'),
 				'toggle-compare-view': t('duplicatefinder', 'Toggle side-by-side visual comparison'),
 				'toggle-treemap': t('duplicatefinder', 'Toggle interactive storage treemap'),
+				'toggle-reclamation-history': t('duplicatefinder', 'Toggle scan history and reclamation timeline'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1129,6 +1189,34 @@ export default {
 			}
 			this.treemapOpen = !this.treemapOpen
 			return true
+		},
+		toggleHistory() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.historyOpen = !this.historyOpen
+			return true
+		},
+		recordCurrentScanSnapshot(trigger = 'sync') {
+			const updated = recordScanSnapshot(
+				this.reclamationHistory,
+				this.currentReclamationBacklog,
+				{ trigger }
+			)
+			if (updated !== this.reclamationHistory) {
+				this.reclamationHistory = updated
+				saveReclamationHistory(undefined, updated)
+			}
+		},
+		onReclamationRecorded(batch) {
+			const updated = recordCleanupBatch(this.reclamationHistory, batch)
+			if (updated !== this.reclamationHistory) {
+				this.reclamationHistory = updated
+				saveReclamationHistory(undefined, updated)
+			}
+		},
+		onClearReclamationHistory() {
+			this.reclamationHistory = clearReclamationHistory(undefined)
 		},
 		onFilteredDuplicatesChanged(list) {
 			this.filteredDuplicatesForTreemap = Array.isArray(list) ? list : []
@@ -1349,6 +1437,13 @@ export default {
 
 			if (action === 'toggle-treemap') {
 				if (this.toggleTreemap() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-reclamation-history') {
+				if (this.toggleHistory() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -1690,6 +1785,7 @@ export default {
 				if (initialScanStatus) {
 					await this.applyScanStatus(initialScanStatus, { isInitial: true })
 				}
+				this.recordCurrentScanSnapshot('baseline')
 			} catch (error) {
 				console.error('Error loading initial data:', error)
 			} finally {
@@ -1750,6 +1846,7 @@ export default {
 
 			if (completedNewScan) {
 				await this.refreshDuplicates({ silent: true })
+				this.recordCurrentScanSnapshot('manual')
 				if (wasRunning && typeof notifyScanCompleted === 'function') {
 					notifyScanCompleted()
 				}
@@ -1805,6 +1902,7 @@ export default {
 						this.wasTrackingActiveScan = false
 						this.clearScanPollTimer()
 						await this.refreshDuplicates({ silent: true })
+						this.recordCurrentScanSnapshot('manual')
 						if (typeof notifyScanCompleted === 'function') {
 							notifyScanCompleted()
 						}
@@ -2251,7 +2349,8 @@ export default {
 
 .app-content-topbar .topbar-scan-button,
 .app-content-topbar .topbar-empty-folders-button,
-.app-content-topbar .topbar-treemap-button {
+.app-content-topbar .topbar-treemap-button,
+.app-content-topbar .topbar-history-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -2273,7 +2372,8 @@ export default {
 
 .app-content-topbar .topbar-scan-button svg,
 .app-content-topbar .topbar-empty-folders-button svg,
-.app-content-topbar .topbar-treemap-button svg {
+.app-content-topbar .topbar-treemap-button svg,
+.app-content-topbar .topbar-history-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -2283,12 +2383,15 @@ export default {
 .app-content-topbar .topbar-empty-folders-button:hover:not(:disabled),
 .app-content-topbar .topbar-empty-folders-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-treemap-button:hover:not(:disabled),
-.app-content-topbar .topbar-treemap-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-treemap-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-history-button:hover:not(:disabled),
+.app-content-topbar .topbar-history-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
 
-.app-content-topbar .topbar-treemap-button.is-active {
+.app-content-topbar .topbar-treemap-button.is-active,
+.app-content-topbar .topbar-history-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -2511,6 +2614,7 @@ export default {
 	.app-content-topbar .topbar-scan-button,
 	.app-content-topbar .topbar-empty-folders-button,
 	.app-content-topbar .topbar-treemap-button,
+	.app-content-topbar .topbar-history-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

@@ -96,6 +96,7 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 		},
 		'./components/DuplicateDetails.vue': { __esModule: true, default: stub('duplicate-details') },
 		'./components/DuplicateTreemap.vue': { __esModule: true, default: stub('duplicate-treemap') },
+		'./components/SpaceReclamationTimeline.vue': { __esModule: true, default: stub('space-reclamation-timeline') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },
@@ -112,6 +113,10 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 		},
 		'@/tools/utils': utils,
 		'@/tools/keyboardShortcuts': loadModule('src/tools/keyboardShortcuts.js'),
+		'@/tools/reclamationHistory': loadModule('src/tools/reclamationHistory.js', {
+			'./duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
+			'./duplicateStats': loadModule('src/tools/duplicateStats.js'),
+		}),
 		'vue-material-design-icons/Folder': icon,
 		'vue-material-design-icons/FolderRemove': icon,
 		'vue-material-design-icons/FolderMultiple': icon,
