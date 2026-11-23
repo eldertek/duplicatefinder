@@ -1,3 +1,7 @@
+## 1.10.41 - 2026-11-23
+### Added
+- **Export filtered CSV report keyboard shortcut (`e`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `e` (`export-csv-report`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` (`exportFilteredCsvReport()`) to invoke `DuplicateNavigation.vue` (`exportFilteredCsv()`) for CWE-1236-safe CSV export when `filteredDuplicatesForExport` is non-empty and `e` is pressed outside editable controls and open modal dialogs, and annotated `.export-csv-button` with `aria-keyshortcuts="e"`.
+
 ## 1.10.40 - 2026-11-23
 ### Added
 - **Jump to largest reclaimable group keyboard shortcut (`g`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `g` (`jump-to-largest-group`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` (`jumpToLargestDuplicateGroup()`) and `DuplicateNavigation.vue` (`jumpToLargestGroup()`) to select and scroll to `largestDuplicateGroup` when `g` is pressed outside editable controls and open modal dialogs, and annotated `.largest-group-jump-button` with `aria-keyshortcuts="g"`.
