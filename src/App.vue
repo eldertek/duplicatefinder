@@ -786,6 +786,40 @@
 							<span>{{ t('duplicatefinder', 'Quota') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-preview-cache-button"
+							:class="{ 'is-active': previewCacheOpen }"
+							:aria-pressed="previewCacheOpen ? 'true' : 'false'"
+							aria-keyshortcuts="["
+							:title="t('duplicatefinder', 'Toggle orphaned Nextcloud preview and cache reclaim analyzer')"
+							@click="togglePreviewCache">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="3"
+									y="4"
+									width="18"
+									height="14"
+									rx="2" />
+								<circle
+									cx="8.5"
+									cy="9.5"
+									r="1.5" />
+								<path d="M21 15l-5-5L5 18" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Preview Cache') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1074,6 +1108,16 @@
 						@quota-delete-completed="onQuotaDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="quotaAttributionOpen = false" />
+					<PreviewCacheWorkbench
+						v-if="previewCacheOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onPreviewCacheSelectDuplicate"
+						@compare-duplicate="onPreviewCacheCompareDuplicate"
+						@preview-cache-delete-completed="onPreviewCacheDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="previewCacheOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1528,6 +1572,7 @@ import BrokenMediaQuarantineWorkbench from './components/BrokenMediaQuarantineWo
 import RetentionAgeWorkbench from './components/RetentionAgeWorkbench.vue'
 import FilenameCollisionWorkbench from './components/FilenameCollisionWorkbench.vue'
 import QuotaAttributionWorkbench from './components/QuotaAttributionWorkbench.vue'
+import PreviewCacheWorkbench from './components/PreviewCacheWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1611,6 +1656,7 @@ export default {
 		RetentionAgeWorkbench,
 		FilenameCollisionWorkbench,
 		QuotaAttributionWorkbench,
+		PreviewCacheWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1661,6 +1707,7 @@ export default {
 			retentionPrunerOpen: false,
 			filenameCollisionsOpen: false,
 			quotaAttributionOpen: false,
+			previewCacheOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1855,6 +1902,7 @@ export default {
 				'toggle-retention-pruner': t('duplicatefinder', 'Toggle retention age, cold-storage and stale artifact pruner workbench'),
 				'toggle-filename-collisions': t('duplicatefinder', 'Toggle filename normalization and Locale/Unicode collision inspector'),
 				'toggle-quota-attribution': t('duplicatefinder', 'Toggle multi-root cross-user quota attribution and chargeback heatmap'),
+				'toggle-preview-cache': t('duplicatefinder', 'Toggle orphaned Nextcloud preview and cache reclaim analyzer'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2441,6 +2489,25 @@ export default {
 		onQuotaDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		togglePreviewCache() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.previewCacheOpen = !this.previewCacheOpen
+			return true
+		},
+		onPreviewCacheSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onPreviewCacheCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onPreviewCacheDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -2946,6 +3013,13 @@ export default {
 
 			if (action === 'toggle-quota-attribution') {
 				if (this.toggleQuotaAttribution() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-preview-cache') {
+				if (this.togglePreviewCache() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3871,7 +3945,8 @@ export default {
 .app-content-topbar .topbar-broken-quarantine-button,
 .app-content-topbar .topbar-retention-pruner-button,
 .app-content-topbar .topbar-filename-collisions-button,
-.app-content-topbar .topbar-quota-attribution-button {
+.app-content-topbar .topbar-quota-attribution-button,
+.app-content-topbar .topbar-preview-cache-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3913,7 +3988,8 @@ export default {
 .app-content-topbar .topbar-broken-quarantine-button svg,
 .app-content-topbar .topbar-retention-pruner-button svg,
 .app-content-topbar .topbar-filename-collisions-button svg,
-.app-content-topbar .topbar-quota-attribution-button svg {
+.app-content-topbar .topbar-quota-attribution-button svg,
+.app-content-topbar .topbar-preview-cache-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3963,7 +4039,9 @@ export default {
 .app-content-topbar .topbar-filename-collisions-button:hover:not(:disabled),
 .app-content-topbar .topbar-filename-collisions-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-quota-attribution-button:hover:not(:disabled),
-.app-content-topbar .topbar-quota-attribution-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-quota-attribution-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-preview-cache-button:hover:not(:disabled),
+.app-content-topbar .topbar-preview-cache-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3988,7 +4066,8 @@ export default {
 .app-content-topbar .topbar-broken-quarantine-button.is-active,
 .app-content-topbar .topbar-retention-pruner-button.is-active,
 .app-content-topbar .topbar-filename-collisions-button.is-active,
-.app-content-topbar .topbar-quota-attribution-button.is-active {
+.app-content-topbar .topbar-quota-attribution-button.is-active,
+.app-content-topbar .topbar-preview-cache-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -4156,6 +4235,7 @@ export default {
 .app-content-topbar .topbar-retention-pruner-button > *,
 .app-content-topbar .topbar-filename-collisions-button > *,
 .app-content-topbar .topbar-quota-attribution-button > *,
+.app-content-topbar .topbar-preview-cache-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -4262,6 +4342,7 @@ export default {
 	.app-content-topbar .topbar-retention-pruner-button,
 	.app-content-topbar .topbar-filename-collisions-button,
 	.app-content-topbar .topbar-quota-attribution-button,
+	.app-content-topbar .topbar-preview-cache-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
