@@ -862,6 +862,7 @@ export default {
 				'clear-selection': t('duplicatefinder', 'Clear current selection'),
 				'copy-group-hash': t('duplicatefinder', 'Copy active group hash'),
 				'export-csv-report': t('duplicatefinder', 'Export current duplicate report (CSV)'),
+				'export-json-report': t('duplicatefinder', 'Export current duplicate report (JSON)'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'reset-filters': t('duplicatefinder', 'Reset all active filters and sorting'),
 				'reset-all-filters': t('duplicatefinder', 'Reset all active filters'),
@@ -990,10 +991,11 @@ export default {
 			return false
 		},
 		/**
-		 * Export the currently filtered duplicate report as CSV in details view.
-		 * @returns {boolean} True when a non-empty CSV export was triggered.
+		 * Export the currently filtered duplicate report using the given navigation method in details view.
+		 * @param {string} methodName Method name on DuplicateNavigation ('exportFilteredCsv' | 'exportFilteredJson').
+		 * @returns {boolean} True when a non-empty export was triggered.
 		 */
-		exportFilteredCsvReport() {
+		exportFilteredReport(methodName) {
 			if (this.activeView !== 'details') {
 				return false
 			}
@@ -1005,10 +1007,24 @@ export default {
 			) {
 				return false
 			}
-			if (typeof navigation.exportFilteredCsv === 'function') {
-				return Boolean(navigation.exportFilteredCsv())
+			if (typeof navigation[methodName] === 'function') {
+				return Boolean(navigation[methodName]())
 			}
 			return false
+		},
+		/**
+		 * Export the currently filtered duplicate report as CSV in details view.
+		 * @returns {boolean} True when a non-empty CSV export was triggered.
+		 */
+		exportFilteredCsvReport() {
+			return this.exportFilteredReport('exportFilteredCsv')
+		},
+		/**
+		 * Export the currently filtered duplicate report as JSON in details view.
+		 * @returns {boolean} True when a non-empty JSON export was triggered.
+		 */
+		exportFilteredJsonReport() {
+			return this.exportFilteredReport('exportFilteredJson')
 		},
 		openShortcutsDialog() {
 			this.lastFocusedBeforeShortcuts = typeof document !== 'undefined' ? document.activeElement : null
@@ -1154,6 +1170,13 @@ export default {
 
 			if (action === 'export-csv-report') {
 				if (this.exportFilteredCsvReport() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'export-json-report') {
+				if (this.exportFilteredJsonReport() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return

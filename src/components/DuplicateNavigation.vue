@@ -374,6 +374,7 @@
                     <button
                         type="button"
                         class="export-json-button"
+                        aria-keyshortcuts="x"
                         :disabled="filteredDuplicatesForExport.length === 0"
                         :title="t('duplicatefinder', 'Export filtered duplicates as JSON')"
                         :aria-label="t('duplicatefinder', 'Export JSON')"

@@ -49,6 +49,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'export-csv-report',
 	},
 	{
+		id: 'export-json-report',
+		keys: ['x'],
+		action: 'export-json-report',
+	},
+	{
 		id: 'focus-search',
 		keys: ['/'],
 		action: 'focus-search',
@@ -87,6 +92,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	c: 'clear-selection',
 	y: 'copy-group-hash',
 	e: 'export-csv-report',
+	x: 'export-json-report',
 	r: 'reset-filters',
 	'0': 'reset-all-filters',
 })
