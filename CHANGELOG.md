@@ -1,3 +1,8 @@
+## 1.10.27 - 2026-11-23
+### Added
+- **Compact group header summary banner** (`src/tools/duplicateGroupSummary.js`, `src/components/DuplicateDetails.vue`). Added a pure `computeGroupHeaderSummary` helper and an accessible header summary banner displaying total copies, redundant copies, reclaimable space, and protected origin copy count for the active duplicate group.
+- **Quick triage keyboard shortcuts `o` and `c`** (`src/tools/keyboardShortcuts.js`, `src/App.vue`, `src/components/DuplicateDetails.vue`). Added `o` to apply the `Keep oldest` selection rule and `c` to clear the active file selection during duplicate triage, suppressed cleanly inside editable controls and open modal dialogs.
+
 ## 1.10.26 - 2026-11-23
 ### Added
 - **Clear selection button and Escape shortcut in duplicate details** (`src/components/DuplicateDetails.vue`). Added a one-click `Clear selection` action in the deletion safety bar (restoring focus cleanly when activated) and an `Escape` shortcut to clear active file selections without interrupting open dialogs or dropdowns.
