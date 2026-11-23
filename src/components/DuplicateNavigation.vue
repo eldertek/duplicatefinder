@@ -38,6 +38,14 @@
                         <button
                             type="button"
                             class="sort-option"
+                            :class="{ 'active': sortOption === 'reclaimable-desc' }"
+                            :aria-pressed="sortOption === 'reclaimable-desc' ? 'true' : 'false'"
+                            @click="setSortOption('reclaimable-desc'); toggleSortMenu()">
+                            {{ t('duplicatefinder', 'Reclaimable space (most wasted first)') }}
+                        </button>
+                        <button
+                            type="button"
+                            class="sort-option"
                             :class="{ 'active': sortOption === 'size-desc' }"
                             :aria-pressed="sortOption === 'size-desc' ? 'true' : 'false'"
                             @click="setSortOption('size-desc'); toggleSortMenu()">
@@ -445,6 +453,7 @@ import {
     saveTriagePreferences,
 } from '@/tools/duplicatePreferences';
 import { downloadDuplicatesCsv } from '@/tools/duplicateSelectionAndExport';
+import { sortDuplicatesDeterministically } from '@/tools/duplicateSortHelper';
 import {
     computeExtensionBreakdown,
     computeGroupReclaimableBytes,
@@ -921,8 +930,15 @@ export default {
             console.log('Sort option changed to:', this.sortOption);
         },
         sortDuplicates(duplicates) {
-            if (this.sortOption === 'none') {
+            if (!Array.isArray(duplicates) || this.sortOption === 'none') {
                 return duplicates; // No sorting, return as is
+            }
+
+            if (this.sortOption === 'reclaimable-desc') {
+                return sortDuplicatesDeterministically(duplicates, {
+                    sortBy: 'reclaimable',
+                    direction: 'desc',
+                });
             }
 
             // Create a copy to avoid mutating the original array
@@ -1453,23 +1469,26 @@ export default {
 .sort-menu {
     position: absolute;
     inset-inline-end: 0;
-    top: calc(100% + 4px);
+    inset-block-start: calc(100% + 4px);
     background-color: var(--color-main-background, #ffffff);
     background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
     border: 1px solid var(--color-border-dark, var(--color-border));
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
     z-index: 2000;
-    min-width: 220px;
-    max-width: calc(100vw - 24px);
-    padding: 6px 0;
+    min-inline-size: 220px;
+    max-inline-size: calc(100vw - 24px);
+    padding-block: 6px;
+    padding-inline: 0;
+    box-sizing: border-box;
     opacity: 1;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
 }
 
 .sort-menu-section-title {
-    padding: 6px 12px 4px;
+    padding-block: 6px 4px;
+    padding-inline: 12px;
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--color-text-maxcontrast);
@@ -1478,17 +1497,21 @@ export default {
 }
 
 .sort-menu-divider {
-    height: 1px;
-    margin: 4px 0;
+    block-size: 1px;
+    margin-block: 4px;
+    margin-inline: 0;
     background-color: var(--color-border);
 }
 
 .sort-option {
     display: flex;
     align-items: center;
-    width: 100%;
-    min-height: 44px;
-    padding: 7px 12px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 7px;
+    padding-inline: 12px;
     border: none;
     background: transparent;
     color: var(--color-main-text);
@@ -1496,6 +1519,9 @@ export default {
     cursor: pointer;
     transition: background-color 0.2s;
     font-size: 0.9rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
 }
 
 .sort-option:hover {

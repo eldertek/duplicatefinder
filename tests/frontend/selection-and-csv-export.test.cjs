@@ -38,6 +38,7 @@ function createDetailsComponent() {
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
+		'@/tools/duplicateSortHelper': loadModule('src/tools/duplicateSortHelper.js'),
 		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 		'@/tools/duplicateMetadataBadges': metadataBadges,
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
@@ -102,6 +103,7 @@ function createNavigationComponent() {
 		'@/tools/duplicateFilters': duplicateFilters,
 		'@/tools/duplicatePreferences': loadModule('src/tools/duplicatePreferences.js'),
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
+		'@/tools/duplicateSortHelper': loadModule('src/tools/duplicateSortHelper.js'),
 		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 		'@/tools/duplicateMetadataBadges': metadataBadges,
 	})

@@ -76,6 +76,7 @@ function createNavigationComponent() {
 		'@/tools/duplicateFilters': duplicateFilters,
 		'@/tools/duplicatePreferences': duplicatePreferences,
 		'@/tools/duplicateSelectionAndExport': duplicateSelectionAndExport,
+		'@/tools/duplicateSortHelper': loadModule('src/tools/duplicateSortHelper.js'),
 		'@/tools/duplicateStats': duplicateStats,
 	})
 }

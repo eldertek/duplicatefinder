@@ -18,6 +18,7 @@ export const DEFAULT_ALLOWED_CATEGORIES = Object.freeze([
 
 export const DEFAULT_ALLOWED_SORT_KEYS = Object.freeze([
 	'none',
+	'reclaimable-desc',
 	'size-desc',
 	'size-asc',
 ])

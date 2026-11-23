@@ -269,7 +269,7 @@ export function loadUiPreferences() {
         if (!parsed || typeof parsed !== 'object') {
             return { ...UI_PREFERENCES_DEFAULTS };
         }
-        const validSorts = ['none', 'size-desc', 'size-asc'];
+        const validSorts = ['none', 'reclaimable-desc', 'size-desc', 'size-asc'];
         const parsedMinSize = Number(parsed.minSizeBytes);
         const ignoredEmptyFolders = Array.isArray(parsed.ignoredEmptyFolders)
             ? Array.from(new Set(parsed.ignoredEmptyFolders.filter(p => typeof p === 'string' && p.length > 0)))
@@ -313,7 +313,7 @@ export function saveUiPreferences(partial) {
         if (typeof partial.unacknowledgedOpen === 'boolean') {
             next.unacknowledgedOpen = partial.unacknowledgedOpen;
         }
-        if (['none', 'size-desc', 'size-asc'].includes(partial.sortOption)) {
+        if (['none', 'reclaimable-desc', 'size-desc', 'size-asc'].includes(partial.sortOption)) {
             next.sortOption = partial.sortOption;
         }
         if (partial.minSizeBytes !== undefined) {

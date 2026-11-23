@@ -74,6 +74,7 @@ function createNavigationComponent() {
 		'@/tools/duplicateFilters': duplicateFilters,
 		'@/tools/duplicatePreferences': duplicatePreferences,
 		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
+		'@/tools/duplicateSortHelper': loadModule('src/tools/duplicateSortHelper.js'),
 		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 	})
 }

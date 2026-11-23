@@ -165,6 +165,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 			'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
 			'@/tools/duplicatePreferences': loadModule('src/tools/duplicatePreferences.js'),
 			'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
+			'@/tools/duplicateSortHelper': loadModule('src/tools/duplicateSortHelper.js'),
 			'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 			'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
 		})
@@ -196,6 +197,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 			'@/tools/api': { acknowledgeDuplicate: async () => {}, unacknowledgeDuplicate: async () => {}, deleteFiles: async () => ({ success: [], errors: [] }), findDuplicates: async () => {} },
 			'@/tools/utils': utils,
 			'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
+			'@/tools/duplicateSortHelper': loadModule('src/tools/duplicateSortHelper.js'),
 			'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 			'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
 			'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
