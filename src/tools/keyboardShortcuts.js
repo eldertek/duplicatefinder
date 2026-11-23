@@ -104,6 +104,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-folder-matrix',
 	},
 	{
+		id: 'toggle-storage-footprint',
+		keys: ['z'],
+		action: 'toggle-storage-footprint',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -163,6 +168,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	i: 'toggle-file-hygiene',
 	l: 'toggle-link-simulator',
 	d: 'toggle-folder-matrix',
+	z: 'toggle-storage-footprint',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',

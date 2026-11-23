@@ -27,6 +27,7 @@
 					@query-options-changed="handleQueryOptionsChanged"
 					@filtered-duplicates-changed="onFilteredDuplicatesChanged"
 					@folder-filter-changed="onFolderFilterChanged"
+					@extension-filter-changed="onExtensionFilterChanged"
 					@load-more-start="onLoadMoreStart"
 					@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
 					@update-unacknowledged-duplicates="updateUnacknowledgedDuplicates" />
@@ -329,6 +330,32 @@
 							<span>{{ t('duplicatefinder', 'Folder Matrix') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-footprint-button"
+							:class="{ 'is-active': footprintAnalyzerOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="footprintAnalyzerOpen ? 'true' : 'false'"
+							aria-keyshortcuts="z"
+							:title="t('duplicatefinder', 'Toggle storage footprint and extension analyzer')"
+							@click="toggleFootprintAnalyzer">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+								<path d="M22 12A10 10 0 0 0 12 2v10z" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Footprint') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -471,6 +498,17 @@
 						@folder-pair-delete-completed="onFolderMatrixDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="folderMatrixOpen = false" />
+					<StorageFootprintAnalyzer
+						v-if="footprintAnalyzerOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						:synced-extension-filter="footprintSyncedExtension"
+						@select-duplicate="onFootprintSelectDuplicate"
+						@compare-duplicate="onFootprintCompareDuplicate"
+						@sync-extension-filter="onFootprintSyncExtensionFilter"
+						@start-scan="triggerScan"
+						@close="footprintAnalyzerOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -911,6 +949,7 @@ import BatchAutoSelectWorkbench from './components/BatchAutoSelectWorkbench.vue'
 import FileHygieneInspector from './components/FileHygieneInspector.vue';
 import LinkDeduplicationSimulator from './components/LinkDeduplicationSimulator.vue';
 import FolderPairMatrix from './components/FolderPairMatrix.vue';
+import StorageFootprintAnalyzer from './components/StorageFootprintAnalyzer.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -980,6 +1019,7 @@ export default {
 		FileHygieneInspector,
 		LinkDeduplicationSimulator,
 		FolderPairMatrix,
+		StorageFootprintAnalyzer,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1016,9 +1056,11 @@ export default {
 			hygieneOpen: false,
 			linkSimulatorOpen: false,
 			folderMatrixOpen: false,
+			footprintAnalyzerOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
+			footprintSyncedExtension: '',
 			activeView: 'details',
 			acknowledgedPagination: {
 				currentPage: 1,
@@ -1195,6 +1237,7 @@ export default {
 				'toggle-file-hygiene': t('duplicatefinder', 'Toggle file hygiene and bad-extension inspector'),
 				'toggle-link-simulator': t('duplicatefinder', 'Toggle hardlink and reference deduplication simulator'),
 				'toggle-folder-matrix': t('duplicatefinder', 'Toggle directory folder pair matrix'),
+				'toggle-storage-footprint': t('duplicatefinder', 'Toggle storage footprint and extension analyzer'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1501,6 +1544,35 @@ export default {
 		},
 		onFolderMatrixDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
+		},
+		toggleFootprintAnalyzer() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.footprintAnalyzerOpen = !this.footprintAnalyzerOpen
+			return true
+		},
+		onFootprintSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onFootprintCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onFootprintSyncExtensionFilter(ext) {
+			const normalized = typeof ext === 'string' ? ext.trim() : ''
+			this.footprintSyncedExtension = normalized
+			if (
+				this.$refs.duplicateNavigation
+				&& typeof this.$refs.duplicateNavigation.setExtensionFilter === 'function'
+			) {
+				this.$refs.duplicateNavigation.setExtensionFilter(normalized)
+			}
+		},
+		onExtensionFilterChanged(ext) {
+			this.footprintSyncedExtension = typeof ext === 'string' ? ext.trim() : ''
 		},
 		onBatchDeleteCompleted({
 			deletedFiles = [],
@@ -1894,6 +1966,13 @@ export default {
 
 			if (action === 'toggle-folder-matrix') {
 				if (this.toggleFolderMatrix() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-storage-footprint') {
+				if (this.toggleFootprintAnalyzer() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -2805,7 +2884,8 @@ export default {
 .app-content-topbar .topbar-batch-rules-button,
 .app-content-topbar .topbar-hygiene-button,
 .app-content-topbar .topbar-link-simulator-button,
-.app-content-topbar .topbar-folder-matrix-button {
+.app-content-topbar .topbar-folder-matrix-button,
+.app-content-topbar .topbar-footprint-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -2833,7 +2913,8 @@ export default {
 .app-content-topbar .topbar-batch-rules-button svg,
 .app-content-topbar .topbar-hygiene-button svg,
 .app-content-topbar .topbar-link-simulator-button svg,
-.app-content-topbar .topbar-folder-matrix-button svg {
+.app-content-topbar .topbar-folder-matrix-button svg,
+.app-content-topbar .topbar-footprint-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -2855,7 +2936,9 @@ export default {
 .app-content-topbar .topbar-link-simulator-button:hover:not(:disabled),
 .app-content-topbar .topbar-link-simulator-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-folder-matrix-button:hover:not(:disabled),
-.app-content-topbar .topbar-folder-matrix-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-folder-matrix-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-footprint-button:hover:not(:disabled),
+.app-content-topbar .topbar-footprint-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -2866,7 +2949,8 @@ export default {
 .app-content-topbar .topbar-batch-rules-button.is-active,
 .app-content-topbar .topbar-hygiene-button.is-active,
 .app-content-topbar .topbar-link-simulator-button.is-active,
-.app-content-topbar .topbar-folder-matrix-button.is-active {
+.app-content-topbar .topbar-folder-matrix-button.is-active,
+.app-content-topbar .topbar-footprint-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -2877,7 +2961,8 @@ export default {
 .app-content-topbar .topbar-batch-rules-button:disabled,
 .app-content-topbar .topbar-hygiene-button:disabled,
 .app-content-topbar .topbar-link-simulator-button:disabled,
-.app-content-topbar .topbar-folder-matrix-button:disabled {
+.app-content-topbar .topbar-folder-matrix-button:disabled,
+.app-content-topbar .topbar-footprint-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -3014,6 +3099,7 @@ export default {
 .app-content-topbar .topbar-hygiene-button > *,
 .app-content-topbar .topbar-link-simulator-button > *,
 .app-content-topbar .topbar-folder-matrix-button > *,
+.app-content-topbar .topbar-footprint-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3106,6 +3192,7 @@ export default {
 	.app-content-topbar .topbar-hygiene-button,
 	.app-content-topbar .topbar-link-simulator-button,
 	.app-content-topbar .topbar-folder-matrix-button,
+	.app-content-topbar .topbar-footprint-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
@@ -3418,6 +3505,7 @@ export default {
 .app-content-topbar .topbar-history-button:focus-visible,
 .app-content-topbar .topbar-similarity-button:focus-visible,
 .app-content-topbar .topbar-batch-rules-button:focus-visible,
+.app-content-topbar .topbar-footprint-button:focus-visible,
 .app-content-topbar .topbar-bulk-delete-button:focus-visible,
 .nc-confirm-dialog__button:focus-visible {
 	outline: 2px solid var(--color-primary-element, #0082c9) !important;

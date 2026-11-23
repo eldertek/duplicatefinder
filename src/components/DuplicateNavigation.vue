@@ -752,6 +752,12 @@ export default {
                 this.$emit('folder-filter-changed', typeof nextQuery === 'string' ? nextQuery : '');
             },
         },
+        selectedExtension: {
+            immediate: true,
+            handler(nextExtension) {
+                this.$emit('extension-filter-changed', typeof nextExtension === 'string' ? nextExtension : '');
+            },
+        },
     },
     computed: {
         hasAnyDuplicates() {
@@ -1113,6 +1119,16 @@ export default {
         },
         setFolderFilter(folderPath) {
             this.folderQuery = typeof folderPath === 'string' ? folderPath.trim() : '';
+        },
+        setExtensionFilter(ext) {
+            if (typeof ext !== 'string' || !ext.trim()) {
+                this.selectedExtension = '';
+                return;
+            }
+            const raw = ext.trim().toLowerCase();
+            this.selectedExtension = raw === 'other'
+                ? 'other'
+                : (raw.startsWith('.') ? raw : `.${raw}`);
         },
         clearSearchFilter() {
             this.searchPattern = '';
