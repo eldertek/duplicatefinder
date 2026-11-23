@@ -703,3 +703,293 @@ describe('Cycle 56: quick triage keyboard shortcuts o (Keep oldest) and c (Clear
 		}
 	})
 })
+
+describe('Cycle 80: quick triage triad shortcuts n (Keep newest) and s (Keep shortest path)', () => {
+	test('resolveShortcutAction maps n/s, documents them in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const keepNewestDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'keep-newest')
+		const keepShortestDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'keep-shortest-path')
+		assert.deepEqual(keepNewestDef, { id: 'keep-newest', keys: ['n'], action: 'keep-newest' })
+		assert.deepEqual(keepShortestDef, { id: 'keep-shortest-path', keys: ['s'], action: 'keep-shortest-path' })
+
+		assert.equal(resolveShortcutAction({ key: 'n' }), 'keep-newest')
+		assert.equal(resolveShortcutAction({ key: 's' }), 'keep-shortest-path')
+
+		// Modifiers and Shift must never be hijacked (e.g. Ctrl+s / Cmd+s save)
+		assert.equal(resolveShortcutAction({ key: 'n', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 's', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 's', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'n', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'N', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'S', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: 'n' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 's' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'n' }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 's' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: 'n', target }), null)
+			assert.equal(resolveShortcutAction({ key: 's', target }), null)
+		}
+	})
+
+	test('App.vue -> DuplicateDetails.vue applies Keep newest on n, Keep shortest path on s, updates help <dialog>, and ignores editable fields or open <dialog>', async () => {
+		window.localStorage.clear()
+		const group = {
+			id: 90,
+			hash: 'hash-90',
+			acknowledged: false,
+			files: [
+				{
+					id: 901,
+					nodeId: 901,
+					path: '/alice/files/Origin/Very/Long/Folder/photo.jpg',
+					size: 2048,
+					mtime: 500,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: true,
+				},
+				{
+					id: 902,
+					nodeId: 902,
+					path: '/alice/files/B/photo.jpg',
+					size: 2048,
+					mtime: 1000,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: false,
+				},
+				{
+					id: 903,
+					nodeId: 903,
+					path: '/alice/files/Deep/Folder/photo.jpg',
+					size: 2048,
+					mtime: 3000,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: false,
+				},
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [group],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		try {
+			await settle()
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
+
+			// 1. Pressing n keeps newest (mtime=3000 id=903), skips protected id=901, selects id=902
+			const nEvent = new window.KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true })
+			window.dispatchEvent(nEvent)
+			await settle()
+			assert.equal(nEvent.defaultPrevented, true)
+			assert.equal(detailsVm.activeKeepRule, 'newest')
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [902])
+
+			// 2. Pressing s inside editable targets must NOT switch to shortest_path
+			const searchInput = vm.$el.querySelector('input.search-input')
+			assert.ok(searchInput)
+			for (const field of [searchInput, externalTextarea, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 's', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.equal(detailsVm.activeKeepRule, 'newest')
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [902])
+
+			// 3. Help <dialog> documents n and s and blocks n/s while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('n'), 'help dialog documents n shortcut')
+			assert.ok(kbdLabels.includes('s'), 'help dialog documents s shortcut')
+			assert.ok(helpDialog.textContent.includes('Keep newest copy in active group'))
+			assert.ok(helpDialog.textContent.includes('Keep shortest path copy in active group'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 's', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(detailsVm.activeKeepRule, 'newest')
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 4. Delete confirmation <dialog> blocks s
+			detailsVm.$el.querySelector('button.delete-selected-button').click()
+			await settle()
+			assert.equal(detailsVm.showDeleteConfirmDialog, true)
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 's', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(detailsVm.activeKeepRule, 'newest')
+			detailsVm.resolveDeleteConfirm(false)
+			await settle()
+
+			// 5. Pressing s in normal state keeps shortest path (id=902), skips protected id=901, selects id=903
+			const sEvent = new window.KeyboardEvent('keydown', { key: 's', bubbles: true, cancelable: true })
+			window.dispatchEvent(sEvent)
+			await settle()
+			assert.equal(sEvent.defaultPrevented, true)
+			assert.equal(detailsVm.activeKeepRule, 'shortest_path')
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [903])
+
+			// 6. External <dialog open> blocks n
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(detailsVm.activeKeepRule, 'shortest_path')
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [903])
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+		}
+	})
+
+	test('n and s shortcuts never select protected-only groups, ignore bulk-delete view, and work in project-duplicate view', async () => {
+		window.localStorage.clear()
+		const protectedOnlyGroup = {
+			id: 91,
+			hash: 'hash-91',
+			acknowledged: false,
+			files: [
+				{
+					id: 911,
+					nodeId: 911,
+					path: '/alice/files/OriginA/doc.pdf',
+					size: 1024,
+					mtime: 1000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: true,
+				},
+				{
+					id: 912,
+					nodeId: 912,
+					path: '/alice/files/OriginB/Longer/doc.pdf',
+					size: 1024,
+					mtime: 2000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: true,
+				},
+			],
+		}
+		const projectGroup = {
+			id: 92,
+			hash: 'hash-92',
+			acknowledged: false,
+			files: [
+				{
+					id: 921,
+					nodeId: 921,
+					path: '/alice/files/A/report.pdf',
+					size: 4096,
+					mtime: 1000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+				{
+					id: 922,
+					nodeId: 922,
+					path: '/alice/files/Newer/Folder/report.pdf',
+					size: 4096,
+					mtime: 2000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [protectedOnlyGroup],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(detailsVm)
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true }))
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 's', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles, [])
+			assert.equal(detailsVm.activeKeepRule, null)
+
+			// Bulk-delete view ignores n and s
+			vm.openBulkDelete()
+			await settle()
+			const bulkN = new window.KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true })
+			const bulkS = new window.KeyboardEvent('keydown', { key: 's', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkN)
+			window.dispatchEvent(bulkS)
+			await settle()
+			assert.equal(bulkN.defaultPrevented, false)
+			assert.equal(bulkS.defaultPrevented, false)
+
+			// Project-duplicate view supports n and s
+			vm.viewProjectDuplicate(projectGroup)
+			await settle()
+			const projectDetailsVm = vm.$refs.projectDuplicateDetails
+			assert.ok(projectDetailsVm, 'projectDuplicateDetails ref is mounted')
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(projectDetailsVm.activeKeepRule, 'newest')
+			assert.deepEqual(projectDetailsVm.selectedFiles.map(file => file.id), [921])
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 's', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(projectDetailsVm.activeKeepRule, 'shortest_path')
+			assert.deepEqual(projectDetailsVm.selectedFiles.map(file => file.id), [922])
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('App.vue and keyboardShortcuts.js preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of ['src/tools/keyboardShortcuts.js', 'src/App.vue']) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})

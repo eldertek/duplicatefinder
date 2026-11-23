@@ -19,6 +19,16 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'keep-oldest',
 	},
 	{
+		id: 'keep-newest',
+		keys: ['n'],
+		action: 'keep-newest',
+	},
+	{
+		id: 'keep-shortest-path',
+		keys: ['s'],
+		action: 'keep-shortest-path',
+	},
+	{
 		id: 'clear-selection',
 		keys: ['c'],
 		action: 'clear-selection',
@@ -41,6 +51,15 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 ])
 
 const EDITABLE_TAG_NAMES = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
+
+const SINGLE_KEY_ACTIONS = Object.freeze({
+	j: 'next-duplicate',
+	k: 'previous-duplicate',
+	o: 'keep-oldest',
+	n: 'keep-newest',
+	s: 'keep-shortest-path',
+	c: 'clear-selection',
+})
 
 /**
  * Checks whether an event target is an editable form control or contenteditable region.
@@ -151,24 +170,16 @@ export function resolveShortcutAction(event, options = {}) {
 		return 'focus-search'
 	}
 
-	const normalizedKey = !event.shiftKey && key.length === 1
-		? key.toLowerCase()
-		: key
-
-	if (normalizedKey === 'j' || key === 'ArrowDown') {
+	if (key === 'ArrowDown') {
 		return 'next-duplicate'
 	}
 
-	if (normalizedKey === 'k' || key === 'ArrowUp') {
+	if (key === 'ArrowUp') {
 		return 'previous-duplicate'
 	}
 
-	if (normalizedKey === 'o') {
-		return 'keep-oldest'
-	}
-
-	if (normalizedKey === 'c') {
-		return 'clear-selection'
+	if (!event.shiftKey && key.length === 1) {
+		return SINGLE_KEY_ACTIONS[key.toLowerCase()] || null
 	}
 
 	return null

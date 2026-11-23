@@ -675,6 +675,12 @@ const {
 	notifyScanFailed,
 } = api;
 
+const KEEP_SHORTCUT_RULES = Object.freeze({
+	'keep-oldest': 'oldest',
+	'keep-newest': 'newest',
+	'keep-shortest-path': 'shortest_path',
+});
+
 export default {
 	name: 'DuplicateFinder',
 	components: {
@@ -850,6 +856,8 @@ export default {
 				'next-duplicate': t('duplicatefinder', 'Select next duplicate group'),
 				'previous-duplicate': t('duplicatefinder', 'Select previous duplicate group'),
 				'keep-oldest': t('duplicatefinder', 'Keep oldest copy in active group'),
+				'keep-newest': t('duplicatefinder', 'Keep newest copy in active group'),
+				'keep-shortest-path': t('duplicatefinder', 'Keep shortest path copy in active group'),
 				'clear-selection': t('duplicatefinder', 'Clear current selection'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'toggle-help': t('duplicatefinder', 'Toggle keyboard shortcuts help'),
@@ -1072,7 +1080,8 @@ export default {
 				return
 			}
 
-			if (action === 'keep-oldest') {
+			const keepRule = KEEP_SHORTCUT_RULES[action]
+			if (keepRule) {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
 					!detailsComponent
@@ -1086,7 +1095,7 @@ export default {
 				if (typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
-				detailsComponent.applyKeepRule('oldest')
+				detailsComponent.applyKeepRule(keepRule)
 				return
 			}
 
