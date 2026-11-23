@@ -1159,3 +1159,207 @@ describe('Cycle 71: countActiveTriageFilters and Reset filters (N) live counter'
 		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS must use logical properties only')
 	})
 })
+
+describe('Cycle 74: buildActiveFilterChips and clickable individual active filter chips in DuplicateNavigation', () => {
+	test('buildActiveFilterChips returns deterministic { key, label } chips across all 6 dimensions and edge cases', () => {
+		const { buildActiveFilterChips, countActiveTriageFilters } = loadModule('src/tools/duplicateFilters.js')
+
+		assert.deepEqual(buildActiveFilterChips(), [])
+		assert.deepEqual(buildActiveFilterChips(null), [])
+		assert.deepEqual(buildActiveFilterChips(undefined), [])
+		assert.deepEqual(buildActiveFilterChips([]), [])
+		assert.deepEqual(buildActiveFilterChips('invalid'), [])
+
+		assert.deepEqual(buildActiveFilterChips({
+			category: 'all',
+			extension: '  ',
+			folderQuery: '   ',
+			minSizePreset: 'any',
+			minCopiesPreset: 'any',
+			searchQuery: '',
+		}), [])
+
+		assert.deepEqual(buildActiveFilterChips({ category: 'images' }), [
+			{ key: 'category', label: 'Images' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ category: ' LARGE ' }), [
+			{ key: 'category', label: '> 10 MB' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ extension: ' .jpg ' }), [
+			{ key: 'extension', label: '.jpg' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ folderQuery: ' /Photos ' }), [
+			{ key: 'folder', label: 'Folder: /Photos' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ minSizePreset: '10mb' }), [
+			{ key: 'minSize', label: '>= 10 MB' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ minSizePreset: 'custom' }), [
+			{ key: 'minSize', label: 'Custom size' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ minSizePreset: 'custom', minSizeBytes: 5 * 1024 * 1024 }), [
+			{ key: 'minSize', label: '>= 5 MB' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ minCopiesPreset: ' 3PLUS ' }), [
+			{ key: 'minCopies', label: '3+ copies' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ minCopiesPreset: '5plus' }), [
+			{ key: 'minCopies', label: '5+ copies' },
+		])
+		assert.deepEqual(buildActiveFilterChips({ searchQuery: ' holiday ' }), [
+			{ key: 'search', label: 'Search: holiday' },
+		])
+
+		const fullState = {
+			category: 'images',
+			extension: '.jpg',
+			folderQuery: '/Photos',
+			minSizePreset: '10mb',
+			minCopiesPreset: '3plus',
+			searchQuery: 'IMG_',
+		}
+		const fullChips = buildActiveFilterChips(fullState)
+		assert.deepEqual(fullChips, [
+			{ key: 'category', label: 'Images' },
+			{ key: 'extension', label: '.jpg' },
+			{ key: 'folder', label: 'Folder: /Photos' },
+			{ key: 'minSize', label: '>= 10 MB' },
+			{ key: 'minCopies', label: '3+ copies' },
+			{ key: 'search', label: 'Search: IMG_' },
+		])
+		assert.equal(fullChips.length, countActiveTriageFilters(fullState))
+	})
+
+	test('DuplicateNavigation renders clickable active filter chips and removes only the clicked filter without clearing others', async () => {
+		window.localStorage.clear()
+		const DuplicateNavigation = createNavigationComponent()
+		const emittedQueryChanges = []
+		const fifteenMb = 15 * 1024 * 1024
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [],
+						unacknowledgedDuplicates: [
+							{
+								id: 1,
+								hash: 'photo-set',
+								files: [
+									{ id: 11, path: '/Photos/vacation.jpg', mimetype: 'image/jpeg', size: fifteenMb },
+									{ id: 12, path: '/Photos/vacation-copy.jpg', mimetype: 'image/jpeg', size: fifteenMb },
+									{ id: 13, path: '/Downloads/vacation.jpg', mimetype: 'image/jpeg', size: fifteenMb },
+								],
+							},
+						],
+					},
+					on: {
+						'query-options-changed': payload => emittedQueryChanges.push(payload),
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const nav = vm.$refs.nav
+		assert.equal(vm.$el.querySelectorAll('button.active-filter-chip').length, 0)
+
+		// Activate sort + all 6 filters
+		nav.setSortOption('size-desc')
+		nav.setCategoryFilter('images')
+		nav.toggleExtensionFilter('.jpg')
+		nav.folderQuery = '/Photos'
+		nav.setMinSizePreset('10mb')
+		nav.setMinCopiesPreset('3plus')
+		nav.handleSearch({ query: 'vacation', type: 'simple' })
+		await settle()
+
+		const readActiveChips = () => Array.from(vm.$el.querySelectorAll('button.active-filter-chip')).map(btn => ({
+			key: btn.getAttribute('data-filter-key'),
+			label: btn.querySelector('.active-filter-chip-label').textContent.trim(),
+			ariaLabel: btn.getAttribute('aria-label'),
+		}))
+
+		assert.deepEqual(readActiveChips().map(c => ({ key: c.key, label: c.label })), [
+			{ key: 'category', label: 'Images' },
+			{ key: 'extension', label: '.jpg' },
+			{ key: 'folder', label: 'Folder: /Photos' },
+			{ key: 'minSize', label: '>= 10 MB' },
+			{ key: 'minCopies', label: '3+ copies' },
+			{ key: 'search', label: 'Search: vacation' },
+		])
+		assert.equal(readActiveChips()[0].ariaLabel, 'Remove filter: Images')
+
+		// Click minSize chip -> removes only minSize, preserves all 5 other filters and sortOption
+		vm.$el.querySelector('button.active-filter-chip[data-filter-key="minSize"]').click()
+		await settle()
+		assert.equal(nav.minSizeBytes, 0)
+		assert.equal(nav.selectedMinSizePreset, 'any')
+		assert.equal(nav.sortOption, 'size-desc')
+		assert.equal(nav.selectedCategory, 'images')
+		assert.equal(nav.selectedExtension, '.jpg')
+		assert.equal(nav.folderQuery, '/Photos')
+		assert.equal(nav.selectedMinCopiesPreset, '3plus')
+		assert.equal(nav.searchPattern, 'vacation')
+		assert.deepEqual(emittedQueryChanges[emittedQueryChanges.length - 1], {
+			sortBy: 'size-desc',
+			minSize: 0,
+		})
+		assert.deepEqual(readActiveChips().map(c => c.key), ['category', 'extension', 'folder', 'minCopies', 'search'])
+
+		// Click category chip -> removes only category without clearing selectedExtension
+		vm.$el.querySelector('button.active-filter-chip[data-filter-key="category"]').click()
+		await settle()
+		assert.equal(nav.selectedCategory, 'all')
+		assert.equal(nav.selectedExtension, '.jpg')
+		assert.deepEqual(readActiveChips().map(c => c.key), ['extension', 'folder', 'minCopies', 'search'])
+
+		// Click extension, folder, minCopies, search chips one by one
+		vm.$el.querySelector('button.active-filter-chip[data-filter-key="extension"]').click()
+		await settle()
+		assert.equal(nav.selectedExtension, '')
+		assert.equal(nav.folderQuery, '/Photos')
+
+		vm.$el.querySelector('button.active-filter-chip[data-filter-key="folder"]').click()
+		await settle()
+		assert.equal(nav.folderQuery, '')
+		assert.equal(nav.selectedMinCopiesPreset, '3plus')
+
+		vm.$el.querySelector('button.active-filter-chip[data-filter-key="minCopies"]').click()
+		await settle()
+		assert.equal(nav.selectedMinCopiesPreset, 'any')
+		assert.equal(nav.searchPattern, 'vacation')
+
+		vm.$el.querySelector('button.active-filter-chip[data-filter-key="search"]').click()
+		await settle()
+		assert.equal(nav.searchPattern, '')
+		assert.equal(nav.sortOption, 'size-desc')
+		assert.equal(vm.$el.querySelectorAll('button.active-filter-chip').length, 0)
+
+		vm.$destroy()
+	})
+
+	test('Cycle 74 active filter chips enforce >= 44px targets, :focus-visible, logical CSS, zero XSS, and zero dashes', () => {
+		const filtersSource = readFileSync(resolve(root, 'src/tools/duplicateFilters.js'), 'utf8')
+		const navSource = readFileSync(resolve(root, 'src/components/DuplicateNavigation.vue'), 'utf8')
+
+		for (const content of [filtersSource, navSource]) {
+			assert.ok(!/[\u2013\u2014]/.test(content), 'no U+2013/U+2014 dashes allowed')
+			assert.ok(!/v-html|innerHTML|outerHTML|document\.write/.test(content), 'no DOM XSS sinks allowed')
+		}
+
+		const filterCssStart = navSource.indexOf('/* Quick File-Type Filter Chips & Live Reclaimable Summary */')
+		const filterCssEnd = navSource.indexOf('/* Consistent highlighting')
+		const filterCssBlock = navSource.slice(filterCssStart, filterCssEnd)
+
+		assert.ok(filterCssBlock.includes('.active-filter-chips'))
+		assert.ok(filterCssBlock.includes('.active-filter-chip'))
+		assert.ok(filterCssBlock.includes('.active-filter-chip:focus-visible'))
+		assert.ok(filterCssBlock.includes('flex-wrap: wrap'))
+		assert.ok(filterCssBlock.includes('overflow-wrap: anywhere'))
+		assert.ok(filterCssBlock.includes('min-inline-size: 44px'))
+		assert.ok(filterCssBlock.includes('min-block-size: 44px'))
+		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS must use logical properties only')
+	})
+})

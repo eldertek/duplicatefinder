@@ -325,6 +325,24 @@
                         </button>
                     </div>
                 </div>
+                <div
+                    v-if="activeFilterChips.length > 0"
+                    class="active-filter-chips"
+                    role="group"
+                    :aria-label="t('duplicatefinder', 'Active filters')">
+                    <button
+                        v-for="chip in activeFilterChips"
+                        :key="chip.key"
+                        type="button"
+                        class="active-filter-chip"
+                        :data-filter-key="chip.key"
+                        :title="t('duplicatefinder', 'Remove filter: {label}', { label: chip.label })"
+                        :aria-label="t('duplicatefinder', 'Remove filter: {label}', { label: chip.label })"
+                        @click="removeFilterChip(chip.key)">
+                        <span class="active-filter-chip-label">{{ chip.label }}</span>
+                        <span class="active-filter-chip-remove" aria-hidden="true">×</span>
+                    </button>
+                </div>
                 <div class="quick-filter-actions">
                     <button
                         v-if="hasActiveFilters"
@@ -490,6 +508,7 @@ import {
     DUPLICATE_FILTER_CATEGORIES,
     MIN_COPIES_PRESETS,
     MIN_SIZE_PRESETS,
+    buildActiveFilterChips,
     computeCategoryCounts,
     computeReclaimableSummary,
     countActiveTriageFilters,
@@ -703,6 +722,31 @@ export default {
                 minSizePreset: this.selectedMinSizePreset,
                 minCopiesPreset: this.selectedMinCopiesPreset,
                 searchQuery: this.searchPattern,
+            });
+        },
+        activeFilterChips() {
+            const chips = buildActiveFilterChips({
+                category: this.selectedCategory,
+                extension: this.selectedExtension,
+                folderQuery: this.folderQuery,
+                minSizePreset: this.selectedMinSizePreset,
+                minSizeBytes: this.minSizeBytes,
+                minCopiesPreset: this.selectedMinCopiesPreset,
+                searchQuery: this.searchPattern,
+            });
+            const localizedCategories = {
+                Images: t('duplicatefinder', 'Images'),
+                Videos: t('duplicatefinder', 'Videos'),
+                Audio: t('duplicatefinder', 'Audio'),
+                Documents: t('duplicatefinder', 'Documents'),
+                Archives: t('duplicatefinder', 'Archives'),
+                '> 10 MB': t('duplicatefinder', '> 10 MB'),
+            };
+            return chips.map(chip => {
+                if (chip.key === 'category' && Object.prototype.hasOwnProperty.call(localizedCategories, chip.label)) {
+                    return { ...chip, label: localizedCategories[chip.label] };
+                }
+                return chip;
             });
         },
         resetFiltersButtonLabel() {
@@ -975,6 +1019,40 @@ export default {
                 },
             );
         },
+        clearSearchFilter() {
+            this.searchPattern = '';
+            if (this.$refs.searchBar && typeof this.$refs.searchBar.clear === 'function') {
+                this.$refs.searchBar.clear();
+            } else if (this.$refs.searchBar && 'searchQuery' in this.$refs.searchBar) {
+                this.$refs.searchBar.searchQuery = '';
+            }
+        },
+        removeFilterChip(key) {
+            if (key === 'category') {
+                this.selectedCategory = 'all';
+                this.persistTriagePreferences();
+                return;
+            }
+            if (key === 'extension') {
+                this.selectedExtension = '';
+                return;
+            }
+            if (key === 'folder') {
+                this.folderQuery = '';
+                return;
+            }
+            if (key === 'minSize') {
+                this.setMinSizeBytes(0);
+                return;
+            }
+            if (key === 'minCopies') {
+                this.setMinCopiesPreset('any');
+                return;
+            }
+            if (key === 'search') {
+                this.clearSearchFilter();
+            }
+        },
         resetFilters() {
             const queryOptionsChanged = this.sortOption !== 'none' || this.minSizeBytes > 0;
             this.selectedCategory = 'all';
@@ -984,12 +1062,7 @@ export default {
             this.sortOption = 'none';
             this.minSizeBytes = 0;
             this.customMinSizeMb = '';
-            this.searchPattern = '';
-            if (this.$refs.searchBar && typeof this.$refs.searchBar.clear === 'function') {
-                this.$refs.searchBar.clear();
-            } else if (this.$refs.searchBar && 'searchQuery' in this.$refs.searchBar) {
-                this.$refs.searchBar.searchQuery = '';
-            }
+            this.clearSearchFilter();
             this.persistTriagePreferences();
             if (queryOptionsChanged) {
                 this.acknowledgedPage = 1;
@@ -2199,6 +2272,60 @@ export default {
 
 .extension-insight-chip.active .extension-insight-pct {
     color: var(--color-primary-text);
+}
+
+.active-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.active-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    max-inline-size: 100%;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 6px;
+    padding-inline: 10px;
+    margin-block: 0;
+    margin-inline: 0;
+    border: 1px solid var(--color-primary-element, #0082c9);
+    border-radius: 999px;
+    background-color: var(--color-primary-element-light);
+    color: var(--color-main-text);
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.25;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.active-filter-chip:hover {
+    background-color: var(--color-background-hover);
+    border-color: var(--color-primary-element-hover, #006aa3);
+}
+
+.active-filter-chip:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
+}
+
+.active-filter-chip-label {
+    overflow-wrap: anywhere;
+    text-align: start;
+}
+
+.active-filter-chip-remove {
+    flex-shrink: 0;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .quick-filter-actions {

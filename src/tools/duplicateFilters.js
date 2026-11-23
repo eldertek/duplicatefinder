@@ -467,6 +467,123 @@ export function computeReclaimableSummary(duplicates) {
 	}
 }
 
+const CATEGORY_CHIP_LABELS = Object.freeze({
+	images: 'Images',
+	videos: 'Videos',
+	audio: 'Audio',
+	documents: 'Documents',
+	archives: 'Archives',
+	large: '> 10 MB',
+})
+
+const MIN_SIZE_CHIP_LABELS = Object.freeze({
+	'1mb': '>= 1 MB',
+	'10mb': '>= 10 MB',
+	'100mb': '>= 100 MB',
+})
+
+const MIN_COPIES_CHIP_LABELS = Object.freeze({
+	'3plus': '3+ copies',
+	'5plus': '5+ copies',
+})
+
+/**
+ * Build a deterministic list of active triage filter chips across all 6 filter dimensions.
+ *
+ * @param {object|null|undefined} [filters] - Active triage filter state.
+ * @param {string} [filters.category] - Selected file category ('all' or a specific category).
+ * @param {string} [filters.extension] - Selected file extension chip (e.g. '.jpg').
+ * @param {string} [filters.folderQuery] - Folder prefix filter query.
+ * @param {string} [filters.minSizePreset] - Minimum file size preset ('any', '1mb', '10mb', '100mb', 'custom').
+ * @param {number} [filters.minSizeBytes] - Optional exact minimum size in bytes when minSizePreset is 'custom'.
+ * @param {string} [filters.minCopiesPreset] - Minimum copy count preset ('any', '3plus', '5plus').
+ * @param {string} [filters.searchQuery] - Filename or path search pattern.
+ * @return {Array<{ key: 'category'|'extension'|'folder'|'minSize'|'minCopies'|'search', label: string }>} Ordered active chips.
+ */
+export function buildActiveFilterChips(filters = {}) {
+	if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+		return []
+	}
+
+	const chips = []
+
+	const normalizedCategory = typeof filters.category === 'string'
+		? filters.category.trim().toLowerCase()
+		: ''
+	if (
+		normalizedCategory
+		&& normalizedCategory !== 'all'
+		&& Object.prototype.hasOwnProperty.call(CATEGORY_CHIP_LABELS, normalizedCategory)
+	) {
+		chips.push({
+			key: 'category',
+			label: CATEGORY_CHIP_LABELS[normalizedCategory],
+		})
+	}
+
+	const trimmedExtension = typeof filters.extension === 'string' ? filters.extension.trim() : ''
+	if (trimmedExtension !== '') {
+		chips.push({
+			key: 'extension',
+			label: trimmedExtension,
+		})
+	}
+
+	const trimmedFolder = typeof filters.folderQuery === 'string' ? filters.folderQuery.trim() : ''
+	if (trimmedFolder !== '') {
+		chips.push({
+			key: 'folder',
+			label: `Folder: ${trimmedFolder}`,
+		})
+	}
+
+	const normalizedMinSize = typeof filters.minSizePreset === 'string'
+		? filters.minSizePreset.trim().toLowerCase()
+		: ''
+	if (normalizedMinSize === 'custom') {
+		const customBytes = Number(filters.minSizeBytes)
+		chips.push({
+			key: 'minSize',
+			label: Number.isFinite(customBytes) && customBytes > 0
+				? `>= ${formatBytes(customBytes)}`
+				: 'Custom size',
+		})
+	} else if (
+		Object.prototype.hasOwnProperty.call(MIN_SIZE_PRESETS, normalizedMinSize)
+		&& MIN_SIZE_PRESETS[normalizedMinSize] > 0
+		&& Object.prototype.hasOwnProperty.call(MIN_SIZE_CHIP_LABELS, normalizedMinSize)
+	) {
+		chips.push({
+			key: 'minSize',
+			label: MIN_SIZE_CHIP_LABELS[normalizedMinSize],
+		})
+	}
+
+	const normalizedMinCopies = typeof filters.minCopiesPreset === 'string'
+		? filters.minCopiesPreset.trim().toLowerCase()
+		: ''
+	if (
+		Object.prototype.hasOwnProperty.call(MIN_COPIES_PRESETS, normalizedMinCopies)
+		&& MIN_COPIES_PRESETS[normalizedMinCopies] > 0
+		&& Object.prototype.hasOwnProperty.call(MIN_COPIES_CHIP_LABELS, normalizedMinCopies)
+	) {
+		chips.push({
+			key: 'minCopies',
+			label: MIN_COPIES_CHIP_LABELS[normalizedMinCopies],
+		})
+	}
+
+	const trimmedSearch = typeof filters.searchQuery === 'string' ? filters.searchQuery.trim() : ''
+	if (trimmedSearch !== '') {
+		chips.push({
+			key: 'search',
+			label: `Search: ${trimmedSearch}`,
+		})
+	}
+
+	return chips
+}
+
 /**
  * Count the number of active triage filters across all 6 filter dimensions.
  *
@@ -480,47 +597,5 @@ export function computeReclaimableSummary(duplicates) {
  * @return {number} Exact count of active filters in range 0..6.
  */
 export function countActiveTriageFilters(filters = {}) {
-	if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
-		return 0
-	}
-
-	let activeCount = 0
-
-	const normalizedCategory = typeof filters.category === 'string'
-		? filters.category.trim().toLowerCase()
-		: ''
-	if (normalizedCategory && normalizedCategory !== 'all' && DUPLICATE_FILTER_CATEGORIES.includes(normalizedCategory)) {
-		activeCount += 1
-	}
-
-	if (typeof filters.extension === 'string' && filters.extension.trim() !== '') {
-		activeCount += 1
-	}
-
-	if (typeof filters.folderQuery === 'string' && filters.folderQuery.trim() !== '') {
-		activeCount += 1
-	}
-
-	const normalizedMinSize = typeof filters.minSizePreset === 'string'
-		? filters.minSizePreset.trim().toLowerCase()
-		: ''
-	if (
-		normalizedMinSize === 'custom'
-		|| (Object.prototype.hasOwnProperty.call(MIN_SIZE_PRESETS, normalizedMinSize) && MIN_SIZE_PRESETS[normalizedMinSize] > 0)
-	) {
-		activeCount += 1
-	}
-
-	const normalizedMinCopies = typeof filters.minCopiesPreset === 'string'
-		? filters.minCopiesPreset.trim().toLowerCase()
-		: ''
-	if (Object.prototype.hasOwnProperty.call(MIN_COPIES_PRESETS, normalizedMinCopies) && MIN_COPIES_PRESETS[normalizedMinCopies] > 0) {
-		activeCount += 1
-	}
-
-	if (typeof filters.searchQuery === 'string' && filters.searchQuery.trim() !== '') {
-		activeCount += 1
-	}
-
-	return activeCount
+	return buildActiveFilterChips(filters).length
 }
