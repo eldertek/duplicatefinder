@@ -111,6 +111,7 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 		'./components/SidecarSweepWorkbench.vue': { __esModule: true, default: stub('sidecar-sweep') },
 		'./components/RuleProfilesWorkbench.vue': { __esModule: true, default: stub('rule-profiles') },
 		'./components/DocumentLineageWorkbench.vue': { __esModule: true, default: stub('document-lineage') },
+		'./components/PhotoPerceptualWorkbench.vue': { __esModule: true, default: stub('photo-perceptual') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

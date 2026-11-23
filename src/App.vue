@@ -616,6 +616,41 @@
 							<span>{{ t('duplicatefinder', 'Doc Lineage') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-photo-perceptual-button"
+							:class="{ 'is-active': photoPerceptualOpen }"
+							:aria-pressed="photoPerceptualOpen ? 'true' : 'false'"
+							aria-keyshortcuts="7"
+							:title="t('duplicatefinder', 'Toggle similar-photo perceptual pHash, EXIF sharpness and crop comparator workbench')"
+							@click="togglePhotoPerceptual">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="3"
+									y="3"
+									width="18"
+									height="18"
+									rx="2"
+									ry="2" />
+								<circle
+									cx="8.5"
+									cy="8.5"
+									r="1.5" />
+								<polyline points="21 15 16 10 5 21" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Similar Photos') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -854,6 +889,16 @@
 						@doc-delete-completed="onDocumentLineageDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="documentLineageOpen = false" />
+					<PhotoPerceptualWorkbench
+						v-if="photoPerceptualOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onPhotoPerceptualSelectDuplicate"
+						@compare-duplicate="onPhotoPerceptualCompareDuplicate"
+						@photo-delete-completed="onPhotoPerceptualDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="photoPerceptualOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1303,6 +1348,7 @@ import VideoSceneWorkbench from './components/VideoSceneWorkbench.vue'
 import SidecarSweepWorkbench from './components/SidecarSweepWorkbench.vue'
 import RuleProfilesWorkbench from './components/RuleProfilesWorkbench.vue'
 import DocumentLineageWorkbench from './components/DocumentLineageWorkbench.vue'
+import PhotoPerceptualWorkbench from './components/PhotoPerceptualWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1381,6 +1427,7 @@ export default {
 		SidecarSweepWorkbench,
 		RuleProfilesWorkbench,
 		DocumentLineageWorkbench,
+		PhotoPerceptualWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1426,6 +1473,7 @@ export default {
 			sidecarSweepOpen: false,
 			ruleProfilesOpen: false,
 			documentLineageOpen: false,
+			photoPerceptualOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1615,6 +1663,7 @@ export default {
 				'toggle-sidecar-sweep': t('duplicatefinder', 'Toggle orphaned sidecar and post-cleanup empty-folder sweep inspector'),
 				'toggle-rule-profiles': t('duplicatefinder', 'Toggle cleanup rule profiles, regex exclusions and batch audit log'),
 				'toggle-document-lineage': t('duplicatefinder', 'Toggle near-duplicate document fuzzy diff and version lineage workbench'),
+				'toggle-photo-perceptual': t('duplicatefinder', 'Toggle similar-photo perceptual pHash, EXIF sharpness and crop comparator workbench'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2106,6 +2155,25 @@ export default {
 		onDocumentLineageDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		togglePhotoPerceptual() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.photoPerceptualOpen = !this.photoPerceptualOpen
+			return true
+		},
+		onPhotoPerceptualSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onPhotoPerceptualCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onPhotoPerceptualDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -2576,6 +2644,13 @@ export default {
 
 			if (action === 'toggle-document-lineage') {
 				if (this.toggleDocumentLineage() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-photo-perceptual') {
+				if (this.togglePhotoPerceptual() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3496,7 +3571,8 @@ export default {
 .app-content-topbar .topbar-video-workbench-button,
 .app-content-topbar .topbar-sidecar-sweep-button,
 .app-content-topbar .topbar-rule-profiles-button,
-.app-content-topbar .topbar-document-lineage-button {
+.app-content-topbar .topbar-document-lineage-button,
+.app-content-topbar .topbar-photo-perceptual-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3533,7 +3609,8 @@ export default {
 .app-content-topbar .topbar-video-workbench-button svg,
 .app-content-topbar .topbar-sidecar-sweep-button svg,
 .app-content-topbar .topbar-rule-profiles-button svg,
-.app-content-topbar .topbar-document-lineage-button svg {
+.app-content-topbar .topbar-document-lineage-button svg,
+.app-content-topbar .topbar-photo-perceptual-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3573,7 +3650,9 @@ export default {
 .app-content-topbar .topbar-rule-profiles-button:hover:not(:disabled),
 .app-content-topbar .topbar-rule-profiles-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-document-lineage-button:hover:not(:disabled),
-.app-content-topbar .topbar-document-lineage-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-document-lineage-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-photo-perceptual-button:hover:not(:disabled),
+.app-content-topbar .topbar-photo-perceptual-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3593,7 +3672,8 @@ export default {
 .app-content-topbar .topbar-video-workbench-button.is-active,
 .app-content-topbar .topbar-sidecar-sweep-button.is-active,
 .app-content-topbar .topbar-rule-profiles-button.is-active,
-.app-content-topbar .topbar-document-lineage-button.is-active {
+.app-content-topbar .topbar-document-lineage-button.is-active,
+.app-content-topbar .topbar-photo-perceptual-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -3756,6 +3836,7 @@ export default {
 .app-content-topbar .topbar-sidecar-sweep-button > *,
 .app-content-topbar .topbar-rule-profiles-button > *,
 .app-content-topbar .topbar-document-lineage-button > *,
+.app-content-topbar .topbar-photo-perceptual-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3857,6 +3938,7 @@ export default {
 	.app-content-topbar .topbar-sidecar-sweep-button,
 	.app-content-topbar .topbar-rule-profiles-button,
 	.app-content-topbar .topbar-document-lineage-button,
+	.app-content-topbar .topbar-photo-perceptual-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
