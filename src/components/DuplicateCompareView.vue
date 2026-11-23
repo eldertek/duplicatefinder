@@ -22,6 +22,15 @@
 			<div class="compare-toolbar__actions">
 				<button
 					type="button"
+					class="compare-toolbar__button compare-diffs-only-button"
+					:class="{ 'is-active': showOnlyDiffs }"
+					:aria-pressed="showOnlyDiffs ? 'true' : 'false'"
+					:disabled="files.length < 2"
+					@click="showOnlyDiffs = !showOnlyDiffs">
+					<span>{{ t('duplicatefinder', 'Diffs only') }}</span>
+				</button>
+				<button
+					type="button"
 					class="compare-toolbar__button compare-swap-button"
 					:disabled="files.length < 2"
 					@click="swapSides">
@@ -201,9 +210,9 @@
 					</div>
 				</div>
 
-				<dl class="compare-pane__diff-list">
+				<dl v-if="visibleDiffRows.length > 0" class="compare-pane__diff-list">
 					<div
-						v-for="row in diffResult.rows"
+						v-for="row in visibleDiffRows"
 						:key="row.key"
 						class="compare-diff-row"
 						:class="{ 'is-diff': row.isDiff }">
@@ -220,6 +229,13 @@
 						</dd>
 					</div>
 				</dl>
+				<p
+					v-else
+					class="compare-pane__no-diffs"
+					role="status"
+					aria-live="polite">
+					{{ t('duplicatefinder', 'No metadata differences between these two copies') }}
+				</p>
 
 				<footer class="compare-pane__footer">
 					<button
@@ -228,7 +244,7 @@
 						class="compare-pane__triage-button"
 						:class="{ 'is-marked-delete': pane.isSelected }"
 						:aria-pressed="pane.isSelected ? 'true' : 'false'"
-						@click="$emit('toggle-file-selection', pane.file)">
+						@click="$emit('toggle-copy-selection', pane.file)">
 						{{ pane.isSelected
 							? t('duplicatefinder', 'Keep this copy')
 							: t('duplicatefinder', 'Mark for deletion') }}
@@ -252,6 +268,7 @@ import {
 	clampComparisonPair,
 	computeSideBySideDiffRows,
 	extractFileDisplayMeta,
+	filterComparisonDiffRows,
 	pickDefaultComparisonPair,
 } from '../tools/duplicateCompare'
 import { formatBytes } from '../tools/duplicateStats'
@@ -281,6 +298,7 @@ export default {
 		return {
 			leftIndex: 0,
 			rightIndex: 1,
+			showOnlyDiffs: false,
 			previewErrors: {},
 			copyStates: {
 				left: 'idle',
@@ -318,6 +336,9 @@ export default {
 				rightStatus,
 				unavailableLabel: this.t('duplicatefinder', 'Unavailable'),
 			})
+		},
+		visibleDiffRows() {
+			return filterComparisonDiffRows(this.diffResult.rows, this.showOnlyDiffs)
 		},
 		panes() {
 			return [
@@ -604,6 +625,11 @@ export default {
 .compare-toolbar__button:hover:not(:disabled),
 .compare-toolbar__button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
+	border-color: var(--color-primary-element, #0082c9);
+}
+
+.compare-toolbar__button.is-active {
+	background-color: rgba(0, 130, 201, 0.14);
 	border-color: var(--color-primary-element, #0082c9);
 }
 
@@ -930,6 +956,18 @@ export default {
 	color: var(--color-main-text);
 	font-variant-numeric: tabular-nums;
 	overflow-wrap: anywhere;
+}
+
+.compare-pane__no-diffs {
+	margin: 0;
+	padding-block: 10px;
+	padding-inline: 12px;
+	border-radius: 6px;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
+	font-size: 0.82rem;
+	font-weight: 500;
 }
 
 .compare-pane__footer {

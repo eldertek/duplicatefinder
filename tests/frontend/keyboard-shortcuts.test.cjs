@@ -12,7 +12,7 @@ const slotBox = tag => ({
 	},
 })
 
-function createRealDuplicateDetails(utils, clipboardImpl) {
+function createRealDuplicateDetails(utils, clipboardImpl, apiOverrides = {}) {
 	const selectionAndExport = loadModule('src/tools/duplicateSelectionAndExport.js')
 	const metadataBadges = loadModule('src/tools/duplicateMetadataBadges.js')
 	const deleteSafetyGuard = loadModule('src/tools/deleteSafetyGuard.js')
@@ -52,6 +52,7 @@ function createRealDuplicateDetails(utils, clipboardImpl) {
 			unacknowledgeDuplicate: async () => {},
 			deleteFiles: async () => ({ success: [], errors: [] }),
 			findDuplicates: async () => {},
+			...apiOverrides,
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
@@ -68,7 +69,7 @@ function createRealDuplicateDetails(utils, clipboardImpl) {
 	})
 }
 
-function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetails = false, clipboardImpl } = {}) {
+function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetails = false, clipboardImpl, apiOverrides } = {}) {
 	const utils = loadModule('src/tools/utils.js', {
 		'./notifications': { showErrorNotification: () => {} },
 	})
@@ -141,7 +142,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 	})
 
 	const detailsComponent = useRealDetails
-		? createRealDuplicateDetails(utils, clipboardImpl)
+		? createRealDuplicateDetails(utils, clipboardImpl, apiOverrides)
 		: stub('duplicate-details')
 
 	const App = loadComponent('src/App.vue', {
@@ -3803,6 +3804,160 @@ describe('Cycle 114: keyboard shortcut v (toggle-compare-view)', () => {
 			vm.$destroy()
 			mountNode.remove()
 			externalInput.remove()
+		}
+	})
+})
+
+describe('Cycle 115: keyboard shortcut u (toggle-acknowledge)', () => {
+	test('resolveShortcutAction maps u to toggle-acknowledge, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const ackDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'toggle-acknowledge')
+		assert.ok(ackDef, 'toggle-acknowledge is documented in SHORTCUT_DEFINITIONS')
+		assert.deepEqual(ackDef.keys, ['u'])
+		assert.equal(ackDef.action, 'toggle-acknowledge')
+
+		assert.equal(resolveShortcutAction({ key: 'u' }), 'toggle-acknowledge')
+		assert.equal(resolveShortcutAction({ key: 'U' }), 'toggle-acknowledge')
+
+		for (const mod of [
+			{ ctrlKey: true },
+			{ metaKey: true },
+			{ altKey: true },
+			{ shiftKey: true },
+		]) {
+			assert.equal(resolveShortcutAction({ key: 'u', ...mod }), null)
+		}
+
+		assert.equal(resolveShortcutAction({ key: 'u', target: { tagName: 'INPUT' } }), null)
+		assert.equal(resolveShortcutAction({ key: 'u', target: { tagName: 'TEXTAREA' } }), null)
+		assert.equal(resolveShortcutAction({ key: 'u', target: { tagName: 'SELECT' } }), null)
+		assert.equal(resolveShortcutAction({ key: 'u', target: { isContentEditable: true } }), null)
+		assert.equal(resolveShortcutAction({ key: 'u' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'u' }, { hasBlockingModal: true }), null)
+	})
+
+	test('App.vue -> DuplicateDetails.vue toggles acknowledge on u, sets aria-keyshortcuts="u", guards in-flight calls, and updates help <dialog>', async () => {
+		window.localStorage.clear()
+		const ackCalls = []
+		const unackCalls = []
+		let resolvePendingAck = null
+		const dup1 = makeDuplicate(960, 'ack-one.jpg')
+		const dup2 = { ...makeDuplicate(961, 'ack-two.jpg'), acknowledged: true }
+
+		const { App } = createAppHarness({
+			acknowledged: [dup2],
+			unacknowledged: [dup1],
+			useRealDetails: true,
+			apiOverrides: {
+				acknowledgeDuplicate: hash => {
+					ackCalls.push(hash)
+					return new Promise(resolve => {
+						resolvePendingAck = resolve
+					})
+				},
+				unacknowledgeDuplicate: async hash => {
+					unackCalls.push(hash)
+				},
+			},
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalInput = document.createElement('input')
+		document.body.appendChild(externalInput)
+
+		try {
+			await settle()
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(detailsVm)
+			const ackButton = detailsVm.$el.querySelector('button.acknowledge-link')
+			assert.ok(ackButton, 'Acknowledge button renders')
+			assert.equal(ackButton.getAttribute('aria-keyshortcuts'), 'u')
+
+			// 1. Editable field ignores u
+			const inputEvent = new window.KeyboardEvent('keydown', { key: 'u', bubbles: true, cancelable: true })
+			externalInput.dispatchEvent(inputEvent)
+			await settle()
+			assert.equal(inputEvent.defaultPrevented, false)
+			assert.equal(ackCalls.length, 0)
+
+			// 2. ? help <dialog> documents u and blocks u while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('u'), 'help dialog documents u shortcut')
+			assert.ok(helpDialog.textContent.includes('Acknowledge or unacknowledge active group'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'u', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(ackCalls.length, 0)
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 3. Pressing u starts acknowledge and guards against duplicate concurrent trigger
+			const firstEvent = new window.KeyboardEvent('keydown', { key: 'u', bubbles: true, cancelable: true })
+			window.dispatchEvent(firstEvent)
+			assert.equal(firstEvent.defaultPrevented, true)
+			assert.deepEqual(ackCalls, [dup1.hash])
+			assert.equal(detailsVm.isAcknowledging, true)
+
+			const secondEvent = new window.KeyboardEvent('keydown', { key: 'u', bubbles: true, cancelable: true })
+			window.dispatchEvent(secondEvent)
+			assert.equal(secondEvent.defaultPrevented, false)
+			assert.deepEqual(ackCalls, [dup1.hash])
+
+			resolvePendingAck()
+			await settle()
+			assert.equal(detailsVm.isAcknowledging, false)
+			assert.equal(vm.acknowledgedDuplicates.some(d => d.id === dup1.id), true)
+			assert.equal(vm.unacknowledgedDuplicates.some(d => d.id === dup1.id), false)
+
+			// 4. Selecting an acknowledged group and pressing u unacknowledges it
+			vm.openDuplicate(dup2)
+			await settle()
+			assert.equal(vm.currentDuplicate.id, dup2.id)
+			const unackEvent = new window.KeyboardEvent('keydown', { key: 'u', bubbles: true, cancelable: true })
+			window.dispatchEvent(unackEvent)
+			await settle()
+			assert.equal(unackEvent.defaultPrevented, true)
+			assert.deepEqual(unackCalls, [dup2.hash])
+			assert.equal(vm.unacknowledgedDuplicates.some(d => d.id === dup2.id), true)
+
+			// 5. u is a safe no-op in bulk-delete view
+			vm.openBulkDelete()
+			await settle()
+			const bulkEvent = new window.KeyboardEvent('keydown', { key: 'u', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkEvent)
+			await settle()
+			assert.equal(bulkEvent.defaultPrevented, false)
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalInput.remove()
+		}
+	})
+
+	test('Cycle 115 touched files preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of [
+			'src/tools/keyboardShortcuts.js',
+			'src/tools/duplicateCompare.js',
+			'src/components/DuplicateCompareView.vue',
+			'src/components/DuplicateDetails.vue',
+			'src/App.vue',
+		]) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
 		}
 	})
 })

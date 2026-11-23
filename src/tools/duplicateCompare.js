@@ -228,3 +228,20 @@ export function computeSideBySideDiffRows(leftFile, rightFile, options = {}) {
 		diffCount,
 	}
 }
+
+/**
+ * Filter comparison diff rows to either all rows or only differing metadata rows.
+ *
+ * @param {Array<{ key: string, leftValue: string, rightValue: string, isDiff: boolean }>|null|undefined} rows - Computed diff rows.
+ * @param {boolean} [onlyDiffs=false] - Whether to keep only differing rows.
+ * @return {Array<{ key: string, leftValue: string, rightValue: string, isDiff: boolean }>} Filtered rows.
+ */
+export function filterComparisonDiffRows(rows, onlyDiffs = false) {
+	if (!Array.isArray(rows) || rows.length === 0) {
+		return []
+	}
+	if (!onlyDiffs) {
+		return rows
+	}
+	return rows.filter(row => Boolean(row && row.isDiff))
+}

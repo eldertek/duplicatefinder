@@ -69,6 +69,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-compare-view',
 	},
 	{
+		id: 'toggle-acknowledge',
+		keys: ['u'],
+		action: 'toggle-acknowledge',
+	},
+	{
 		id: 'focus-search',
 		keys: ['/'],
 		action: 'focus-search',
@@ -116,9 +121,10 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	x: 'export-json-report',
 	b: 'toggle-bulk-delete-view',
 	v: 'toggle-compare-view',
+	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
-	'0': 'reset-all-filters',
+	0: 'reset-all-filters',
 })
 
 /**

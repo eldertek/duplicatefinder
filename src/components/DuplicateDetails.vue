@@ -137,6 +137,8 @@
                 v-if="duplicate.acknowledged"
                 type="button"
                 class="toolbar-button acknowledge-link is-acknowledged"
+                :disabled="isAcknowledging"
+                aria-keyshortcuts="u"
                 @click="unOrAcknowledgeDuplicate(duplicate)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -149,6 +151,8 @@
                 v-else
                 type="button"
                 class="toolbar-button acknowledge-link"
+                :disabled="isAcknowledging"
+                aria-keyshortcuts="u"
                 @click="unOrAcknowledgeDuplicate(duplicate)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -330,7 +334,7 @@
             :selected-files="selectedFiles"
             :path-segments-by-index="filePathSegments"
             :metadata-badges-by-index="fileMetadataBadges"
-            @toggle-file-selection="toggleFileSelection"
+            @toggle-copy-selection="toggleFileSelection"
             @close-compare="compareMode = false"
           />
         </div>
@@ -452,6 +456,8 @@ export default {
       selectedFiles: [],
       activeKeepRule: null,
       compareMode: false,
+      isAcknowledging: false,
+      acknowledgeRequestToken: 0,
       isLoadingNextDuplicate: false,
       showDropdown: false,
       showDeleteConfirmDialog: false,
@@ -467,6 +473,8 @@ export default {
     duplicate() {
       this.selectedFiles = [];
       this.activeKeepRule = null;
+      this.isAcknowledging = false;
+      this.acknowledgeRequestToken += 1;
       this.resetHashCopyFeedback();
       if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
         this.resolveDeleteConfirm(false);
@@ -576,7 +584,26 @@ export default {
       }
       return names[0] || '';
     },
+    toggleAcknowledge() {
+      if (
+        !this.duplicate
+        || !Array.isArray(this.duplicate.files)
+        || this.duplicate.files.length <= 1
+        || this.showDeleteConfirmDialog
+        || this.pendingDeleteResolver
+        || this.isAcknowledging
+      ) {
+        return false;
+      }
+      this.unOrAcknowledgeDuplicate(this.duplicate);
+      return true;
+    },
     async unOrAcknowledgeDuplicate(duplicate) {
+      if (!duplicate || this.isAcknowledging) {
+        return false;
+      }
+      const token = ++this.acknowledgeRequestToken;
+      this.isAcknowledging = true;
       try {
         const updatedDuplicate = { ...duplicate };
 
@@ -588,9 +615,20 @@ export default {
           updatedDuplicate.acknowledged = true;
         }
 
-        this.$emit('duplicateUpdated', updatedDuplicate);
+        if (token === this.acknowledgeRequestToken) {
+          this.$emit('duplicateUpdated', updatedDuplicate);
+        }
+        return true;
       } catch (error) {
         console.error('Error updating duplicate acknowledgement status:', error);
+        if (typeof showError === 'function') {
+          showError(this.t('duplicatefinder', 'Could not update acknowledgement status'));
+        }
+        return false;
+      } finally {
+        if (token === this.acknowledgeRequestToken) {
+          this.isAcknowledging = false;
+        }
       }
     },
     openFileInViewer,

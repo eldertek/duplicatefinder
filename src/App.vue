@@ -868,6 +868,7 @@ export default {
 				'export-json-report': t('duplicatefinder', 'Export current duplicate report (JSON)'),
 				'toggle-bulk-delete-view': t('duplicatefinder', 'Toggle Bulk Delete view'),
 				'toggle-compare-view': t('duplicatefinder', 'Toggle side-by-side visual comparison'),
+				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
 				'reset-filters': t('duplicatefinder', 'Reset all active filters and sorting'),
@@ -1244,6 +1245,23 @@ export default {
 					return
 				}
 				if (detailsComponent.toggleCompareMode() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-acknowledge') {
+				const detailsComponent = this.getActiveDuplicateDetailsComponent()
+				if (
+					!detailsComponent
+					|| typeof detailsComponent.toggleAcknowledge !== 'function'
+					|| !detailsComponent.duplicate
+					|| !Array.isArray(detailsComponent.duplicate.files)
+					|| detailsComponent.duplicate.files.length <= 1
+				) {
+					return
+				}
+				if (detailsComponent.toggleAcknowledge() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return

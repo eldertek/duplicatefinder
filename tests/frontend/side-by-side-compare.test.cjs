@@ -328,4 +328,88 @@ describe('Cycle 114: Beyond Compare side-by-side visual comparison view', () => 
 		assert.ok(compareVue.includes('min-block-size: 44px'), 'enforces >= 44px touch targets')
 		assert.ok(compareVue.includes(':focus-visible'), 'exposes focus-visible rings')
 	})
+
+	test('Cycle 115: filterComparisonDiffRows and Diffs only toggle isolate differing metadata cleanly', async () => {
+		const pathDiff = loadModule('src/tools/duplicatePathDiff.js')
+		const {
+			computeSideBySideDiffRows,
+			filterComparisonDiffRows,
+		} = loadModule('src/tools/duplicateCompare.js', {
+			'./duplicatePathDiff': pathDiff,
+		})
+
+		assert.deepEqual(filterComparisonDiffRows(null, true), [])
+		const sampleRows = [
+			{ key: 'fileName', leftValue: 'a.jpg', rightValue: 'a.jpg', isDiff: false },
+			{ key: 'folder', leftValue: '/A', rightValue: '/B', isDiff: true },
+			{ key: 'size', leftValue: '100 B', rightValue: '100 B', isDiff: false },
+		]
+		assert.equal(filterComparisonDiffRows(sampleRows, false).length, 3)
+		assert.deepEqual(
+			filterComparisonDiffRows(sampleRows, true).map(row => row.key),
+			['folder'],
+		)
+
+		const Details = createDetailsWithCompare()
+		const duplicate = {
+			id: 504,
+			hash: 'diffs-only-hash',
+			acknowledged: false,
+			files: [
+				{ id: 41, nodeId: 541, path: '/alice/files/Origin/photo.jpg', size: 2048, mtime: 1700000000, mimetype: 'image/jpeg', isInOriginFolder: true },
+				{ id: 42, nodeId: 542, path: '/alice/files/Backups/photo.jpg', size: 2048, mtime: 1700000000, mimetype: 'image/jpeg', isInOriginFolder: false },
+			],
+		}
+		const identicalPair = computeSideBySideDiffRows(duplicate.files[0], duplicate.files[0], {
+			leftStatus: 'Protected',
+			rightStatus: 'Protected',
+		})
+		assert.deepEqual(filterComparisonDiffRows(identicalPair.rows, true), [])
+
+		const wrapper = new Vue({
+			render(h) {
+				return h(Details, { props: { duplicate } })
+			},
+		}).$mount()
+		document.body.appendChild(wrapper.$el)
+
+		try {
+			await settle()
+			wrapper.$children[0].toggleCompareMode()
+			await settle()
+
+			const workspace = wrapper.$el.querySelector('.compare-workspace')
+			const diffsOnlyBtn = workspace.querySelector('.compare-diffs-only-button')
+			assert.ok(diffsOnlyBtn, 'Diffs only toggle button is rendered')
+			assert.equal(diffsOnlyBtn.getAttribute('aria-pressed'), 'false')
+
+			const leftPane = workspace.querySelector('.compare-pane--left')
+			assert.equal(leftPane.querySelectorAll('.compare-diff-row').length, 6)
+
+			diffsOnlyBtn.click()
+			await settle()
+			assert.equal(diffsOnlyBtn.getAttribute('aria-pressed'), 'true')
+			const filteredKeys = Array.from(leftPane.querySelectorAll('.compare-diff-row')).map(
+				row => row.querySelector('.compare-diff-row__label').textContent,
+			)
+			assert.equal(filteredKeys.length, 2)
+			assert.ok(filteredKeys.some(label => label.includes('Folder')))
+			assert.ok(filteredKeys.some(label => label.includes('Status')))
+
+			// Selecting identical file on both sides via same-copy fallback shows sober no-diffs status
+			const compareVm = wrapper.$children[0].$children.find(child => child.$options.name === 'DuplicateCompareView')
+			assert.ok(compareVm)
+			compareVm.leftIndex = 0
+			compareVm.rightIndex = 0
+			assert.equal(leftPane.querySelectorAll('.compare-diff-row').length, 2)
+
+			diffsOnlyBtn.click()
+			await settle()
+			assert.equal(diffsOnlyBtn.getAttribute('aria-pressed'), 'false')
+			assert.equal(leftPane.querySelectorAll('.compare-diff-row').length, 6)
+		} finally {
+			wrapper.$destroy()
+			wrapper.$el.remove()
+		}
+	})
 })
