@@ -179,6 +179,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-preview-cache',
 	},
 	{
+		id: 'toggle-share-mount-auditor',
+		keys: [']'],
+		action: 'toggle-share-mount-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -253,6 +258,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	'=': 'toggle-filename-collisions',
 	'-': 'toggle-quota-attribution',
 	'[': 'toggle-preview-cache',
+	']': 'toggle-share-mount-auditor',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
