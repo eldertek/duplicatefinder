@@ -1,3 +1,15 @@
+## 1.10.23 - 2026-11-23
+### Added
+- **Smart keep-rule selection and CWE-1236-safe CSV export** (`src/tools/duplicateSelectionAndExport.js`, `DuplicateDetails.vue`, `DuplicateNavigation.vue`). Added one-click keep-rule actions (`oldest`, `newest`, `shortest_path`) to preselect redundant copies safely while respecting protected origin folders, paired with RFC 4180 CSV export hardened against spreadsheet formula injection (CWE-1236).
+- **File-type filter chips and live reclaimable space badge** (`src/tools/duplicateFilters.js`, `DuplicateNavigation.vue`). Added instant category chips (`all`, `images`, `videos`, `audio`, `documents`, `archives`, `large`) and a live reclaimable storage badge for faster duplicate triage.
+- **Keyboard shortcuts for duplicate triage** (`src/tools/keyboardShortcuts.js`, `App.vue`, `DuplicateNavigation.vue`, `SearchBar.vue`). Added keyboard navigation (`j`/`ArrowDown`, `k`/`ArrowUp`), search focus (`/`), and shortcut help (`?`, `Escape`), automatically suppressed inside editable form controls and `contenteditable` elements.
+
+### Security
+- **Eliminate `v-html`/`innerHTML` sinks in FAQ rendering** (`src/tools/faqParser.js`, `src/components/help/FAQ.vue`). Replaced raw HTML FAQ rendering with a structured token parser and safe text/link bindings.
+
+### Fixed
+- **CSS logical properties, mobile/keyboard accessibility, `ProjectDuplicates` pagination, and lint compliance**. Converted physical layout styles to CSS logical properties across components, hardened mobile responsiveness and `:focus-visible` keyboard navigation, fixed pagination advancement in `ProjectDuplicates.vue`, and resolved remaining ESLint and Stylelint issues.
+
 ## 1.10.22 - 2026-11-23
 ### Fixed
 - **Deduplicate `path_hash` rows and enforce unique database index** ([#248](https://github.com/eldertek/duplicatefinder/issues/248)). Added migration `Version11022Date20261122000000` to backfill missing `path_hash` values, remove duplicate `path_hash` rows in `oc_duplicatefinder_finfo`, and replace `duplicatefinder_ph_idx` with a unique index. Handled concurrent insert/rename conflicts atomically in `FileInfoService` (`deleteOtherByPathHash`) and defensively deduplicated list-all queries in `FileInfoMapper` (`COUNT(DISTINCT path)`) and `ListAllDuplicates`.
