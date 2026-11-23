@@ -1,3 +1,7 @@
+## 1.10.34 - 2026-11-23
+### Added
+- **Structured JSON report export (`duplicatefinder.report.v1`)** (`src/tools/duplicateSelectionAndExport.js`, `src/components/DuplicateNavigation.vue`). Added `JSON_REPORT_SCHEMA`, `buildDuplicatesJson`, and `downloadDuplicatesJson` (sharing `triggerBlobDownload` with `downloadDuplicatesCsv`) to serialize filtered duplicate groups with export timestamp, group count, total reclaimable bytes, and per-file metadata, paired with an accessible `Export JSON` button (`exportFilteredJson`) in `DuplicateNavigation.vue`.
+
 ## 1.10.33 - 2026-11-23
 ### Added
 - **Individually removable active filter chips** (`src/tools/duplicateFilters.js`, `src/components/DuplicateNavigation.vue`). Added the pure `buildActiveFilterChips` helper producing ordered chip descriptors across all 6 triage filter dimensions (category, extension, folder query, minimum size preset, minimum copies preset, and search query) and rendered clickable, keyboard-accessible active filter chips (`removeFilterChip`, `clearSearchFilter`) in `DuplicateNavigation.vue` so each active filter can be cleared individually.
