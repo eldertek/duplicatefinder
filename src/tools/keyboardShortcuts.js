@@ -184,6 +184,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-share-mount-auditor',
 	},
 	{
+		id: 'toggle-backup-drift',
+		keys: ['\\'],
+		action: 'toggle-backup-drift',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -259,6 +264,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	'-': 'toggle-quota-attribution',
 	'[': 'toggle-preview-cache',
 	']': 'toggle-share-mount-auditor',
+	'\\': 'toggle-backup-drift',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',

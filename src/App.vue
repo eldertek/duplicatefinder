@@ -865,6 +865,32 @@
 							<span>{{ t('duplicatefinder', 'Shares & Mounts') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-backup-drift-button"
+							:class="{ 'is-active': backupDriftOpen }"
+							:aria-pressed="backupDriftOpen ? 'true' : 'false'"
+							aria-keyshortcuts="\"
+							:title="t('duplicatefinder', 'Toggle backup snapshot and mirror-tree drift synchronizer')"
+							@click="toggleBackupDrift">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<polyline points="1 4 1 10 7 10" />
+								<polyline points="23 20 23 14 17 14" />
+								<path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Backup Drift') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1173,6 +1199,16 @@
 						@share-mount-delete-completed="onShareMountDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="shareMountAuditorOpen = false" />
+					<BackupDriftWorkbench
+						v-if="backupDriftOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onBackupDriftSelectDuplicate"
+						@compare-duplicate="onBackupDriftCompareDuplicate"
+						@backup-drift-delete-completed="onBackupDriftDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="backupDriftOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1629,6 +1665,7 @@ import FilenameCollisionWorkbench from './components/FilenameCollisionWorkbench.
 import QuotaAttributionWorkbench from './components/QuotaAttributionWorkbench.vue'
 import PreviewCacheWorkbench from './components/PreviewCacheWorkbench.vue'
 import ShareMountAuditorWorkbench from './components/ShareMountAuditorWorkbench.vue'
+import BackupDriftWorkbench from './components/BackupDriftWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1714,6 +1751,7 @@ export default {
 		QuotaAttributionWorkbench,
 		PreviewCacheWorkbench,
 		ShareMountAuditorWorkbench,
+		BackupDriftWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1766,6 +1804,7 @@ export default {
 			quotaAttributionOpen: false,
 			previewCacheOpen: false,
 			shareMountAuditorOpen: false,
+			backupDriftOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1962,6 +2001,7 @@ export default {
 				'toggle-quota-attribution': t('duplicatefinder', 'Toggle multi-root cross-user quota attribution and chargeback heatmap'),
 				'toggle-preview-cache': t('duplicatefinder', 'Toggle orphaned Nextcloud preview and cache reclaim analyzer'),
 				'toggle-share-mount-auditor': t('duplicatefinder', 'Toggle cross-share permission and orphaned external-mount auditor'),
+				'toggle-backup-drift': t('duplicatefinder', 'Toggle backup snapshot and mirror-tree drift synchronizer'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2586,6 +2626,25 @@ export default {
 		onShareMountDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleBackupDrift() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.backupDriftOpen = !this.backupDriftOpen
+			return true
+		},
+		onBackupDriftSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onBackupDriftCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onBackupDriftDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3105,6 +3164,13 @@ export default {
 
 			if (action === 'toggle-share-mount-auditor') {
 				if (this.toggleShareMountAuditor() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-backup-drift') {
+				if (this.toggleBackupDrift() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4032,7 +4098,8 @@ export default {
 .app-content-topbar .topbar-filename-collisions-button,
 .app-content-topbar .topbar-quota-attribution-button,
 .app-content-topbar .topbar-preview-cache-button,
-.app-content-topbar .topbar-share-mount-button {
+.app-content-topbar .topbar-share-mount-button,
+.app-content-topbar .topbar-backup-drift-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4076,7 +4143,8 @@ export default {
 .app-content-topbar .topbar-filename-collisions-button svg,
 .app-content-topbar .topbar-quota-attribution-button svg,
 .app-content-topbar .topbar-preview-cache-button svg,
-.app-content-topbar .topbar-share-mount-button svg {
+.app-content-topbar .topbar-share-mount-button svg,
+.app-content-topbar .topbar-backup-drift-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -4130,7 +4198,9 @@ export default {
 .app-content-topbar .topbar-preview-cache-button:hover:not(:disabled),
 .app-content-topbar .topbar-preview-cache-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-share-mount-button:hover:not(:disabled),
-.app-content-topbar .topbar-share-mount-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-share-mount-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-backup-drift-button:hover:not(:disabled),
+.app-content-topbar .topbar-backup-drift-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -4157,7 +4227,8 @@ export default {
 .app-content-topbar .topbar-filename-collisions-button.is-active,
 .app-content-topbar .topbar-quota-attribution-button.is-active,
 .app-content-topbar .topbar-preview-cache-button.is-active,
-.app-content-topbar .topbar-share-mount-button.is-active {
+.app-content-topbar .topbar-share-mount-button.is-active,
+.app-content-topbar .topbar-backup-drift-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -4327,6 +4398,7 @@ export default {
 .app-content-topbar .topbar-quota-attribution-button > *,
 .app-content-topbar .topbar-preview-cache-button > *,
 .app-content-topbar .topbar-share-mount-button > *,
+.app-content-topbar .topbar-backup-drift-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -4435,6 +4507,7 @@ export default {
 	.app-content-topbar .topbar-quota-attribution-button,
 	.app-content-topbar .topbar-preview-cache-button,
 	.app-content-topbar .topbar-share-mount-button,
+	.app-content-topbar .topbar-backup-drift-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
