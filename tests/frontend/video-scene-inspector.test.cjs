@@ -711,6 +711,7 @@ describe('Cycle 132: Video Scene Perceptual Fingerprint, Codec Quality & Duratio
 			'./components/AudioTagWorkbench.vue': { __esModule: true, default: stub('audio-workbench') },
 			'./components/VideoSceneWorkbench.vue': { __esModule: true, default: Workbench },
 			'./components/SidecarSweepWorkbench.vue': { __esModule: true, default: stub('sidecar-sweep') },
+			'./components/RuleProfilesWorkbench.vue': { __esModule: true, default: stub('rule-profiles') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

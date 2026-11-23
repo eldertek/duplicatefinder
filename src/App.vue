@@ -557,6 +557,30 @@
 							<span>{{ t('duplicatefinder', 'Sidecar Sweep') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-rule-profiles-button"
+							:class="{ 'is-active': ruleProfilesOpen }"
+							:aria-pressed="ruleProfilesOpen ? 'true' : 'false'"
+							aria-keyshortcuts="5"
+							:title="t('duplicatefinder', 'Toggle cleanup rule profiles, regex exclusions and batch audit log')"
+							@click="toggleRuleProfiles">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Rule Profiles') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -775,6 +799,16 @@
 						@empty-folders-deleted="onEmptyFoldersDeletedFromWorkbench"
 						@start-scan="triggerScan"
 						@close="sidecarSweepOpen = false" />
+					<RuleProfilesWorkbench
+						v-if="ruleProfilesOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onRuleProfilesSelectDuplicate"
+						@compare-duplicate="onRuleProfilesCompareDuplicate"
+						@rule-delete-completed="onRuleProfilesDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="ruleProfilesOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1222,6 +1256,7 @@ import ArchivePayloadInspector from './components/ArchivePayloadInspector.vue'
 import AudioTagWorkbench from './components/AudioTagWorkbench.vue'
 import VideoSceneWorkbench from './components/VideoSceneWorkbench.vue'
 import SidecarSweepWorkbench from './components/SidecarSweepWorkbench.vue'
+import RuleProfilesWorkbench from './components/RuleProfilesWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1298,6 +1333,7 @@ export default {
 		AudioTagWorkbench,
 		VideoSceneWorkbench,
 		SidecarSweepWorkbench,
+		RuleProfilesWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1341,6 +1377,7 @@ export default {
 			audioWorkbenchOpen: false,
 			videoWorkbenchOpen: false,
 			sidecarSweepOpen: false,
+			ruleProfilesOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1528,6 +1565,7 @@ export default {
 				'toggle-audio-workbench': t('duplicatefinder', 'Toggle audio tags, bitrate and album consolidator workbench'),
 				'toggle-video-workbench': t('duplicatefinder', 'Toggle video frame fingerprint, codec quality and duration tolerance inspector'),
 				'toggle-sidecar-sweep': t('duplicatefinder', 'Toggle orphaned sidecar and post-cleanup empty-folder sweep inspector'),
+				'toggle-rule-profiles': t('duplicatefinder', 'Toggle cleanup rule profiles, regex exclusions and batch audit log'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1979,6 +2017,25 @@ export default {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
 		onSidecarDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
+		toggleRuleProfiles() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.ruleProfilesOpen = !this.ruleProfilesOpen
+			return true
+		},
+		onRuleProfilesSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onRuleProfilesCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onRuleProfilesDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
 		onUpdateIgnoredEmptyFolders(list) {
@@ -2437,6 +2494,13 @@ export default {
 
 			if (action === 'toggle-sidecar-sweep') {
 				if (this.toggleSidecarSweep() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-rule-profiles') {
+				if (this.toggleRuleProfiles() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3355,7 +3419,8 @@ export default {
 .app-content-topbar .topbar-archive-inspector-button,
 .app-content-topbar .topbar-audio-workbench-button,
 .app-content-topbar .topbar-video-workbench-button,
-.app-content-topbar .topbar-sidecar-sweep-button {
+.app-content-topbar .topbar-sidecar-sweep-button,
+.app-content-topbar .topbar-rule-profiles-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3390,7 +3455,8 @@ export default {
 .app-content-topbar .topbar-archive-inspector-button svg,
 .app-content-topbar .topbar-audio-workbench-button svg,
 .app-content-topbar .topbar-video-workbench-button svg,
-.app-content-topbar .topbar-sidecar-sweep-button svg {
+.app-content-topbar .topbar-sidecar-sweep-button svg,
+.app-content-topbar .topbar-rule-profiles-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3426,7 +3492,9 @@ export default {
 .app-content-topbar .topbar-video-workbench-button:hover:not(:disabled),
 .app-content-topbar .topbar-video-workbench-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-sidecar-sweep-button:hover:not(:disabled),
-.app-content-topbar .topbar-sidecar-sweep-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-sidecar-sweep-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-rule-profiles-button:hover:not(:disabled),
+.app-content-topbar .topbar-rule-profiles-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3444,7 +3512,8 @@ export default {
 .app-content-topbar .topbar-archive-inspector-button.is-active,
 .app-content-topbar .topbar-audio-workbench-button.is-active,
 .app-content-topbar .topbar-video-workbench-button.is-active,
-.app-content-topbar .topbar-sidecar-sweep-button.is-active {
+.app-content-topbar .topbar-sidecar-sweep-button.is-active,
+.app-content-topbar .topbar-rule-profiles-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -3605,6 +3674,7 @@ export default {
 .app-content-topbar .topbar-audio-workbench-button > *,
 .app-content-topbar .topbar-video-workbench-button > *,
 .app-content-topbar .topbar-sidecar-sweep-button > *,
+.app-content-topbar .topbar-rule-profiles-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3704,6 +3774,7 @@ export default {
 	.app-content-topbar .topbar-audio-workbench-button,
 	.app-content-topbar .topbar-video-workbench-button,
 	.app-content-topbar .topbar-sidecar-sweep-button,
+	.app-content-topbar .topbar-rule-profiles-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

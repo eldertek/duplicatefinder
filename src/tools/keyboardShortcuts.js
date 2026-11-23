@@ -139,6 +139,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-sidecar-sweep',
 	},
 	{
+		id: 'toggle-rule-profiles',
+		keys: ['5'],
+		action: 'toggle-rule-profiles',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -205,6 +210,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	2: 'toggle-audio-workbench',
 	3: 'toggle-video-workbench',
 	4: 'toggle-sidecar-sweep',
+	5: 'toggle-rule-profiles',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
