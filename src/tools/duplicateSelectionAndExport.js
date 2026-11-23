@@ -272,17 +272,15 @@ export function buildDuplicatesCsv(duplicates) {
 }
 
 /**
- * Trigger a client-side CSV download for the provided filtered duplicate groups
- * using a Blob and a temporary anchor element.
+ * Trigger a client-side file download from serialized text content using a Blob
+ * and a temporary anchor element.
  *
- * @param {Array<object>} duplicates - Filtered duplicate group objects.
- * @param {string} [filename='duplicates-export.csv'] - Suggested download filename.
+ * @param {string} content - Serialized file content.
+ * @param {string} mimeType - MIME type for the Blob.
+ * @param {string} filename - Suggested download filename.
  * @return {boolean} True when a download was triggered, false otherwise.
  */
-export function downloadDuplicatesCsv(duplicates, filename = 'duplicates-export.csv') {
-	if (!Array.isArray(duplicates) || duplicates.length === 0) {
-		return false
-	}
+function triggerBlobDownload(content, mimeType, filename) {
 	if (
 		typeof document === 'undefined'
 		|| typeof Blob === 'undefined'
@@ -292,8 +290,7 @@ export function downloadDuplicatesCsv(duplicates, filename = 'duplicates-export.
 		return false
 	}
 
-	const csvContent = buildDuplicatesCsv(duplicates)
-	const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' })
+	const blob = new Blob([content], { type: mimeType })
 	const url = URL.createObjectURL(blob)
 	const link = document.createElement('a')
 	link.href = url
@@ -309,4 +306,117 @@ export function downloadDuplicatesCsv(duplicates, filename = 'duplicates-export.
 		}
 	}
 	return true
+}
+
+/**
+ * Trigger a client-side CSV download for the provided filtered duplicate groups
+ * using a Blob and a temporary anchor element.
+ *
+ * @param {Array<object>} duplicates - Filtered duplicate group objects.
+ * @param {string} [filename='duplicates-export.csv'] - Suggested download filename.
+ * @return {boolean} True when a download was triggered, false otherwise.
+ */
+export function downloadDuplicatesCsv(duplicates, filename = 'duplicates-export.csv') {
+	if (!Array.isArray(duplicates) || duplicates.length === 0) {
+		return false
+	}
+
+	const csvContent = buildDuplicatesCsv(duplicates)
+	return triggerBlobDownload(`\uFEFF${csvContent}`, 'text/csv;charset=utf-8;', filename)
+}
+
+export const JSON_REPORT_SCHEMA = 'duplicatefinder.report.v1'
+
+/**
+ * Build a structured JSON report document from a list of duplicate groups.
+ *
+ * @param {Array<object>} duplicates - Filtered duplicate group objects.
+ * @param {string} [exportedAt] - Optional ISO-8601 export timestamp override.
+ * @return {string} Pretty-printed JSON report document.
+ */
+export function buildDuplicatesJson(duplicates, exportedAt) {
+	const timestamp = typeof exportedAt === 'string' && exportedAt.trim()
+		? exportedAt.trim()
+		: new Date().toISOString()
+
+	const groups = []
+	let totalReclaimableBytes = 0
+
+	if (Array.isArray(duplicates)) {
+		for (const duplicate of duplicates) {
+			if (!duplicate || typeof duplicate !== 'object') {
+				continue
+			}
+
+			const rawFiles = Array.isArray(duplicate.files) ? duplicate.files : []
+			const normalizedFiles = []
+			let unitSize = 0
+
+			for (const file of rawFiles) {
+				if (!file || typeof file !== 'object') {
+					continue
+				}
+				const rawSize = Number(file.size)
+				const sizeBytes = Number.isFinite(rawSize) && rawSize >= 0 ? Math.floor(rawSize) : 0
+				if (unitSize === 0 && sizeBytes > 0) {
+					unitSize = sizeBytes
+				}
+				normalizedFiles.push({
+					id: file.id ?? null,
+					path: typeof file.path === 'string' ? file.path : String(file.path ?? ''),
+					sizeBytes,
+					mimetype: typeof file.mimetype === 'string' ? file.mimetype : String(file.mimetype ?? ''),
+					protected: Boolean(file.isInOriginFolder),
+				})
+			}
+
+			let reclaimableBytes = 0
+			if (normalizedFiles.length > 1) {
+				reclaimableBytes = (normalizedFiles.length - 1) * unitSize
+			} else if (!Array.isArray(duplicate.files) && duplicate.count !== undefined) {
+				const rawCount = Number(duplicate.count)
+				const rawGroupSize = Number(duplicate.size)
+				const fallbackSize = Number.isFinite(rawGroupSize) && rawGroupSize >= 0 ? Math.floor(rawGroupSize) : 0
+				if (Number.isFinite(rawCount) && rawCount > 1) {
+					reclaimableBytes = (Math.floor(rawCount) - 1) * fallbackSize
+				}
+			}
+
+			totalReclaimableBytes += reclaimableBytes
+			groups.push({
+				id: duplicate.id ?? null,
+				hash: typeof duplicate.hash === 'string' ? duplicate.hash : String(duplicate.hash ?? ''),
+				status: duplicate.acknowledged ? 'acknowledged' : 'unacknowledged',
+				acknowledged: Boolean(duplicate.acknowledged),
+				fileCount: normalizedFiles.length,
+				reclaimableBytes,
+				files: normalizedFiles,
+			})
+		}
+	}
+
+	return JSON.stringify({
+		schema: JSON_REPORT_SCHEMA,
+		exportedAt: timestamp,
+		groupCount: groups.length,
+		totalReclaimableBytes,
+		groups,
+	}, null, 2)
+}
+
+/**
+ * Trigger a client-side JSON download for the provided filtered duplicate groups
+ * using an application/json Blob and a temporary anchor element.
+ *
+ * @param {Array<object>} duplicates - Filtered duplicate group objects.
+ * @param {string} [filename='duplicates-export.json'] - Suggested download filename.
+ * @return {boolean} True when a download was triggered, false otherwise.
+ */
+export function downloadDuplicatesJson(duplicates, filename = 'duplicates-export.json') {
+	if (!Array.isArray(duplicates) || duplicates.length === 0) {
+		return false
+	}
+
+	const jsonContent = buildDuplicatesJson(duplicates)
+	return triggerBlobDownload(jsonContent, 'application/json', filename)
 }

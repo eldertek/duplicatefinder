@@ -368,6 +368,20 @@
                         </svg>
                         <span>{{ t('duplicatefinder', 'Export CSV') }}</span>
                     </button>
+                    <button
+                        type="button"
+                        class="export-json-button"
+                        :disabled="filteredDuplicatesForExport.length === 0"
+                        :title="t('duplicatefinder', 'Export filtered duplicates as JSON')"
+                        :aria-label="t('duplicatefinder', 'Export JSON')"
+                        @click="exportFilteredJson">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>{{ t('duplicatefinder', 'Export JSON') }}</span>
+                    </button>
                 </div>
             </div>
 
@@ -522,7 +536,7 @@ import {
     loadTriagePreferences,
     saveTriagePreferences,
 } from '@/tools/duplicatePreferences';
-import { downloadDuplicatesCsv } from '@/tools/duplicateSelectionAndExport';
+import { downloadDuplicatesCsv, downloadDuplicatesJson } from '@/tools/duplicateSelectionAndExport';
 import { sortDuplicatesDeterministically } from '@/tools/duplicateSortHelper';
 import {
     computeExtensionBreakdown,
@@ -942,6 +956,12 @@ export default {
                 return false;
             }
             return downloadDuplicatesCsv(this.filteredDuplicatesForExport, 'duplicates-export.csv');
+        },
+        exportFilteredJson() {
+            if (this.filteredDuplicatesForExport.length === 0) {
+                return false;
+            }
+            return downloadDuplicatesJson(this.filteredDuplicatesForExport, 'duplicates-export.json');
         },
         focusSearch() {
             if (this.$refs.searchBar && typeof this.$refs.searchBar.focus === 'function') {
@@ -2371,13 +2391,14 @@ export default {
     outline-offset: 2px;
 }
 
+.export-json-button,
 .export-csv-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    flex: 1 1 120px;
-    inline-size: 100%;
+    flex: 1 1 110px;
+    max-inline-size: 100%;
     min-inline-size: 44px;
     min-block-size: 44px;
     padding-block: 6px;
@@ -2395,21 +2416,25 @@ export default {
     transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 
+.export-json-button svg,
 .export-csv-button svg {
     display: block;
     flex-shrink: 0;
 }
 
+.export-json-button:hover:not(:disabled),
 .export-csv-button:hover:not(:disabled) {
     background-color: var(--color-background-hover);
     border-color: var(--color-primary-element, #0082c9);
 }
 
+.export-json-button:focus-visible,
 .export-csv-button:focus-visible {
     outline: 2px solid var(--color-primary-element, #0082c9);
     outline-offset: 2px;
 }
 
+.export-json-button:disabled,
 .export-csv-button:disabled {
     opacity: 0.45;
     cursor: not-allowed;

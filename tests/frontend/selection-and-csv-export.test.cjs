@@ -449,3 +449,261 @@ describe('Cycle 38: smart keep-rule selection and CWE-1236-safe CSV export', () 
 		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(exportCssBlock), 'DuplicateNavigation export CSS uses logical properties only')
 	})
 })
+
+describe('Cycle 77: structured JSON report export', () => {
+	test('buildDuplicatesJson builds duplicatefinder.report.v1 schema with groupCount, totalReclaimableBytes, and normalized groups', () => {
+		const { buildDuplicatesJson, JSON_REPORT_SCHEMA } = loadModule('src/tools/duplicateSelectionAndExport.js')
+
+		assert.equal(JSON_REPORT_SCHEMA, 'duplicatefinder.report.v1')
+
+		const emptyReport = JSON.parse(buildDuplicatesJson([], '2026-11-23T05:14:21.000Z'))
+		assert.deepEqual(emptyReport, {
+			schema: 'duplicatefinder.report.v1',
+			exportedAt: '2026-11-23T05:14:21.000Z',
+			groupCount: 0,
+			totalReclaimableBytes: 0,
+			groups: [],
+		})
+
+		const nullReport = JSON.parse(buildDuplicatesJson(null))
+		assert.equal(nullReport.schema, 'duplicatefinder.report.v1')
+		assert.equal(nullReport.groupCount, 0)
+		assert.equal(nullReport.totalReclaimableBytes, 0)
+		assert.deepEqual(nullReport.groups, [])
+		assert.ok(!Number.isNaN(Date.parse(nullReport.exportedAt)), 'exportedAt is a valid ISO timestamp')
+
+		const json = buildDuplicatesJson([
+			{
+				id: 42,
+				hash: 'abc123',
+				acknowledged: false,
+				files: [
+					{ id: 101, path: '/alice/files/photo.jpg', size: 2048, mimetype: 'image/jpeg', isInOriginFolder: true },
+					{ id: 102, path: '/alice/files/copy/photo.jpg', size: 2048, mimetype: 'image/jpeg', isInOriginFolder: false },
+					{ id: 103, path: '/alice/files/archive/photo.jpg', size: 2048, mimetype: 'image/jpeg', isInOriginFolder: false },
+				],
+			},
+			{
+				id: 43,
+				hash: 'def456',
+				acknowledged: true,
+				files: [
+					{ id: null, path: '/alice/files/doc.pdf', size: 512, mimetype: 'application/pdf', isInOriginFolder: false },
+					{ id: 202, path: '/alice/files/backup/doc.pdf', size: 512, mimetype: 'application/pdf', isInOriginFolder: false },
+				],
+			},
+			{
+				id: 44,
+				hash: 'single1',
+				acknowledged: false,
+				files: [
+					{ id: 301, path: '/alice/files/solo.txt', size: -100, mimetype: 'text/plain', isInOriginFolder: false },
+				],
+			},
+		], '2026-11-23T05:15:00.000Z')
+
+		const parsed = JSON.parse(json)
+		assert.equal(parsed.schema, 'duplicatefinder.report.v1')
+		assert.equal(parsed.exportedAt, '2026-11-23T05:15:00.000Z')
+		assert.equal(parsed.groupCount, 3)
+		// Group 42: (3 - 1) * 2048 = 4096; Group 43: (2 - 1) * 512 = 512; Group 44: 0
+		assert.equal(parsed.totalReclaimableBytes, 4608)
+		assert.equal(parsed.groups.length, 3)
+		assert.deepEqual(parsed.groups[0], {
+			id: 42,
+			hash: 'abc123',
+			status: 'unacknowledged',
+			acknowledged: false,
+			fileCount: 3,
+			reclaimableBytes: 4096,
+			files: [
+				{ id: 101, path: '/alice/files/photo.jpg', sizeBytes: 2048, mimetype: 'image/jpeg', protected: true },
+				{ id: 102, path: '/alice/files/copy/photo.jpg', sizeBytes: 2048, mimetype: 'image/jpeg', protected: false },
+				{ id: 103, path: '/alice/files/archive/photo.jpg', sizeBytes: 2048, mimetype: 'image/jpeg', protected: false },
+			],
+		})
+		assert.equal(parsed.groups[1].status, 'acknowledged')
+		assert.equal(parsed.groups[1].reclaimableBytes, 512)
+		assert.equal(parsed.groups[2].reclaimableBytes, 0)
+		assert.equal(parsed.groups[2].files[0].sizeBytes, 0)
+	})
+
+	test('downloadDuplicatesJson returns false for empty input and triggers application/json Blob download', async () => {
+		const { downloadDuplicatesJson } = loadModule('src/tools/duplicateSelectionAndExport.js')
+
+		assert.equal(downloadDuplicatesJson([]), false)
+		assert.equal(downloadDuplicatesJson(null), false)
+
+		const originalCreateObjectURL = global.URL.createObjectURL
+		const originalRevokeObjectURL = global.URL.revokeObjectURL
+		const originalAnchorClick = document.defaultView.HTMLAnchorElement.prototype.click
+		const capturedBlobs = []
+		const revokedUrls = []
+		const clickedLinks = []
+
+		global.URL.createObjectURL = blob => {
+			capturedBlobs.push(blob)
+			return 'blob:https://cloud.example.test/mock-json-helper'
+		}
+		global.URL.revokeObjectURL = url => {
+			revokedUrls.push(url)
+		}
+		document.defaultView.HTMLAnchorElement.prototype.click = function clickSpy() {
+			clickedLinks.push({
+				href: this.href,
+				download: this.getAttribute('download'),
+			})
+		}
+
+		try {
+			const triggered = downloadDuplicatesJson([
+				{
+					id: 9,
+					hash: 'h9',
+					acknowledged: false,
+					files: [
+						{ id: 1, path: '/a.bin', size: 1024, mimetype: 'application/octet-stream', isInOriginFolder: false },
+						{ id: 2, path: '/b.bin', size: 1024, mimetype: 'application/octet-stream', isInOriginFolder: false },
+					],
+				},
+			], 'custom-report.json')
+
+			assert.equal(triggered, true)
+			assert.equal(capturedBlobs.length, 1)
+			assert.equal(capturedBlobs[0].type, 'application/json')
+			assert.equal(clickedLinks.length, 1)
+			assert.equal(clickedLinks[0].download, 'custom-report.json')
+			assert.deepEqual(revokedUrls, ['blob:https://cloud.example.test/mock-json-helper'])
+
+			const parsed = JSON.parse(await capturedBlobs[0].text())
+			assert.equal(parsed.schema, 'duplicatefinder.report.v1')
+			assert.equal(parsed.groupCount, 1)
+			assert.equal(parsed.totalReclaimableBytes, 1024)
+		} finally {
+			global.URL.createObjectURL = originalCreateObjectURL
+			global.URL.revokeObjectURL = originalRevokeObjectURL
+			document.defaultView.HTMLAnchorElement.prototype.click = originalAnchorClick
+		}
+	})
+
+	test('DuplicateNavigation Export JSON button disables when empty and exports filtered list via application/json Blob', async () => {
+		window.localStorage.clear()
+		const DuplicateNavigation = createNavigationComponent()
+
+		const emptyVm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					props: {
+						acknowledgedDuplicates: [],
+						unacknowledgedDuplicates: [],
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const emptyJsonBtn = emptyVm.$el.querySelector('button.export-json-button')
+		assert.ok(emptyJsonBtn, 'Export JSON button exists')
+		assert.equal(emptyJsonBtn.disabled, true, 'Export JSON button is disabled when filtered list is empty')
+		emptyVm.$destroy()
+
+		const unacknowledged = [
+			{
+				id: 1,
+				hash: 'img-json-1',
+				acknowledged: false,
+				files: [
+					{ id: 11, path: '/alice/files/photo.jpg', size: 2048, mimetype: 'image/jpeg', isInOriginFolder: false },
+					{ id: 12, path: '/alice/files/copy/photo.jpg', size: 2048, mimetype: 'image/jpeg', isInOriginFolder: false },
+				],
+			},
+			{
+				id: 2,
+				hash: 'doc-json-1',
+				acknowledged: false,
+				files: [
+					{ id: 21, path: '/alice/files/notes.pdf', size: 1024, mimetype: 'application/pdf', isInOriginFolder: false },
+					{ id: 22, path: '/alice/files/backup/notes.pdf', size: 1024, mimetype: 'application/pdf', isInOriginFolder: false },
+				],
+			},
+		]
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					props: {
+						acknowledgedDuplicates: [],
+						unacknowledgedDuplicates: unacknowledged,
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const jsonBtn = vm.$el.querySelector('button.export-json-button')
+		assert.equal(jsonBtn.disabled, false)
+		assert.equal(jsonBtn.textContent.trim(), 'Export JSON')
+
+		// Filter to Images only before exporting
+		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
+		chips[1].click()
+		await settle()
+
+		const originalCreateObjectURL = global.URL.createObjectURL
+		const originalRevokeObjectURL = global.URL.revokeObjectURL
+		const originalAnchorClick = document.defaultView.HTMLAnchorElement.prototype.click
+		const capturedBlobs = []
+		const clickedLinks = []
+
+		global.URL.createObjectURL = blob => {
+			capturedBlobs.push(blob)
+			return 'blob:https://cloud.example.test/mock-json-nav'
+		}
+		global.URL.revokeObjectURL = () => {}
+		document.defaultView.HTMLAnchorElement.prototype.click = function clickSpy() {
+			clickedLinks.push({
+				href: this.href,
+				download: this.getAttribute('download'),
+			})
+		}
+
+		try {
+			jsonBtn.click()
+			await settle()
+
+			assert.equal(capturedBlobs.length, 1)
+			assert.equal(capturedBlobs[0].type, 'application/json')
+			assert.equal(clickedLinks.length, 1)
+			assert.equal(clickedLinks[0].download, 'duplicates-export.json')
+
+			const report = JSON.parse(await capturedBlobs[0].text())
+			assert.equal(report.schema, 'duplicatefinder.report.v1')
+			assert.equal(report.groupCount, 1)
+			assert.equal(report.totalReclaimableBytes, 2048)
+			assert.equal(report.groups[0].hash, 'img-json-1')
+		} finally {
+			global.URL.createObjectURL = originalCreateObjectURL
+			global.URL.revokeObjectURL = originalRevokeObjectURL
+			document.defaultView.HTMLAnchorElement.prototype.click = originalAnchorClick
+		}
+
+		// Filter to Videos (0 results) -> Export JSON becomes disabled again
+		chips[2].click()
+		await settle()
+		assert.equal(jsonBtn.disabled, true)
+
+		vm.$destroy()
+		window.localStorage.clear()
+	})
+
+	test('Cycle 77 Export JSON styles enforce >= 44px targets, focus-visible, logical CSS, and zero XSS/dashes', () => {
+		const navSource = readFileSync(resolve(root, 'src/components/DuplicateNavigation.vue'), 'utf8')
+		const exportToolSource = readFileSync(resolve(root, 'src/tools/duplicateSelectionAndExport.js'), 'utf8')
+
+		assert.ok(navSource.includes('.export-json-button'))
+		assert.ok(navSource.includes('.export-json-button:focus-visible'))
+		assert.ok(!/v-html|innerHTML/.test(navSource), 'DuplicateNavigation has zero v-html/innerHTML sinks')
+		assert.ok(!/[\u2013\u2014]/.test(navSource), 'DuplicateNavigation has zero typographic dashes')
+		assert.ok(!/[\u2013\u2014]/.test(exportToolSource), 'duplicateSelectionAndExport has zero typographic dashes')
+	})
+})
