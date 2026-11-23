@@ -1,3 +1,7 @@
+## 1.10.28 - 2026-11-23
+### Added
+- **Deterministic sort by reclaimable space (`Reclaimable space (most wasted first)`)** (`src/tools/duplicateSortHelper.js`, `src/tools/duplicatePreferences.js`, `src/components/DuplicateNavigation.vue`). Added a pure `duplicateSortHelper` supporting deterministic sorting by reclaimable space (`(count - 1) * size`), unit size, copy count, and name/path without mutating input arrays, exposed the `Reclaimable space (most wasted first)` (`reclaimable-desc`) sort option in `DuplicateNavigation.vue`, and persisted it via the strictly whitelisted `DEFAULT_ALLOWED_SORT_KEYS` triage preference storage.
+
 ## 1.10.27 - 2026-11-23
 ### Added
 - **Compact group header summary banner** (`src/tools/duplicateGroupSummary.js`, `src/components/DuplicateDetails.vue`). Added a pure `computeGroupHeaderSummary` helper and an accessible header summary banner displaying total copies, redundant copies, reclaimable space, and protected origin copy count for the active duplicate group.
