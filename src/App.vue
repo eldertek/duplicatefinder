@@ -859,6 +859,7 @@ export default {
 				'keep-newest': t('duplicatefinder', 'Keep newest copy in active group'),
 				'keep-shortest-path': t('duplicatefinder', 'Keep shortest path copy in active group'),
 				'clear-selection': t('duplicatefinder', 'Clear current selection'),
+				'copy-group-hash': t('duplicatefinder', 'Copy active group hash'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'reset-filters': t('duplicatefinder', 'Reset all active filters and sorting'),
 				'toggle-help': t('duplicatefinder', 'Toggle keyboard shortcuts help'),
@@ -1136,6 +1137,25 @@ export default {
 					event.preventDefault()
 				}
 				detailsComponent.clearSelection()
+				return
+			}
+
+			if (action === 'copy-group-hash') {
+				const detailsComponent = this.getActiveDuplicateDetailsComponent()
+				if (
+					!detailsComponent
+					|| typeof detailsComponent.copyGroupHash !== 'function'
+					|| !detailsComponent.duplicate
+					|| !Array.isArray(detailsComponent.duplicate.files)
+					|| detailsComponent.duplicate.files.length <= 1
+					|| !detailsComponent.fullGroupHash
+				) {
+					return
+				}
+				if (typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				detailsComponent.copyGroupHash()
 				return
 			}
 

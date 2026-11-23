@@ -34,6 +34,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'clear-selection',
 	},
 	{
+		id: 'copy-group-hash',
+		keys: ['y'],
+		action: 'copy-group-hash',
+	},
+	{
 		id: 'focus-search',
 		keys: ['/'],
 		action: 'focus-search',
@@ -64,6 +69,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	n: 'keep-newest',
 	s: 'keep-shortest-path',
 	c: 'clear-selection',
+	y: 'copy-group-hash',
 	r: 'reset-filters',
 })
 

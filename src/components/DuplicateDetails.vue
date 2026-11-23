@@ -45,6 +45,7 @@
                   'is-error': hashCopyStatus === 'error'
                 }"
                 :disabled="!fullGroupHash"
+                aria-keyshortcuts="y"
                 :title="shortGroupHash
                   ? t('duplicatefinder', 'Copy hash ({hash})', { hash: shortGroupHash })
                   : t('duplicatefinder', 'Copy hash')"

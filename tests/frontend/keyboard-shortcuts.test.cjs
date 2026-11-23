@@ -12,14 +12,20 @@ const slotBox = tag => ({
 	},
 })
 
-function createRealDuplicateDetails(utils) {
+function createRealDuplicateDetails(utils, clipboardImpl) {
 	const selectionAndExport = loadModule('src/tools/duplicateSelectionAndExport.js')
 	const metadataBadges = loadModule('src/tools/duplicateMetadataBadges.js')
 	const deleteSafetyGuard = loadModule('src/tools/deleteSafetyGuard.js')
+	const clipboardHelper = loadModule('src/tools/clipboardHelper.js')
+	const clipboardDependency = clipboardImpl === undefined
+		? clipboardHelper
+		: {
+			copyTextSafely: text => clipboardHelper.copyTextSafely(text, clipboardImpl),
+		}
 
 	const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 		'@/tools/api': { deleteFile: async () => true },
-		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
+		'@/tools/clipboardHelper': clipboardDependency,
 		'@/tools/utils': utils,
 		'@nextcloud/router': { generateUrl: url => url },
 	})
@@ -40,13 +46,13 @@ function createRealDuplicateDetails(utils) {
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
-		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
+		'@/tools/clipboardHelper': clipboardDependency,
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
 }
 
-function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetails = false } = {}) {
+function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetails = false, clipboardImpl } = {}) {
 	const utils = loadModule('src/tools/utils.js', {
 		'./notifications': { showErrorNotification: () => {} },
 	})
@@ -118,7 +124,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 	})
 
 	const detailsComponent = useRealDetails
-		? createRealDuplicateDetails(utils)
+		? createRealDuplicateDetails(utils, clipboardImpl)
 		: stub('duplicate-details')
 
 	const App = loadComponent('src/App.vue', {
@@ -1231,6 +1237,271 @@ describe('Cycle 83: keyboard shortcut r (reset-filters) in DuplicateNavigation a
 			'src/tools/keyboardShortcuts.js',
 			'src/App.vue',
 			'src/components/DuplicateNavigation.vue',
+		]) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})
+
+describe('Cycle 90: keyboard shortcut y (copy-group-hash) in DuplicateDetails and App', () => {
+	test('resolveShortcutAction maps y to copy-group-hash, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const copyHashDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'copy-group-hash')
+		assert.deepEqual(copyHashDef, { id: 'copy-group-hash', keys: ['y'], action: 'copy-group-hash' })
+
+		assert.equal(resolveShortcutAction({ key: 'y' }), 'copy-group-hash')
+
+		// Browser redo/modifiers and Shift must never be hijacked (Ctrl+y / Cmd+y / Alt+y / Shift+Y)
+		assert.equal(resolveShortcutAction({ key: 'y', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'y', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'y', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Y', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: 'y' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'y' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: 'y', target }), null)
+		}
+	})
+
+	test('App.vue -> DuplicateDetails.vue copies group hash on y, sets aria-keyshortcuts="y", documents y in ? <dialog>, and ignores editable fields, modifiers, or open <dialog>', async () => {
+		window.localStorage.clear()
+		const copiedValues = []
+		const group = {
+			id: 201,
+			hash: '0123456789abcdef0123456789abcdef',
+			acknowledged: false,
+			files: [
+				{ id: 2011, nodeId: 2011, path: '/alice/files/A/archive.zip', size: 4096, mtime: 1000, mimetype: 'application/zip' },
+				{ id: 2012, nodeId: 2012, path: '/alice/files/B/archive.zip', size: 4096, mtime: 2000, mimetype: 'application/zip' },
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [group],
+			useRealDetails: true,
+			clipboardImpl: {
+				writeText: async value => {
+					copiedValues.push(value)
+				},
+			},
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalSelect = document.createElement('select')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalSelect)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		try {
+			await settle()
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
+
+			const copyHashButton = detailsVm.$el.querySelector('button.group-header-summary__copy-hash-button')
+			assert.ok(copyHashButton, 'Copy hash button is rendered')
+			assert.equal(copyHashButton.getAttribute('aria-keyshortcuts'), 'y')
+
+			// 1. Typing y inside editable inputs/select/textarea/contenteditable must NOT copy
+			const searchInput = vm.$el.querySelector('input.search-input')
+			const folderInput = vm.$el.querySelector('input.folder-filter-input')
+			assert.ok(searchInput)
+			assert.ok(folderInput)
+			for (const field of [searchInput, folderInput, externalTextarea, externalSelect, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.deepEqual(copiedValues, [])
+			assert.equal(detailsVm.hashCopyStatus, 'idle')
+
+			// 2. Modifiers (Ctrl+y / Cmd+y / Alt+y / Shift+Y) must NOT copy or preventDefault
+			for (const init of [
+				{ key: 'y', ctrlKey: true },
+				{ key: 'y', metaKey: true },
+				{ key: 'y', altKey: true },
+				{ key: 'Y', shiftKey: true },
+			]) {
+				const modEvent = new window.KeyboardEvent('keydown', { ...init, bubbles: true, cancelable: true })
+				window.dispatchEvent(modEvent)
+				assert.equal(modEvent.defaultPrevented, false)
+			}
+			await settle()
+			assert.deepEqual(copiedValues, [])
+
+			// 3. ? help <dialog> documents y and blocks y while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('y'), 'help dialog documents y shortcut')
+			assert.ok(helpDialog.textContent.includes('Copy active group hash'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(copiedValues, [])
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 4. Delete confirmation <dialog> blocks y
+			detailsVm.applyKeepRule('oldest')
+			await settle()
+			detailsVm.$el.querySelector('button.delete-selected-button').click()
+			await settle()
+			assert.equal(detailsVm.showDeleteConfirmDialog, true)
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(copiedValues, [])
+			detailsVm.resolveDeleteConfirm(false)
+			await settle()
+
+			// 5. External <dialog open> blocks y
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(copiedValues, [])
+			externalDialog.removeAttribute('open')
+
+			// 6. Pressing y in normal view copies full group hash and updates live status
+			const yEvent = new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true })
+			window.dispatchEvent(yEvent)
+			await settle()
+			assert.equal(yEvent.defaultPrevented, true)
+			assert.deepEqual(copiedValues, ['0123456789abcdef0123456789abcdef'])
+			assert.equal(detailsVm.hashCopyStatus, 'copied')
+			assert.equal(detailsVm.hashCopyStatusMessage, 'Copied')
+			const statusEl = detailsVm.$el.querySelector('.group-header-summary__copy-status')
+			assert.ok(statusEl)
+			assert.equal(statusEl.textContent.trim(), 'Copied')
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalSelect.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+		}
+	})
+
+	test('y shortcut is a safe no-op when hash is missing or in bulk-delete view, works in project-duplicate view, and reports clipboard failures cleanly', async () => {
+		window.localStorage.clear()
+		const copiedValues = []
+		let shouldFailClipboard = false
+
+		const missingHashGroup = {
+			id: 202,
+			hash: '',
+			acknowledged: false,
+			files: [
+				{ id: 2021, nodeId: 2021, path: '/alice/files/A/doc.txt', size: 512, mtime: 1000, mimetype: 'text/plain' },
+				{ id: 2022, nodeId: 2022, path: '/alice/files/B/doc.txt', size: 512, mtime: 2000, mimetype: 'text/plain' },
+			],
+		}
+		const projectGroup = {
+			id: 203,
+			hash: 'fedcba9876543210fedcba9876543210',
+			acknowledged: false,
+			files: [
+				{ id: 2031, nodeId: 2031, path: '/alice/files/P1/spec.pdf', size: 1024, mtime: 1000, mimetype: 'application/pdf' },
+				{ id: 2032, nodeId: 2032, path: '/alice/files/P2/spec.pdf', size: 1024, mtime: 2000, mimetype: 'application/pdf' },
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [missingHashGroup],
+			useRealDetails: true,
+			clipboardImpl: {
+				writeText: async value => {
+					if (shouldFailClipboard) {
+						throw new Error('Clipboard denied')
+					}
+					copiedValues.push(value)
+				},
+			},
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			// Missing hash -> safe no-op
+			const noHashEvent = new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true })
+			window.dispatchEvent(noHashEvent)
+			await settle()
+			assert.equal(noHashEvent.defaultPrevented, false)
+			assert.deepEqual(copiedValues, [])
+
+			// Bulk-delete view -> ignored
+			vm.openBulkDelete()
+			await settle()
+			const bulkY = new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkY)
+			await settle()
+			assert.equal(bulkY.defaultPrevented, false)
+			assert.deepEqual(copiedValues, [])
+
+			// Project-duplicate view -> copies group hash
+			vm.viewProjectDuplicate(projectGroup)
+			await settle()
+			const projectDetailsVm = vm.$refs.projectDuplicateDetails
+			assert.ok(projectDetailsVm, 'projectDuplicateDetails ref is mounted')
+
+			const projectY = new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true })
+			window.dispatchEvent(projectY)
+			await settle()
+			assert.equal(projectY.defaultPrevented, true)
+			assert.deepEqual(copiedValues, ['fedcba9876543210fedcba9876543210'])
+			assert.equal(projectDetailsVm.hashCopyStatus, 'copied')
+
+			// Clipboard failure -> Copy failed without uncaught throw
+			shouldFailClipboard = true
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'y', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(projectDetailsVm.hashCopyStatus, 'error')
+			assert.equal(projectDetailsVm.hashCopyStatusMessage, 'Copy failed')
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('Cycle 90 touched files preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of [
+			'src/tools/keyboardShortcuts.js',
+			'src/App.vue',
+			'src/components/DuplicateDetails.vue',
 		]) {
 			const source = readFileSync(resolve(root, relPath), 'utf8')
 			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
