@@ -685,6 +685,33 @@
 							<span>{{ t('duplicatefinder', 'Quarantine') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-retention-pruner-button"
+							:class="{ 'is-active': retentionPrunerOpen }"
+							:aria-pressed="retentionPrunerOpen ? 'true' : 'false'"
+							aria-keyshortcuts="9"
+							:title="t('duplicatefinder', 'Toggle retention age, cold-storage and stale artifact pruner workbench')"
+							@click="toggleRetentionPruner">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle cx="12" cy="12" r="9" />
+								<polyline points="12 6 12 12 16 14" />
+								<path d="M5 3L2 6" />
+								<path d="M22 6l-3-3" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Retention') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -943,6 +970,16 @@
 						@quarantine-delete-completed="onBrokenQuarantineDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="brokenQuarantineOpen = false" />
+					<RetentionAgeWorkbench
+						v-if="retentionPrunerOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onRetentionSelectDuplicate"
+						@compare-duplicate="onRetentionCompareDuplicate"
+						@retention-delete-completed="onRetentionDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="retentionPrunerOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1394,6 +1431,7 @@ import RuleProfilesWorkbench from './components/RuleProfilesWorkbench.vue'
 import DocumentLineageWorkbench from './components/DocumentLineageWorkbench.vue'
 import PhotoPerceptualWorkbench from './components/PhotoPerceptualWorkbench.vue'
 import BrokenMediaQuarantineWorkbench from './components/BrokenMediaQuarantineWorkbench.vue'
+import RetentionAgeWorkbench from './components/RetentionAgeWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1474,6 +1512,7 @@ export default {
 		DocumentLineageWorkbench,
 		PhotoPerceptualWorkbench,
 		BrokenMediaQuarantineWorkbench,
+		RetentionAgeWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1521,6 +1560,7 @@ export default {
 			documentLineageOpen: false,
 			photoPerceptualOpen: false,
 			brokenQuarantineOpen: false,
+			retentionPrunerOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1712,6 +1752,7 @@ export default {
 				'toggle-document-lineage': t('duplicatefinder', 'Toggle near-duplicate document fuzzy diff and version lineage workbench'),
 				'toggle-photo-perceptual': t('duplicatefinder', 'Toggle similar-photo perceptual pHash, EXIF sharpness and crop comparator workbench'),
 				'toggle-broken-quarantine': t('duplicatefinder', 'Toggle broken, zero-byte, truncated media and corrupted header quarantine workbench'),
+				'toggle-retention-pruner': t('duplicatefinder', 'Toggle retention age, cold-storage and stale artifact pruner workbench'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2241,6 +2282,25 @@ export default {
 		onBrokenQuarantineDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleRetentionPruner() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.retentionPrunerOpen = !this.retentionPrunerOpen
+			return true
+		},
+		onRetentionSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onRetentionCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onRetentionDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -2725,6 +2785,13 @@ export default {
 
 			if (action === 'toggle-broken-quarantine') {
 				if (this.toggleBrokenQuarantine() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-retention-pruner') {
+				if (this.toggleRetentionPruner() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3647,7 +3714,8 @@ export default {
 .app-content-topbar .topbar-rule-profiles-button,
 .app-content-topbar .topbar-document-lineage-button,
 .app-content-topbar .topbar-photo-perceptual-button,
-.app-content-topbar .topbar-broken-quarantine-button {
+.app-content-topbar .topbar-broken-quarantine-button,
+.app-content-topbar .topbar-retention-pruner-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3686,7 +3754,8 @@ export default {
 .app-content-topbar .topbar-rule-profiles-button svg,
 .app-content-topbar .topbar-document-lineage-button svg,
 .app-content-topbar .topbar-photo-perceptual-button svg,
-.app-content-topbar .topbar-broken-quarantine-button svg {
+.app-content-topbar .topbar-broken-quarantine-button svg,
+.app-content-topbar .topbar-retention-pruner-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3730,7 +3799,9 @@ export default {
 .app-content-topbar .topbar-photo-perceptual-button:hover:not(:disabled),
 .app-content-topbar .topbar-photo-perceptual-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-broken-quarantine-button:hover:not(:disabled),
-.app-content-topbar .topbar-broken-quarantine-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-broken-quarantine-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-retention-pruner-button:hover:not(:disabled),
+.app-content-topbar .topbar-retention-pruner-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3752,7 +3823,8 @@ export default {
 .app-content-topbar .topbar-rule-profiles-button.is-active,
 .app-content-topbar .topbar-document-lineage-button.is-active,
 .app-content-topbar .topbar-photo-perceptual-button.is-active,
-.app-content-topbar .topbar-broken-quarantine-button.is-active {
+.app-content-topbar .topbar-broken-quarantine-button.is-active,
+.app-content-topbar .topbar-retention-pruner-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -3917,6 +3989,7 @@ export default {
 .app-content-topbar .topbar-document-lineage-button > *,
 .app-content-topbar .topbar-photo-perceptual-button > *,
 .app-content-topbar .topbar-broken-quarantine-button > *,
+.app-content-topbar .topbar-retention-pruner-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -4020,6 +4093,7 @@ export default {
 	.app-content-topbar .topbar-document-lineage-button,
 	.app-content-topbar .topbar-photo-perceptual-button,
 	.app-content-topbar .topbar-broken-quarantine-button,
+	.app-content-topbar .topbar-retention-pruner-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

@@ -349,6 +349,7 @@ describe('Cycle 129: Recovery Safety Manifest & Share-Impact Risk Pre-Check Work
 			'./components/DocumentLineageWorkbench.vue': { __esModule: true, default: stub('document-lineage') },
 			'./components/PhotoPerceptualWorkbench.vue': { __esModule: true, default: stub('photo-perceptual') },
 			'./components/BrokenMediaQuarantineWorkbench.vue': { __esModule: true, default: stub('broken-quarantine') },
+'./components/RetentionAgeWorkbench.vue': { __esModule: true, default: stub('retention-pruner') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
