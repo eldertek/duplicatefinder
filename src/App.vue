@@ -280,7 +280,9 @@
 					<template #icon>
 						<FilterOutline :size="20" />
 					</template>
-					<FilterSettings @filters-changed="refreshDuplicates" />
+					<FilterSettings
+						:duplicates="allLoadedDuplicates"
+						@filters-changed="refreshDuplicates" />
 				</NcAppSettingsSection>
 
 				<NcAppSettingsSection
@@ -877,6 +879,11 @@ export default {
 		},
 		totalDuplicateCount() {
 			return this.unacknowledgedDuplicateCount + this.acknowledgedDuplicateCount
+		},
+		allLoadedDuplicates() {
+			const unack = Array.isArray(this.unacknowledgedDuplicates) ? this.unacknowledgedDuplicates : []
+			const ack = Array.isArray(this.acknowledgedDuplicates) ? this.acknowledgedDuplicates : []
+			return [...unack, ...ack]
 		},
 		duplicateCountTooltipText() {
 			return t(

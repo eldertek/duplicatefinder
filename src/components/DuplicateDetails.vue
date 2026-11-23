@@ -7,11 +7,18 @@
             <h3 class="details-group-title">
               {{ t('duplicatefinder', 'Duplicate Details') }} - {{ getGroupDisplayName(duplicate) }}
             </h3>
-            <span
-              class="group-status-pill"
-              :class="duplicate.acknowledged ? 'is-acknowledged' : 'is-unacknowledged'">
-              {{ duplicate.acknowledged ? t('duplicatefinder', 'Acknowledged') : t('duplicatefinder', 'Unacknowledged') }}
-            </span>
+            <div class="details-header-pills">
+              <span
+                v-if="isGroupExcluded"
+                class="group-status-pill is-excluded">
+                {{ t('duplicatefinder', 'False positive (Excluded)') }}
+              </span>
+              <span
+                class="group-status-pill"
+                :class="duplicate.acknowledged ? 'is-acknowledged' : 'is-unacknowledged'">
+                {{ duplicate.acknowledged ? t('duplicatefinder', 'Acknowledged') : t('duplicatefinder', 'Unacknowledged') }}
+              </span>
+            </div>
           </div>
 
           <div
@@ -189,22 +196,103 @@
                 <span>{{ compareMode ? t('duplicatefinder', 'List view') : t('duplicatefinder', 'Compare') }}</span>
               </button>
 
-              <div class="dropdown" @keydown.esc.stop="showDropdown = false">
+              <button
+                type="button"
+                class="toolbar-button false-positive-button"
+                :class="{ 'is-excluded': isGroupExcluded }"
+                :disabled="!fullGroupHash || isIgnoringRule || isGroupExcluded"
+                :title="isGroupExcluded
+                  ? t('duplicatefinder', 'Group hash is excluded from future scans')
+                  : t('duplicatefinder', 'Mark as false positive and exclude hash from future scans')"
+                @click="excludeGroupAsFalsePositive">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                </svg>
+                <span>{{ isGroupExcluded ? t('duplicatefinder', 'Excluded') : t('duplicatefinder', 'False positive') }}</span>
+              </button>
+
+              <div ref="actionsDropdown" class="dropdown" @keydown.esc.stop="showDropdown = false">
                 <button
                   type="button"
                   class="dropdown-toggle has-tooltip"
                   :title="t('duplicatefinder', 'More actions')"
                   :aria-label="t('duplicatefinder', 'More actions')"
                   :aria-expanded="showDropdown ? 'true' : 'false'"
-                  aria-haspopup="true"
+                  aria-haspopup="menu"
                   :data-tooltip="t('duplicatefinder', 'More actions')"
                   @click="toggleDropdown">
                   <span class="arrow-down"></span>
                 </button>
-                <div v-show="showDropdown" class="dropdown-menu">
-                  <button type="button" @click="copyFileHash">{{ t('duplicatefinder', 'Copy File Hash') }}</button>
+                <div v-if="showDropdown" class="dropdown-menu" role="menu">
+                  <button type="button" role="menuitem" @click="copyFileHash">
+                    {{ t('duplicatefinder', 'Copy File Hash') }}
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    :disabled="!fullGroupHash || isIgnoringRule || isGroupExcluded"
+                    @click="excludeGroupAsFalsePositive">
+                    {{ isGroupExcluded
+                      ? t('duplicatefinder', 'Excluded from future scans')
+                      : t('duplicatefinder', 'Exclude group (False positive)') }}
+                  </button>
+                  <button
+                    v-for="pattern in groupIgnoreOptions.extensionPatterns"
+                    :key="'ext-' + pattern"
+                    type="button"
+                    role="menuitem"
+                    :disabled="isIgnoringRule || isPatternIgnored(pattern)"
+                    @click="ignorePatternRule(pattern)">
+                    {{ isPatternIgnored(pattern)
+                      ? t('duplicatefinder', 'Ignored: {pattern}', { pattern })
+                      : t('duplicatefinder', 'Ignore pattern: {pattern}', { pattern }) }}
+                  </button>
+                  <button
+                    v-for="fileName in groupIgnoreOptions.exactFileNames"
+                    :key="'name-' + fileName"
+                    type="button"
+                    role="menuitem"
+                    :disabled="isIgnoringRule || isPatternIgnored(fileName)"
+                    @click="ignorePatternRule(fileName)">
+                    {{ isPatternIgnored(fileName)
+                      ? t('duplicatefinder', 'Ignored: {pattern}', { pattern: fileName })
+                      : t('duplicatefinder', 'Ignore file name: {name}', { name: fileName }) }}
+                  </button>
+                  <button
+                    v-for="folderPath in groupIgnoreOptions.folderPaths"
+                    :key="'folder-' + folderPath"
+                    type="button"
+                    role="menuitem"
+                    :disabled="isIgnoringRule || isFolderExcluded(folderPath)"
+                    @click="excludeFolderRule(folderPath)">
+                    {{ isFolderExcluded(folderPath)
+                      ? t('duplicatefinder', 'Excluded folder: {folder}', { folder: folderPath })
+                      : t('duplicatefinder', 'Exclude folder: {folder}', { folder: folderPath }) }}
+                  </button>
+                  <div class="dropdown-menu-divider" role="separator"></div>
+                  <button type="button" role="menuitem" @click="openIgnoreRulesSettings">
+                    {{ t('duplicatefinder', 'Manage ignore rules...') }}
+                  </button>
                 </div>
               </div>
+            </div>
+
+            <div
+              v-if="ignoreActionMessage || isGroupExcluded"
+              class="ignore-rule-banner"
+              :class="{ 'is-error': ignoreActionStatus === 'error' }"
+              role="status"
+              aria-live="polite">
+              <span class="ignore-rule-banner__text">
+                {{ ignoreActionMessage || t('duplicatefinder', 'This group hash is excluded from future scans.') }}
+              </span>
+              <button
+                type="button"
+                class="ignore-rule-banner__link"
+                @click="openSettings">
+                {{ t('duplicatefinder', 'Manage ignore rules') }}
+              </button>
             </div>
 
             <div
@@ -528,7 +616,7 @@
 </template>
 
 <script>
-import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates } from '@/tools/api';
+import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates, saveFilter, saveExcludedFolder } from '@/tools/api';
 import { copyTextSafely } from '@/tools/clipboardHelper';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
 import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport';
@@ -536,7 +624,7 @@ import { annotateDuplicateMetadataBadges } from '@/tools/duplicateMetadataBadges
 import { computePathDiffSegments } from '@/tools/duplicatePathDiff';
 import { buildDeletionAuditPlan, downloadDeletionPlanJson, evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
 import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary';
-import { formatShortHash } from '@/tools/duplicateHashHelper';
+import { formatShortHash, deriveGroupIgnoreOptions } from '@/tools/duplicateHashHelper';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateCompareView from './DuplicateCompareView.vue';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
@@ -572,7 +660,15 @@ export default {
       planExportTimer: null,
       hashCopyStatus: 'idle',
       hashCopyStatusMessage: '',
-      hashCopyResetTimer: null
+      hashCopyResetTimer: null,
+      isIgnoringRule: false,
+      excludedHashesInSession: [],
+      ignoredPatternsInSession: [],
+      excludedFoldersInSession: [],
+      ignoreActionStatus: 'idle',
+      ignoreActionMessage: '',
+      ignoreActionTimer: null,
+      outsideClickHandler: null
     };
   },
   watch: {
@@ -582,16 +678,37 @@ export default {
       this.activeKeepRule = null;
       this.isAcknowledging = false;
       this.acknowledgeRequestToken += 1;
+      this.showDropdown = false;
       this.resetHashCopyFeedback();
       this.resetPlanExportFeedback();
+      this.resetIgnoreActionFeedback();
       if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
         this.resolveDeleteConfirm(false);
       }
     }
   },
+  mounted() {
+    this.outsideClickHandler = event => {
+      if (!this.showDropdown) {
+        return;
+      }
+      const dropdown = this.$refs.actionsDropdown;
+      if (dropdown && typeof dropdown.contains === 'function' && !dropdown.contains(event.target)) {
+        this.showDropdown = false;
+      }
+    };
+    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+      document.addEventListener('click', this.outsideClickHandler);
+    }
+  },
   beforeDestroy() {
     this.resetHashCopyFeedback();
     this.resetPlanExportFeedback();
+    this.resetIgnoreActionFeedback();
+    if (this.outsideClickHandler && typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
+      document.removeEventListener('click', this.outsideClickHandler);
+      this.outsideClickHandler = null;
+    }
     if (this.pendingDeleteResolver) {
       this.resolveDeleteConfirm(false);
     }
@@ -659,6 +776,19 @@ export default {
     },
     shortGroupHash() {
       return formatShortHash(this.fullGroupHash);
+    },
+    isGroupExcluded() {
+      const normalized = this.fullGroupHash.toLowerCase();
+      if (!normalized) {
+        return false;
+      }
+      return Boolean(
+        (this.duplicate && this.duplicate.ignoredByRule)
+        || this.excludedHashesInSession.includes(normalized)
+      );
+    },
+    groupIgnoreOptions() {
+      return deriveGroupIgnoreOptions(this.duplicate);
     },
     deletionSafetyPlan() {
       const files = this.duplicate && Array.isArray(this.duplicate.files)
@@ -1124,6 +1254,130 @@ export default {
         });
       }
     },
+    resetIgnoreActionFeedback() {
+      if (this.ignoreActionTimer) {
+        clearTimeout(this.ignoreActionTimer);
+        this.ignoreActionTimer = null;
+      }
+      this.ignoreActionStatus = 'idle';
+      this.ignoreActionMessage = '';
+    },
+    setIgnoreActionFeedback(status, message) {
+      this.resetIgnoreActionFeedback();
+      this.ignoreActionStatus = status;
+      this.ignoreActionMessage = message;
+      this.ignoreActionTimer = setTimeout(() => {
+        this.ignoreActionStatus = 'idle';
+        this.ignoreActionMessage = '';
+        this.ignoreActionTimer = null;
+      }, 4500);
+    },
+    isPatternIgnored(pattern) {
+      return typeof pattern === 'string' && this.ignoredPatternsInSession.includes(pattern.trim());
+    },
+    isFolderExcluded(folderPath) {
+      return typeof folderPath === 'string' && this.excludedFoldersInSession.includes(folderPath.trim());
+    },
+    openIgnoreRulesSettings() {
+      this.showDropdown = false;
+      this.openSettings();
+    },
+    async excludeGroupAsFalsePositive() {
+      const targetHash = this.fullGroupHash;
+      if (!targetHash || this.isIgnoringRule || this.isGroupExcluded) {
+        return false;
+      }
+      this.isIgnoringRule = true;
+      this.showDropdown = false;
+      try {
+        if (typeof saveFilter === 'function') {
+          await saveFilter({ type: 'hash', value: targetHash.toLowerCase() });
+        }
+        const normalizedHash = targetHash.toLowerCase();
+        if (!this.excludedHashesInSession.includes(normalizedHash)) {
+          this.excludedHashesInSession = [...this.excludedHashesInSession, normalizedHash];
+        }
+        const displayHash = this.shortGroupHash || targetHash;
+        if (this.duplicate && !this.duplicate.acknowledged && typeof acknowledgeDuplicate === 'function') {
+          await acknowledgeDuplicate(this.duplicate.hash);
+          this.$emit('duplicateUpdated', {
+            ...this.duplicate,
+            acknowledged: true,
+            ignoredByRule: true
+          });
+        }
+        this.setIgnoreActionFeedback(
+          'success',
+          this.t('duplicatefinder', 'Marked as false positive. Hash {hash} excluded from future scans.', { hash: displayHash })
+        );
+        return true;
+      } catch (error) {
+        console.error('Error excluding duplicate hash:', error);
+        this.setIgnoreActionFeedback(
+          'error',
+          this.t('duplicatefinder', 'Could not exclude group hash.')
+        );
+        return false;
+      } finally {
+        this.isIgnoringRule = false;
+      }
+    },
+    async ignorePatternRule(pattern) {
+      const trimmed = typeof pattern === 'string' ? pattern.trim() : '';
+      if (!trimmed || this.isIgnoringRule || this.isPatternIgnored(trimmed)) {
+        return false;
+      }
+      this.isIgnoringRule = true;
+      this.showDropdown = false;
+      try {
+        if (typeof saveFilter === 'function') {
+          await saveFilter({ type: 'name', value: trimmed });
+        }
+        this.ignoredPatternsInSession = [...this.ignoredPatternsInSession, trimmed];
+        this.setIgnoreActionFeedback(
+          'success',
+          this.t('duplicatefinder', 'Rule "{pattern}" added to Ignore Rules.', { pattern: trimmed })
+        );
+        return true;
+      } catch (error) {
+        console.error('Error saving filename ignore rule:', error);
+        this.setIgnoreActionFeedback(
+          'error',
+          this.t('duplicatefinder', 'Could not save filename ignore rule.')
+        );
+        return false;
+      } finally {
+        this.isIgnoringRule = false;
+      }
+    },
+    async excludeFolderRule(folderPath) {
+      const trimmed = typeof folderPath === 'string' ? folderPath.trim() : '';
+      if (!trimmed || trimmed === '/' || this.isIgnoringRule || this.isFolderExcluded(trimmed)) {
+        return false;
+      }
+      this.isIgnoringRule = true;
+      this.showDropdown = false;
+      try {
+        if (typeof saveExcludedFolder === 'function') {
+          await saveExcludedFolder(trimmed);
+        }
+        this.excludedFoldersInSession = [...this.excludedFoldersInSession, trimmed];
+        this.setIgnoreActionFeedback(
+          'success',
+          this.t('duplicatefinder', 'Folder "{folder}" added to Excluded Folders.', { folder: trimmed })
+        );
+        return true;
+      } catch (error) {
+        console.error('Error excluding folder:', error);
+        this.setIgnoreActionFeedback(
+          'error',
+          this.t('duplicatefinder', 'Could not exclude folder.')
+        );
+        return false;
+      } finally {
+        this.isIgnoringRule = false;
+      }
+    },
     openSettings() {
       this.$emit('openSettings');
     },
@@ -1170,6 +1424,13 @@ export default {
   overflow-wrap: anywhere;
 }
 
+.details-header-pills {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .group-status-pill {
   display: inline-flex;
   align-items: center;
@@ -1184,6 +1445,12 @@ export default {
   background-color: rgba(46, 125, 50, 0.16);
   color: #4caf50;
   border: 1px solid rgba(76, 175, 80, 0.35);
+}
+
+.group-status-pill.is-excluded {
+  background-color: rgba(183, 28, 28, 0.12);
+  color: #b71c1c;
+  border: 1px solid rgba(183, 28, 28, 0.35);
 }
 
 .group-status-pill.is-unacknowledged {
@@ -1531,9 +1798,64 @@ export default {
 .preview-button:hover:not(:disabled),
 .preview-button:focus-visible:not(:disabled),
 .compare-toggle-button:hover:not(:disabled),
-.compare-toggle-button:focus-visible:not(:disabled) {
+.compare-toggle-button:focus-visible:not(:disabled),
+.false-positive-button:hover:not(:disabled),
+.false-positive-button:focus-visible:not(:disabled) {
   background-color: var(--color-background-dark);
   border-color: var(--color-primary-element, #ffffff);
+}
+
+.false-positive-button.is-excluded {
+  border-color: rgba(183, 28, 28, 0.45);
+  background-color: rgba(183, 28, 28, 0.1);
+  color: var(--color-main-text);
+}
+
+.ignore-rule-banner {
+  inline-size: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-block: 8px;
+  padding-inline: 12px;
+  border-radius: var(--border-radius-large, 8px);
+  border: 1px solid rgba(46, 125, 50, 0.45);
+  background-color: rgba(46, 125, 50, 0.12);
+  color: var(--color-main-text);
+  font-size: 0.86rem;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.ignore-rule-banner.is-error {
+  border-color: rgba(211, 47, 47, 0.5);
+  background-color: rgba(211, 47, 47, 0.12);
+}
+
+.ignore-rule-banner__text {
+  overflow-wrap: anywhere;
+}
+
+.ignore-rule-banner__link {
+  min-block-size: 36px;
+  padding-block: 4px;
+  padding-inline: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+  background-color: var(--color-main-background);
+  color: var(--color-main-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ignore-rule-banner__link:hover,
+.ignore-rule-banner__link:focus-visible {
+  border-color: var(--color-primary-element, #0082c9);
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 1px;
 }
 
 .compare-toggle-button.is-active:not(:disabled) {
@@ -1811,6 +2133,10 @@ export default {
     min-height: 44px;
   }
 
+  .ignore-rule-banner__link {
+    min-block-size: 44px;
+  }
+
   .action-buttons {
     flex-wrap: wrap;
   }
@@ -1923,7 +2249,8 @@ button:disabled *,
   border-radius: var(--border-radius-large, 8px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   z-index: 2000;
-  min-width: 160px;
+  min-width: 220px;
+  max-inline-size: min(320px, calc(100vw - 24px));
   overflow: hidden;
 }
 
@@ -1937,10 +2264,36 @@ button:disabled *,
   color: var(--color-main-text);
   font-size: 0.88rem;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
-.dropdown-menu button:hover {
+.dropdown-menu button:hover:not(:disabled) {
   background: var(--color-background-hover);
+}
+
+.dropdown-menu-divider {
+  border-block-start: 1px solid var(--color-border);
+  margin-block: 4px;
+}
+
+@media (max-width: 800px) {
+  .dropdown-toggle {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .dropdown-menu {
+    position: fixed;
+    inset-inline: 12px;
+    top: auto;
+    bottom: 12px;
+    min-width: 0;
+    max-inline-size: calc(100vw - 24px);
+    max-block-size: 70vh;
+    overflow-y: auto;
+  }
 }
 
 .emptycontent {
