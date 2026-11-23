@@ -119,6 +119,7 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 			'./components/PreviewCacheWorkbench.vue': { __esModule: true, default: stub('preview-cache') },
 			'./components/ShareMountAuditorWorkbench.vue': { __esModule: true, default: stub('share-mount') },
 			'./components/BackupDriftWorkbench.vue': { __esModule: true, default: stub('backup-drift') },
+			'./components/AutomationRulebookWorkbench.vue': { __esModule: true, default: stub('automation-rulebook') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

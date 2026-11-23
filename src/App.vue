@@ -891,6 +891,34 @@
 							<span>{{ t('duplicatefinder', 'Backup Drift') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-automation-rulebook-button"
+							:class="{ 'is-active': automationRulebookOpen }"
+							:aria-pressed="automationRulebookOpen ? 'true' : 'false'"
+							aria-keyshortcuts=";"
+							:title="t('duplicatefinder', 'Toggle zero-touch scheduled retention rulebook and policy simulator')"
+							@click="toggleAutomationRulebook">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle
+									cx="12"
+									cy="12"
+									r="10" />
+								<polyline points="12 6 12 12 16 14" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Rulebook') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1209,6 +1237,16 @@
 						@backup-drift-delete-completed="onBackupDriftDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="backupDriftOpen = false" />
+					<AutomationRulebookWorkbench
+						v-if="automationRulebookOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onAutomationRulebookSelectDuplicate"
+						@compare-duplicate="onAutomationRulebookCompareDuplicate"
+						@automation-delete-completed="onAutomationRulebookDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="automationRulebookOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1666,6 +1704,7 @@ import QuotaAttributionWorkbench from './components/QuotaAttributionWorkbench.vu
 import PreviewCacheWorkbench from './components/PreviewCacheWorkbench.vue'
 import ShareMountAuditorWorkbench from './components/ShareMountAuditorWorkbench.vue'
 import BackupDriftWorkbench from './components/BackupDriftWorkbench.vue'
+import AutomationRulebookWorkbench from './components/AutomationRulebookWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1752,6 +1791,7 @@ export default {
 		PreviewCacheWorkbench,
 		ShareMountAuditorWorkbench,
 		BackupDriftWorkbench,
+		AutomationRulebookWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1805,6 +1845,7 @@ export default {
 			previewCacheOpen: false,
 			shareMountAuditorOpen: false,
 			backupDriftOpen: false,
+			automationRulebookOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2002,6 +2043,7 @@ export default {
 				'toggle-preview-cache': t('duplicatefinder', 'Toggle orphaned Nextcloud preview and cache reclaim analyzer'),
 				'toggle-share-mount-auditor': t('duplicatefinder', 'Toggle cross-share permission and orphaned external-mount auditor'),
 				'toggle-backup-drift': t('duplicatefinder', 'Toggle backup snapshot and mirror-tree drift synchronizer'),
+				'toggle-automation-rulebook': t('duplicatefinder', 'Toggle zero-touch scheduled retention rulebook and policy simulator'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2645,6 +2687,25 @@ export default {
 		onBackupDriftDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleAutomationRulebook() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.automationRulebookOpen = !this.automationRulebookOpen
+			return true
+		},
+		onAutomationRulebookSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onAutomationRulebookCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onAutomationRulebookDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3171,6 +3232,13 @@ export default {
 
 			if (action === 'toggle-backup-drift') {
 				if (this.toggleBackupDrift() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-automation-rulebook') {
+				if (this.toggleAutomationRulebook() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4099,7 +4167,8 @@ export default {
 .app-content-topbar .topbar-quota-attribution-button,
 .app-content-topbar .topbar-preview-cache-button,
 .app-content-topbar .topbar-share-mount-button,
-.app-content-topbar .topbar-backup-drift-button {
+.app-content-topbar .topbar-backup-drift-button,
+.app-content-topbar .topbar-automation-rulebook-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4144,7 +4213,8 @@ export default {
 .app-content-topbar .topbar-quota-attribution-button svg,
 .app-content-topbar .topbar-preview-cache-button svg,
 .app-content-topbar .topbar-share-mount-button svg,
-.app-content-topbar .topbar-backup-drift-button svg {
+.app-content-topbar .topbar-backup-drift-button svg,
+.app-content-topbar .topbar-automation-rulebook-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -4200,7 +4270,9 @@ export default {
 .app-content-topbar .topbar-share-mount-button:hover:not(:disabled),
 .app-content-topbar .topbar-share-mount-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-backup-drift-button:hover:not(:disabled),
-.app-content-topbar .topbar-backup-drift-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-backup-drift-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-automation-rulebook-button:hover:not(:disabled),
+.app-content-topbar .topbar-automation-rulebook-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -4228,7 +4300,8 @@ export default {
 .app-content-topbar .topbar-quota-attribution-button.is-active,
 .app-content-topbar .topbar-preview-cache-button.is-active,
 .app-content-topbar .topbar-share-mount-button.is-active,
-.app-content-topbar .topbar-backup-drift-button.is-active {
+.app-content-topbar .topbar-backup-drift-button.is-active,
+.app-content-topbar .topbar-automation-rulebook-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -4399,6 +4472,7 @@ export default {
 .app-content-topbar .topbar-preview-cache-button > *,
 .app-content-topbar .topbar-share-mount-button > *,
 .app-content-topbar .topbar-backup-drift-button > *,
+.app-content-topbar .topbar-automation-rulebook-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -4508,6 +4582,7 @@ export default {
 	.app-content-topbar .topbar-preview-cache-button,
 	.app-content-topbar .topbar-share-mount-button,
 	.app-content-topbar .topbar-backup-drift-button,
+	.app-content-topbar .topbar-automation-rulebook-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
