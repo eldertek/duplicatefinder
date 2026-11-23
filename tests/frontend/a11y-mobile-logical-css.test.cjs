@@ -162,6 +162,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 			},
 			'@/tools/utils': utils,
 			'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
+			'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 		})
 
 		const navVm = new Vue({
@@ -190,6 +191,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 		const Details = loadComponent('src/components/DuplicateDetails.vue', {
 			'@/tools/api': { acknowledgeDuplicate: async () => {}, unacknowledgeDuplicate: async () => {}, deleteFiles: async () => ({ success: [], errors: [] }), findDuplicates: async () => {} },
 			'@/tools/utils': utils,
+			'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 			'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 			'./DuplicateFileDisplay.vue': slotBox('div'),
 		})

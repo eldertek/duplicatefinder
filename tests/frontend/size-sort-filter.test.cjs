@@ -54,6 +54,7 @@ function navigationImports(fetchDuplicates) {
 		'@/tools/api': { fetchDuplicates },
 		'@/tools/utils': loadModule('src/tools/utils.js', { './notifications': { showErrorNotification: () => {} } }),
 		'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
+		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 	}
 }
 

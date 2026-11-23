@@ -61,6 +61,7 @@ function mount(duplicate) {
 	const Details = loadComponent('src/components/DuplicateDetails.vue', {
 		'@/tools/api': api,
 		'@/tools/utils': utils,
+		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})

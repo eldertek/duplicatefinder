@@ -100,6 +100,24 @@
                 </div>
               </div>
             </div>
+
+            <div
+              class="keep-rules-toolbar"
+              role="group"
+              :aria-label="t('duplicatefinder', 'Smart selection rules')">
+              <span class="keep-rules-label">{{ t('duplicatefinder', 'Smart keep:') }}</span>
+              <button
+                v-for="ruleOption in keepRuleOptions"
+                :key="ruleOption.id"
+                type="button"
+                class="toolbar-button keep-rule-button"
+                :class="{ 'is-active': activeKeepRule === ruleOption.id }"
+                :aria-pressed="activeKeepRule === ruleOption.id ? 'true' : 'false'"
+                :disabled="selectableFiles.length === 0"
+                @click="applyKeepRule(ruleOption.id)">
+                <span>{{ ruleOption.label }}</span>
+              </button>
+            </div>
           </div>
 
           <div class="files-card" :class="{ 'is-compact-actions': !hasMultiFolderActions }">
@@ -138,6 +156,7 @@
                 :value="file"
                 :disabled="file.isInOriginFolder"
                 :aria-label="t('duplicatefinder', 'Select {file}', { file: file.path })"
+                @change="activeKeepRule = null"
               />
               <DuplicateFileDisplay
                 :file="file"
@@ -219,6 +238,7 @@
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates } from '@/tools/api';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
+import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -236,6 +256,7 @@ export default {
   data() {
     return {
       selectedFiles: [],
+      activeKeepRule: null,
       isLoadingNextDuplicate: false,
       showDropdown: false,
       showDeleteAllConfirmDialog: false,
@@ -246,6 +267,7 @@ export default {
     // A selection belongs to the duplicate it was made on: never carry it over to another one
     duplicate() {
       this.selectedFiles = [];
+      this.activeKeepRule = null;
       if (this.showDeleteAllConfirmDialog) {
         this.resolveDeleteAllConfirm(false);
       }
@@ -257,6 +279,13 @@ export default {
     }
   },
   computed: {
+    keepRuleOptions() {
+      return [
+        { id: 'oldest', label: t('duplicatefinder', 'Keep oldest') },
+        { id: 'newest', label: t('duplicatefinder', 'Keep newest') },
+        { id: 'shortest_path', label: t('duplicatefinder', 'Keep shortest path') },
+      ];
+    },
     selectableFiles() {
       if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
         return [];
@@ -417,7 +446,22 @@ export default {
         resolver(Boolean(confirmed));
       }
     },
+    applyKeepRule(rule) {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return;
+      }
+      const targetKeys = new Set(selectDuplicatesByKeepRule(this.duplicate.files, rule));
+      this.selectedFiles = this.duplicate.files.filter(file => {
+        if (!file || file.isInOriginFolder) {
+          return false;
+        }
+        const key = getFileSelectionKey(file);
+        return key !== null && targetKeys.has(key);
+      });
+      this.activeKeepRule = rule;
+    },
     selectAllFiles() {
+      this.activeKeepRule = null;
       if (this.isAllFilesSelected) {
         this.selectedFiles = [];
       } else {
@@ -443,6 +487,7 @@ export default {
       if (!this.duplicate || !Array.isArray(this.duplicate.files) || !targetFile) {
         return;
       }
+      this.activeKeepRule = null;
       const keptFolder = getParentFolderPath(targetFile.path);
       this.selectedFiles = this.duplicate.files.filter(
         file => !file.isInOriginFolder && getParentFolderPath(file.path) !== keptFolder
@@ -562,6 +607,41 @@ export default {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.keep-rules-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  inline-size: 100%;
+  padding-block-start: 10px;
+  border-block-start: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.keep-rules-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-maxcontrast);
+  margin-inline-end: 4px;
+}
+
+.keep-rule-button {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+}
+
+.keep-rule-button:hover:not(:disabled),
+.keep-rule-button:focus-visible:not(:disabled) {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-primary-element, #0082c9);
+}
+
+.keep-rule-button.is-active:not(:disabled) {
+  background-color: var(--color-primary-element-light);
+  border-color: var(--color-primary-element, #0082c9);
+  color: var(--color-primary-element, #0082c9);
 }
 
 .toolbar-button {

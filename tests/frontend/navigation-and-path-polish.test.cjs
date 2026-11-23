@@ -112,6 +112,7 @@ function createNavigationHarness() {
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
+		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 	})
 
 	return { DuplicateNavigation, DuplicateListItem, utils }

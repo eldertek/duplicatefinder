@@ -223,6 +223,20 @@
                         }) }}
                     </span>
                 </div>
+                <button
+                    type="button"
+                    class="export-csv-button"
+                    :disabled="filteredDuplicatesForExport.length === 0"
+                    :title="t('duplicatefinder', 'Export filtered duplicates as CSV')"
+                    :aria-label="t('duplicatefinder', 'Export CSV')"
+                    @click="exportFilteredCsv">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>{{ t('duplicatefinder', 'Export CSV') }}</span>
+                </button>
             </div>
 
             <!-- Navigation for Acknowledged Duplicates -->
@@ -327,6 +341,7 @@ import {
     computeReclaimableSummary,
     matchesDuplicateCategory,
 } from '@/tools/duplicateFilters';
+import { downloadDuplicatesCsv } from '@/tools/duplicateSelectionAndExport';
 
 export default {
     components: {
@@ -571,9 +586,24 @@ export default {
                 ? this.filteredAcknowledgedDuplicates
                 : [];
             return computeReclaimableSummary([...unacknowledged, ...acknowledged]);
+        },
+        filteredDuplicatesForExport() {
+            const unacknowledged = Array.isArray(this.filteredUnacknowledgedDuplicates)
+                ? this.filteredUnacknowledgedDuplicates
+                : [];
+            const acknowledged = Array.isArray(this.filteredAcknowledgedDuplicates)
+                ? this.filteredAcknowledgedDuplicates
+                : [];
+            return [...unacknowledged, ...acknowledged];
         }
     },
     methods: {
+        exportFilteredCsv() {
+            if (this.filteredDuplicatesForExport.length === 0) {
+                return false;
+            }
+            return downloadDuplicatesCsv(this.filteredDuplicatesForExport, 'duplicates-export.csv');
+        },
         focusSearch() {
             if (this.$refs.searchBar && typeof this.$refs.searchBar.focus === 'function') {
                 this.$refs.searchBar.focus();
@@ -1533,6 +1563,49 @@ export default {
 .reclaimable-summary-meta {
     color: var(--color-text-maxcontrast);
     font-size: 0.78rem;
+}
+
+.export-csv-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    inline-size: 100%;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 6px;
+    padding-inline: 12px;
+    margin: 0;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 6px;
+    background-color: var(--color-main-background);
+    color: var(--color-main-text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.export-csv-button svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+.export-csv-button:hover:not(:disabled) {
+    background-color: var(--color-background-hover);
+    border-color: var(--color-primary-element, #0082c9);
+}
+
+.export-csv-button:focus-visible {
+    outline: 2px solid var(--color-primary-element, #0082c9);
+    outline-offset: 2px;
+}
+
+.export-csv-button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 /* Consistent highlighting and full-row clickability for Acknowledged / Unacknowledged sections */

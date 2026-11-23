@@ -63,6 +63,7 @@ function createNavigationComponent() {
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateFilters': duplicateFilters,
+		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 	})
 }
 
