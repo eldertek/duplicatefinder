@@ -129,6 +129,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-audio-workbench',
 	},
 	{
+		id: 'toggle-video-workbench',
+		keys: ['3'],
+		action: 'toggle-video-workbench',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -193,6 +198,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	q: 'toggle-recovery-safety',
 	1: 'toggle-archive-inspector',
 	2: 'toggle-audio-workbench',
+	3: 'toggle-video-workbench',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',

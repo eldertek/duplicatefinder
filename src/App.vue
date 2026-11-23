@@ -496,6 +496,37 @@
 							<span>{{ t('duplicatefinder', 'Audio Tags') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-video-workbench-button"
+							:class="{ 'is-active': videoWorkbenchOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="videoWorkbenchOpen ? 'true' : 'false'"
+							aria-keyshortcuts="3"
+							:title="t('duplicatefinder', 'Toggle video frame fingerprint, codec quality and duration tolerance inspector')"
+							@click="toggleVideoWorkbench">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="2"
+									y="4"
+									width="15"
+									height="16"
+									rx="2" />
+								<polygon points="22 7 17 12 22 17 22 7" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Video Scenes') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -690,6 +721,16 @@
 						@audio-delete-completed="onAudioDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="audioWorkbenchOpen = false" />
+					<VideoSceneWorkbench
+						v-if="videoWorkbenchOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onVideoSelectDuplicate"
+						@compare-duplicate="onVideoCompareDuplicate"
+						@video-delete-completed="onVideoDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="videoWorkbenchOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1135,6 +1176,7 @@ import PhotoBurstTimeline from './components/PhotoBurstTimeline.vue'
 import RecoverySafetyWorkbench from './components/RecoverySafetyWorkbench.vue'
 import ArchivePayloadInspector from './components/ArchivePayloadInspector.vue'
 import AudioTagWorkbench from './components/AudioTagWorkbench.vue'
+import VideoSceneWorkbench from './components/VideoSceneWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1209,6 +1251,7 @@ export default {
 		RecoverySafetyWorkbench,
 		ArchivePayloadInspector,
 		AudioTagWorkbench,
+		VideoSceneWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1250,6 +1293,7 @@ export default {
 			recoverySafetyOpen: false,
 			archiveInspectorOpen: false,
 			audioWorkbenchOpen: false,
+			videoWorkbenchOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1435,6 +1479,7 @@ export default {
 				'toggle-recovery-safety': t('duplicatefinder', 'Toggle recovery safety manifest and share-impact audit'),
 				'toggle-archive-inspector': t('duplicatefinder', 'Toggle archive and container payload inspector'),
 				'toggle-audio-workbench': t('duplicatefinder', 'Toggle audio tags, bitrate and album consolidator workbench'),
+				'toggle-video-workbench': t('duplicatefinder', 'Toggle video frame fingerprint, codec quality and duration tolerance inspector'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1848,6 +1893,25 @@ export default {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
 		onAudioDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
+		toggleVideoWorkbench() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.videoWorkbenchOpen = !this.videoWorkbenchOpen
+			return true
+		},
+		onVideoSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onVideoCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onVideoDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
 		onBatchDeleteCompleted({
@@ -2277,6 +2341,13 @@ export default {
 
 			if (action === 'toggle-audio-workbench') {
 				if (this.toggleAudioWorkbench() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-video-workbench') {
+				if (this.toggleVideoWorkbench() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3193,7 +3264,8 @@ export default {
 .app-content-topbar .topbar-photo-bursts-button,
 .app-content-topbar .topbar-recovery-safety-button,
 .app-content-topbar .topbar-archive-inspector-button,
-.app-content-topbar .topbar-audio-workbench-button {
+.app-content-topbar .topbar-audio-workbench-button,
+.app-content-topbar .topbar-video-workbench-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3226,7 +3298,8 @@ export default {
 .app-content-topbar .topbar-photo-bursts-button svg,
 .app-content-topbar .topbar-recovery-safety-button svg,
 .app-content-topbar .topbar-archive-inspector-button svg,
-.app-content-topbar .topbar-audio-workbench-button svg {
+.app-content-topbar .topbar-audio-workbench-button svg,
+.app-content-topbar .topbar-video-workbench-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3258,7 +3331,9 @@ export default {
 .app-content-topbar .topbar-archive-inspector-button:hover:not(:disabled),
 .app-content-topbar .topbar-archive-inspector-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-audio-workbench-button:hover:not(:disabled),
-.app-content-topbar .topbar-audio-workbench-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-audio-workbench-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-video-workbench-button:hover:not(:disabled),
+.app-content-topbar .topbar-video-workbench-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3274,7 +3349,8 @@ export default {
 .app-content-topbar .topbar-photo-bursts-button.is-active,
 .app-content-topbar .topbar-recovery-safety-button.is-active,
 .app-content-topbar .topbar-archive-inspector-button.is-active,
-.app-content-topbar .topbar-audio-workbench-button.is-active {
+.app-content-topbar .topbar-audio-workbench-button.is-active,
+.app-content-topbar .topbar-video-workbench-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -3290,7 +3366,8 @@ export default {
 .app-content-topbar .topbar-photo-bursts-button:disabled,
 .app-content-topbar .topbar-recovery-safety-button:disabled,
 .app-content-topbar .topbar-archive-inspector-button:disabled,
-.app-content-topbar .topbar-audio-workbench-button:disabled {
+.app-content-topbar .topbar-audio-workbench-button:disabled,
+.app-content-topbar .topbar-video-workbench-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -3432,6 +3509,7 @@ export default {
 .app-content-topbar .topbar-recovery-safety-button > *,
 .app-content-topbar .topbar-archive-inspector-button > *,
 .app-content-topbar .topbar-audio-workbench-button > *,
+.app-content-topbar .topbar-video-workbench-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3529,6 +3607,7 @@ export default {
 	.app-content-topbar .topbar-recovery-safety-button,
 	.app-content-topbar .topbar-archive-inspector-button,
 	.app-content-topbar .topbar-audio-workbench-button,
+	.app-content-topbar .topbar-video-workbench-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
