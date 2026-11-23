@@ -194,6 +194,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-automation-rulebook',
 	},
 	{
+		id: 'toggle-metadata-consolidation',
+		keys: [','],
+		action: 'toggle-metadata-consolidation',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -271,6 +276,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	']': 'toggle-share-mount-auditor',
 	'\\': 'toggle-backup-drift',
 	';': 'toggle-automation-rulebook',
+	',': 'toggle-metadata-consolidation',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
