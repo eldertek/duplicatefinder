@@ -1,3 +1,7 @@
+## 1.10.36 - 2026-11-23
+### Added
+- **Reset all active filters keyboard shortcut (`r`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `r` (`reset-filters`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `resetNavigationFilters()` / `resetActiveFilters()` to clear all active filters and sorting when `hasActiveFilters` is true (suppressed inside editable controls and open modal dialogs), and annotated the reset filter buttons with `aria-keyshortcuts="r"`.
+
 ## 1.10.35 - 2026-11-23
 ### Added
 - **Full keyboard keep-rule triage shortcuts (`n` Keep newest, `s` Keep shortest path)** (`src/tools/keyboardShortcuts.js`, `src/App.vue`). Completed the `o` / `n` / `s` / `c` duplicate triage shortcut suite by registering `n` (`keep-newest`) and `s` (`keep-shortest-path`) in `SHORTCUT_DEFINITIONS` and `SINGLE_KEY_ACTIONS`, and wiring `KEEP_SHORTCUT_RULES` in `App.vue` to invoke `applyKeepRule('newest')` and `applyKeepRule('shortest_path')` while staying suppressed inside editable inputs and open modal dialogs.
