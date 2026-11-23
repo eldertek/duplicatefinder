@@ -119,6 +119,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-recovery-safety',
 	},
 	{
+		id: 'toggle-archive-inspector',
+		keys: ['1'],
+		action: 'toggle-archive-inspector',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -181,6 +186,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	z: 'toggle-storage-footprint',
 	p: 'toggle-photo-bursts',
 	q: 'toggle-recovery-safety',
+	1: 'toggle-archive-inspector',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',

@@ -428,6 +428,41 @@
 							<span>{{ t('duplicatefinder', 'Recovery Audit') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-archive-inspector-button"
+							:class="{ 'is-active': archiveInspectorOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="archiveInspectorOpen ? 'true' : 'false'"
+							aria-keyshortcuts="1"
+							:title="t('duplicatefinder', 'Toggle archive and container payload inspector')"
+							@click="toggleArchiveInspector">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<polyline points="21 8 21 21 3 21 3 8" />
+								<rect
+									x="1"
+									y="3"
+									width="22"
+									height="5" />
+								<line
+									x1="10"
+									y1="12"
+									x2="14"
+									y2="12" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Archives') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -602,6 +637,16 @@
 						@recovery-acknowledge-completed="onRecoveryAcknowledgeCompleted"
 						@start-scan="triggerScan"
 						@close="recoverySafetyOpen = false" />
+					<ArchivePayloadInspector
+						v-if="archiveInspectorOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onArchiveSelectDuplicate"
+						@compare-duplicate="onArchiveCompareDuplicate"
+						@archive-delete-completed="onArchiveDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="archiveInspectorOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1045,6 +1090,7 @@ import FolderPairMatrix from './components/FolderPairMatrix.vue'
 import StorageFootprintAnalyzer from './components/StorageFootprintAnalyzer.vue'
 import PhotoBurstTimeline from './components/PhotoBurstTimeline.vue'
 import RecoverySafetyWorkbench from './components/RecoverySafetyWorkbench.vue'
+import ArchivePayloadInspector from './components/ArchivePayloadInspector.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1117,6 +1163,7 @@ export default {
 		StorageFootprintAnalyzer,
 		PhotoBurstTimeline,
 		RecoverySafetyWorkbench,
+		ArchivePayloadInspector,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1156,6 +1203,7 @@ export default {
 			footprintAnalyzerOpen: false,
 			photoBurstsOpen: false,
 			recoverySafetyOpen: false,
+			archiveInspectorOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1339,6 +1387,7 @@ export default {
 				'toggle-storage-footprint': t('duplicatefinder', 'Toggle storage footprint and extension analyzer'),
 				'toggle-photo-bursts': t('duplicatefinder', 'Toggle photo and media timeline bursts'),
 				'toggle-recovery-safety': t('duplicatefinder', 'Toggle recovery safety manifest and share-impact audit'),
+				'toggle-archive-inspector': t('duplicatefinder', 'Toggle archive and container payload inspector'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1715,6 +1764,25 @@ export default {
 		},
 		onRecoveryAcknowledgeCompleted(payload) {
 			this.onBatchAcknowledgeCompleted(payload)
+		},
+		toggleArchiveInspector() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.archiveInspectorOpen = !this.archiveInspectorOpen
+			return true
+		},
+		onArchiveSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onArchiveCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onArchiveDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
 		},
 		onBatchDeleteCompleted({
 			deletedFiles = [],
@@ -2129,6 +2197,13 @@ export default {
 
 			if (action === 'toggle-recovery-safety') {
 				if (this.toggleRecoverySafety() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-archive-inspector') {
+				if (this.toggleArchiveInspector() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3043,7 +3118,8 @@ export default {
 .app-content-topbar .topbar-folder-matrix-button,
 .app-content-topbar .topbar-footprint-button,
 .app-content-topbar .topbar-photo-bursts-button,
-.app-content-topbar .topbar-recovery-safety-button {
+.app-content-topbar .topbar-recovery-safety-button,
+.app-content-topbar .topbar-archive-inspector-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3074,7 +3150,8 @@ export default {
 .app-content-topbar .topbar-folder-matrix-button svg,
 .app-content-topbar .topbar-footprint-button svg,
 .app-content-topbar .topbar-photo-bursts-button svg,
-.app-content-topbar .topbar-recovery-safety-button svg {
+.app-content-topbar .topbar-recovery-safety-button svg,
+.app-content-topbar .topbar-archive-inspector-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3102,7 +3179,9 @@ export default {
 .app-content-topbar .topbar-photo-bursts-button:hover:not(:disabled),
 .app-content-topbar .topbar-photo-bursts-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-recovery-safety-button:hover:not(:disabled),
-.app-content-topbar .topbar-recovery-safety-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-recovery-safety-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-archive-inspector-button:hover:not(:disabled),
+.app-content-topbar .topbar-archive-inspector-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3116,7 +3195,8 @@ export default {
 .app-content-topbar .topbar-folder-matrix-button.is-active,
 .app-content-topbar .topbar-footprint-button.is-active,
 .app-content-topbar .topbar-photo-bursts-button.is-active,
-.app-content-topbar .topbar-recovery-safety-button.is-active {
+.app-content-topbar .topbar-recovery-safety-button.is-active,
+.app-content-topbar .topbar-archive-inspector-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -3130,7 +3210,8 @@ export default {
 .app-content-topbar .topbar-folder-matrix-button:disabled,
 .app-content-topbar .topbar-footprint-button:disabled,
 .app-content-topbar .topbar-photo-bursts-button:disabled,
-.app-content-topbar .topbar-recovery-safety-button:disabled {
+.app-content-topbar .topbar-recovery-safety-button:disabled,
+.app-content-topbar .topbar-archive-inspector-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -3270,6 +3351,7 @@ export default {
 .app-content-topbar .topbar-footprint-button > *,
 .app-content-topbar .topbar-photo-bursts-button > *,
 .app-content-topbar .topbar-recovery-safety-button > *,
+.app-content-topbar .topbar-archive-inspector-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3365,6 +3447,7 @@ export default {
 	.app-content-topbar .topbar-footprint-button,
 	.app-content-topbar .topbar-photo-bursts-button,
 	.app-content-topbar .topbar-recovery-safety-button,
+	.app-content-topbar .topbar-archive-inspector-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
