@@ -456,6 +456,23 @@
         <p id="bulk-nc-confirm-desc" class="nc-confirm-dialog__message">
           {{ confirmDialog.message }}
         </p>
+        <dl v-if="confirmDialog.stats" class="nc-confirm-dialog__stats">
+          <div class="nc-confirm-dialog__stat">
+            <dt>{{ t('duplicatefinder', 'Files to delete') }}</dt>
+            <dd>{{ confirmDialog.stats.deleteCount }}</dd>
+          </div>
+          <div class="nc-confirm-dialog__stat">
+            <dt>{{ t('duplicatefinder', 'Groups affected') }}</dt>
+            <dd>{{ confirmDialog.stats.groupCount }}</dd>
+          </div>
+          <div class="nc-confirm-dialog__stat">
+            <dt>{{ t('duplicatefinder', 'Space freed') }}</dt>
+            <dd>{{ confirmDialog.stats.reclaimableFormatted }}</dd>
+          </div>
+        </dl>
+        <p v-if="confirmDialog.note" class="nc-confirm-dialog__note" role="status">
+          {{ confirmDialog.note }}
+        </p>
         <div class="nc-confirm-dialog__actions">
           <button
             type="button"
@@ -531,6 +548,8 @@ export default {
         title: '',
         message: '',
         confirmLabel: '',
+        stats: null,
+        note: '',
         resolver: null
       }
     }
@@ -818,7 +837,7 @@ export default {
       }
     },
 
-    requestConfirmation({ title, message, confirmLabel }) {
+    requestConfirmation({ title, message, confirmLabel, stats = null, note = '' }) {
       if (this.confirmDialog && typeof this.confirmDialog.resolver === 'function') {
         this.confirmDialog.resolver(false)
       }
@@ -827,6 +846,8 @@ export default {
         title,
         message,
         confirmLabel,
+        stats,
+        note,
         resolver: null
       }
       return new Promise(resolve => {
@@ -836,33 +857,81 @@ export default {
     resolveConfirmDialog(confirmed) {
       const resolver = this.confirmDialog ? this.confirmDialog.resolver : null
       this.confirmDialog.open = false
+      this.confirmDialog.stats = null
+      this.confirmDialog.note = ''
       this.confirmDialog.resolver = null
       if (typeof resolver === 'function') {
         resolver(Boolean(confirmed))
       }
     },
+    computeBulkDeletionAuditPlan() {
+      const groups = (this.previewResults && this.previewResults.duplicateGroups) || {}
+      const safeSelections = {}
+      let deleteCount = 0
+      let groupCount = 0
+      let reclaimableBytes = 0
+      let autoPreservedCount = 0
+
+      Object.entries(this.selectedFiles || {}).forEach(([hash, selectedIndexes]) => {
+        const group = groups[hash]
+        if (!group || !Array.isArray(group.filesToDelete) || !Array.isArray(selectedIndexes)) {
+          return
+        }
+        const validIndexes = selectedIndexes.filter(index => Boolean(group.filesToDelete[index]))
+        if (validIndexes.length === 0) {
+          safeSelections[hash] = []
+          return
+        }
+        const hasProtectedFiles = Number(group.protectedFileCount) > 0
+        let finalIndexes = validIndexes
+        if (validIndexes.length === group.filesToDelete.length && !hasProtectedFiles) {
+          finalIndexes = validIndexes.slice(0, -1)
+          autoPreservedCount += 1
+        }
+        safeSelections[hash] = finalIndexes
+        if (finalIndexes.length > 0) {
+          groupCount += 1
+          deleteCount += finalIndexes.length
+          finalIndexes.forEach(index => {
+            reclaimableBytes += Number(group.filesToDelete[index].size) || 0
+          })
+        }
+      })
+
+      return {
+        safeSelections,
+        deleteCount,
+        groupCount,
+        reclaimableBytes,
+        reclaimableFormatted: this.formatBytes(reclaimableBytes),
+        autoPreservedCount
+      }
+    },
 
     async confirmBulkDelete() {
+      const auditPlan = this.computeBulkDeletionAuditPlan()
+      const note = auditPlan.autoPreservedCount > 0
+        ? t('duplicatefinder', '{count} copy/copies will be kept automatically so at least one copy remains per group.', { count: auditPlan.autoPreservedCount })
+        : ''
       const confirmed = await this.requestConfirmation({
         title: t('duplicatefinder', 'Delete selected duplicates?'),
         message: t('duplicatefinder', 'Are you sure you want to delete all selected duplicates? This action cannot be undone.'),
-        confirmLabel: t('duplicatefinder', 'Delete selected files')
+        confirmLabel: t('duplicatefinder', 'Delete selected files'),
+        stats: {
+          deleteCount: auditPlan.deleteCount,
+          groupCount: auditPlan.groupCount,
+          reclaimableFormatted: auditPlan.reclaimableFormatted
+        },
+        note
       })
       if (!confirmed) {
         return
       }
 
-      // Ensure at least one file per group is preserved
-      Object.entries(this.selectedFiles).forEach(([hash, selectedIndexes]) => {
-        const group = this.previewResults.duplicateGroups[hash];
-        // Check if protected files exist for this group
-        const hasProtectedFiles = group.protectedFileCount > 0;
-        
-        if (selectedIndexes.length === group.filesToDelete.length && !hasProtectedFiles) {
-          // If all files in a group are selected and no protected copies exist, deselect one to preserve it
-          this.selectedFiles[hash] = selectedIndexes.slice(0, -1);
-        }
-      });
+      // Apply the verified safe selections so at least one copy per group is preserved
+      Object.entries(auditPlan.safeSelections).forEach(([hash, safeIndexes]) => {
+        this.$set(this.selectedFiles, hash, safeIndexes)
+      })
 
       const filesToDelete = Object.entries(this.selectedFiles).flatMap(([hash, selectedIndexes]) => {
         const group = this.previewResults.duplicateGroups[hash]
@@ -1713,14 +1782,64 @@ export default {
 }
 
 .nc-confirm-dialog__message {
-  margin: 0 0 18px;
+  margin-block: 0 14px;
+  margin-inline: 0;
   font-size: 0.92rem;
   line-height: 1.48;
   color: var(--color-text-maxcontrast, var(--color-main-text));
 }
 
+.nc-confirm-dialog__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-block: 0 14px;
+  margin-inline: 0;
+  padding: 10px;
+  border-radius: var(--border-radius-large, 8px);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background-hover);
+  box-sizing: border-box;
+}
+
+.nc-confirm-dialog__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.nc-confirm-dialog__stat dt {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-maxcontrast);
+}
+
+.nc-confirm-dialog__stat dd {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-main-text);
+  overflow-wrap: anywhere;
+}
+
+.nc-confirm-dialog__note {
+  margin-block: 0 14px;
+  margin-inline: 0;
+  padding-block: 8px;
+  padding-inline: 10px;
+  border-radius: 6px;
+  border-inline-start: 3px solid var(--color-primary-element, #0082c9);
+  background-color: var(--color-background-hover);
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--color-main-text);
+}
+
 .nc-confirm-dialog__actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
 }
@@ -1729,8 +1848,10 @@ export default {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-height: 34px !important;
-  padding: 6px 14px !important;
+  min-block-size: 44px !important;
+  min-inline-size: 44px !important;
+  padding-block: 8px !important;
+  padding-inline: 14px !important;
   margin: 0 !important;
   border-radius: var(--border-radius-large, 8px) !important;
   background-image: none !important;
@@ -1739,6 +1860,11 @@ export default {
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.nc-confirm-dialog__button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
 }
 
 .nc-confirm-dialog__button--cancel {

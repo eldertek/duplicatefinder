@@ -258,19 +258,37 @@
                 </p>
               </div>
 
-              <button
+              <div
                 v-if="selectedFiles.length > 0"
-                ref="clearSelectionButton"
-                type="button"
-                class="toolbar-button clear-selection-button"
-                :aria-label="t('duplicatefinder', 'Clear selection')"
-                @click="clearSelection({ restoreFocus: true })">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-                <span>{{ t('duplicatefinder', 'Clear selection') }}</span>
-              </button>
+                class="deletion-safety-bar__actions">
+                <button
+                  v-if="deletionAuditPlan.selectedCount > 0"
+                  type="button"
+                  class="toolbar-button review-deletion-plan-button"
+                  :aria-label="t('duplicatefinder', 'Review deletion plan')"
+                  @click="openDryRunAuditDialog">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="9" y1="13" x2="15" y2="13"></line>
+                    <line x1="9" y1="17" x2="13" y2="17"></line>
+                  </svg>
+                  <span>{{ t('duplicatefinder', 'Review plan') }}</span>
+                </button>
+
+                <button
+                  ref="clearSelectionButton"
+                  type="button"
+                  class="toolbar-button clear-selection-button"
+                  :aria-label="t('duplicatefinder', 'Clear selection')"
+                  @click="clearSelection({ restoreFocus: true })">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span>{{ t('duplicatefinder', 'Clear selection') }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -382,13 +400,17 @@
           <h4 id="nc-confirm-delete-title" class="nc-confirm-dialog__title">
             {{ confirmDialogPlan.wouldDeleteAllCopies
               ? t('duplicatefinder', 'Delete all copies?')
-              : t('duplicatefinder', 'Confirm deletion') }}
+              : (isDryRunDialog
+                ? t('duplicatefinder', 'Dry-run deletion plan')
+                : t('duplicatefinder', 'Confirm deletion')) }}
           </h4>
         </div>
         <p id="nc-confirm-delete-desc" class="nc-confirm-dialog__message">
           {{ confirmDialogPlan.wouldDeleteAllCopies
             ? t('duplicatefinder', 'This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?')
-            : t('duplicatefinder', 'Review the deletion impact below before permanently removing the selected files.') }}
+            : (isDryRunDialog
+              ? t('duplicatefinder', 'Dry-run audit: inspect which files will be removed and which copies will remain safe. No files are deleted yet.')
+              : t('duplicatefinder', 'Review the deletion impact below before permanently removing the selected files.')) }}
         </p>
         <dl class="nc-confirm-dialog__stats">
           <div class="nc-confirm-dialog__stat">
@@ -404,21 +426,101 @@
             <dd>{{ confirmDialogPlan.reclaimableFormatted }}</dd>
           </div>
         </dl>
+        <div class="nc-confirm-dialog__audit">
+          <section class="nc-confirm-dialog__audit-section nc-confirm-dialog__audit-section--delete">
+            <h5 class="nc-confirm-dialog__audit-heading">
+              {{ t('duplicatefinder', 'Files to delete ({count})', { count: confirmDialogAuditPlan.targetEntries.length }) }}
+            </h5>
+            <ul class="nc-confirm-dialog__path-list nc-confirm-dialog__path-list--delete">
+              <li
+                v-for="(entry, idx) in confirmDialogAuditPlan.targetEntries"
+                :key="'del-' + (entry.key || entry.path || idx)"
+                class="nc-confirm-dialog__path-item">
+                <span class="nc-confirm-dialog__path-text" :title="entry.normalizedPath || entry.path">
+                  {{ entry.normalizedPath || entry.path }}
+                </span>
+                <span class="nc-confirm-dialog__path-meta">
+                  <span
+                    v-if="entry.isProtected"
+                    class="nc-confirm-dialog__path-badge is-protected">
+                    {{ t('duplicatefinder', 'Protected origin') }}
+                  </span>
+                  <span class="nc-confirm-dialog__path-size">{{ entry.formattedSize }}</span>
+                </span>
+              </li>
+            </ul>
+          </section>
+          <section class="nc-confirm-dialog__audit-section nc-confirm-dialog__audit-section--keep">
+            <h5 class="nc-confirm-dialog__audit-heading">
+              {{ t('duplicatefinder', 'Surviving copies kept ({count})', { count: confirmDialogAuditPlan.survivingEntries.length }) }}
+            </h5>
+            <ul
+              v-if="confirmDialogAuditPlan.survivingEntries.length > 0"
+              class="nc-confirm-dialog__path-list nc-confirm-dialog__path-list--keep">
+              <li
+                v-for="(entry, idx) in confirmDialogAuditPlan.survivingEntries"
+                :key="'keep-' + (entry.key || entry.path || idx)"
+                class="nc-confirm-dialog__path-item">
+                <span class="nc-confirm-dialog__path-text" :title="entry.normalizedPath || entry.path">
+                  {{ entry.normalizedPath || entry.path }}
+                </span>
+                <span class="nc-confirm-dialog__path-meta">
+                  <span
+                    class="nc-confirm-dialog__path-badge"
+                    :class="entry.isProtected ? 'is-protected' : 'is-kept'">
+                    {{ entry.isProtected
+                      ? t('duplicatefinder', 'Protected origin')
+                      : t('duplicatefinder', 'Kept') }}
+                  </span>
+                  <span class="nc-confirm-dialog__path-size">{{ entry.formattedSize }}</span>
+                </span>
+              </li>
+            </ul>
+            <p
+              v-else
+              class="nc-confirm-dialog__empty-keep-warning"
+              role="status">
+              {{ t('duplicatefinder', 'No copies will remain after this deletion.') }}
+            </p>
+          </section>
+        </div>
         <div class="nc-confirm-dialog__actions">
-          <button
-            type="button"
-            class="nc-confirm-dialog__button nc-confirm-dialog__button--cancel"
-            @click="resolveDeleteConfirm(false)">
-            {{ t('duplicatefinder', 'Cancel') }}
-          </button>
-          <button
-            type="button"
-            class="nc-confirm-dialog__button nc-confirm-dialog__button--danger"
-            @click="resolveDeleteConfirm(true)">
-            {{ confirmDialogPlan.wouldDeleteAllCopies
-              ? t('duplicatefinder', 'Delete all copies')
-              : t('duplicatefinder', 'Confirm delete') }}
-          </button>
+          <div class="nc-confirm-dialog__export-group">
+            <button
+              type="button"
+              class="nc-confirm-dialog__button nc-confirm-dialog__button--export"
+              :disabled="confirmDialogAuditPlan.selectedCount === 0"
+              @click="exportCurrentDeletionPlan">
+              {{ t('duplicatefinder', 'Export plan (JSON)') }}
+            </button>
+            <span
+              v-if="planExportMessage"
+              class="nc-confirm-dialog__export-status"
+              :class="{ 'is-error': planExportStatus === 'error' }"
+              role="status"
+              aria-live="polite">
+              {{ planExportMessage }}
+            </span>
+          </div>
+          <div class="nc-confirm-dialog__decision-group">
+            <button
+              type="button"
+              class="nc-confirm-dialog__button nc-confirm-dialog__button--cancel"
+              @click="resolveDeleteConfirm(false)">
+              {{ isDryRunDialog ? t('duplicatefinder', 'Close') : t('duplicatefinder', 'Cancel') }}
+            </button>
+            <button
+              type="button"
+              class="nc-confirm-dialog__button nc-confirm-dialog__button--danger"
+              :disabled="confirmDialogPlan.includesProtectedOrigin"
+              @click="resolveDeleteConfirm(true)">
+              {{ confirmDialogPlan.wouldDeleteAllCopies
+                ? t('duplicatefinder', 'Delete all copies')
+                : (isDryRunDialog
+                  ? t('duplicatefinder', 'Execute deletion')
+                  : t('duplicatefinder', 'Confirm delete')) }}
+            </button>
+          </div>
         </div>
       </div>
     </dialog>
@@ -432,7 +534,7 @@ import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromLis
 import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport';
 import { annotateDuplicateMetadataBadges } from '@/tools/duplicateMetadataBadges';
 import { computePathDiffSegments } from '@/tools/duplicatePathDiff';
-import { evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
+import { buildDeletionAuditPlan, downloadDeletionPlanJson, evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
 import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary';
 import { formatShortHash } from '@/tools/duplicateHashHelper';
 import { showSuccess, showError } from '@nextcloud/dialogs';
@@ -461,8 +563,13 @@ export default {
       isLoadingNextDuplicate: false,
       showDropdown: false,
       showDeleteConfirmDialog: false,
+      confirmDialogMode: 'confirm',
       pendingDeletePlan: null,
+      pendingDeleteAuditPlan: null,
       pendingDeleteResolver: null,
+      planExportStatus: 'idle',
+      planExportMessage: '',
+      planExportTimer: null,
       hashCopyStatus: 'idle',
       hashCopyStatusMessage: '',
       hashCopyResetTimer: null
@@ -476,6 +583,7 @@ export default {
       this.isAcknowledging = false;
       this.acknowledgeRequestToken += 1;
       this.resetHashCopyFeedback();
+      this.resetPlanExportFeedback();
       if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
         this.resolveDeleteConfirm(false);
       }
@@ -483,6 +591,7 @@ export default {
   },
   beforeDestroy() {
     this.resetHashCopyFeedback();
+    this.resetPlanExportFeedback();
     if (this.pendingDeleteResolver) {
       this.resolveDeleteConfirm(false);
     }
@@ -560,8 +669,23 @@ export default {
         .filter(key => key !== null);
       return evaluateDeletionPlan(files, selectedKeys);
     },
+    deletionAuditPlan() {
+      const files = this.duplicate && Array.isArray(this.duplicate.files)
+        ? this.duplicate.files
+        : [];
+      const selectedKeys = this.selectedFiles
+        .map(file => getFileSelectionKey(file))
+        .filter(key => key !== null);
+      return buildDeletionAuditPlan(files, selectedKeys);
+    },
     confirmDialogPlan() {
       return this.pendingDeletePlan || this.deletionSafetyPlan;
+    },
+    confirmDialogAuditPlan() {
+      return this.pendingDeleteAuditPlan || this.deletionAuditPlan;
+    },
+    isDryRunDialog() {
+      return this.confirmDialogMode === 'dry-run';
     }
   },
   methods: {
@@ -689,51 +813,85 @@ export default {
       return true;
     },
 
+    async executeSelectedDeletion(plan) {
+      // Only an explicit confirmation on a full-group plan lets the server delete the last copy
+      const allowLastCopy = Boolean(plan && plan.wouldDeleteAllCopies);
+      const { success, deletedNodeIds = [] } = await deleteFiles(this.selectedFiles, { allowLastCopy });
+      if (success.length > 0) {
+        this.$emit('folders-touched', success.map(file => file && file.path).filter(Boolean));
+        if (deletedNodeIds.length > 1) {
+          this.$emit('duplicatesSearchCompleted');
+          return;
+        }
+        removeFilesFromList(success, this.duplicate.files);
+        this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
+
+        if (this.duplicate.files.length <= 1) {
+          this.$emit('duplicate-resolved', {
+            duplicate: this.duplicate,
+            type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged'
+          });
+        }
+      }
+    },
+    async openDryRunAuditDialog() {
+      try {
+        if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.selectedFiles.length === 0) {
+          return false;
+        }
+        const plan = this.deletionSafetyPlan;
+        const auditPlan = this.deletionAuditPlan;
+        const confirmDelete = await this.requestDeleteConfirmation(plan, {
+          mode: 'dry-run',
+          auditPlan,
+        });
+        if (!confirmDelete) {
+          return false;
+        }
+        if (plan.includesProtectedOrigin || this.selectedFiles.some(file => file && file.isInOriginFolder)) {
+          this.$emit('showError', this.t('duplicatefinder', 'Cannot delete protected files'));
+          return false;
+        }
+        await this.executeSelectedDeletion(plan);
+        return true;
+      } catch (error) {
+        console.error('Error executing deletion from dry-run plan:', error);
+        return false;
+      }
+    },
     async deleteSelectedDuplicates() {
       try {
         if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.selectedFiles.length === 0) {
           return;
         }
         const plan = this.deletionSafetyPlan;
+        const auditPlan = this.deletionAuditPlan;
         // Verify whether protected files are selected
         if (plan.includesProtectedOrigin || this.selectedFiles.some(file => file && file.isInOriginFolder)) {
           this.$emit('showError', this.t('duplicatefinder', 'Cannot delete protected files'));
           return;
         }
 
-        const confirmDelete = await this.requestDeleteConfirmation(plan);
+        const confirmDelete = await this.requestDeleteConfirmation(plan, {
+          mode: 'confirm',
+          auditPlan,
+        });
         if (!confirmDelete) {
           return;
         }
-        // Only an explicit confirmation on a full-group plan lets the server delete the last copy
-        const allowLastCopy = Boolean(plan.wouldDeleteAllCopies);
-
-        const { success, deletedNodeIds = [] } = await deleteFiles(this.selectedFiles, { allowLastCopy });
-        if (success.length > 0) {
-          this.$emit('folders-touched', success.map(file => file && file.path).filter(Boolean));
-          if (deletedNodeIds.length > 1) {
-            this.$emit('duplicatesSearchCompleted');
-            return;
-          }
-          removeFilesFromList(success, this.duplicate.files);
-          this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
-
-          if (this.duplicate.files.length <= 1) {
-            this.$emit('duplicate-resolved', {
-              duplicate: this.duplicate,
-              type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged'
-            });
-          }
-        }
+        await this.executeSelectedDeletion(plan);
       } catch (error) {
         console.error('Error deleting selected files:', error);
       }
     },
-    requestDeleteConfirmation(plan) {
+    requestDeleteConfirmation(plan, options = {}) {
       if (this.pendingDeleteResolver) {
         this.pendingDeleteResolver(false);
       }
+      this.resetPlanExportFeedback();
+      this.confirmDialogMode = options.mode === 'dry-run' ? 'dry-run' : 'confirm';
       this.pendingDeletePlan = plan || this.deletionSafetyPlan;
+      this.pendingDeleteAuditPlan = options.auditPlan || this.deletionAuditPlan;
       this.showDeleteConfirmDialog = true;
       this.$nextTick(() => {
         const dialog = this.$refs.deleteConfirmDialog;
@@ -762,12 +920,46 @@ export default {
         dialog.close();
       }
       this.showDeleteConfirmDialog = false;
+      this.confirmDialogMode = 'confirm';
       this.pendingDeletePlan = null;
+      this.pendingDeleteAuditPlan = null;
+      this.resetPlanExportFeedback();
       const resolver = this.pendingDeleteResolver;
       this.pendingDeleteResolver = null;
       if (typeof resolver === 'function') {
         resolver(Boolean(confirmed));
       }
+    },
+    resetPlanExportFeedback() {
+      if (this.planExportTimer) {
+        clearTimeout(this.planExportTimer);
+        this.planExportTimer = null;
+      }
+      this.planExportStatus = 'idle';
+      this.planExportMessage = '';
+    },
+    exportCurrentDeletionPlan() {
+      const auditPlan = this.confirmDialogAuditPlan;
+      if (!auditPlan || auditPlan.selectedCount === 0) {
+        return false;
+      }
+      this.resetPlanExportFeedback();
+      const shortHash = this.shortGroupHash || 'group';
+      const filename = `deletion-plan-${shortHash}.json`;
+      const ok = downloadDeletionPlanJson(this.duplicate, auditPlan, filename);
+      if (ok) {
+        this.planExportStatus = 'exported';
+        this.planExportMessage = this.t('duplicatefinder', 'Plan exported');
+      } else {
+        this.planExportStatus = 'error';
+        this.planExportMessage = this.t('duplicatefinder', 'Export failed');
+      }
+      this.planExportTimer = setTimeout(() => {
+        this.planExportStatus = 'idle';
+        this.planExportMessage = '';
+        this.planExportTimer = null;
+      }, 2500);
+      return ok;
     },
     applyKeepRule(rule) {
       if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
@@ -1270,20 +1462,33 @@ export default {
   line-height: 1.4;
 }
 
-.clear-selection-button {
+.deletion-safety-bar__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+
+.deletion-safety-bar__actions .review-deletion-plan-button,
+.deletion-safety-bar__actions .clear-selection-button {
   min-block-size: 44px;
   min-inline-size: 44px;
   max-inline-size: 100%;
   flex-shrink: 0;
 }
 
-.clear-selection-button:hover:not(:disabled),
-.clear-selection-button:focus-visible:not(:disabled) {
+.deletion-safety-bar__actions .review-deletion-plan-button:hover:not(:disabled),
+.deletion-safety-bar__actions .review-deletion-plan-button:focus-visible:not(:disabled),
+.deletion-safety-bar__actions .clear-selection-button:hover:not(:disabled),
+.deletion-safety-bar__actions .clear-selection-button:focus-visible:not(:disabled) {
   background-color: var(--color-background-dark);
   border-color: var(--color-primary-element, #0082c9);
 }
 
-.clear-selection-button:focus-visible {
+.deletion-safety-bar__actions .review-deletion-plan-button:focus-visible,
+.deletion-safety-bar__actions .clear-selection-button:focus-visible {
   outline: 2px solid var(--color-primary-element, #0082c9);
   outline-offset: 2px;
 }
@@ -1782,9 +1987,9 @@ dialog.nc-confirm-dialog {
   position: fixed;
   inset: 0;
   margin: auto;
-  inline-size: min(440px, calc(100vw - 32px));
+  inline-size: min(560px, calc(100vw - 24px));
   max-inline-size: 100%;
-  max-block-size: calc(100vh - 32px);
+  max-block-size: calc(100vh - 24px);
   overflow: auto;
   background-color: var(--color-main-background, #ffffff);
   background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
@@ -1849,7 +2054,7 @@ dialog.nc-confirm-dialog::backdrop {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin-block: 0 18px;
+  margin-block: 0 14px;
   margin-inline: 0;
   padding: 10px;
   border-radius: var(--border-radius-large, 8px);
@@ -1880,11 +2085,161 @@ dialog.nc-confirm-dialog::backdrop {
   overflow-wrap: anywhere;
 }
 
+.nc-confirm-dialog__audit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-block: 0 16px;
+  margin-inline: 0;
+  min-inline-size: 0;
+  box-sizing: border-box;
+}
+
+.nc-confirm-dialog__audit-section {
+  border-radius: var(--border-radius-large, 8px);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background-hover);
+  padding-block: 10px;
+  padding-inline: 12px;
+  min-inline-size: 0;
+  box-sizing: border-box;
+}
+
+.nc-confirm-dialog__audit-section--delete {
+  border-inline-start: 4px solid #d32f2f;
+}
+
+.nc-confirm-dialog__audit-section--keep {
+  border-inline-start: 4px solid #2e7d32;
+}
+
+.nc-confirm-dialog__audit-heading {
+  margin-block: 0 8px;
+  margin-inline: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__path-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-block-size: 140px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.nc-confirm-dialog__path-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-block: 4px;
+  padding-inline: 8px;
+  border-radius: 6px;
+  background-color: var(--color-main-background);
+  border: 1px solid var(--color-border);
+  min-inline-size: 0;
+  box-sizing: border-box;
+}
+
+.nc-confirm-dialog__path-text {
+  flex: 1 1 180px;
+  min-inline-size: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--color-main-text);
+  overflow-wrap: anywhere;
+}
+
+.nc-confirm-dialog__path-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.nc-confirm-dialog__path-badge {
+  display: inline-flex;
+  align-items: center;
+  padding-block: 2px;
+  padding-inline: 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.nc-confirm-dialog__path-badge.is-kept {
+  background-color: rgba(46, 125, 50, 0.14);
+  border: 1px solid rgba(46, 125, 50, 0.48);
+  color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__path-badge.is-protected {
+  background-color: var(--color-primary-element-light, #e5eff5);
+  border: 1px solid var(--color-primary-element, #00679e);
+  color: var(--color-primary-element-light-text, var(--color-main-text, #222222));
+}
+
+.nc-confirm-dialog__path-size {
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-maxcontrast);
+  white-space: nowrap;
+}
+
+.nc-confirm-dialog__empty-keep-warning {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #b71c1c;
+}
+
 .nc-confirm-dialog__actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
+}
+
+.nc-confirm-dialog__export-group,
+.nc-confirm-dialog__decision-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.nc-confirm-dialog__export-status {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-main-text);
+}
+
+.nc-confirm-dialog__export-status.is-error {
+  color: #b71c1c;
+}
+
+.nc-confirm-dialog__button--export {
+  background-color: var(--color-main-background) !important;
+  border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark)) !important;
+  color: var(--color-main-text) !important;
+}
+
+.nc-confirm-dialog__button--export:hover:not(:disabled),
+.nc-confirm-dialog__button--export:focus-visible:not(:disabled) {
+  background-color: var(--color-background-dark) !important;
+  border-color: var(--color-primary-element, #0082c9) !important;
+  color: var(--color-main-text) !important;
 }
 
 .nc-confirm-dialog__button {
