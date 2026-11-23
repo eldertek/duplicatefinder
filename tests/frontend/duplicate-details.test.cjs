@@ -56,6 +56,7 @@ function mount(duplicate) {
 	const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 		'@/tools/api': api,
 		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
+		'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 		'@/tools/utils': utils,
 		'@nextcloud/router': { generateUrl: url => url },
 	})
@@ -64,6 +65,7 @@ function mount(duplicate) {
 		'@/tools/utils': utils,
 		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 		'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
+		'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 		'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),

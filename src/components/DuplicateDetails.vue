@@ -282,6 +282,7 @@
               class="file-display"
               :class="{
                 'is-selected': isFileSelected(file),
+                'is-keeping': selectedFiles.length > 0 && !isFileSelected(file),
                 'is-protected': file.isInOriginFolder
               }">
               <input
@@ -299,6 +300,9 @@
                 :duplicate-acknowledged="duplicate.acknowledged"
                 :has-other-folders="hasFilesInOtherFolders(file)"
                 :metadata-badges="fileMetadataBadges[index] || null"
+                :path-segments="filePathSegments[index] || []"
+                :is-selected="isFileSelected(file)"
+                :has-active-selection="selectedFiles.length > 0"
                 @keepFolder="selectDuplicatesOutsideFolder(file)"
                 @fileDeleted="removeFileFromListAndUpdate(file, $event)">
               </DuplicateFileDisplay>
@@ -398,6 +402,7 @@ import { copyTextSafely } from '@/tools/clipboardHelper';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
 import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport';
 import { annotateDuplicateMetadataBadges } from '@/tools/duplicateMetadataBadges';
+import { computePathDiffSegments } from '@/tools/duplicatePathDiff';
 import { evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
 import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary';
 import { formatShortHash } from '@/tools/duplicateHashHelper';
@@ -488,6 +493,12 @@ export default {
         return [];
       }
       return annotateDuplicateMetadataBadges(this.duplicate.files);
+    },
+    filePathSegments() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return [];
+      }
+      return computePathDiffSegments(this.duplicate.files);
     },
     groupHeaderSummary() {
       const files = this.duplicate && Array.isArray(this.duplicate.files)
@@ -1376,6 +1387,11 @@ export default {
 
 .file-display.is-selected {
   background-color: var(--color-primary-element-light);
+  border-inline-start: 3px solid #d32f2f;
+}
+
+.file-display.is-keeping {
+  border-inline-start: 3px solid var(--color-element-success, #2e7d32);
 }
 
 .file-row-checkbox,

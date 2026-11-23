@@ -302,6 +302,7 @@ describe('Issues 207 and 206: dropdown selection contrast, row clickability, sec
 		const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 			'@/tools/api': { deleteFile: async () => true },
 			'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
+			'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 			'@/tools/utils': utils,
 			'@nextcloud/router': { generateUrl: url => url },
 		})

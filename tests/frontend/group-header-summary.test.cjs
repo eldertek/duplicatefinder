@@ -23,6 +23,7 @@ function createDetailsComponent(apiOverrides = {}, clipboardImpl) {
 	const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 		'@/tools/api': api,
 		'@/tools/clipboardHelper': clipboardHelper,
+		'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 		'@/tools/utils': utils,
 		'@nextcloud/router': { generateUrl: url => url },
 	})
@@ -39,6 +40,7 @@ function createDetailsComponent(apiOverrides = {}, clipboardImpl) {
 			},
 		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 		'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
+		'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 		'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),

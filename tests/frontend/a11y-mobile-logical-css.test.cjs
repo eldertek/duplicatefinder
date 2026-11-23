@@ -80,6 +80,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 		const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 			'@/tools/api': { deleteFile: async () => true },
 			'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
+			'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 			'@/tools/utils': utils,
 			'@nextcloud/router': { generateUrl: url => url },
 		})
@@ -200,6 +201,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 			'@/tools/duplicateSortHelper': loadModule('src/tools/duplicateSortHelper.js'),
 			'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 			'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
+			'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 			'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 			'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 			'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),

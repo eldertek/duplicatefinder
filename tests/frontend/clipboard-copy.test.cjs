@@ -20,6 +20,7 @@ function mountDisplay({ file, clipboardImpl } = {}) {
 				copyTextSafely: text => clipboardHelper.copyTextSafely(text, clipboardImpl),
 			},
 		'@/tools/utils': utils,
+		'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 		'@nextcloud/router': { generateUrl: url => url },
 	})
 

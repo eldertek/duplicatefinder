@@ -20,7 +20,17 @@
         <span v-if="fileName" class="file-name-badge" :title="fileName">{{ fileName }}</span>
       </div>
       <div class="file-path-row">
-        <p class="file-path" :title="normalizedPath"><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizedPath }}</p>
+        <p class="file-path" :title="normalizedPath">
+          <strong>{{ t('duplicatefinder', 'Path:') }}</strong>
+          <template v-if="hasPathSegments">
+            <span
+              v-for="(segment, segIdx) in pathSegments"
+              :key="segIdx"
+              class="file-path-segment"
+              :class="'file-path-segment--' + segment.kind">{{ segment.text }}</span>
+          </template>
+          <template v-else>{{ normalizedPath }}</template>
+        </p>
         <div class="copy-path-control">
           <button
             type="button"
@@ -96,6 +106,12 @@
           {{ t('duplicatefinder', 'Shortest path') }}
         </span>
         <span
+          v-if="formattedModifiedAt"
+          class="metadata-badge metadata-badge--mtime"
+          :title="t('duplicatefinder', 'Modified: {date}', { date: formattedModifiedAt })">
+          {{ t('duplicatefinder', 'Modified: {date}', { date: formattedModifiedAt }) }}
+        </span>
+        <span
           v-if="resolvedBadges.folderLabel"
           class="metadata-badge metadata-badge--folder"
           :title="t('duplicatefinder', 'Folder: {folder}', { folder: resolvedBadges.folderLabel })"
@@ -130,6 +146,14 @@
       <span v-if="file.isInOriginFolder" class="file-status-badge is-protected">
         {{ t('duplicatefinder', 'Protected') }}
       </span>
+      <template v-else-if="hasActiveSelection">
+        <span v-if="isSelected" class="file-status-badge is-will-delete">
+          {{ t('duplicatefinder', 'Will delete') }}
+        </span>
+        <span v-else class="file-status-badge is-keeping">
+          {{ t('duplicatefinder', 'Keeping') }}
+        </span>
+      </template>
       <span v-else-if="index === 0" class="file-status-badge is-original">
         {{ t('duplicatefinder', 'Original') }}
       </span>
@@ -214,6 +238,7 @@
 <script>
 import { deleteFile } from '@/tools/api';
 import { copyTextSafely } from '@/tools/clipboardHelper';
+import { formatFileModifiedTime } from '@/tools/duplicatePathDiff';
 import { getPreviewImage, normalizeItemPath, getParentFolderPath } from '@/tools/utils';
 import { generateUrl } from '@nextcloud/router';
 
@@ -232,6 +257,18 @@ export default {
     metadataBadges: {
       type: Object,
       default: null
+    },
+    pathSegments: {
+      type: Array,
+      default: () => []
+    },
+    isSelected: {
+      type: Boolean,
+      default: false
+    },
+    hasActiveSelection: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -261,8 +298,15 @@ export default {
         badges.isOldest ||
         badges.isNewest ||
         badges.isShortestPath ||
-        badges.folderLabel
+        badges.folderLabel ||
+        this.formattedModifiedAt
       );
+    },
+    formattedModifiedAt() {
+      return formatFileModifiedTime(this.file);
+    },
+    hasPathSegments() {
+      return Array.isArray(this.pathSegments) && this.pathSegments.length > 0;
     },
     normalizedPath() {
       if (!this.file || typeof this.file.path !== 'string') {
@@ -452,6 +496,23 @@ export default {
   line-height: 1.4;
 }
 
+.file-path-segment--common {
+  color: var(--color-text-maxcontrast);
+}
+
+.file-path-segment--diff {
+  color: var(--color-main-text);
+  background-color: var(--color-primary-element-light, rgba(0, 130, 201, 0.14));
+  font-weight: 600;
+  border-radius: 3px;
+  padding-inline: 2px;
+}
+
+.file-path-segment--filename {
+  color: var(--color-main-text);
+  font-weight: 500;
+}
+
 .copy-path-control {
   display: inline-flex;
   flex-wrap: wrap;
@@ -592,6 +653,13 @@ export default {
   color: var(--color-main-text);
 }
 
+.metadata-badge--mtime {
+  background-color: var(--color-background-hover);
+  border-color: var(--color-border-dark, var(--color-border));
+  color: var(--color-text-maxcontrast, var(--color-main-text));
+  font-variant-numeric: tabular-nums;
+}
+
 .metadata-badge--folder {
   background-color: var(--color-background-dark);
   border-color: var(--color-border-dark, var(--color-border));
@@ -645,6 +713,24 @@ export default {
 
 .file-status-badge.is-protected {
   color: var(--color-primary-element, #0082c9);
+}
+
+.file-status-badge.is-will-delete {
+  padding-block: 2px;
+  padding-inline: 8px;
+  border-radius: 999px;
+  background-color: rgba(211, 47, 47, 0.14);
+  border: 1px solid rgba(211, 47, 47, 0.48);
+  color: var(--color-main-text);
+}
+
+.file-status-badge.is-keeping {
+  padding-block: 2px;
+  padding-inline: 8px;
+  border-radius: 999px;
+  background-color: rgba(46, 125, 50, 0.14);
+  border: 1px solid rgba(46, 125, 50, 0.48);
+  color: var(--color-main-text);
 }
 
 .action-buttons {
