@@ -1,3 +1,7 @@
+## 1.10.43 - 2026-11-23
+### Added
+- **Select safe duplicate copies keyboard shortcut (`a`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateDetails.vue`, `src/App.vue`). Registered the `a` (`select-duplicate-copies`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` to invoke `selectAllFiles()` on the active `DuplicateDetails` group when `a` is pressed outside editable controls and open modal dialogs (strictly preserving `defaultSelectAllTargetFiles` and the Last-Copy Safety Guard), and updated `.select-all-button` with `:disabled="defaultSelectAllTargetFiles.length === 0"` and `aria-keyshortcuts="a"`.
+
 ## 1.10.42 - 2026-11-23
 ### Added
 - **Export filtered JSON report keyboard shortcut (`x`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `x` (`export-json-report`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` (`exportFilteredJsonReport()` via `exportFilteredReport('exportFilteredJson')`) to invoke `DuplicateNavigation.vue` (`exportFilteredJson()`) for structured `duplicatefinder.report.v1` JSON export when `filteredDuplicatesForExport` is non-empty and `x` is pressed outside editable controls and open modal dialogs, and annotated `.export-json-button` with `aria-keyshortcuts="x"`.
