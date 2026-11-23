@@ -22,6 +22,7 @@ function createDetailsComponent() {
 
 	const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 		'@/tools/api': { deleteFile: async () => true },
+		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
 		'@/tools/utils': utils,
 		'@nextcloud/router': { generateUrl: url => url },
 	})

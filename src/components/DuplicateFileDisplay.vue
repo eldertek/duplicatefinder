@@ -19,7 +19,61 @@
         </p>
         <span v-if="fileName" class="file-name-badge" :title="fileName">{{ fileName }}</span>
       </div>
-      <p class="file-path" :title="normalizedPath"><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizedPath }}</p>
+      <div class="file-path-row">
+        <p class="file-path" :title="normalizedPath"><strong>{{ t('duplicatefinder', 'Path:') }}</strong> {{ normalizedPath }}</p>
+        <div class="copy-path-control">
+          <button
+            type="button"
+            class="copy-path-button"
+            :class="{ 'is-copied': copyStatus === 'copied', 'is-error': copyStatus === 'error' }"
+            :title="t('duplicatefinder', 'Copy path')"
+            :aria-label="t('duplicatefinder', 'Copy path')"
+            :disabled="!pathToCopy"
+            @click="copyFilePath">
+            <svg
+              v-if="copyStatus === 'copied'"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <svg
+              v-else
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span class="copy-path-button__label">{{ t('duplicatefinder', 'Copy path') }}</span>
+          </button>
+          <span
+            class="copy-path-status"
+            :class="{
+              'is-visible': Boolean(copyStatusMessage),
+              'is-copied': copyStatus === 'copied',
+              'is-error': copyStatus === 'error'
+            }"
+            role="status"
+            aria-live="polite">
+            {{ copyStatusMessage }}
+          </span>
+        </div>
+      </div>
       <div v-if="hasMetadataBadges" class="file-metadata-badges">
         <span
           v-if="resolvedBadges.isProtectedOrigin"
@@ -159,6 +213,7 @@
 </template>
 <script>
 import { deleteFile } from '@/tools/api';
+import { copyTextSafely } from '@/tools/clipboardHelper';
 import { getPreviewImage, normalizeItemPath, getParentFolderPath } from '@/tools/utils';
 import { generateUrl } from '@nextcloud/router';
 
@@ -178,6 +233,13 @@ export default {
       type: Object,
       default: null
     }
+  },
+  data() {
+    return {
+      copyStatus: 'idle',
+      copyStatusMessage: '',
+      copyResetTimer: null
+    };
   },
   computed: {
     resolvedBadges() {
@@ -203,7 +265,16 @@ export default {
       );
     },
     normalizedPath() {
+      if (!this.file || typeof this.file.path !== 'string') {
+        return '';
+      }
       return this.normalizeItemPath(this.file.path);
+    },
+    pathToCopy() {
+      if (this.normalizedPath) {
+        return this.normalizedPath;
+      }
+      return this.file && typeof this.file.path === 'string' ? this.file.path : '';
     },
     fileName() {
       if (!this.file || !this.file.path) {
@@ -220,9 +291,41 @@ export default {
       return `${rawSize} B`;
     }
   },
+  beforeDestroy() {
+    if (this.copyResetTimer) {
+      clearTimeout(this.copyResetTimer);
+      this.copyResetTimer = null;
+    }
+  },
   methods: {
     getPreviewImage,
     normalizeItemPath,
+    async copyFilePath() {
+      const targetPath = this.pathToCopy;
+      if (!targetPath) {
+        return false;
+      }
+      if (this.copyResetTimer) {
+        clearTimeout(this.copyResetTimer);
+        this.copyResetTimer = null;
+      }
+      this.copyStatus = 'idle';
+      this.copyStatusMessage = '';
+      const copied = await copyTextSafely(targetPath);
+      if (copied) {
+        this.copyStatus = 'copied';
+        this.copyStatusMessage = this.t('duplicatefinder', 'Copied');
+      } else {
+        this.copyStatus = 'error';
+        this.copyStatusMessage = this.t('duplicatefinder', 'Copy failed');
+      }
+      this.copyResetTimer = setTimeout(() => {
+        this.copyStatus = 'idle';
+        this.copyStatusMessage = '';
+        this.copyResetTimer = null;
+      }, 2000);
+      return copied;
+    },
     openInNewWindow() {
       const url = generateUrl('/apps/files/files/' + this.file.nodeId + '?dir={dir}&openfile=true', {
         dir: this.getParentPath()
@@ -330,13 +433,113 @@ export default {
   white-space: nowrap;
 }
 
+.file-path-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-inline-size: 100%;
+}
+
 .file-path {
   margin: 0;
+  flex: 1 1 200px;
+  min-inline-size: 0;
   font-size: 0.84rem;
   color: var(--color-text-maxcontrast);
   white-space: normal;
   overflow-wrap: anywhere;
   line-height: 1.4;
+}
+
+.copy-path-control {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  max-inline-size: 100%;
+  flex-shrink: 0;
+}
+
+.copy-path-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  max-inline-size: 100%;
+  padding-block: 6px;
+  padding-inline: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+  background-color: var(--color-background-hover);
+  color: var(--color-main-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.copy-path-button svg {
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.copy-path-button:hover:not(:disabled) {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-primary-element, #0082c9);
+  color: var(--color-primary-element, #0082c9);
+}
+
+.copy-path-button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
+}
+
+.copy-path-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.copy-path-button.is-copied {
+  border-color: var(--color-element-success, #2e7d32);
+  background-color: var(--color-background-dark);
+}
+
+.copy-path-button.is-error {
+  border-color: var(--color-element-error, #d32f2f);
+}
+
+.copy-path-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 999px;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+
+.copy-path-status.is-visible {
+  margin-inline-start: 6px;
+  padding-block: 4px;
+  padding-inline: 10px;
+}
+
+.copy-path-status.is-copied {
+  background-color: rgba(46, 125, 50, 0.14);
+  border: 1px solid rgba(46, 125, 50, 0.48);
+  color: var(--color-main-text);
+}
+
+.copy-path-status.is-error {
+  background-color: rgba(211, 47, 47, 0.14);
+  border: 1px solid rgba(211, 47, 47, 0.48);
+  color: var(--color-main-text);
 }
 
 .file-metadata-badges {
