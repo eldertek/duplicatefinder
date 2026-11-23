@@ -250,6 +250,25 @@
                         </option>
                     </select>
                 </div>
+                <div class="min-copies-filter-row">
+                    <label
+                        for="duplicate-min-copies-select"
+                        class="min-copies-filter-label">
+                        {{ t('duplicatefinder', 'Minimum copies') }}
+                    </label>
+                    <select
+                        id="duplicate-min-copies-select"
+                        v-model="selectedMinCopiesPreset"
+                        class="min-copies-filter-select"
+                        :aria-label="t('duplicatefinder', 'Minimum copies')">
+                        <option
+                            v-for="option in minCopiesSelectOptions"
+                            :key="option.id"
+                            :value="option.id">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                </div>
                 <div
                     class="reclaimable-summary-badge"
                     role="status"
@@ -468,9 +487,11 @@ import { fetchDuplicates } from '@/tools/api';
 import { getTotalSizeOfDuplicate, loadUiPreferences, saveUiPreferences } from '@/tools/utils';
 import {
     DUPLICATE_FILTER_CATEGORIES,
+    MIN_COPIES_PRESETS,
     MIN_SIZE_PRESETS,
     computeCategoryCounts,
     computeReclaimableSummary,
+    filterDuplicatesByMinCopies,
     filterDuplicatesByMinSize,
     matchesDuplicateCategory,
 } from '@/tools/duplicateFilters';
@@ -579,6 +600,7 @@ export default {
             selectedCategory: 'all',
             selectedExtension: '',
             folderQuery: '',
+            minCopiesPreset: 'any',
             acknowledgedOpen: savedPreferences.acknowledgedOpen,
             unacknowledgedOpen: savedPreferences.unacknowledgedOpen,
             activeSection: 'unacknowledged',
@@ -667,6 +689,7 @@ export default {
                 || this.selectedExtension !== ''
                 || this.folderQuery.trim() !== ''
                 || this.minSizeBytes > 0
+                || this.selectedMinCopiesPreset !== 'any'
                 || this.sortOption !== 'none'
                 || Boolean(this.searchPattern);
         },
@@ -677,18 +700,10 @@ export default {
             const acknowledged = Array.isArray(this.acknowledgedDuplicates)
                 ? this.acknowledgedDuplicates
                 : [];
-            const combinedRaw = [...unacknowledged, ...acknowledged];
-            const byMinSize = this.selectedMinSizePreset === 'custom'
-                ? combinedRaw
-                : filterDuplicatesByMinSize(combinedRaw, this.selectedMinSizePreset);
-            const combined = byMinSize.filter(duplicate => {
-                return this.filterDuplicate(duplicate, {
-                    ignoreCategory: true,
-                    ignoreExtension: true,
-                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
-                });
+            return this.applyClientFilters([...unacknowledged, ...acknowledged], {
+                ignoreCategory: true,
+                ignoreExtension: true,
             });
-            return filterDuplicatesByFolderPrefix(combined, this.folderQuery);
         },
         categoryCounts() {
             return computeCategoryCounts(this.baseDuplicatesForCategoryCounts);
@@ -724,6 +739,23 @@ export default {
                 { id: '1mb', bytes: MIN_SIZE_PRESETS['1mb'], label: '>= 1 MB' },
                 { id: '10mb', bytes: MIN_SIZE_PRESETS['10mb'], label: '>= 10 MB' },
                 { id: '100mb', bytes: MIN_SIZE_PRESETS['100mb'], label: '>= 100 MB' },
+            ];
+        },
+        selectedMinCopiesPreset: {
+            get() {
+                return Object.prototype.hasOwnProperty.call(MIN_COPIES_PRESETS, this.minCopiesPreset)
+                    ? this.minCopiesPreset
+                    : 'any';
+            },
+            set(preset) {
+                this.setMinCopiesPreset(preset);
+            },
+        },
+        minCopiesSelectOptions() {
+            return [
+                { id: 'any', minCopies: MIN_COPIES_PRESETS.any, label: t('duplicatefinder', 'Any count') },
+                { id: '3plus', minCopies: MIN_COPIES_PRESETS['3plus'], label: t('duplicatefinder', '3+ copies') },
+                { id: '5plus', minCopies: MIN_COPIES_PRESETS['5plus'], label: t('duplicatefinder', '5+ copies') },
             ];
         },
         customMinSizeOptionLabel() {
@@ -767,28 +799,10 @@ export default {
             return currentPage < totalPages;
         },
         filteredUnacknowledgedDuplicates() {
-            const byMinSize = this.selectedMinSizePreset === 'custom'
-                ? this.unacknowledgedDuplicates
-                : filterDuplicatesByMinSize(this.unacknowledgedDuplicates, this.selectedMinSizePreset);
-            const filtered = byMinSize.filter(duplicate => {
-                return this.filterDuplicate(duplicate, {
-                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
-                });
-            });
-            const byFolder = filterDuplicatesByFolderPrefix(filtered, this.folderQuery);
-            return this.sortDuplicates(byFolder);
+            return this.sortDuplicates(this.applyClientFilters(this.unacknowledgedDuplicates));
         },
         filteredAcknowledgedDuplicates() {
-            const byMinSize = this.selectedMinSizePreset === 'custom'
-                ? this.acknowledgedDuplicates
-                : filterDuplicatesByMinSize(this.acknowledgedDuplicates, this.selectedMinSizePreset);
-            const filtered = byMinSize.filter(duplicate => {
-                return this.filterDuplicate(duplicate, {
-                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
-                });
-            });
-            const byFolder = filterDuplicatesByFolderPrefix(filtered, this.folderQuery);
-            return this.sortDuplicates(byFolder);
+            return this.sortDuplicates(this.applyClientFilters(this.acknowledgedDuplicates));
         },
         reclaimableSummary() {
             const unacknowledged = Array.isArray(this.filteredUnacknowledgedDuplicates)
@@ -806,17 +820,9 @@ export default {
             const acknowledged = Array.isArray(this.acknowledgedDuplicates)
                 ? this.acknowledgedDuplicates
                 : [];
-            const combinedRaw = [...unacknowledged, ...acknowledged];
-            const byMinSize = this.selectedMinSizePreset === 'custom'
-                ? combinedRaw
-                : filterDuplicatesByMinSize(combinedRaw, this.selectedMinSizePreset);
-            const combined = byMinSize.filter(duplicate => {
-                return this.filterDuplicate(duplicate, {
-                    ignoreExtension: true,
-                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
-                });
+            return this.applyClientFilters([...unacknowledged, ...acknowledged], {
+                ignoreExtension: true,
             });
-            return filterDuplicatesByFolderPrefix(combined, this.folderQuery);
         },
         extensionBreakdown() {
             return computeExtensionBreakdown(this.baseFilteredDuplicatesForStats, 3);
@@ -954,6 +960,7 @@ export default {
             this.selectedCategory = 'all';
             this.selectedExtension = '';
             this.folderQuery = '';
+            this.minCopiesPreset = 'any';
             this.sortOption = 'none';
             this.minSizeBytes = 0;
             this.customMinSizeMb = '';
@@ -995,6 +1002,28 @@ export default {
             if (typeof preset === 'string' && Object.prototype.hasOwnProperty.call(MIN_SIZE_PRESETS, preset)) {
                 this.setMinSizeBytes(MIN_SIZE_PRESETS[preset]);
             }
+        },
+        setMinCopiesPreset(preset) {
+            const normalized = typeof preset === 'string'
+                ? preset.trim().toLowerCase()
+                : 'any';
+            this.minCopiesPreset = Object.prototype.hasOwnProperty.call(MIN_COPIES_PRESETS, normalized)
+                ? normalized
+                : 'any';
+        },
+        applyClientFilters(duplicates, filterOptions = {}) {
+            const list = Array.isArray(duplicates) ? duplicates : [];
+            const byMinSize = this.selectedMinSizePreset === 'custom'
+                ? list
+                : filterDuplicatesByMinSize(list, this.selectedMinSizePreset);
+            const byMinCopies = filterDuplicatesByMinCopies(byMinSize, this.selectedMinCopiesPreset);
+            const filtered = byMinCopies.filter(duplicate => {
+                return this.filterDuplicate(duplicate, {
+                    ...filterOptions,
+                    ignoreMinSize: this.selectedMinSizePreset !== 'custom',
+                });
+            });
+            return filterDuplicatesByFolderPrefix(filtered, this.folderQuery);
         },
         setMinSizeBytes(bytes) {
             const normalized = Number(bytes) > 0 ? Math.floor(Number(bytes)) : 0;
@@ -1940,7 +1969,8 @@ export default {
     outline-offset: 2px;
 }
 
-.min-size-filter-row {
+.min-size-filter-row,
+.min-copies-filter-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1950,7 +1980,8 @@ export default {
     box-sizing: border-box;
 }
 
-.min-size-filter-label {
+.min-size-filter-label,
+.min-copies-filter-label {
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--color-text-maxcontrast);
@@ -1959,7 +1990,8 @@ export default {
     margin-inline: 0;
 }
 
-.min-size-filter-select {
+.min-size-filter-select,
+.min-copies-filter-select {
     flex: 1 1 140px;
     max-inline-size: 100%;
     min-inline-size: 44px;
@@ -1978,11 +2010,13 @@ export default {
     box-sizing: border-box;
 }
 
-.min-size-filter-select:hover {
+.min-size-filter-select:hover,
+.min-copies-filter-select:hover {
     border-color: var(--color-primary-element, #0082c9);
 }
 
-.min-size-filter-select:focus-visible {
+.min-size-filter-select:focus-visible,
+.min-copies-filter-select:focus-visible {
     outline: 2px solid var(--color-primary-element, #0082c9);
     outline-offset: 2px;
 }

@@ -739,3 +739,266 @@ describe('Cycle 65: MIN_SIZE_PRESETS, filterDuplicatesByMinSize, and accessible 
 		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS must use logical properties only')
 	})
 })
+
+describe('Cycle 68: MIN_COPIES_PRESETS, filterDuplicatesByMinCopies, and accessible minimum copies selector', () => {
+	test('MIN_COPIES_PRESETS exposes frozen copy thresholds and filterDuplicatesByMinCopies filters purely without mutation', () => {
+		const { MIN_COPIES_PRESETS, filterDuplicatesByMinCopies } = loadModule('src/tools/duplicateFilters.js')
+
+		assert.deepEqual(MIN_COPIES_PRESETS, {
+			any: 0,
+			'3plus': 3,
+			'5plus': 5,
+		})
+		assert.equal(Object.isFrozen(MIN_COPIES_PRESETS), true)
+
+		const twoCopiesGroup = Object.freeze({
+			id: 1,
+			files: Object.freeze([
+				Object.freeze({ path: '/u/files/a1.txt', size: 100 }),
+				Object.freeze({ path: '/u/files/a2.txt', size: 100 }),
+			]),
+		})
+		const threeCopiesGroup = Object.freeze({
+			id: 2,
+			files: Object.freeze([
+				Object.freeze({ path: '/u/files/b1.png', size: 200 }),
+				Object.freeze({ path: '/u/files/b2.png', size: 200 }),
+				Object.freeze({ path: '/u/files/b3.png', size: 200 }),
+			]),
+		})
+		const fiveCopiesGroup = Object.freeze({
+			id: 3,
+			files: Object.freeze([
+				Object.freeze({ path: '/u/files/c1.mp4', size: 300 }),
+				Object.freeze({ path: '/u/files/c2.mp4', size: 300 }),
+				Object.freeze({ path: '/u/files/c3.mp4', size: 300 }),
+				Object.freeze({ path: '/u/files/c4.mp4', size: 300 }),
+				Object.freeze({ path: '/u/files/c5.mp4', size: 300 }),
+			]),
+		})
+		const countFallbackGroup = Object.freeze({
+			id: 4,
+			count: 6,
+		})
+		const invalidCountFallbackGroup = Object.freeze({
+			id: 5,
+			count: '',
+		})
+
+		const frozenInput = Object.freeze([
+			twoCopiesGroup,
+			threeCopiesGroup,
+			fiveCopiesGroup,
+			countFallbackGroup,
+			invalidCountFallbackGroup,
+		])
+
+		const anyResult = filterDuplicatesByMinCopies(frozenInput, 'any')
+		assert.notEqual(anyResult, frozenInput)
+		assert.deepEqual(anyResult.map(g => g.id), [1, 2, 3, 4, 5])
+
+		assert.deepEqual(filterDuplicatesByMinCopies(frozenInput, '3plus').map(g => g.id), [2, 3, 4])
+		assert.deepEqual(filterDuplicatesByMinCopies(frozenInput, '5plus').map(g => g.id), [3, 4])
+		assert.deepEqual(filterDuplicatesByMinCopies(frozenInput, ' 3PLUS ').map(g => g.id), [2, 3, 4])
+
+		// Unknown, null, undefined presets fall back to 'any'; non-array input returns []
+		assert.deepEqual(filterDuplicatesByMinCopies(frozenInput, 'unknown').map(g => g.id), [1, 2, 3, 4, 5])
+		assert.deepEqual(filterDuplicatesByMinCopies(frozenInput, null).map(g => g.id), [1, 2, 3, 4, 5])
+		assert.deepEqual(filterDuplicatesByMinCopies(undefined, '3plus'), [])
+		assert.deepEqual(filterDuplicatesByMinCopies(null, '5plus'), [])
+	})
+
+	test('DuplicateNavigation renders accessible minimum copies select, filters duplicates + counts, and resets via Reset filters', async () => {
+		window.localStorage.clear()
+		const DuplicateNavigation = createNavigationComponent()
+		const emittedQueryChanges = []
+		const oneMb = 1024 * 1024
+
+		const makeFiles = (prefix, count, ext = 'jpg', mimetype = 'image/jpeg') => Array.from(
+			{ length: count },
+			(_, idx) => ({
+				id: `${prefix}-${idx + 1}`,
+				path: `/u/files/${prefix}-${idx + 1}.${ext}`,
+				mimetype,
+				size: oneMb,
+			}),
+		)
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [
+							{
+								id: 100,
+								hash: 'ack-five',
+								files: makeFiles('ack', 5, 'pdf', 'application/pdf'),
+							},
+						],
+						unacknowledgedDuplicates: [
+							{
+								id: 1,
+								hash: 'two-copies',
+								files: makeFiles('two', 2),
+							},
+							{
+								id: 2,
+								hash: 'three-copies',
+								files: makeFiles('three', 3),
+							},
+							{
+								id: 3,
+								hash: 'five-copies',
+								files: makeFiles('five', 5, 'zip', 'application/zip'),
+							},
+						],
+					},
+					on: {
+						'query-options-changed': payload => emittedQueryChanges.push(payload),
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const nav = vm.$refs.nav
+		const select = vm.$el.querySelector('select.min-copies-filter-select')
+		const label = vm.$el.querySelector('label.min-copies-filter-label')
+		assert.ok(select, 'minimum copies select is rendered')
+		assert.ok(label, 'minimum copies label is rendered')
+		assert.equal(label.getAttribute('for'), select.getAttribute('id'))
+		assert.ok(select.getAttribute('aria-label'))
+		assert.equal(select.value, 'any')
+		assert.deepEqual(
+			Array.from(select.querySelectorAll('option')).map(o => o.value),
+			['any', '3plus', '5plus'],
+		)
+
+		// Change to 3+ copies via DOM select event
+		select.value = '3plus'
+		select.dispatchEvent(new window.Event('change'))
+		await settle()
+
+		assert.equal(nav.selectedMinCopiesPreset, '3plus')
+		assert.deepEqual(nav.filteredUnacknowledgedDuplicates.map(d => d.id), [2, 3])
+		assert.deepEqual(nav.filteredAcknowledgedDuplicates.map(d => d.id), [100])
+		assert.equal(emittedQueryChanges.length, 0)
+
+		const readChipTexts = () => Array.from(vm.$el.querySelectorAll('button.filter-chip'))
+			.map(btn => btn.textContent.replace(/\s+/g, ' ').trim())
+		assert.deepEqual(readChipTexts(), [
+			'All (3)',
+			'Images (1)',
+			'Videos (0)',
+			'Audio (0)',
+			'Documents (1)',
+			'Archives (1)',
+			'> 10 MB (0)',
+		])
+
+		// Change to 5+ copies via DOM select event
+		select.value = '5plus'
+		select.dispatchEvent(new window.Event('change'))
+		await settle()
+
+		assert.equal(nav.selectedMinCopiesPreset, '5plus')
+		assert.deepEqual(nav.filteredUnacknowledgedDuplicates.map(d => d.id), [3])
+		assert.deepEqual(nav.filteredAcknowledgedDuplicates.map(d => d.id), [100])
+
+		// Reset filters button is visible and resets select back to 'any'
+		const resetBtn = vm.$el.querySelector('button.reset-filters-button')
+		assert.ok(resetBtn, 'Reset filters button appears when minCopies preset is active')
+		resetBtn.click()
+		await settle()
+
+		assert.equal(nav.selectedMinCopiesPreset, 'any')
+		assert.equal(select.value, 'any')
+		assert.deepEqual(nav.filteredUnacknowledgedDuplicates.map(d => d.id), [1, 2, 3])
+		assert.deepEqual(nav.filteredAcknowledgedDuplicates.map(d => d.id), [100])
+		assert.equal(vm.$el.querySelector('button.reset-filters-button'), null)
+
+		vm.$destroy()
+	})
+
+	test('DuplicateNavigation combines minimum copies filter with category filter and shows filtered-empty state when none match', async () => {
+		window.localStorage.clear()
+		const DuplicateNavigation = createNavigationComponent()
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [],
+						unacknowledgedDuplicates: [
+							{
+								id: 1,
+								hash: 'two-images',
+								files: [
+									{ id: 11, path: '/Photos/a.jpg', mimetype: 'image/jpeg', size: 2048 },
+									{ id: 12, path: '/Photos/b.jpg', mimetype: 'image/jpeg', size: 2048 },
+								],
+							},
+							{
+								id: 2,
+								hash: 'three-docs',
+								files: [
+									{ id: 21, path: '/Docs/a.pdf', mimetype: 'application/pdf', size: 2048 },
+									{ id: 22, path: '/Docs/b.pdf', mimetype: 'application/pdf', size: 2048 },
+									{ id: 23, path: '/Docs/c.pdf', mimetype: 'application/pdf', size: 2048 },
+								],
+							},
+						],
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const nav = vm.$refs.nav
+		const select = vm.$el.querySelector('select.min-copies-filter-select')
+		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
+
+		// Filter to Images + 3+ copies -> matches 0 groups (filtered-empty state)
+		chips[1].click()
+		select.value = '3plus'
+		select.dispatchEvent(new window.Event('change'))
+		await settle()
+
+		assert.equal(nav.filteredUnacknowledgedDuplicates.length, 0)
+		assert.equal(nav.unacknowledgedEmptyState, 'filtered-empty')
+		const emptyResetBtn = vm.$el.querySelector('.duplicate-section-unacknowledged button.empty-state-reset-button')
+		assert.ok(emptyResetBtn, 'empty-state Reset filters button renders when combined filters match none')
+
+		emptyResetBtn.click()
+		await settle()
+		assert.equal(nav.selectedCategory, 'all')
+		assert.equal(nav.selectedMinCopiesPreset, 'any')
+		assert.equal(nav.filteredUnacknowledgedDuplicates.length, 2)
+
+		vm.$destroy()
+	})
+
+	test('DuplicateNavigation min-copies select CSS enforces >= 44px touch targets, :focus-visible, logical properties, and zero XSS/dashes', () => {
+		const filtersSource = readFileSync(resolve(root, 'src/tools/duplicateFilters.js'), 'utf8')
+		const navSource = readFileSync(resolve(root, 'src/components/DuplicateNavigation.vue'), 'utf8')
+
+		for (const content of [filtersSource, navSource]) {
+			assert.ok(!/[\u2013\u2014]/.test(content), 'no U+2013/U+2014 dashes allowed')
+			assert.ok(!/v-html|innerHTML|outerHTML|document\.write/.test(content), 'no DOM XSS sinks allowed')
+		}
+
+		const filterCssStart = navSource.indexOf('/* Quick File-Type Filter Chips & Live Reclaimable Summary */')
+		const filterCssEnd = navSource.indexOf('/* Consistent highlighting')
+		const filterCssBlock = navSource.slice(filterCssStart, filterCssEnd)
+
+		assert.ok(filterCssBlock.includes('.min-copies-filter-row'))
+		assert.ok(filterCssBlock.includes('.min-copies-filter-label'))
+		assert.ok(filterCssBlock.includes('.min-copies-filter-select'))
+		assert.ok(filterCssBlock.includes('.min-copies-filter-select:focus-visible'))
+		assert.ok(filterCssBlock.includes('min-inline-size: 44px'))
+		assert.ok(filterCssBlock.includes('min-block-size: 44px'))
+		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS must use logical properties only')
+	})
+})

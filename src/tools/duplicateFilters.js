@@ -12,6 +12,12 @@ export const MIN_SIZE_PRESETS = Object.freeze({
 	'100mb': 100 * 1024 * 1024,
 })
 
+export const MIN_COPIES_PRESETS = Object.freeze({
+	any: 0,
+	'3plus': 3,
+	'5plus': 5,
+})
+
 export const DUPLICATE_FILTER_CATEGORIES = Object.freeze([
 	'all',
 	'images',
@@ -215,17 +221,31 @@ export function filterDuplicatesByCategory(duplicates, category = 'all') {
 }
 
 /**
- * Parse a numeric byte size strictly from a raw size value.
+ * Parse a finite non-negative number strictly from a raw value.
  *
- * @param {*} rawSize - Candidate size value.
- * @return {number} Finite non-negative byte size, or NaN when invalid.
+ * @param {*} rawValue - Candidate numeric value.
+ * @return {number} Finite non-negative number, or NaN when invalid.
  */
-function parseValidByteSize(rawSize) {
-	if (rawSize === null || rawSize === undefined || rawSize === '' || typeof rawSize === 'boolean') {
+function parseValidNonNegativeNumber(rawValue) {
+	if (rawValue === null || rawValue === undefined || rawValue === '' || typeof rawValue === 'boolean') {
 		return Number.NaN
 	}
-	const numeric = Number(rawSize)
+	const numeric = Number(rawValue)
 	return Number.isFinite(numeric) && numeric >= 0 ? numeric : Number.NaN
+}
+
+/**
+ * Determine the copy count of a duplicate group from files array or count fallback.
+ *
+ * @param {object} duplicate - Duplicate group object.
+ * @return {number} Non-negative integer copy count.
+ */
+function getDuplicateCopyCount(duplicate) {
+	if (Array.isArray(duplicate.files)) {
+		return duplicate.files.length
+	}
+	const parsedCount = parseValidNonNegativeNumber(duplicate.count)
+	return Number.isFinite(parsedCount) ? Math.floor(parsedCount) : 0
 }
 
 /**
@@ -259,12 +279,42 @@ export function filterDuplicatesByMinSize(duplicates, minSizePreset = 'any') {
 				if (!file || typeof file !== 'object') {
 					return false
 				}
-				const fileSize = parseValidByteSize(file.size)
+				const fileSize = parseValidNonNegativeNumber(file.size)
 				return Number.isFinite(fileSize) && fileSize >= thresholdBytes
 			})
 		}
-		const groupSize = parseValidByteSize(duplicate.size)
+		const groupSize = parseValidNonNegativeNumber(duplicate.size)
 		return Number.isFinite(groupSize) && groupSize >= thresholdBytes
+	})
+}
+
+/**
+ * Filter duplicate groups by minimum copy count preset without mutating the input array.
+ *
+ * @param {Array} duplicates - Array of duplicate group objects.
+ * @param {string} [minCopiesPreset='any'] - Copy count preset key ('any', '3plus', '5plus').
+ * @return {Array} New filtered array of duplicate groups.
+ */
+export function filterDuplicatesByMinCopies(duplicates, minCopiesPreset = 'any') {
+	if (!Array.isArray(duplicates)) {
+		return []
+	}
+	const normalizedPreset = typeof minCopiesPreset === 'string'
+		? minCopiesPreset.trim().toLowerCase()
+		: ''
+	const minCopies = Object.prototype.hasOwnProperty.call(MIN_COPIES_PRESETS, normalizedPreset)
+		? MIN_COPIES_PRESETS[normalizedPreset]
+		: 0
+
+	if (minCopies <= 0) {
+		return duplicates.filter(Boolean)
+	}
+
+	return duplicates.filter(duplicate => {
+		if (!duplicate || typeof duplicate !== 'object') {
+			return false
+		}
+		return getDuplicateCopyCount(duplicate) >= minCopies
 	})
 }
 
