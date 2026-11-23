@@ -104,6 +104,7 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 		'./components/FolderPairMatrix.vue': { __esModule: true, default: stub('folder-matrix') },
 		'./components/StorageFootprintAnalyzer.vue': { __esModule: true, default: stub('storage-footprint') },
 		'./components/PhotoBurstTimeline.vue': { __esModule: true, default: stub('photo-bursts') },
+		'./components/RecoverySafetyWorkbench.vue': { __esModule: true, default: stub('recovery-safety') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },
