@@ -45,6 +45,7 @@ function createDetailsComponent(apiOverrides = {}, clipboardImpl) {
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
+		'./DuplicateCompareView.vue': { __esModule: true, default: { render: h => h('div') } },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
 }

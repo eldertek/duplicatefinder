@@ -39,6 +39,7 @@ function createDetailsComponent() {
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
 		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
+		'./DuplicateCompareView.vue': { __esModule: true, default: { render: h => h('div') } },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
 }

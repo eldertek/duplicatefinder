@@ -170,6 +170,21 @@
                 <span>{{ t('duplicatefinder', 'Preview') }}</span>
               </button>
 
+              <button
+                type="button"
+                class="toolbar-button compare-toggle-button"
+                :class="{ 'is-active': compareMode }"
+                :aria-pressed="compareMode ? 'true' : 'false'"
+                aria-keyshortcuts="v"
+                :title="t('duplicatefinder', 'Compare copies side-by-side')"
+                @click="toggleCompareMode">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="8" height="16" rx="1"></rect>
+                  <rect x="13" y="4" width="8" height="16" rx="1"></rect>
+                </svg>
+                <span>{{ compareMode ? t('duplicatefinder', 'List view') : t('duplicatefinder', 'Compare') }}</span>
+              </button>
+
               <div class="dropdown" @keydown.esc.stop="showDropdown = false">
                 <button
                   type="button"
@@ -255,7 +270,7 @@
             </div>
           </div>
 
-          <div class="files-card" :class="{ 'is-compact-actions': !hasMultiFolderActions }">
+          <div v-if="!compareMode" class="files-card" :class="{ 'is-compact-actions': !hasMultiFolderActions }">
             <div class="files-table-header">
               <div class="col-checkbox" @click.self="toggleSelectAllFromHeader">
                 <input
@@ -308,6 +323,16 @@
               </DuplicateFileDisplay>
             </div>
           </div>
+
+          <DuplicateCompareView
+            v-else
+            :files="duplicate.files"
+            :selected-files="selectedFiles"
+            :path-segments-by-index="filePathSegments"
+            :metadata-badges-by-index="fileMetadataBadges"
+            @toggle-file-selection="toggleFileSelection"
+            @close-compare="compareMode = false"
+          />
         </div>
         <div v-else class="emptycontent" role="status" aria-live="polite">
           <div class="icon-file" />
@@ -407,10 +432,12 @@ import { evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
 import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary';
 import { formatShortHash } from '@/tools/duplicateHashHelper';
 import { showSuccess, showError } from '@nextcloud/dialogs';
+import DuplicateCompareView from './DuplicateCompareView.vue';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
 export default {
   components: {
+    DuplicateCompareView,
     DuplicateFileDisplay
   },
   props: {
@@ -424,6 +451,7 @@ export default {
     return {
       selectedFiles: [],
       activeKeepRule: null,
+      compareMode: false,
       isLoadingNextDuplicate: false,
       showDropdown: false,
       showDeleteConfirmDialog: false,
@@ -599,6 +627,28 @@ export default {
       if (this.duplicate && this.duplicate.files.length > 0) {
         openFileInViewer(this.duplicate.files[0]);
       }
+    },
+    toggleCompareMode() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+        return false;
+      }
+      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+        return false;
+      }
+      this.compareMode = !this.compareMode;
+      return true;
+    },
+    toggleFileSelection(file) {
+      if (!file || file.isInOriginFolder) {
+        return false;
+      }
+      this.activeKeepRule = null;
+      if (this.isFileSelected(file)) {
+        this.selectedFiles = this.selectedFiles.filter(selected => !isSameFile(selected, file));
+      } else {
+        this.selectedFiles = [...this.selectedFiles, file];
+      }
+      return true;
     },
 
     async deleteSelectedDuplicates() {
@@ -1236,9 +1286,17 @@ export default {
 .select-all-button:hover:not(:disabled),
 .select-all-button:focus-visible:not(:disabled),
 .preview-button:hover:not(:disabled),
-.preview-button:focus-visible:not(:disabled) {
+.preview-button:focus-visible:not(:disabled),
+.compare-toggle-button:hover:not(:disabled),
+.compare-toggle-button:focus-visible:not(:disabled) {
   background-color: var(--color-background-dark);
   border-color: var(--color-primary-element, #ffffff);
+}
+
+.compare-toggle-button.is-active:not(:disabled) {
+  background-color: var(--color-primary-element-light);
+  border-color: var(--color-primary-element, #0082c9);
+  color: var(--color-primary-element, #0082c9);
 }
 
 .delete-selected-button {

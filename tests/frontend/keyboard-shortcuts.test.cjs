@@ -31,6 +31,19 @@ function createRealDuplicateDetails(utils, clipboardImpl) {
 		'@nextcloud/router': { generateUrl: url => url },
 	})
 
+	const pathDiffModule = loadModule('src/tools/duplicatePathDiff.js')
+	const statsModule = loadModule('src/tools/duplicateStats.js')
+	const compareModule = loadModule('src/tools/duplicateCompare.js', {
+		'./duplicatePathDiff': pathDiffModule,
+	})
+	const CompareView = loadComponent('src/components/DuplicateCompareView.vue', {
+		'@nextcloud/router': { generateUrl: url => url },
+		'../tools/clipboardHelper': clipboardDependency,
+		'../tools/duplicateCompare': compareModule,
+		'../tools/duplicateStats': statsModule,
+		'../tools/utils': utils,
+	})
+
 	Vue.component('NcLoadingSpinner', { render: h => h('span') })
 
 	return loadComponent('src/components/DuplicateDetails.vue', {
@@ -42,14 +55,15 @@ function createRealDuplicateDetails(utils, clipboardImpl) {
 		},
 		'@/tools/utils': utils,
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
-		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
+		'@/tools/duplicateStats': statsModule,
 		'@/tools/duplicateMetadataBadges': metadataBadges,
-		'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
+		'@/tools/duplicatePathDiff': pathDiffModule,
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
 		'@/tools/clipboardHelper': clipboardDependency,
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
+		'./DuplicateCompareView.vue': { __esModule: true, default: CompareView },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
 }
@@ -3681,6 +3695,114 @@ describe('Cycle 111: keyboard shortcut m (cycle-min-size-filter)', () => {
 			const source = readFileSync(resolve(root, relPath), 'utf8')
 			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
 			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})
+
+describe('Cycle 114: keyboard shortcut v (toggle-compare-view)', () => {
+	test('resolveShortcutAction maps v to toggle-compare-view, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const compareDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'toggle-compare-view')
+		assert.ok(compareDef, 'toggle-compare-view is documented in SHORTCUT_DEFINITIONS')
+		assert.deepEqual(compareDef.keys, ['v'])
+		assert.equal(compareDef.action, 'toggle-compare-view')
+
+		assert.equal(resolveShortcutAction({ key: 'v' }), 'toggle-compare-view')
+		assert.equal(resolveShortcutAction({ key: 'V' }), 'toggle-compare-view')
+
+		for (const mod of [
+			{ ctrlKey: true },
+			{ metaKey: true },
+			{ altKey: true },
+			{ shiftKey: true },
+		]) {
+			assert.equal(resolveShortcutAction({ key: 'v', ...mod }), null)
+		}
+
+		assert.equal(resolveShortcutAction({ key: 'v', target: { tagName: 'INPUT' } }), null)
+		assert.equal(resolveShortcutAction({ key: 'v', target: { tagName: 'TEXTAREA' } }), null)
+		assert.equal(resolveShortcutAction({ key: 'v', target: { tagName: 'SELECT' } }), null)
+		assert.equal(resolveShortcutAction({ key: 'v', target: { isContentEditable: true } }), null)
+		assert.equal(resolveShortcutAction({ key: 'v' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'v' }, { hasBlockingModal: true }), null)
+	})
+
+	test('App.vue -> DuplicateDetails.vue toggles side-by-side compare mode on v, updates help <dialog>, and respects editable/modal guards', async () => {
+		window.localStorage.clear()
+		const dup = makeDuplicate(950, 'compare-me.jpg')
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [dup],
+			useRealDetails: true,
+		})
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalInput = document.createElement('input')
+		document.body.appendChild(externalInput)
+
+		try {
+			await settle()
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(detailsVm)
+			assert.equal(detailsVm.compareMode, false)
+
+			// 1. Editable input ignores v
+			const inputEvent = new window.KeyboardEvent('keydown', { key: 'v', bubbles: true, cancelable: true })
+			externalInput.dispatchEvent(inputEvent)
+			await settle()
+			assert.equal(inputEvent.defaultPrevented, false)
+			assert.equal(detailsVm.compareMode, false)
+
+			// 2. ? help <dialog> documents v and blocks v while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('v'), 'help dialog documents v shortcut')
+			assert.ok(helpDialog.textContent.includes('Toggle side-by-side visual comparison'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'v', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(detailsVm.compareMode, false)
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 3. Pressing v enters side-by-side compare mode
+			const openEvent = new window.KeyboardEvent('keydown', { key: 'v', bubbles: true, cancelable: true })
+			window.dispatchEvent(openEvent)
+			await settle()
+			assert.equal(openEvent.defaultPrevented, true)
+			assert.equal(detailsVm.compareMode, true)
+			assert.ok(detailsVm.$el.querySelector('.compare-workspace'))
+
+			// 4. Pressing v again exits compare mode back to list view
+			const closeEvent = new window.KeyboardEvent('keydown', { key: 'v', bubbles: true, cancelable: true })
+			window.dispatchEvent(closeEvent)
+			await settle()
+			assert.equal(closeEvent.defaultPrevented, true)
+			assert.equal(detailsVm.compareMode, false)
+			assert.ok(detailsVm.$el.querySelector('.files-card'))
+
+			// 5. v is a safe no-op in bulk-delete view
+			vm.openBulkDelete()
+			await settle()
+			const bulkEvent = new window.KeyboardEvent('keydown', { key: 'v', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkEvent)
+			await settle()
+			assert.equal(bulkEvent.defaultPrevented, false)
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalInput.remove()
 		}
 	})
 })

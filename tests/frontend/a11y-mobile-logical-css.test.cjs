@@ -207,6 +207,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 			'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
 			'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
 			'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
+			'./DuplicateCompareView.vue': slotBox('div'),
 			'./DuplicateFileDisplay.vue': slotBox('div'),
 		})
 		Vue.component('NcLoadingSpinner', { render: h => h('span') })
