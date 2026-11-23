@@ -1,3 +1,8 @@
+## 1.10.26 - 2026-11-23
+### Added
+- **Clear selection button and Escape shortcut in duplicate details** (`src/components/DuplicateDetails.vue`). Added a one-click `Clear selection` action in the deletion safety bar (restoring focus cleanly when activated) and an `Escape` shortcut to clear active file selections without interrupting open dialogs or dropdowns.
+- **Accessible 1-click Copy path button and safe clipboard helper** (`src/tools/clipboardHelper.js`, `src/components/DuplicateFileDisplay.vue`). Added a pure `copyTextSafely` helper using `navigator.clipboard.writeText` with zero raw HTML manipulation, paired with a 44x44px-compliant `Copy path` button and polite `aria-live` feedback (`Copied` / `Copy failed`) on each duplicate file item.
+
 ## 1.10.25 - 2026-11-23
 ### Added
 - **Top-3 extension breakdown insights and largest-group jump** (`src/tools/duplicateStats.js`, `src/components/DuplicateNavigation.vue`). Added pure duplicate storage insights computing the Top-3 reclaimable extensions with interactive filter chips and a one-click `Largest` jump button to focus the highest-reclaimable duplicate group.
