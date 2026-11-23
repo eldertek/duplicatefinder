@@ -9,6 +9,17 @@ Find, review, and safely clean up duplicate files in Nextcloud (**Nextcloud 28 t
 
 Install directly from the [Nextcloud App Store](https://apps.nextcloud.com/apps/duplicatefinder) inside your Nextcloud instance.
 
+## Features
+
+Duplicate Finder is a 100% open-source (`AGPL-3.0-or-later`) Nextcloud app designed for fast, safe duplicate triage and cleanup:
+
+- **Content-hash duplicate detection** across event hooks, background jobs, and `occ` CLI commands, backed by unique `path_hash` indexing in `oc_duplicatefinder_finfo` (`#248`) for reliable deduplication under concurrent file operations.
+- **Fast filtering & live space summary**: Instant file-type chips (`All`, `Images`, `Videos`, `Audio`, `Documents`, `Archives`, `> 10 MB`), folder prefix include/exclude syntax (`/Photos`, `!/Backups`), persisted per-user triage preferences, one-click filter reset, and a live `Reclaimable` storage counter.
+- **Safe triage & master copy guidance**: Deterministic metadata badges (`Oldest`, `Newest`, `Shortest path`, `Original`, and folder path labels), one-click **Smart keep** rules (`Keep oldest`, `Keep newest`, `Keep shortest path`), and a pre-deletion safety summary with native `<dialog>` confirmation.
+- **CWE-1236-safe CSV export**: Export filtered duplicate groups to RFC 4180 CSV with spreadsheet formula-injection neutralization.
+- **Keyboard-first navigation**: Triaging shortcuts (`j`, `k`, `/`, `?`, `Esc`) with automatic suppression inside editable inputs.
+- **Bulk cleanup & protections**: Bulk Delete dry-run preview, duplicate folder tree cleanup (`Keep this folder`), Empty Folders Cleanup, Live Photo pair protection, and Origin Folders.
+
 ## Preview
 
 ### Main Duplicate View (Light Mode)
@@ -34,6 +45,8 @@ Duplicate Finder compares files by content hash (independent of filename or loca
 3. **Command-based detection**: Run a full or targeted scan via `occ duplicates:find-all` (see [Command usage](#command-usage)).
 
 When installing Duplicate Finder on an existing Nextcloud instance, running an initial CLI scan with `occ duplicates:find-all` is recommended.
+
+Indexed entries in `oc_duplicatefinder_finfo` enforce a unique `path_hash` index (`#248`) with atomic conflict handling on concurrent inserts or renames and deduplicated `occ duplicates:list-all` queries.
 
 ### Live Photos
 
@@ -86,7 +99,31 @@ You can exclude specific folders or files from duplicate detection in three ways
 At the top of the navigation sidebar, you can narrow down **Unacknowledged** and **Acknowledged** duplicate groups:
 
 - **Search modes**: Click the chevron in the search bar to switch between **Simple search**, **Wildcard search (`*`, `?`)** (e.g., `IMG*.jpg`), and **Regular expression** (e.g., `^IMG_\d{4}\.jpg$`).
+- **File-type filter chips**: Filter instantly by `All`, `Images`, `Videos`, `Audio`, `Documents`, `Archives`, or `> 10 MB`.
+- **Folder prefix filter**: Scope groups using inclusive (`/Photos`) or exclusive (`!/Backups`) folder prefixes; press `Esc` inside the field to clear it.
 - **Sort & minimum file size**: Click the sort/filter icon next to the search bar to sort by `Default`, `Size (largest first)`, or `Size (smallest first)`, or filter by preset sizes and custom `Min MB`.
+- **Live reclaimable space & preferences**: A live `Reclaimable` badge displays recoverable storage, group count, and redundant copy count for the active view. Active category filter and sort preferences are persisted per user, with a one-click **Reset filters** button and distinct empty-state guidance when filters match zero groups.
+- **Export CSV**: Click **Export CSV** to download the currently filtered duplicate groups as an RFC 4180 CSV file hardened against spreadsheet formula injection (`CWE-1236`).
+
+### Safe Triage
+
+When reviewing a duplicate group in the details pane, Duplicate Finder surfaces clear signals and guardrails before any file is removed:
+
+- **Master copy metadata badges**: Each copy displays deterministic badges when applicable: `Oldest`, `Newest`, `Shortest path`, `Original` (for files inside protected Origin Folders), and a normalized parent folder label.
+- **Smart keep rules**: Use the **Smart keep** toolbar (`Keep oldest`, `Keep newest`, `Keep shortest path`) to preselect redundant copies for deletion while preserving the chosen master copy and never selecting files in protected Origin Folders.
+- **Deletion safety guard & `<dialog>` confirmation**: A live summary shows selected files, surviving copies, and space freed, warns if all copies are selected or protected origin files are involved, and opens an accessible native `<dialog>` confirmation before permanently deleting files.
+
+### Keyboard Shortcuts
+
+Navigate and triage duplicates quickly without leaving the keyboard (shortcuts are automatically suppressed when focus is inside an `<input>`, `<textarea>`, `<select>`, or `contenteditable` element):
+
+| Key | Action |
+|---|---|
+| `j` or `ArrowDown` | Select next duplicate group |
+| `k` or `ArrowUp` | Select previous duplicate group |
+| `/` | Focus the duplicate search bar |
+| `?` | Toggle the keyboard shortcuts help dialog |
+| `Esc` | Close the keyboard shortcuts help dialog |
 
 ### Projects
 
