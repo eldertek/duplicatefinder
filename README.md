@@ -14,10 +14,10 @@ Install directly from the [Nextcloud App Store](https://apps.nextcloud.com/apps/
 Duplicate Finder is a 100% open-source (`AGPL-3.0-or-later`) Nextcloud app designed for fast, safe duplicate triage and cleanup:
 
 - **Content-hash duplicate detection** across event hooks, background jobs, and `occ` CLI commands, backed by unique `path_hash` indexing in `oc_duplicatefinder_finfo` (`#248`) for reliable deduplication under concurrent file operations.
-- **Fast filtering & live space summary**: Instant file-type chips (`All`, `Images`, `Videos`, `Audio`, `Documents`, `Archives`, `> 10 MB`), folder prefix include/exclude syntax (`/Photos`, `!/Backups`), persisted per-user triage preferences, one-click filter reset, and a live `Reclaimable` storage counter.
-- **Safe triage & master copy guidance**: Deterministic metadata badges (`Oldest`, `Newest`, `Shortest path`, `Original`, and folder path labels), one-click **Smart keep** rules (`Keep oldest`, `Keep newest`, `Keep shortest path`), and a pre-deletion safety summary with native `<dialog>` confirmation.
-- **CWE-1236-safe CSV export**: Export filtered duplicate groups to RFC 4180 CSV with spreadsheet formula-injection neutralization.
-- **Keyboard-first navigation**: Triaging shortcuts (`j`, `k`, `/`, `?`, `Esc`) with automatic suppression inside editable inputs.
+- **Fast filtering, deterministic sorting & storage insights**: Live `(N)` category counters (`All`, `Images`, `Videos`, `Audio`, `Documents`, `Archives`, `> 10 MB`), folder prefix include/exclude syntax (`/Photos`, `!/Backups`), deterministic `Reclaimable space (most wasted first)` sorting, minimum size (`>= 1 MB`, `>= 10 MB`, `>= 100 MB`) and minimum copy count (`3+`, `5+`) filters, Top-3 extension breakdown with largest-group jump, individually removable active filter chips, `Reset filters (N)` live counter, persisted per-user preferences, and a live `Reclaimable` storage counter.
+- **Safe triage & master copy guidance**: Compact per-group summary banner (`copies`, `reclaimable`, `protected`), deterministic metadata badges (`Oldest`, `Newest`, `Shortest path`, `Original`, and folder path labels), 1-click **Copy path** button, one-click **Smart keep** rules (`Keep oldest`, `Keep newest`, `Keep shortest path`), **Clear selection**, and a pre-deletion safety summary with native `<dialog>` confirmation.
+- **CSV (CWE-1236-safe) & structured JSON export**: Export filtered duplicate groups to RFC 4180 CSV with spreadsheet formula-injection neutralization or structured JSON (`duplicatefinder.report.v1`).
+- **Keyboard-first navigation**: Full triage and navigation shortcuts (`j`/`k`, `/`, `?`, `o`, `n`, `s`, `c`, `r`, `Escape`) with automatic suppression inside editable inputs.
 - **Bulk cleanup & protections**: Bulk Delete dry-run preview, duplicate folder tree cleanup (`Keep this folder`), Empty Folders Cleanup, Live Photo pair protection, and Origin Folders.
 
 ## Preview
@@ -99,18 +99,20 @@ You can exclude specific folders or files from duplicate detection in three ways
 At the top of the navigation sidebar, you can narrow down **Unacknowledged** and **Acknowledged** duplicate groups:
 
 - **Search modes**: Click the chevron in the search bar to switch between **Simple search**, **Wildcard search (`*`, `?`)** (e.g., `IMG*.jpg`), and **Regular expression** (e.g., `^IMG_\d{4}\.jpg$`).
-- **File-type filter chips**: Filter instantly by `All`, `Images`, `Videos`, `Audio`, `Documents`, `Archives`, or `> 10 MB`.
+- **File-type filter chips with live counts**: Filter instantly by `All`, `Images`, `Videos`, `Audio`, `Documents`, `Archives`, or `> 10 MB`. Each chip displays a live `(N)` group count for the active search and folder scope.
 - **Folder prefix filter**: Scope groups using inclusive (`/Photos`) or exclusive (`!/Backups`) folder prefixes; press `Esc` inside the field to clear it.
-- **Sort & minimum file size**: Click the sort/filter icon next to the search bar to sort by `Default`, `Size (largest first)`, or `Size (smallest first)`, or filter by preset sizes and custom `Min MB`.
-- **Live reclaimable space & preferences**: A live `Reclaimable` badge displays recoverable storage, group count, and redundant copy count for the active view. Active category filter and sort preferences are persisted per user, with a one-click **Reset filters** button and distinct empty-state guidance when filters match zero groups.
-- **Export CSV**: Click **Export CSV** to download the currently filtered duplicate groups as an RFC 4180 CSV file hardened against spreadsheet formula injection (`CWE-1236`).
+- **Deterministic sorting & size/copy thresholds**: Click the sort/filter icon next to the search bar to sort by `Default`, `Reclaimable space (most wasted first)` (with deterministic tie-breaking), `Size (largest first)`, or `Size (smallest first)`. Narrow results using the **Minimum file size** selector (`Any size`, `>= 1 MB`, `>= 10 MB`, `>= 100 MB`, plus `>= 1 GB` and custom `Min MB` in the sort menu) and the **Minimum copies** selector (`Any count`, `3+ copies`, `5+ copies`).
+- **Top-3 extensions & largest-group jump**: When duplicates are present, the **Top extensions** bar highlights the top 3 file extensions by reclaimable space (clickable to filter by extension) alongside a **Largest** button to jump directly to the highest-waste duplicate group.
+- **Active filter chips, reset counter & live reclaimable space**: A live `Reclaimable` badge displays recoverable storage, group count, and redundant copy count for the active view. Active filters appear as individually removable chips, paired with a live `Reset filters (N)` counter button, persisted per-user preferences, and distinct empty-state guidance when filters match zero groups.
+- **Export CSV & Export JSON**: Click **Export CSV** to download the currently filtered duplicate groups as an RFC 4180 CSV file hardened against spreadsheet formula injection (`CWE-1236`), or click **Export JSON** to download a structured JSON report conforming to schema `duplicatefinder.report.v1`.
 
 ### Safe Triage
 
 When reviewing a duplicate group in the details pane, Duplicate Finder surfaces clear signals and guardrails before any file is removed:
 
-- **Master copy metadata badges**: Each copy displays deterministic badges when applicable: `Oldest`, `Newest`, `Shortest path`, `Original` (for files inside protected Origin Folders), and a normalized parent folder label.
-- **Smart keep rules**: Use the **Smart keep** toolbar (`Keep oldest`, `Keep newest`, `Keep shortest path`) to preselect redundant copies for deletion while preserving the chosen master copy and never selecting files in protected Origin Folders.
+- **Group header summary banner**: Shows total and redundant copy counts (`{totalCopies} copies ({redundantCopies} redundant)`), reclaimable space for the group, and the number of protected copies when Origin Folder files are present.
+- **Master copy metadata badges & 1-click Copy path**: Each copy displays deterministic badges when applicable (`Oldest`, `Newest`, `Shortest path`, `Original` for files inside protected Origin Folders, and a normalized parent folder label) alongside a 1-click **Copy path** button to copy its full Nextcloud path to the clipboard.
+- **Smart keep rules & Clear selection**: Use the **Smart keep** toolbar (`Keep oldest`, `Keep newest`, `Keep shortest path`) to preselect redundant copies for deletion while preserving the chosen master copy and never selecting files in protected Origin Folders. Click **Clear selection** (or press `c` / `Esc` in Duplicate Details) to clear all selected files in the active group.
 - **Deletion safety guard & `<dialog>` confirmation**: A live summary shows selected files, surviving copies, and space freed, warns if all copies are selected or protected origin files are involved, and opens an accessible native `<dialog>` confirmation before permanently deleting files.
 
 ### Keyboard Shortcuts
@@ -123,7 +125,12 @@ Navigate and triage duplicates quickly without leaving the keyboard (shortcuts a
 | `k` or `ArrowUp` | Select previous duplicate group |
 | `/` | Focus the duplicate search bar |
 | `?` | Toggle the keyboard shortcuts help dialog |
-| `Esc` | Close the keyboard shortcuts help dialog |
+| `o` | Keep oldest copy in active group (`Keep oldest`) |
+| `n` | Keep newest copy in active group (`Keep newest`) |
+| `s` | Keep shortest path copy in active group (`Keep shortest path`) |
+| `c` | Clear current file selection in active group |
+| `r` | Reset all active filters and sorting |
+| `Escape` (`Esc`) | Close the keyboard shortcuts help dialog (or clear file selection in Duplicate Details) |
 
 ### Projects
 
