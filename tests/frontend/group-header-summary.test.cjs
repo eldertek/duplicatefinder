@@ -6,10 +6,11 @@ const { Vue, loadComponent, loadModule, settle } = require('./helpers.cjs')
 
 const root = resolve(__dirname, '../..')
 
-function createDetailsComponent(apiOverrides = {}) {
+function createDetailsComponent(apiOverrides = {}, clipboardImpl) {
 	const utils = loadModule('src/tools/utils.js', {
 		'./notifications': { showErrorNotification: () => {} },
 	})
+	const clipboardHelper = loadModule('src/tools/clipboardHelper.js')
 	const api = {
 		acknowledgeDuplicate: async () => {},
 		unacknowledgeDuplicate: async () => {},
@@ -21,7 +22,7 @@ function createDetailsComponent(apiOverrides = {}) {
 
 	const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 		'@/tools/api': api,
-		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
+		'@/tools/clipboardHelper': clipboardHelper,
 		'@/tools/utils': utils,
 		'@nextcloud/router': { generateUrl: url => url },
 	})
@@ -31,10 +32,16 @@ function createDetailsComponent(apiOverrides = {}) {
 	return loadComponent('src/components/DuplicateDetails.vue', {
 		'@/tools/api': api,
 		'@/tools/utils': utils,
+		'@/tools/clipboardHelper': clipboardImpl === undefined
+			? clipboardHelper
+			: {
+				copyTextSafely: text => clipboardHelper.copyTextSafely(text, clipboardImpl),
+			},
 		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 		'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
 		'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
+		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
@@ -188,6 +195,182 @@ describe('Cycle 55: computeGroupHeaderSummary and DuplicateDetails compact heade
 		assert.ok(bannerCss.includes('flex-wrap: wrap;'), 'banner wraps cleanly at 375px')
 		assert.ok(bannerCss.includes('max-inline-size: 100%;'), 'banner constrains inline size for 375px mobile')
 		assert.ok(bannerCss.includes('overflow-wrap: anywhere;'), 'banner items wrap long content safely')
+		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(bannerCss), 'banner CSS uses 100% logical properties')
+	})
+})
+
+describe('Cycle 87: duplicateHashHelper and 1-click Copy hash button in group header summary', () => {
+	test('formatShortHash returns lowercase hex prefix and returns empty string for invalid inputs', () => {
+		const { formatShortHash } = loadModule('src/tools/duplicateHashHelper.js')
+
+		assert.equal(formatShortHash('D41D8CD98F00B204E9800998ECF8427E'), 'd41d8cd98f00')
+		assert.equal(formatShortHash('  ABCDEF0123456789  ', 8), 'abcdef01')
+		assert.equal(formatShortHash('AbCd12', 12), 'abcd12')
+		assert.equal(formatShortHash('0123456789abcdef', 6.8), '012345')
+
+		assert.equal(formatShortHash(''), '')
+		assert.equal(formatShortHash('   '), '')
+		assert.equal(formatShortHash(null), '')
+		assert.equal(formatShortHash(undefined), '')
+		assert.equal(formatShortHash(123456), '')
+		assert.equal(formatShortHash({}), '')
+		assert.equal(formatShortHash('not-a-hex-hash'), '')
+		assert.equal(formatShortHash('0xabcdef123456'), '')
+		assert.equal(formatShortHash('abcdef123456', 0), '')
+		assert.equal(formatShortHash('abcdef123456', -4), '')
+		assert.equal(formatShortHash('abcdef123456', Number.NaN), '')
+		assert.equal(formatShortHash('abcdef123456', Number.POSITIVE_INFINITY), '')
+		assert.equal(formatShortHash('abcdef123456', null), '')
+	})
+
+	test('DuplicateDetails renders Copy hash button in .group-header-summary, copies full hash, and announces via aria-live polite', async () => {
+		const copiedValues = []
+		const Details = createDetailsComponent({}, {
+			writeText: async value => {
+				copiedValues.push(value)
+			},
+		})
+		const fullHash = '  D41D8CD98F00B204E9800998ECF8427E  '
+
+		const wrapper = new Vue({
+			data: {
+				duplicate: {
+					id: 21,
+					hash: fullHash,
+					acknowledged: false,
+					files: [
+						{ id: 1, nodeId: 11, path: '/alice/files/a/photo.jpg', mimetype: 'image/jpeg', size: 1024, isInOriginFolder: false },
+						{ id: 2, nodeId: 12, path: '/alice/files/b/photo.jpg', mimetype: 'image/jpeg', size: 1024, isInOriginFolder: false },
+					],
+				},
+			},
+			render(h) {
+				return h(Details, { props: { duplicate: this.duplicate } })
+			},
+		}).$mount()
+		await settle()
+
+		const banner = wrapper.$el.querySelector('.group-header-summary')
+		const button = banner.querySelector('button.group-header-summary__copy-hash-button')
+		const code = banner.querySelector('.group-header-summary__hash-code')
+		const status = banner.querySelector('.group-header-summary__copy-status')
+
+		assert.ok(button, 'renders Copy hash button inside .group-header-summary')
+		assert.equal(button.getAttribute('type'), 'button')
+		assert.equal(button.disabled, false)
+		assert.ok(button.textContent.includes('Copy hash'))
+		assert.equal(button.getAttribute('aria-label'), 'Copy hash (d41d8cd98f00)')
+		assert.ok(code, 'renders readable short hex prefix')
+		assert.equal(code.textContent.trim(), 'd41d8cd98f00')
+
+		assert.ok(status, 'renders aria-live status element')
+		assert.equal(status.getAttribute('role'), 'status')
+		assert.equal(status.getAttribute('aria-live'), 'polite')
+		assert.equal(status.textContent.trim(), '')
+
+		button.click()
+		await settle()
+
+		assert.deepEqual(copiedValues, ['D41D8CD98F00B204E9800998ECF8427E'])
+		assert.equal(status.textContent.trim(), 'Copied')
+		assert.equal(button.classList.contains('is-copied'), true)
+
+		// Switching duplicate resets copy status feedback
+		wrapper.duplicate = {
+			id: 22,
+			hash: '00112233445566778899aabbccddeeff',
+			acknowledged: false,
+			files: [
+				{ id: 3, nodeId: 13, path: '/alice/files/c/doc.pdf', mimetype: 'application/pdf', size: 2048, isInOriginFolder: false },
+				{ id: 4, nodeId: 14, path: '/alice/files/d/doc.pdf', mimetype: 'application/pdf', size: 2048, isInOriginFolder: false },
+			],
+		}
+		await settle()
+
+		assert.equal(status.textContent.trim(), '')
+		assert.equal(button.classList.contains('is-copied'), false)
+		assert.equal(banner.querySelector('.group-header-summary__hash-code').textContent.trim(), '001122334455')
+
+		wrapper.$destroy()
+	})
+
+	test('DuplicateDetails Copy hash announces Copy failed on clipboard error and disables when hash is missing', async () => {
+		const FailingDetails = createDetailsComponent({}, {
+			writeText: async () => {
+				throw new Error('Clipboard denied')
+			},
+		})
+
+		const failingWrapper = new Vue({
+			render(h) {
+				return h(FailingDetails, {
+					props: {
+						duplicate: {
+							id: 31,
+							hash: 'abcdef0123456789',
+							acknowledged: false,
+							files: [
+								{ id: 1, nodeId: 11, path: '/u/files/a.bin', mimetype: 'application/octet-stream', size: 512, isInOriginFolder: false },
+								{ id: 2, nodeId: 12, path: '/u/files/b.bin', mimetype: 'application/octet-stream', size: 512, isInOriginFolder: false },
+							],
+						},
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const failButton = failingWrapper.$el.querySelector('button.group-header-summary__copy-hash-button')
+		const failStatus = failingWrapper.$el.querySelector('.group-header-summary__copy-status')
+		failButton.click()
+		await settle()
+
+		assert.equal(failStatus.textContent.trim(), 'Copy failed')
+		assert.equal(failButton.classList.contains('is-error'), true)
+		failingWrapper.$destroy()
+
+		const EmptyHashDetails = createDetailsComponent({}, { writeText: async () => {} })
+		const emptyHashWrapper = new Vue({
+			render(h) {
+				return h(EmptyHashDetails, {
+					props: {
+						duplicate: {
+							id: 32,
+							hash: '   ',
+							acknowledged: false,
+							files: [
+								{ id: 1, nodeId: 11, path: '/u/files/a.bin', mimetype: 'application/octet-stream', size: 512, isInOriginFolder: false },
+								{ id: 2, nodeId: 12, path: '/u/files/b.bin', mimetype: 'application/octet-stream', size: 512, isInOriginFolder: false },
+							],
+						},
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const disabledButton = emptyHashWrapper.$el.querySelector('button.group-header-summary__copy-hash-button')
+		assert.equal(disabledButton.disabled, true)
+		assert.equal(emptyHashWrapper.$el.querySelector('.group-header-summary__hash-code'), null)
+		emptyHashWrapper.$destroy()
+	})
+
+	test('duplicateHashHelper.js and Copy hash CSS follow >= 44px targets, focus-visible, logical properties, zero XSS, and zero dashes', () => {
+		const helperSource = readFileSync(resolve(root, 'src/tools/duplicateHashHelper.js'), 'utf8')
+		const detailsSource = readFileSync(resolve(root, 'src/components/DuplicateDetails.vue'), 'utf8')
+
+		for (const source of [helperSource, detailsSource]) {
+			assert.ok(!/[\u2013\u2014]/.test(source), 'has zero U+2013/U+2014 dashes')
+			assert.ok(!/v-html|innerHTML|outerHTML|document\.write/.test(source), 'has zero XSS sinks')
+		}
+
+		const cssStart = detailsSource.indexOf('.group-header-summary {')
+		const cssEnd = detailsSource.indexOf('.summary-section {', cssStart)
+		const bannerCss = detailsSource.slice(cssStart, cssEnd)
+
+		assert.ok(bannerCss.includes('.group-header-summary__copy-hash-button:focus-visible'), 'Copy hash button styles :focus-visible')
+		assert.ok(bannerCss.includes('min-inline-size: 44px;'), 'Copy hash button enforces >= 44px inline target')
+		assert.ok(bannerCss.includes('min-block-size: 44px;'), 'Copy hash button enforces >= 44px block target')
 		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(bannerCss), 'banner CSS uses 100% logical properties')
 	})
 })

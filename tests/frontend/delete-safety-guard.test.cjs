@@ -39,6 +39,8 @@ function createDetailsComponent(apiOverrides = {}) {
 		'@/tools/duplicateMetadataBadges': metadataBadges,
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
+		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
+		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})

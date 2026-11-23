@@ -66,6 +66,8 @@ function mount(duplicate) {
 		'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
 		'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
+		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
+		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})

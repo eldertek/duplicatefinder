@@ -36,6 +36,66 @@
                 protectedCount: groupHeaderSummary.protectedCount
               }) }}
             </span>
+            <div class="group-header-summary__hash-control">
+              <button
+                type="button"
+                class="group-header-summary__copy-hash-button"
+                :class="{
+                  'is-copied': hashCopyStatus === 'copied',
+                  'is-error': hashCopyStatus === 'error'
+                }"
+                :disabled="!fullGroupHash"
+                :title="shortGroupHash
+                  ? t('duplicatefinder', 'Copy hash ({hash})', { hash: shortGroupHash })
+                  : t('duplicatefinder', 'Copy hash')"
+                :aria-label="shortGroupHash
+                  ? t('duplicatefinder', 'Copy hash ({hash})', { hash: shortGroupHash })
+                  : t('duplicatefinder', 'Copy hash')"
+                @click="copyGroupHash">
+                <svg
+                  v-if="hashCopyStatus === 'copied'"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <span class="group-header-summary__copy-hash-label">{{ t('duplicatefinder', 'Copy hash') }}</span>
+                <code v-if="shortGroupHash" class="group-header-summary__hash-code">{{ shortGroupHash }}</code>
+              </button>
+              <span
+                class="group-header-summary__copy-status"
+                :class="{
+                  'is-visible': Boolean(hashCopyStatusMessage),
+                  'is-copied': hashCopyStatus === 'copied',
+                  'is-error': hashCopyStatus === 'error'
+                }"
+                role="status"
+                aria-live="polite">
+                {{ hashCopyStatusMessage }}
+              </span>
+            </div>
           </div>
 
           <div class="summary-section">
@@ -331,11 +391,13 @@
 
 <script>
 import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates } from '@/tools/api';
+import { copyTextSafely } from '@/tools/clipboardHelper';
 import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
 import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport';
 import { annotateDuplicateMetadataBadges } from '@/tools/duplicateMetadataBadges';
 import { evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
 import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary';
+import { formatShortHash } from '@/tools/duplicateHashHelper';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
 
@@ -358,7 +420,10 @@ export default {
       showDropdown: false,
       showDeleteConfirmDialog: false,
       pendingDeletePlan: null,
-      pendingDeleteResolver: null
+      pendingDeleteResolver: null,
+      hashCopyStatus: 'idle',
+      hashCopyStatusMessage: '',
+      hashCopyResetTimer: null
     };
   },
   watch: {
@@ -366,12 +431,14 @@ export default {
     duplicate() {
       this.selectedFiles = [];
       this.activeKeepRule = null;
+      this.resetHashCopyFeedback();
       if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
         this.resolveDeleteConfirm(false);
       }
     }
   },
   beforeDestroy() {
+    this.resetHashCopyFeedback();
     if (this.pendingDeleteResolver) {
       this.resolveDeleteConfirm(false);
     }
@@ -424,6 +491,15 @@ export default {
         ? this.duplicate.files
         : [];
       return computeGroupHeaderSummary(files);
+    },
+    fullGroupHash() {
+      if (!this.duplicate || typeof this.duplicate.hash !== 'string') {
+        return '';
+      }
+      return this.duplicate.hash.trim();
+    },
+    shortGroupHash() {
+      return formatShortHash(this.fullGroupHash);
     },
     deletionSafetyPlan() {
       const files = this.duplicate && Array.isArray(this.duplicate.files)
@@ -704,6 +780,35 @@ export default {
     toggleDropdown() {
       this.showDropdown = !this.showDropdown;
     },
+    resetHashCopyFeedback() {
+      if (this.hashCopyResetTimer) {
+        clearTimeout(this.hashCopyResetTimer);
+        this.hashCopyResetTimer = null;
+      }
+      this.hashCopyStatus = 'idle';
+      this.hashCopyStatusMessage = '';
+    },
+    async copyGroupHash() {
+      const targetHash = this.fullGroupHash;
+      if (!targetHash) {
+        return false;
+      }
+      this.resetHashCopyFeedback();
+      const copied = await copyTextSafely(targetHash);
+      if (copied) {
+        this.hashCopyStatus = 'copied';
+        this.hashCopyStatusMessage = this.t('duplicatefinder', 'Copied');
+      } else {
+        this.hashCopyStatus = 'error';
+        this.hashCopyStatusMessage = this.t('duplicatefinder', 'Copy failed');
+      }
+      this.hashCopyResetTimer = setTimeout(() => {
+        this.hashCopyStatus = 'idle';
+        this.hashCopyStatusMessage = '';
+        this.hashCopyResetTimer = null;
+      }, 2000);
+      return copied;
+    },
     copyFileHash() {
       if (this.duplicate && this.duplicate.files.length > 0) {
         const hash = this.duplicate.hash;
@@ -827,6 +932,110 @@ export default {
   background-color: var(--color-primary-element-light, #e5eff5);
   border-color: var(--color-primary-element, #00679e);
   color: var(--color-primary-element-light-text, var(--color-main-text, #222222));
+}
+
+.group-header-summary__hash-control {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-inline-size: 100%;
+  margin-inline-start: auto;
+}
+
+.group-header-summary__copy-hash-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  max-inline-size: 100%;
+  padding-block: 6px;
+  padding-inline: 12px;
+  border-radius: var(--border-radius-large, 8px);
+  border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+  background-color: var(--color-background-hover);
+  color: var(--color-main-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.group-header-summary__copy-hash-button svg {
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.group-header-summary__copy-hash-button:hover:not(:disabled) {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-primary-element, #0082c9);
+  color: var(--color-primary-element, #0082c9);
+}
+
+.group-header-summary__copy-hash-button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
+}
+
+.group-header-summary__copy-hash-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.group-header-summary__copy-hash-button.is-copied {
+  border-color: var(--color-element-success, #2e7d32);
+  background-color: var(--color-background-dark);
+}
+
+.group-header-summary__copy-hash-button.is-error {
+  border-color: var(--color-element-error, #d32f2f);
+}
+
+.group-header-summary__hash-code {
+  padding-block: 1px;
+  padding-inline: 6px;
+  border-radius: 4px;
+  background-color: var(--color-background-dark);
+  color: var(--color-text-maxcontrast, var(--color-main-text));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.group-header-summary__copy-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 999px;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+
+.group-header-summary__copy-status.is-visible {
+  padding-block: 4px;
+  padding-inline: 10px;
+}
+
+.group-header-summary__copy-status.is-copied {
+  background-color: rgba(46, 125, 50, 0.14);
+  border: 1px solid rgba(46, 125, 50, 0.48);
+  color: var(--color-main-text);
+}
+
+.group-header-summary__copy-status.is-error {
+  background-color: rgba(211, 47, 47, 0.14);
+  border: 1px solid rgba(211, 47, 47, 0.48);
+  color: var(--color-main-text);
 }
 
 .summary-section {
