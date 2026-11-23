@@ -1,3 +1,9 @@
+## 1.10.24 - 2026-11-23
+### Added
+- **Master copy metadata badges for duplicate triage** (`src/tools/duplicateMetadataBadges.js`, `DuplicateFileDisplay.vue`, `DuplicateDetails.vue`). Added deterministic per-copy metadata badges (`Oldest`, `Newest`, `Shortest path`, `Protected origin`, and normalized folder path labels) to help identify the master copy before deleting duplicates.
+- **Triage preferences persistence, folder prefix filtering, and filter reset** (`src/tools/duplicatePreferences.js`, `DuplicateNavigation.vue`). Persisted strictly whitelisted category filter and sort preferences per user in `localStorage`, added folder-prefix include/exclude queries (`/Photos` and `!/Backups`) to navigation filtering, and added a one-click reset filters control.
+- **Deletion safety guard, live summary, and native `<dialog>` confirmation** (`src/tools/deleteSafetyGuard.js`, `DuplicateDetails.vue`). Added a pure deletion-plan guard with live counts for selected files, surviving copies, reclaimable storage, and all-copies warnings, backed by an accessible native `<dialog>` confirmation before executing file deletions.
+
 ## 1.10.23 - 2026-11-23
 ### Added
 - **Smart keep-rule selection and CWE-1236-safe CSV export** (`src/tools/duplicateSelectionAndExport.js`, `DuplicateDetails.vue`, `DuplicateNavigation.vue`). Added one-click keep-rule actions (`oldest`, `newest`, `shortest_path`) to preselect redundant copies safely while respecting protected origin folders, paired with RFC 4180 CSV export hardened against spreadsheet formula injection (CWE-1236).
