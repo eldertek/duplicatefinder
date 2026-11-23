@@ -379,6 +379,7 @@ describe('Cycle 128: Smart Photo & Media Timeline Bursts & Chronology Clustering
 			'./components/ArchivePayloadInspector.vue': { __esModule: true, default: stub('archive-inspector') },
 			'./components/AudioTagWorkbench.vue': { __esModule: true, default: stub('audio-workbench') },
 			'./components/VideoSceneWorkbench.vue': { __esModule: true, default: stub('video-workbench') },
+			'./components/SidecarSweepWorkbench.vue': { __esModule: true, default: stub('sidecar-sweep') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

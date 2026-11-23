@@ -108,6 +108,7 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 		'./components/ArchivePayloadInspector.vue': { __esModule: true, default: stub('archive-inspector') },
 		'./components/AudioTagWorkbench.vue': { __esModule: true, default: stub('audio-workbench') },
 		'./components/VideoSceneWorkbench.vue': { __esModule: true, default: stub('video-workbench') },
+		'./components/SidecarSweepWorkbench.vue': { __esModule: true, default: stub('sidecar-sweep') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

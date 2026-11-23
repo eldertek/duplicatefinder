@@ -527,6 +527,36 @@
 							<span>{{ t('duplicatefinder', 'Video Scenes') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-sidecar-sweep-button"
+							:class="{ 'is-active': sidecarSweepOpen }"
+							:aria-pressed="sidecarSweepOpen ? 'true' : 'false'"
+							aria-keyshortcuts="4"
+							:title="t('duplicatefinder', 'Toggle orphaned sidecar and post-cleanup empty-folder sweep inspector')"
+							@click="toggleSidecarSweep">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+								<polyline points="14 2 14 8 20 8" />
+								<line
+									x1="9"
+									y1="15"
+									x2="15"
+									y2="15" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Sidecar Sweep') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -731,6 +761,20 @@
 						@video-delete-completed="onVideoDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="videoWorkbenchOpen = false" />
+					<SidecarSweepWorkbench
+						v-if="sidecarSweepOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						:recent-cleaned-paths="recentCleanedPaths"
+						:ignored-empty-folders="ignoredEmptyFolders"
+						@select-duplicate="onSidecarSelectDuplicate"
+						@compare-duplicate="onSidecarCompareDuplicate"
+						@sidecar-delete-completed="onSidecarDeleteCompleted"
+						@update-ignored-empty-folders="onUpdateIgnoredEmptyFolders"
+						@empty-folders-deleted="onEmptyFoldersDeletedFromWorkbench"
+						@start-scan="triggerScan"
+						@close="sidecarSweepOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1177,6 +1221,7 @@ import RecoverySafetyWorkbench from './components/RecoverySafetyWorkbench.vue'
 import ArchivePayloadInspector from './components/ArchivePayloadInspector.vue'
 import AudioTagWorkbench from './components/AudioTagWorkbench.vue'
 import VideoSceneWorkbench from './components/VideoSceneWorkbench.vue'
+import SidecarSweepWorkbench from './components/SidecarSweepWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1252,6 +1297,7 @@ export default {
 		ArchivePayloadInspector,
 		AudioTagWorkbench,
 		VideoSceneWorkbench,
+		SidecarSweepWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1294,6 +1340,7 @@ export default {
 			archiveInspectorOpen: false,
 			audioWorkbenchOpen: false,
 			videoWorkbenchOpen: false,
+			sidecarSweepOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1480,6 +1527,7 @@ export default {
 				'toggle-archive-inspector': t('duplicatefinder', 'Toggle archive and container payload inspector'),
 				'toggle-audio-workbench': t('duplicatefinder', 'Toggle audio tags, bitrate and album consolidator workbench'),
 				'toggle-video-workbench': t('duplicatefinder', 'Toggle video frame fingerprint, codec quality and duration tolerance inspector'),
+				'toggle-sidecar-sweep': t('duplicatefinder', 'Toggle orphaned sidecar and post-cleanup empty-folder sweep inspector'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1913,6 +1961,40 @@ export default {
 		},
 		onVideoDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
+		},
+		toggleSidecarSweep() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.sidecarSweepOpen = !this.sidecarSweepOpen
+			return true
+		},
+		onSidecarSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onSidecarCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onSidecarDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
+		onUpdateIgnoredEmptyFolders(list) {
+			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
+			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
+		},
+		onEmptyFoldersDeletedFromWorkbench({ deleted = [] } = {}) {
+			if (!Array.isArray(deleted) || deleted.length === 0) {
+				return
+			}
+			const deletedSet = new Set(deleted)
+			this.modalEmptyFolders = this.modalEmptyFolders.filter(folder => !deletedSet.has(folder.path))
+			this.selectedModalEmptyFolders = this.selectedModalEmptyFolders.filter(path => !deletedSet.has(path))
+			if (this.modalEmptyFolders.length === 0) {
+				this.recentCleanedPaths = []
+			}
 		},
 		onBatchDeleteCompleted({
 			deletedFiles = [],
@@ -2348,6 +2430,13 @@ export default {
 
 			if (action === 'toggle-video-workbench') {
 				if (this.toggleVideoWorkbench() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-sidecar-sweep') {
+				if (this.toggleSidecarSweep() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -3265,7 +3354,8 @@ export default {
 .app-content-topbar .topbar-recovery-safety-button,
 .app-content-topbar .topbar-archive-inspector-button,
 .app-content-topbar .topbar-audio-workbench-button,
-.app-content-topbar .topbar-video-workbench-button {
+.app-content-topbar .topbar-video-workbench-button,
+.app-content-topbar .topbar-sidecar-sweep-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -3299,7 +3389,8 @@ export default {
 .app-content-topbar .topbar-recovery-safety-button svg,
 .app-content-topbar .topbar-archive-inspector-button svg,
 .app-content-topbar .topbar-audio-workbench-button svg,
-.app-content-topbar .topbar-video-workbench-button svg {
+.app-content-topbar .topbar-video-workbench-button svg,
+.app-content-topbar .topbar-sidecar-sweep-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -3333,7 +3424,9 @@ export default {
 .app-content-topbar .topbar-audio-workbench-button:hover:not(:disabled),
 .app-content-topbar .topbar-audio-workbench-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-video-workbench-button:hover:not(:disabled),
-.app-content-topbar .topbar-video-workbench-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-video-workbench-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-sidecar-sweep-button:hover:not(:disabled),
+.app-content-topbar .topbar-sidecar-sweep-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -3350,7 +3443,8 @@ export default {
 .app-content-topbar .topbar-recovery-safety-button.is-active,
 .app-content-topbar .topbar-archive-inspector-button.is-active,
 .app-content-topbar .topbar-audio-workbench-button.is-active,
-.app-content-topbar .topbar-video-workbench-button.is-active {
+.app-content-topbar .topbar-video-workbench-button.is-active,
+.app-content-topbar .topbar-sidecar-sweep-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -3510,6 +3604,7 @@ export default {
 .app-content-topbar .topbar-archive-inspector-button > *,
 .app-content-topbar .topbar-audio-workbench-button > *,
 .app-content-topbar .topbar-video-workbench-button > *,
+.app-content-topbar .topbar-sidecar-sweep-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3608,6 +3703,7 @@ export default {
 	.app-content-topbar .topbar-archive-inspector-button,
 	.app-content-topbar .topbar-audio-workbench-button,
 	.app-content-topbar .topbar-video-workbench-button,
+	.app-content-topbar .topbar-sidecar-sweep-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
