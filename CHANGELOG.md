@@ -1,3 +1,7 @@
+## 1.10.32 - 2026-11-23
+### Added
+- **Live active filter counter (`Reset filters (N)`)** (`src/tools/duplicateFilters.js`, `src/components/DuplicateNavigation.vue`). Added the pure `countActiveTriageFilters` helper counting active triage filters across all 6 dimensions (category, extension, folder query, minimum size preset, minimum copies preset, and search query) and wired `activeTriageFilterCount` and `resetFiltersButtonLabel` (`Reset filters ({count})` with `aria-live="polite"` and `tabular-nums`) in `DuplicateNavigation.vue`.
+
 ## 1.10.31 - 2026-11-23
 ### Added
 - **Minimum copies filter selector (`Any count`, `3+ copies`, `5+ copies`)** (`src/tools/duplicateFilters.js`, `src/components/DuplicateNavigation.vue`). Added `MIN_COPIES_PRESETS` and the pure `filterDuplicatesByMinCopies` helper, along with an accessible `<select>` control (`#duplicate-min-copies-select`) in `DuplicateNavigation.vue` using CSS logical properties and 44px touch targets to filter duplicate groups by minimum copy count and update live category counts.
