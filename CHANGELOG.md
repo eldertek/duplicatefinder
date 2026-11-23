@@ -1,3 +1,7 @@
+## 1.10.29 - 2026-11-23
+### Added
+- **Live category counts `(N)` on quick filter chips** (`src/tools/duplicateFilters.js`, `src/components/DuplicateNavigation.vue`). Added a pure `computeCategoryCounts` helper and displayed live `(N)` group counts on every category filter chip (`All`, `Images`, `Videos`, `Audio`, `Documents`, `Archives`, `> 10 MB`) reflecting active search, minimum size, and folder prefix filters.
+
 ## 1.10.28 - 2026-11-23
 ### Added
 - **Deterministic sort by reclaimable space (`Reclaimable space (most wasted first)`)** (`src/tools/duplicateSortHelper.js`, `src/tools/duplicatePreferences.js`, `src/components/DuplicateNavigation.vue`). Added a pure `duplicateSortHelper` supporting deterministic sorting by reclaimable space (`(count - 1) * size`), unit size, copy count, and name/path without mutating input arrays, exposed the `Reclaimable space (most wasted first)` (`reclaimable-desc`) sort option in `DuplicateNavigation.vue`, and persisted it via the strictly whitelisted `DEFAULT_ALLOWED_SORT_KEYS` triage preference storage.
