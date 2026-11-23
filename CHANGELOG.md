@@ -1,3 +1,7 @@
+## 1.10.39 - 2026-11-23
+### Added
+- **Reset all active filters keyboard shortcut (`0`) and polite `aria-live` filtered group announcement** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateNavigation.vue`, `src/App.vue`). Registered the `0` (`reset-all-filters`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` to invoke `resetNavigationFilters()` when `0` is pressed outside editable controls and open modal dialogs, updated filter reset buttons with `aria-keyshortcuts="r 0"`, and added an `.sr-only` `role="status"` `aria-live="polite"` `aria-atomic="true"` region (`filteredGroupsAnnouncement`) in `DuplicateNavigation.vue` announcing filtered duplicate group counts.
+
 ## 1.10.38 - 2026-11-23
 ### Added
 - **Copy active group hash keyboard shortcut (`y`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateDetails.vue`, `src/App.vue`). Registered the `y` (`copy-group-hash`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` to invoke `copyGroupHash()` on the active `DuplicateDetails` group (when multiple copies and a valid `fullGroupHash` are present, suppressed inside editable controls and open modal dialogs), and annotated the `Copy hash` button with `aria-keyshortcuts="y"`.
