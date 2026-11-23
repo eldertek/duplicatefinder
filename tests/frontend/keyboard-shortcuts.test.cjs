@@ -12,7 +12,39 @@ const slotBox = tag => ({
 	},
 })
 
-function createAppHarness({ acknowledged = [], unacknowledged = [] } = {}) {
+function createRealDuplicateDetails(utils) {
+	const selectionAndExport = loadModule('src/tools/duplicateSelectionAndExport.js')
+	const metadataBadges = loadModule('src/tools/duplicateMetadataBadges.js')
+	const deleteSafetyGuard = loadModule('src/tools/deleteSafetyGuard.js')
+
+	const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
+		'@/tools/api': { deleteFile: async () => true },
+		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
+		'@/tools/utils': utils,
+		'@nextcloud/router': { generateUrl: url => url },
+	})
+
+	Vue.component('NcLoadingSpinner', { render: h => h('span') })
+
+	return loadComponent('src/components/DuplicateDetails.vue', {
+		'@/tools/api': {
+			acknowledgeDuplicate: async () => {},
+			unacknowledgeDuplicate: async () => {},
+			deleteFiles: async () => ({ success: [], errors: [] }),
+			findDuplicates: async () => {},
+		},
+		'@/tools/utils': utils,
+		'@/tools/duplicateSelectionAndExport': selectionAndExport,
+		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
+		'@/tools/duplicateMetadataBadges': metadataBadges,
+		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
+		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
+		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
+		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
+	})
+}
+
+function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetails = false } = {}) {
 	const utils = loadModule('src/tools/utils.js', {
 		'./notifications': { showErrorNotification: () => {} },
 	})
@@ -82,6 +114,10 @@ function createAppHarness({ acknowledged = [], unacknowledged = [] } = {}) {
 		},
 	})
 
+	const detailsComponent = useRealDetails
+		? createRealDuplicateDetails(utils)
+		: stub('duplicate-details')
+
 	const App = loadComponent('src/App.vue', {
 		'@nextcloud/vue': {
 			NcAppContent: slotBox('main'),
@@ -93,7 +129,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [] } = {}) {
 			NcModal: slotBox('div'),
 		},
 		'./components/DuplicateNavigation.vue': { __esModule: true, default: DuplicateNavigation },
-		'./components/DuplicateDetails.vue': { __esModule: true, default: stub('duplicate-details') },
+		'./components/DuplicateDetails.vue': { __esModule: true, default: detailsComponent },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -358,5 +394,311 @@ describe('Cycle 36: pro keyboard shortcuts for fast duplicate triage', () => {
 		const source = readFileSync(resolve(root, 'src/tools/keyboardShortcuts.js'), 'utf8')
 		assert.equal(/[\u2013\u2014]/.test(source), false)
 		assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false)
+	})
+})
+
+describe('Cycle 56: quick triage keyboard shortcuts o (Keep oldest) and c (Clear selection)', () => {
+	test('resolveShortcutAction maps o/c, documents them in SHORTCUT_DEFINITIONS, and ignores editable targets, modifiers, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const keepOldestDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'keep-oldest')
+		const clearSelectionDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'clear-selection')
+		assert.deepEqual(keepOldestDef, { id: 'keep-oldest', keys: ['o'], action: 'keep-oldest' })
+		assert.deepEqual(clearSelectionDef, { id: 'clear-selection', keys: ['c'], action: 'clear-selection' })
+
+		assert.equal(resolveShortcutAction({ key: 'o' }), 'keep-oldest')
+		assert.equal(resolveShortcutAction({ key: 'c' }), 'clear-selection')
+
+		// Modifiers must never be hijacked (e.g. Ctrl+c / Cmd+c copy)
+		assert.equal(resolveShortcutAction({ key: 'o', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'c', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'c', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'o', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'O', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'C', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: 'o' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'c' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'o' }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'c' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: 'o', target }), null)
+			assert.equal(resolveShortcutAction({ key: 'c', target }), null)
+		}
+	})
+
+	test('App.vue -> DuplicateDetails.vue applies Keep oldest on o, clears on c, skips protected files, and ignores inside text fields or open <dialog>', async () => {
+		window.localStorage.clear()
+		const group = {
+			id: 42,
+			hash: 'hash-42',
+			acknowledged: false,
+			files: [
+				{
+					id: 421,
+					nodeId: 421,
+					path: '/alice/files/Origin/photo.jpg',
+					size: 2048,
+					mtime: 3000,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: true,
+				},
+				{
+					id: 422,
+					nodeId: 422,
+					path: '/alice/files/Archive/photo.jpg',
+					size: 2048,
+					mtime: 1000,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: false,
+				},
+				{
+					id: 423,
+					nodeId: 423,
+					path: '/alice/files/Inbox/photo.jpg',
+					size: 2048,
+					mtime: 2000,
+					mimetype: 'image/jpeg',
+					isInOriginFolder: false,
+				},
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [group],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		try {
+			await settle()
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
+			assert.equal(detailsVm.selectedFiles.length, 0)
+
+			// 1. Pressing o applies Keep oldest (keeps mtime=1000 id=422, skips protected id=421, selects id=423)
+			const oEvent = new window.KeyboardEvent('keydown', { key: 'o', bubbles: true, cancelable: true })
+			window.dispatchEvent(oEvent)
+			await settle()
+			assert.equal(oEvent.defaultPrevented, true)
+			assert.equal(detailsVm.activeKeepRule, 'oldest')
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [423])
+
+			// 2. Typing c inside editable fields must NOT clear selection
+			const searchInput = vm.$el.querySelector('input.search-input')
+			assert.ok(searchInput)
+			for (const field of [searchInput, externalTextarea, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'c', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [423])
+
+			// 3. Pressing c when an open <dialog> (shortcuts dialog) is open must NOT clear selection; o/c appear in dialog
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('o'), 'help dialog documents o shortcut')
+			assert.ok(kbdLabels.includes('c'), 'help dialog documents c shortcut')
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'c', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [423])
+
+			// Close help dialog
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 4. Pressing c when DuplicateDetails delete confirmation <dialog> is open must NOT clear selection
+			detailsVm.$el.querySelector('button.delete-selected-button').click()
+			await settle()
+			const deleteDialog = detailsVm.$el.querySelector('dialog.nc-confirm-dialog')
+			assert.ok(deleteDialog)
+			assert.equal(detailsVm.showDeleteConfirmDialog, true)
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'c', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles.map(file => file.id), [423])
+			detailsVm.resolveDeleteConfirm(false)
+			await settle()
+
+			// 5. Pressing c in normal state clears selection completely
+			const cEvent = new window.KeyboardEvent('keydown', { key: 'c', bubbles: true, cancelable: true })
+			window.dispatchEvent(cEvent)
+			await settle()
+			assert.equal(cEvent.defaultPrevented, true)
+			assert.deepEqual(detailsVm.selectedFiles, [])
+			assert.equal(detailsVm.activeKeepRule, null)
+
+			// 6. Pressing o inside editable field or while external <dialog open> is open must NOT select anything
+			for (const field of [searchInput, externalTextarea, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'o', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles, [])
+
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'o', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles, [])
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+		}
+	})
+
+	test('o shortcut never selects protected-only groups and is ignored in bulk-delete view', async () => {
+		window.localStorage.clear()
+		const protectedOnlyGroup = {
+			id: 77,
+			hash: 'hash-77',
+			acknowledged: false,
+			files: [
+				{
+					id: 771,
+					nodeId: 771,
+					path: '/alice/files/OriginA/doc.pdf',
+					size: 1024,
+					mtime: 1000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: true,
+				},
+				{
+					id: 772,
+					nodeId: 772,
+					path: '/alice/files/OriginB/doc.pdf',
+					size: 1024,
+					mtime: 2000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: true,
+				},
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [protectedOnlyGroup],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(detailsVm)
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'o', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(detailsVm.selectedFiles, [])
+			assert.equal(detailsVm.activeKeepRule, null)
+
+			// In bulk-delete view, o and c are safely ignored
+			vm.openBulkDelete()
+			await settle()
+			const bulkO = new window.KeyboardEvent('keydown', { key: 'o', bubbles: true, cancelable: true })
+			const bulkC = new window.KeyboardEvent('keydown', { key: 'c', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkO)
+			window.dispatchEvent(bulkC)
+			await settle()
+			assert.equal(bulkO.defaultPrevented, false)
+			assert.equal(bulkC.defaultPrevented, false)
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('App.vue supports o and c shortcuts in project-duplicate view as well', async () => {
+		window.localStorage.clear()
+		const projectGroup = {
+			id: 88,
+			hash: 'hash-88',
+			acknowledged: false,
+			files: [
+				{
+					id: 881,
+					nodeId: 881,
+					path: '/alice/files/Older/report.pdf',
+					size: 4096,
+					mtime: 1000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+				{
+					id: 882,
+					nodeId: 882,
+					path: '/alice/files/Newer/report.pdf',
+					size: 4096,
+					mtime: 2000,
+					mimetype: 'application/pdf',
+					isInOriginFolder: false,
+				},
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			vm.viewProjectDuplicate(projectGroup)
+			await settle()
+
+			const projectDetailsVm = vm.$refs.projectDuplicateDetails
+			assert.ok(projectDetailsVm, 'projectDuplicateDetails ref is mounted')
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'o', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(projectDetailsVm.activeKeepRule, 'oldest')
+			assert.deepEqual(projectDetailsVm.selectedFiles.map(file => file.id), [882])
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'c', bubbles: true, cancelable: true }))
+			await settle()
+			assert.deepEqual(projectDetailsVm.selectedFiles, [])
+			assert.equal(projectDetailsVm.activeKeepRule, null)
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
 	})
 })

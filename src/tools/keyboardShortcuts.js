@@ -14,6 +14,16 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'previous-duplicate',
 	},
 	{
+		id: 'keep-oldest',
+		keys: ['o'],
+		action: 'keep-oldest',
+	},
+	{
+		id: 'clear-selection',
+		keys: ['c'],
+		action: 'clear-selection',
+	},
+	{
 		id: 'focus-search',
 		keys: ['/'],
 		action: 'focus-search',
@@ -75,6 +85,31 @@ export function isEditableTarget(target) {
 }
 
 /**
+ * Checks whether an event target is an open native dialog or inside one.
+ *
+ * @param {EventTarget|null|undefined} target Event target element.
+ * @return {boolean} True when target is inside an open <dialog>.
+ */
+function isInsideOpenDialog(target) {
+	if (!target || typeof target !== 'object') {
+		return false
+	}
+
+	const tagName = typeof target.tagName === 'string'
+		? target.tagName.toUpperCase()
+		: ''
+	if (tagName === 'DIALOG') {
+		return Boolean(target.open || (typeof target.hasAttribute === 'function' && target.hasAttribute('open')))
+	}
+
+	if (typeof target.closest === 'function') {
+		return Boolean(target.closest('dialog[open]'))
+	}
+
+	return false
+}
+
+/**
  * Resolves a keyboard event into a deterministic triage shortcut action.
  *
  * @param {KeyboardEvent|object|null|undefined} event Keyboard event.
@@ -89,7 +124,7 @@ export function resolveShortcutAction(event, options = {}) {
 	}
 
 	const isHelpOpen = Boolean(options.isHelpOpen)
-	const hasBlockingModal = Boolean(options.hasBlockingModal)
+	const hasBlockingModal = Boolean(options.hasBlockingModal) || (!isHelpOpen && isInsideOpenDialog(event.target))
 	const key = event.key
 
 	if (key === 'Escape') {
@@ -126,6 +161,14 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (normalizedKey === 'k' || key === 'ArrowUp') {
 		return 'previous-duplicate'
+	}
+
+	if (normalizedKey === 'o') {
+		return 'keep-oldest'
+	}
+
+	if (normalizedKey === 'c') {
+		return 'clear-selection'
 	}
 
 	return null

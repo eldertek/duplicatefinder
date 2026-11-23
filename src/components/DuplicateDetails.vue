@@ -592,8 +592,14 @@ export default {
       }
     },
     applyKeepRule(rule) {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return;
+      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+        return false;
+      }
+      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+        return false;
+      }
+      if (this.selectableFiles.length === 0) {
+        return false;
       }
       const targetKeys = new Set(selectDuplicatesByKeepRule(this.duplicate.files, rule));
       this.selectedFiles = this.duplicate.files.filter(file => {
@@ -604,6 +610,7 @@ export default {
         return key !== null && targetKeys.has(key);
       });
       this.activeKeepRule = rule;
+      return true;
     },
     selectAllFiles() {
       this.activeKeepRule = null;
@@ -614,6 +621,9 @@ export default {
       }
     },
     clearSelection(options = {}) {
+      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+        return false;
+      }
       const shouldRestoreFocus = Boolean(
         options && options.restoreFocus
         && typeof document !== 'undefined'
@@ -632,6 +642,7 @@ export default {
           }
         });
       }
+      return true;
     },
     onDetailsEscape(event) {
       if (

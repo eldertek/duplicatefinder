@@ -849,6 +849,8 @@ export default {
 			const descriptions = {
 				'next-duplicate': t('duplicatefinder', 'Select next duplicate group'),
 				'previous-duplicate': t('duplicatefinder', 'Select previous duplicate group'),
+				'keep-oldest': t('duplicatefinder', 'Keep oldest copy in active group'),
+				'clear-selection': t('duplicatefinder', 'Clear current selection'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'toggle-help': t('duplicatefinder', 'Toggle keyboard shortcuts help'),
 				'close-help': t('duplicatefinder', 'Close keyboard shortcuts dialog'),
@@ -997,6 +999,38 @@ export default {
 				this.closeShortcutsDialog()
 			}
 		},
+		getActiveDuplicateDetailsComponent() {
+			if (this.activeView === 'project-duplicate') {
+				return this.$refs.projectDuplicateDetails || null
+			}
+			if (this.activeView === 'details') {
+				return this.$refs.duplicateDetails || null
+			}
+			return null
+		},
+		hasOpenBlockingDialog() {
+			const detailsComponent = this.getActiveDuplicateDetailsComponent()
+			if (detailsComponent && detailsComponent.showDeleteConfirmDialog) {
+				return true
+			}
+			if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+				const openDialogs = document.querySelectorAll('dialog[open]')
+				for (const dialog of openDialogs) {
+					if (dialog !== this.$refs.shortcutsDialog) {
+						return true
+					}
+				}
+			}
+			if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
+				const openAriaDialog = document.querySelector(
+					'[role="dialog"]:not([aria-hidden="true"]), [role="alertdialog"]:not([aria-hidden="true"]), [aria-modal="true"]:not([aria-hidden="true"])'
+				)
+				if (openAriaDialog && openAriaDialog !== this.$refs.shortcutsDialog) {
+					return true
+				}
+			}
+			return false
+		},
 		handleGlobalKeydown(event) {
 			const hasBlockingModal = Boolean(
 				this.isLoading
@@ -1004,6 +1038,7 @@ export default {
 				|| this.helpModalOpen
 				|| this.emptyFoldersModalOpen
 				|| (this.confirmDialog && this.confirmDialog.open)
+				|| this.hasOpenBlockingDialog()
 			)
 			const action = resolveShortcutAction(event, {
 				isHelpOpen: this.shortcutsDialogOpen,
@@ -1034,6 +1069,42 @@ export default {
 					event.preventDefault()
 				}
 				this.focusSearchBar()
+				return
+			}
+
+			if (action === 'keep-oldest') {
+				const detailsComponent = this.getActiveDuplicateDetailsComponent()
+				if (
+					!detailsComponent
+					|| typeof detailsComponent.applyKeepRule !== 'function'
+					|| !detailsComponent.duplicate
+					|| !Array.isArray(detailsComponent.duplicate.files)
+					|| detailsComponent.duplicate.files.length <= 1
+				) {
+					return
+				}
+				if (typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				detailsComponent.applyKeepRule('oldest')
+				return
+			}
+
+			if (action === 'clear-selection') {
+				const detailsComponent = this.getActiveDuplicateDetailsComponent()
+				if (
+					!detailsComponent
+					|| typeof detailsComponent.clearSelection !== 'function'
+					|| !detailsComponent.duplicate
+					|| !Array.isArray(detailsComponent.duplicate.files)
+					|| detailsComponent.duplicate.files.length <= 1
+				) {
+					return
+				}
+				if (typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				detailsComponent.clearSelection()
 				return
 			}
 
