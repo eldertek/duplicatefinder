@@ -49,6 +49,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'reset-filters',
 	},
 	{
+		id: 'reset-all-filters',
+		keys: ['0'],
+		action: 'reset-all-filters',
+	},
+	{
 		id: 'toggle-help',
 		keys: ['?'],
 		action: 'toggle-help',
@@ -71,6 +76,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	c: 'clear-selection',
 	y: 'copy-group-hash',
 	r: 'reset-filters',
+	'0': 'reset-all-filters',
 })
 
 /**

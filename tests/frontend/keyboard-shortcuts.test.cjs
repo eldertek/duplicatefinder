@@ -1105,7 +1105,7 @@ describe('Cycle 83: keyboard shortcut r (reset-filters) in DuplicateNavigation a
 			assert.equal(navVm.hasActiveFilters, true)
 			const resetBtn = navVm.$el.querySelector('button.reset-filters-button')
 			assert.ok(resetBtn, 'Reset filters button renders when filters are active')
-			assert.equal(resetBtn.getAttribute('aria-keyshortcuts'), 'r')
+			assert.ok(resetBtn.getAttribute('aria-keyshortcuts').split(' ').includes('r'))
 
 			// 1. Pressing r inside editable inputs/select/textarea/contenteditable must NOT reset filters
 			const searchInput = navVm.$el.querySelector('input.search-input')
@@ -1502,6 +1502,284 @@ describe('Cycle 90: keyboard shortcut y (copy-group-hash) in DuplicateDetails an
 			'src/tools/keyboardShortcuts.js',
 			'src/App.vue',
 			'src/components/DuplicateDetails.vue',
+		]) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})
+
+describe('Cycle 93: keyboard shortcut 0 (reset-all-filters) and aria-live filtered group count', () => {
+	test('resolveShortcutAction maps 0 to reset-all-filters, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const resetAllDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'reset-all-filters')
+		assert.deepEqual(resetAllDef, { id: 'reset-all-filters', keys: ['0'], action: 'reset-all-filters' })
+
+		assert.equal(resolveShortcutAction({ key: '0' }), 'reset-all-filters')
+
+		// Browser zoom/tab modifiers and Shift must never be hijacked (Ctrl+0 / Cmd+0 / Alt+0 / Shift+0)
+		assert.equal(resolveShortcutAction({ key: '0', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: '0', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: '0', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: '0', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: '0' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: '0' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: '0', target }), null)
+		}
+	})
+
+	test('App.vue -> DuplicateNavigation.vue resets all active filters on 0, sets aria-keyshortcuts="r 0", announces filtered group count via aria-live="polite", and ignores editable fields or open <dialog>', async () => {
+		window.localStorage.clear()
+		const photoGroup = {
+			id: 301,
+			hash: 'hash-301',
+			acknowledged: false,
+			files: [
+				{ id: 3011, nodeId: 3011, path: '/alice/files/Photos/pic.jpg', size: 2 * 1024 * 1024, mtime: 1000, mimetype: 'image/jpeg' },
+				{ id: 3012, nodeId: 3012, path: '/alice/files/Backup/pic.jpg', size: 2 * 1024 * 1024, mtime: 2000, mimetype: 'image/jpeg' },
+				{ id: 3013, nodeId: 3013, path: '/alice/files/Archive/pic.jpg', size: 2 * 1024 * 1024, mtime: 3000, mimetype: 'image/jpeg' },
+			],
+		}
+		const docGroup = {
+			id: 302,
+			hash: 'hash-302',
+			acknowledged: false,
+			files: [
+				{ id: 3021, nodeId: 3021, path: '/alice/files/Docs/note.txt', size: 1024, mtime: 1000, mimetype: 'text/plain' },
+				{ id: 3022, nodeId: 3022, path: '/alice/files/Copy/note.txt', size: 1024, mtime: 2000, mimetype: 'text/plain' },
+			],
+		}
+
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [photoGroup, docGroup],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalSelect = document.createElement('select')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalSelect)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(navVm, 'DuplicateNavigation ref is mounted')
+			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
+
+			const liveRegion = navVm.$el.querySelector('.filtered-groups-live-status')
+			assert.ok(liveRegion, 'aria-live filtered groups region is rendered')
+			assert.equal(liveRegion.getAttribute('aria-live'), 'polite')
+			assert.equal(liveRegion.getAttribute('aria-atomic'), 'true')
+			assert.ok(liveRegion.classList.contains('sr-only'))
+			assert.equal(liveRegion.textContent.trim(), '2 duplicate groups shown')
+
+			// Activate multiple filters + sorting + search -> live region announces filtered count
+			navVm.setCategoryFilter('images')
+			navVm.toggleExtensionFilter('.jpg')
+			navVm.folderQuery = '/Photos'
+			navVm.setMinCopiesPreset('3plus')
+			navVm.setSortOption('size-desc')
+			navVm.setMinSizeBytes(1024 * 1024)
+			navVm.handleSearch({ query: 'pic', type: 'simple' })
+			if (navVm.$refs.searchBar) {
+				navVm.$refs.searchBar.searchQuery = 'pic'
+			}
+			await settle()
+
+			assert.equal(navVm.hasActiveFilters, true)
+			assert.equal(liveRegion.textContent.trim(), '1 of 2 duplicate groups shown')
+			const resetBtn = navVm.$el.querySelector('button.reset-filters-button')
+			assert.ok(resetBtn, 'Reset filters button renders when filters are active')
+			assert.equal(resetBtn.getAttribute('aria-keyshortcuts'), 'r 0')
+
+			// 1. Typing 0 inside editable inputs/select/textarea/contenteditable must NOT reset filters
+			const searchInput = navVm.$el.querySelector('input.search-input')
+			const folderInput = navVm.$el.querySelector('input.folder-filter-input')
+			assert.ok(searchInput)
+			assert.ok(folderInput)
+			for (const field of [searchInput, folderInput, externalTextarea, externalSelect, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.equal(navVm.hasActiveFilters, true)
+			assert.equal(navVm.selectedCategory, 'images')
+			assert.equal(navVm.folderQuery, '/Photos')
+
+			// 2. Modifiers (Ctrl+0 / Cmd+0 / Alt+0 / Shift+0) must NOT reset filters or preventDefault
+			for (const init of [
+				{ key: '0', ctrlKey: true },
+				{ key: '0', metaKey: true },
+				{ key: '0', altKey: true },
+				{ key: '0', shiftKey: true },
+			]) {
+				const modEvent = new window.KeyboardEvent('keydown', { ...init, bubbles: true, cancelable: true })
+				window.dispatchEvent(modEvent)
+				assert.equal(modEvent.defaultPrevented, false)
+			}
+			await settle()
+			assert.equal(navVm.hasActiveFilters, true)
+
+			// 3. ? help <dialog> documents 0 ("Reset all active filters") and blocks 0 while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('0'), 'help dialog documents 0 shortcut')
+			assert.ok(helpDialog.textContent.includes('Reset all active filters'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(navVm.hasActiveFilters, true)
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 4. Delete confirmation <dialog> blocks 0
+			detailsVm.applyKeepRule('oldest')
+			await settle()
+			detailsVm.$el.querySelector('button.delete-selected-button').click()
+			await settle()
+			assert.equal(detailsVm.showDeleteConfirmDialog, true)
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(navVm.hasActiveFilters, true)
+			detailsVm.resolveDeleteConfirm(false)
+			await settle()
+
+			// 5. External <dialog open> blocks 0
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(navVm.hasActiveFilters, true)
+			externalDialog.removeAttribute('open')
+
+			// 6. Narrowing to 0 matches updates live region to 0 of 2 and sets aria-keyshortcuts on empty-state button
+			navVm.folderQuery = '/NonExistentFolder'
+			await settle()
+			assert.equal(liveRegion.textContent.trim(), '0 of 2 duplicate groups shown')
+			const emptyResetBtn = navVm.$el.querySelector('button.empty-state-reset-button')
+			assert.ok(emptyResetBtn)
+			assert.ok(emptyResetBtn.getAttribute('aria-keyshortcuts').split(' ').includes('0'))
+
+			// 7. Pressing 0 in normal details view resets all active filters and sorting and announces restored count
+			const zeroEvent = new window.KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true })
+			window.dispatchEvent(zeroEvent)
+			await settle()
+			assert.equal(zeroEvent.defaultPrevented, true)
+			assert.equal(navVm.selectedCategory, 'all')
+			assert.equal(navVm.selectedExtension, '')
+			assert.equal(navVm.folderQuery, '')
+			assert.equal(navVm.selectedMinCopiesPreset, 'any')
+			assert.equal(navVm.sortOption, 'none')
+			assert.equal(navVm.minSizeBytes, 0)
+			assert.equal(navVm.searchPattern, '')
+			assert.equal(navVm.hasActiveFilters, false)
+			assert.equal(navVm.$el.querySelector('button.reset-filters-button'), null)
+			assert.equal(navVm.filteredUnacknowledgedDuplicates.length, 2)
+			assert.equal(liveRegion.textContent.trim(), '2 duplicate groups shown')
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalSelect.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+		}
+	})
+
+	test('0 shortcut is a safe no-op when no filters are active or when activeView is bulk-delete', async () => {
+		window.localStorage.clear()
+		const d1 = makeDuplicate(310, 'alpha.txt')
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [d1],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			const liveRegion = navVm.$el.querySelector('.filtered-groups-live-status')
+			assert.equal(navVm.hasActiveFilters, false)
+			assert.equal(liveRegion.textContent.trim(), '1 duplicate group shown')
+
+			// No active filters -> 0 does not preventDefault
+			const idleZero = new window.KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true })
+			window.dispatchEvent(idleZero)
+			await settle()
+			assert.equal(idleZero.defaultPrevented, false)
+
+			// Active filter in bulk-delete view -> 0 is ignored
+			navVm.folderQuery = '/A'
+			await settle()
+			assert.equal(navVm.hasActiveFilters, true)
+			assert.equal(liveRegion.textContent.trim(), '1 of 1 duplicate group shown')
+
+			vm.openBulkDelete()
+			await settle()
+			const bulkZero = new window.KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkZero)
+			await settle()
+			assert.equal(bulkZero.defaultPrevented, false)
+			assert.equal(navVm.folderQuery, '/A')
+
+			// Returning to details view allows 0 to reset the filter
+			vm.closeBulkDelete()
+			await settle()
+			const detailsZero = new window.KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true })
+			window.dispatchEvent(detailsZero)
+			await settle()
+			assert.equal(detailsZero.defaultPrevented, true)
+			assert.equal(navVm.folderQuery, '')
+			assert.equal(navVm.hasActiveFilters, false)
+			assert.equal(liveRegion.textContent.trim(), '1 duplicate group shown')
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('Cycle 93 touched files preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of [
+			'src/tools/keyboardShortcuts.js',
+			'src/App.vue',
+			'src/components/DuplicateNavigation.vue',
 		]) {
 			const source = readFileSync(resolve(root, relPath), 'utf8')
 			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)

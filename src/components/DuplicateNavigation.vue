@@ -348,7 +348,7 @@
                         v-if="hasActiveFilters"
                         type="button"
                         class="reset-filters-button"
-                        aria-keyshortcuts="r"
+                        aria-keyshortcuts="r 0"
                         :title="t('duplicatefinder', 'Reset all active filters and sorting')"
                         :aria-label="resetFiltersButtonLabel"
                         aria-live="polite"
@@ -383,6 +383,13 @@
                         </svg>
                         <span>{{ t('duplicatefinder', 'Export JSON') }}</span>
                     </button>
+                </div>
+                <div
+                    class="sr-only filtered-groups-live-status"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true">
+                    {{ filteredGroupsAnnouncement }}
                 </div>
             </div>
 
@@ -419,7 +426,7 @@
                             <button
                                 type="button"
                                 class="empty-state-reset-button"
-                                aria-keyshortcuts="r"
+                                aria-keyshortcuts="r 0"
                                 :aria-label="t('duplicatefinder', 'Reset filters')"
                                 @click="resetFilters">
                                 {{ t('duplicatefinder', 'Reset filters') }}
@@ -477,7 +484,7 @@
                             <button
                                 type="button"
                                 class="empty-state-reset-button"
-                                aria-keyshortcuts="r"
+                                aria-keyshortcuts="r 0"
                                 :aria-label="t('duplicatefinder', 'Reset filters')"
                                 @click="resetFilters">
                                 {{ t('duplicatefinder', 'Reset filters') }}
@@ -925,6 +932,30 @@ export default {
                 ? this.filteredAcknowledgedDuplicates
                 : [];
             return [...unacknowledged, ...acknowledged];
+        },
+        totalLoadedGroupCount() {
+            const unacknowledged = Array.isArray(this.unacknowledgedDuplicates)
+                ? this.unacknowledgedDuplicates.length
+                : 0;
+            const acknowledged = Array.isArray(this.acknowledgedDuplicates)
+                ? this.acknowledgedDuplicates.length
+                : 0;
+            return unacknowledged + acknowledged;
+        },
+        filteredGroupsAnnouncement() {
+            const total = this.totalLoadedGroupCount;
+            if (total === 0) {
+                return '';
+            }
+            const count = this.filteredDuplicatesForExport.length;
+            if (this.hasActiveFilters) {
+                return total === 1
+                    ? t('duplicatefinder', '{count} of {total} duplicate group shown', { count, total })
+                    : t('duplicatefinder', '{count} of {total} duplicate groups shown', { count, total });
+            }
+            return count === 1
+                ? t('duplicatefinder', '{count} duplicate group shown', { count })
+                : t('duplicatefinder', '{count} duplicate groups shown', { count });
         },
         acknowledgedEmptyState() {
             return this.resolveSectionEmptyState(
@@ -2517,5 +2548,17 @@ export default {
 .duplicate-section-nav :deep(.app-navigation-entry:not(.active) .button-vue.icon-collapse:focus-visible) {
     background-color: var(--color-primary-element-light);
     color: var(--color-primary-element);
+}
+
+.sr-only {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
 }
 </style>

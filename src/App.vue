@@ -862,6 +862,7 @@ export default {
 				'copy-group-hash': t('duplicatefinder', 'Copy active group hash'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'reset-filters': t('duplicatefinder', 'Reset all active filters and sorting'),
+				'reset-all-filters': t('duplicatefinder', 'Reset all active filters'),
 				'toggle-help': t('duplicatefinder', 'Toggle keyboard shortcuts help'),
 				'close-help': t('duplicatefinder', 'Close keyboard shortcuts dialog'),
 			}
@@ -1096,7 +1097,7 @@ export default {
 				return
 			}
 
-			if (action === 'reset-filters') {
+			if (action === 'reset-filters' || action === 'reset-all-filters') {
 				if (this.resetNavigationFilters() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
