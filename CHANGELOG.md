@@ -1,3 +1,7 @@
+## 1.10.30 - 2026-11-23
+### Added
+- **Minimum file size filter selector (`Any size`, `>= 1 MB`, `>= 10 MB`, `>= 100 MB`)** (`src/tools/duplicateFilters.js`, `src/components/DuplicateNavigation.vue`). Added `MIN_SIZE_PRESETS` and the pure `filterDuplicatesByMinSize` helper, along with an accessible `<select>` control (`#duplicate-min-size-select`) in `DuplicateNavigation.vue` using CSS logical properties and 44px touch targets to filter duplicate groups by minimum file size.
+
 ## 1.10.29 - 2026-11-23
 ### Added
 - **Live category counts `(N)` on quick filter chips** (`src/tools/duplicateFilters.js`, `src/components/DuplicateNavigation.vue`). Added a pure `computeCategoryCounts` helper and displayed live `(N)` group counts on every category filter chip (`All`, `Images`, `Videos`, `Audio`, `Documents`, `Archives`, `> 10 MB`) reflecting active search, minimum size, and folder prefix filters.
