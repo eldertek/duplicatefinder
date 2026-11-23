@@ -63,6 +63,7 @@ function mount(duplicate) {
 		'@/tools/utils': utils,
 		'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 		'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
+		'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
@@ -141,6 +142,8 @@ test('a file that was unticked after "Select All" is not deleted by "Delete Sele
 
 	button(vm, 'Delete Selected').click()
 	await settle()
+	vm.$el.querySelector('.nc-confirm-dialog__button--danger').click()
+	await settle()
 
 	assert.deepEqual(calls.deleteFiles.map(c => c.paths), [[path('c', 'photo-one-bis.jpg')]])
 	assert.deepEqual(shownPaths(vm), ['/Projects/a/photo-one.jpg', '/Projects/b/photo-one-copy.jpg'])
@@ -193,6 +196,12 @@ test('deleting some copies never asks to delete the last one', async () => {
 	checkboxes(vm)[2].click()
 	await settle()
 	button(vm, 'Delete Selected').click()
+	await settle()
+
+	const dialog = vm.$el.querySelector('dialog.nc-confirm-dialog[role="alertdialog"]')
+	assert.ok(dialog, 'opens confirmation dialog with deletion summary')
+	assert.ok(!/Delete all copies\?/.test(dialog.textContent), 'partial deletion never warns about deleting all copies')
+	dialog.querySelector('.nc-confirm-dialog__button--danger').click()
 	await settle()
 
 	assert.deepEqual(calls.deleteFiles.map(c => c.options), [{ allowLastCopy: false }])
@@ -268,6 +277,8 @@ test('Keep Folder selects non-protected copies in other folders and preserves al
 	assert.deepEqual(selectedPaths(vm), [path('b', 'photo-1.jpg')])
 
 	button(vm, 'Delete Selected').click()
+	await settle()
+	vm.$el.querySelector('.nc-confirm-dialog__button--danger').click()
 	await settle()
 
 	assert.deepEqual(calls.deleteFiles.map(c => c.paths), [[path('b', 'photo-1.jpg')]])

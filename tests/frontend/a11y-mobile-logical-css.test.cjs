@@ -195,6 +195,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 			'@/tools/utils': utils,
 			'@/tools/duplicateSelectionAndExport': loadModule('src/tools/duplicateSelectionAndExport.js'),
 			'@/tools/duplicateMetadataBadges': loadModule('src/tools/duplicateMetadataBadges.js'),
+			'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 			'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 			'./DuplicateFileDisplay.vue': slotBox('div'),
 		})

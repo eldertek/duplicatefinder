@@ -12,6 +12,7 @@ function createDetailsComponent(apiOverrides = {}) {
 	})
 	const selectionAndExport = loadModule('src/tools/duplicateSelectionAndExport.js')
 	const metadataBadges = loadModule('src/tools/duplicateMetadataBadges.js')
+	const deleteSafetyGuard = loadModule('src/tools/deleteSafetyGuard.js')
 
 	const api = {
 		acknowledgeDuplicate: async () => {},
@@ -35,6 +36,7 @@ function createDetailsComponent(apiOverrides = {}) {
 		'@/tools/utils': utils,
 		'@/tools/duplicateSelectionAndExport': selectionAndExport,
 		'@/tools/duplicateMetadataBadges': metadataBadges,
+		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
