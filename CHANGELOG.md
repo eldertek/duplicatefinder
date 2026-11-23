@@ -1,3 +1,7 @@
+## 1.10.44 - 2026-11-23
+### Added
+- **Toggle Bulk Delete view keyboard shortcut (`b`)** (`src/tools/keyboardShortcuts.js`, `src/App.vue`). Registered the `b` (`toggle-bulk-delete-view`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` (`toggleBulkDeleteView()`) to switch cleanly between the `details` triage view (when `hasDuplicates` is true) and the `bulk-delete` review view without triggering any deletion when `b` is pressed outside editable controls and open modal dialogs, and annotated the Bulk Delete / Back to duplicates topbar buttons with `aria-keyshortcuts="b"`.
+
 ## 1.10.43 - 2026-11-23
 ### Added
 - **Select safe duplicate copies keyboard shortcut (`a`)** (`src/tools/keyboardShortcuts.js`, `src/components/DuplicateDetails.vue`, `src/App.vue`). Registered the `a` (`select-duplicate-copies`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` to invoke `selectAllFiles()` on the active `DuplicateDetails` group when `a` is pressed outside editable controls and open modal dialogs (strictly preserving `defaultSelectAllTargetFiles` and the Last-Copy Safety Guard), and updated `.select-all-button` with `:disabled="defaultSelectAllTargetFiles.length === 0"` and `aria-keyshortcuts="a"`.
