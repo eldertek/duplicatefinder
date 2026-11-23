@@ -42,6 +42,7 @@ function createRealDuplicateDetails(utils, clipboardImpl, apiOverrides = {}) {
 		'../tools/duplicateCompare': compareModule,
 		'../tools/duplicateStats': statsModule,
 		'../tools/utils': utils,
+		'../tools/visualMediaInspector': loadModule('src/tools/visualMediaInspector.js'),
 	})
 
 	Vue.component('NcLoadingSpinner', { render: h => h('span') })
@@ -62,6 +63,7 @@ function createRealDuplicateDetails(utils, clipboardImpl, apiOverrides = {}) {
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
+		'@/tools/visualMediaInspector': loadModule('src/tools/visualMediaInspector.js'),
 		'@/tools/clipboardHelper': clipboardDependency,
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateCompareView.vue': { __esModule: true, default: CompareView },

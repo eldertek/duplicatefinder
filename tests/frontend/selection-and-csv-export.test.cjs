@@ -46,6 +46,7 @@ function createDetailsComponent() {
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
+		'@/tools/visualMediaInspector': loadModule('src/tools/visualMediaInspector.js'),
 		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateCompareView.vue': { __esModule: true, default: { render: h => h('div') } },

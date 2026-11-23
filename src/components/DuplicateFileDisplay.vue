@@ -132,6 +132,26 @@
           </svg>
           <span class="metadata-badge__text">{{ resolvedBadges.folderLabel }}</span>
         </span>
+        <span
+          v-if="visualBadge && visualBadge.isResolutionWinner"
+          class="metadata-badge metadata-badge--winner">
+          {{ t('duplicatefinder', 'Resolution winner') }}
+        </span>
+        <span
+          v-else-if="visualBadge && visualBadge.isLowerResolution"
+          class="metadata-badge metadata-badge--lower-res">
+          {{ t('duplicatefinder', 'Lower resolution ({delta}%)', { delta: visualBadge.deltaVsBestPercent }) }}
+        </span>
+        <span
+          v-if="visualBadge && visualBadge.dimensions"
+          class="metadata-badge metadata-badge--dimensions">
+          {{ visualBadge.dimensions.formattedDimensions }} ({{ visualBadge.dimensions.aspectRatio }})
+        </span>
+        <span
+          v-if="visualBadge && visualBadge.exifCamera"
+          class="metadata-badge metadata-badge--camera">
+          {{ visualBadge.exifCamera }}
+        </span>
       </div>
       <span v-if="file.isLivePhotoVideoMissing" class="file-status-badge is-duplicate">
         {{ t('duplicatefinder', 'Live Photo video is missing') }}
@@ -269,6 +289,10 @@ export default {
     hasActiveSelection: {
       type: Boolean,
       default: false
+    },
+    visualBadge: {
+      type: Object,
+      default: null
     }
   },
   data() {
@@ -299,7 +323,13 @@ export default {
         badges.isNewest ||
         badges.isShortestPath ||
         badges.folderLabel ||
-        this.formattedModifiedAt
+        this.formattedModifiedAt ||
+        (this.visualBadge && (
+          this.visualBadge.isResolutionWinner ||
+          this.visualBadge.isLowerResolution ||
+          this.visualBadge.dimensions ||
+          this.visualBadge.exifCamera
+        ))
       );
     },
     formattedModifiedAt() {
@@ -645,6 +675,26 @@ export default {
   background-color: rgba(2, 119, 189, 0.14);
   border-color: rgba(2, 119, 189, 0.45);
   color: var(--color-main-text);
+}
+
+.metadata-badge--winner {
+  background-color: rgba(46, 125, 50, 0.16);
+  border-color: rgba(46, 125, 50, 0.56);
+  color: var(--color-main-text);
+}
+
+.metadata-badge--lower-res {
+  background-color: rgba(217, 119, 6, 0.16);
+  border-color: rgba(217, 119, 6, 0.56);
+  color: var(--color-main-text);
+}
+
+.metadata-badge--dimensions,
+.metadata-badge--camera {
+  background-color: var(--color-background-hover);
+  border-color: var(--color-border-dark, var(--color-border));
+  color: var(--color-main-text);
+  font-variant-numeric: tabular-nums;
 }
 
 .metadata-badge--shortest {

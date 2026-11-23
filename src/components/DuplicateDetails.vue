@@ -43,6 +43,18 @@
                 protectedCount: groupHeaderSummary.protectedCount
               }) }}
             </span>
+            <span
+              v-if="visualGroupSummaryLabel"
+              class="group-header-summary__item group-header-summary__item--visual">
+              {{ visualGroupSummaryLabel }}
+            </span>
+            <button
+              v-if="visualGroupEvaluation.hasVisualMedia && duplicate.files.length >= 2"
+              type="button"
+              class="group-header-summary__inspect-button"
+              @click="openVisualDiffCompare">
+              {{ t('duplicatefinder', 'Inspect visual diff') }}
+            </button>
             <div class="group-header-summary__hash-control">
               <button
                 type="button"
@@ -311,6 +323,16 @@
                 @click="applyKeepRule(ruleOption.id)">
                 <span>{{ ruleOption.label }}</span>
               </button>
+              <button
+                v-if="visualGroupEvaluation.hasDimensionSpread"
+                type="button"
+                class="toolbar-button resolution-winner-keep-button"
+                :class="{ 'is-active': activeKeepRule === 'highest_resolution' }"
+                :aria-pressed="activeKeepRule === 'highest_resolution' ? 'true' : 'false'"
+                :disabled="selectableFiles.length === 0"
+                @click="applyBestResolutionKeep">
+                <span>{{ t('duplicatefinder', 'Keep best resolution') }}</span>
+              </button>
             </div>
 
             <div
@@ -425,6 +447,7 @@
                 :duplicate-acknowledged="duplicate.acknowledged"
                 :has-other-folders="hasFilesInOtherFolders(file)"
                 :metadata-badges="fileMetadataBadges[index] || null"
+                :visual-badge="fileVisualBadges[index] || null"
                 :path-segments="filePathSegments[index] || []"
                 :is-selected="isFileSelected(file)"
                 :has-active-selection="selectedFiles.length > 0"
@@ -440,8 +463,12 @@
             :selected-files="selectedFiles"
             :path-segments-by-index="filePathSegments"
             :metadata-badges-by-index="fileMetadataBadges"
+            :initial-inspection-mode="compareInitialMode"
+            :live-dimensions-by-key="inspectedDimensionsByKey"
+            @visual-inspection-updated="onVisualInspectionUpdated"
+            @select-lower-res="applyLowerResSelection"
             @toggle-copy-selection="toggleFileSelection"
-            @close-compare="compareMode = false"
+            @close-compare="closeCompareMode"
           />
         </div>
         <div v-else class="emptycontent" role="status" aria-live="polite">
@@ -625,6 +652,11 @@ import { computePathDiffSegments } from '@/tools/duplicatePathDiff';
 import { buildDeletionAuditPlan, downloadDeletionPlanJson, evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
 import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary';
 import { formatShortHash, deriveGroupIgnoreOptions } from '@/tools/duplicateHashHelper';
+import {
+  evaluateResolutionWinners,
+  normalizeExifMetadata,
+  selectLowerResolutionKeys,
+} from '@/tools/visualMediaInspector';
 import { showSuccess, showError } from '@nextcloud/dialogs';
 import DuplicateCompareView from './DuplicateCompareView.vue';
 import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
@@ -646,6 +678,8 @@ export default {
       selectedFiles: [],
       activeKeepRule: null,
       compareMode: false,
+      compareInitialMode: 'side-by-side',
+      inspectedDimensionsByKey: {},
       isAcknowledging: false,
       acknowledgeRequestToken: 0,
       isLoadingNextDuplicate: false,
@@ -676,6 +710,8 @@ export default {
     duplicate() {
       this.selectedFiles = [];
       this.activeKeepRule = null;
+      this.compareInitialMode = 'side-by-side';
+      this.inspectedDimensionsByKey = {};
       this.isAcknowledging = false;
       this.acknowledgeRequestToken += 1;
       this.showDropdown = false;
@@ -755,6 +791,47 @@ export default {
         return [];
       }
       return annotateDuplicateMetadataBadges(this.duplicate.files);
+    },
+    visualGroupEvaluation() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return evaluateResolutionWinners([]);
+      }
+      return evaluateResolutionWinners(this.duplicate.files, this.inspectedDimensionsByKey);
+    },
+    fileVisualBadges() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return [];
+      }
+      return this.duplicate.files.map((file, index) => {
+        const evalEntry = this.visualGroupEvaluation.perFile[index] || {};
+        const exif = normalizeExifMetadata(file);
+        return {
+          ...evalEntry,
+          exifCamera: exif.camera || '',
+        };
+      });
+    },
+    visualGroupSummaryLabel() {
+      const evaluation = this.visualGroupEvaluation;
+      if (!evaluation.hasDimensionData) {
+        return '';
+      }
+      const winnerEntry = evaluation.winnerIndex >= 0
+        ? evaluation.perFile[evaluation.winnerIndex]
+        : evaluation.perFile.find(entry => entry && entry.dimensions);
+      if (!winnerEntry || !winnerEntry.dimensions) {
+        return '';
+      }
+      if (evaluation.hasDimensionSpread) {
+        return this.t('duplicatefinder', 'Best: {dims} ({ratio})', {
+          dims: winnerEntry.dimensions.formattedDimensions,
+          ratio: winnerEntry.dimensions.aspectRatio,
+        });
+      }
+      return this.t('duplicatefinder', '{dims} ({ratio})', {
+        dims: winnerEntry.dimensions.formattedDimensions,
+        ratio: winnerEntry.dimensions.aspectRatio,
+      });
     },
     filePathSegments() {
       if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
@@ -945,8 +1022,49 @@ export default {
       if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
         return false;
       }
+      if (this.compareMode) {
+        this.compareInitialMode = 'side-by-side';
+      }
       this.compareMode = !this.compareMode;
       return true;
+    },
+    openVisualDiffCompare() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+        return false;
+      }
+      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+        return false;
+      }
+      this.compareInitialMode = 'diff';
+      this.compareMode = true;
+      return true;
+    },
+    closeCompareMode() {
+      this.compareMode = false;
+      this.compareInitialMode = 'side-by-side';
+    },
+    onVisualInspectionUpdated(payload) {
+      if (payload && payload.dimensionsByKey && typeof payload.dimensionsByKey === 'object') {
+        this.inspectedDimensionsByKey = { ...payload.dimensionsByKey };
+      }
+    },
+    applyLowerResSelection(keys) {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files) || !Array.isArray(keys)) {
+        return;
+      }
+      const keySet = new Set(keys);
+      this.activeKeepRule = 'highest_resolution';
+      this.selectedFiles = this.duplicate.files.filter(file => {
+        const key = getFileSelectionKey(file);
+        return key !== null && keySet.has(key) && !file.isInOriginFolder;
+      });
+    },
+    applyBestResolutionKeep() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+        return;
+      }
+      const keys = selectLowerResolutionKeys(this.duplicate.files, this.inspectedDimensionsByKey);
+      this.applyLowerResSelection(keys);
     },
     toggleFileSelection(file) {
       if (!file || file.isInOriginFolder) {
@@ -2686,5 +2804,44 @@ dialog.nc-confirm-dialog::backdrop {
   .nc-confirm-dialog__stats {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.group-header-summary__item--visual {
+  background-color: rgba(0, 130, 201, 0.12);
+  border-color: rgba(0, 130, 201, 0.42);
+  font-variant-numeric: tabular-nums;
+}
+
+.group-header-summary__inspect-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding-block: 4px;
+  padding-inline: 10px;
+  border-radius: var(--border-radius-large, 8px);
+  border: 1px solid var(--color-primary-element, #0082c9);
+  background-color: var(--color-main-background);
+  color: var(--color-main-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.group-header-summary__inspect-button:hover,
+.group-header-summary__inspect-button:focus-visible,
+.resolution-winner-keep-button:hover:not(:disabled),
+.resolution-winner-keep-button:focus-visible:not(:disabled) {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-primary-element, #0082c9);
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
+}
+
+.resolution-winner-keep-button.is-active {
+  background-color: rgba(46, 125, 50, 0.16);
+  border-color: rgba(46, 125, 50, 0.56);
 }
 </style>

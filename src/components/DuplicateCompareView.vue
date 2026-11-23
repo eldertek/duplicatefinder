@@ -75,6 +75,219 @@
 			</div>
 		</div>
 
+		<div
+			v-if="hasInspectableImages"
+			class="compare-visual-bar"
+			role="toolbar"
+			:aria-label="t('duplicatefinder', 'Visual inspection controls')">
+			<div
+				class="compare-visual-bar__modes"
+				role="group"
+				:aria-label="t('duplicatefinder', 'Visual comparison mode')">
+				<button
+					type="button"
+					class="compare-toolbar__button compare-mode-button"
+					:class="{ 'is-active': inspectionMode === 'side-by-side' }"
+					:aria-pressed="inspectionMode === 'side-by-side' ? 'true' : 'false'"
+					@click="setInspectionMode('side-by-side')">
+					<span>{{ t('duplicatefinder', 'Side-by-side') }}</span>
+				</button>
+				<button
+					type="button"
+					class="compare-toolbar__button compare-mode-button compare-mode-wipe-button"
+					:class="{ 'is-active': inspectionMode === 'wipe' }"
+					:aria-pressed="inspectionMode === 'wipe' ? 'true' : 'false'"
+					:disabled="!bothPanesHavePreview"
+					@click="setInspectionMode('wipe')">
+					<span>{{ t('duplicatefinder', 'Split wipe') }}</span>
+				</button>
+				<button
+					type="button"
+					class="compare-toolbar__button compare-mode-button compare-mode-diff-button"
+					:class="{ 'is-active': inspectionMode === 'diff' }"
+					:aria-pressed="inspectionMode === 'diff' ? 'true' : 'false'"
+					:disabled="!bothPanesHavePreview"
+					@click="setInspectionMode('diff')">
+					<span>{{ t('duplicatefinder', 'Pixel diff') }}</span>
+				</button>
+			</div>
+
+			<div
+				class="compare-visual-bar__tools"
+				role="group"
+				:aria-label="t('duplicatefinder', 'Zoom and metadata tools')">
+				<div class="compare-zoom-group">
+					<span class="compare-zoom-group__label">{{ t('duplicatefinder', 'Zoom') }}</span>
+					<button
+						v-for="zoomOption in zoomLevels"
+						:key="'zoom-' + zoomOption"
+						type="button"
+						class="compare-zoom-button"
+						:class="{ 'is-active': zoomScale === zoomOption }"
+						:aria-pressed="zoomScale === zoomOption ? 'true' : 'false'"
+						@click="zoomScale = zoomOption">
+						{{ zoomOption }}x
+					</button>
+				</div>
+				<button
+					v-if="resolutionEvaluation.hasDimensionSpread"
+					type="button"
+					class="compare-toolbar__button compare-select-lower-res-button"
+					@click="selectLowerResolutionCopies">
+					<span>{{ t('duplicatefinder', 'Select lower-res') }}</span>
+				</button>
+				<button
+					type="button"
+					class="compare-toolbar__button compare-exif-fetch-button"
+					:disabled="exifFetchState === 'loading' || !bothPanesHaveUrls"
+					@click="loadExifHeadersForCurrentPair">
+					<span>
+						{{ exifFetchState === 'loading'
+							? t('duplicatefinder', 'Reading EXIF...')
+							: (exifFetchState === 'ready'
+								? t('duplicatefinder', 'EXIF inspected')
+								: t('duplicatefinder', 'Read EXIF header')) }}
+					</span>
+				</button>
+			</div>
+		</div>
+
+		<section
+			v-if="hasInspectableImages && inspectionMode === 'wipe'"
+			class="compare-wipe-stage"
+			:aria-label="t('duplicatefinder', 'Split wipe visual comparison')">
+			<div class="compare-wipe-stage__header">
+				<span class="compare-wipe-stage__caption is-left">
+					{{ t('duplicatefinder', 'Left: {name}', { name: leftPane ? (leftPane.meta.fileName || leftPane.meta.normalizedPath) : '' }) }}
+				</span>
+				<span class="compare-wipe-stage__ratio" role="status" aria-live="polite">
+					{{ wipePercent }}%
+				</span>
+				<span class="compare-wipe-stage__caption is-right">
+					{{ t('duplicatefinder', 'Right: {name}', { name: rightPane ? (rightPane.meta.fileName || rightPane.meta.normalizedPath) : '' }) }}
+				</span>
+			</div>
+			<div class="compare-wipe-stage__viewport">
+				<img
+					v-if="leftPane && leftPane.previewUrl && !previewErrors[leftPane.key]"
+					class="compare-wipe-stage__img compare-wipe-stage__img--left"
+					:src="leftPane.previewUrl"
+					:alt="leftPane.meta.fileName || leftPane.meta.normalizedPath"
+					:style="zoomImageStyle">
+				<img
+					v-if="rightPane && rightPane.previewUrl && !previewErrors[rightPane.key]"
+					class="compare-wipe-stage__img compare-wipe-stage__img--right"
+					:src="rightPane.previewUrl"
+					:alt="rightPane.meta.fileName || rightPane.meta.normalizedPath"
+					:style="wipeRightImageStyle">
+				<div
+					class="compare-wipe-stage__divider"
+					:style="{ left: wipePercent + '%' }"
+					aria-hidden="true" />
+			</div>
+			<div class="compare-wipe-stage__controls">
+				<label
+					for="compare-wipe-slider"
+					class="compare-wipe-stage__slider-label">
+					{{ t('duplicatefinder', 'Split curtain position') }}
+				</label>
+				<input
+					id="compare-wipe-slider"
+					v-model.number="wipePercent"
+					type="range"
+					min="0"
+					max="100"
+					step="1"
+					class="compare-wipe-stage__slider"
+					:aria-label="t('duplicatefinder', 'Split comparison position')">
+			</div>
+		</section>
+
+		<section
+			v-if="hasInspectableImages && inspectionMode === 'diff'"
+			class="compare-diff-stage"
+			:aria-label="t('duplicatefinder', 'Perceptual similarity and pixel diff inspector')">
+			<div class="compare-diff-stage__header">
+				<div class="compare-diff-stage__verdict-group">
+					<span
+						class="compare-diff-stage__verdict-badge"
+						:class="'is-' + visualVerdictKind">
+						{{ visualVerdictLabel }}
+					</span>
+					<span
+						v-if="pixelMetrics"
+						class="compare-diff-stage__subnote">
+						{{ t('duplicatefinder', '{changed} / {total} pixels differ', {
+							changed: pixelMetrics.changedPixelCount,
+							total: pixelMetrics.totalPixelCount,
+						}) }}
+					</span>
+				</div>
+				<div class="compare-diff-stage__tolerance">
+					<label for="compare-diff-tolerance" class="compare-diff-stage__tolerance-label">
+						{{ t('duplicatefinder', 'Sensitivity threshold: {value}', { value: diffTolerance }) }}
+					</label>
+					<input
+						id="compare-diff-tolerance"
+						v-model.number="diffTolerance"
+						type="range"
+						min="0"
+						max="40"
+						step="1"
+						class="compare-diff-stage__tolerance-slider">
+				</div>
+			</div>
+
+			<dl
+				v-if="inspectionState === 'ready' && (pixelMetrics || dhashSimilarity)"
+				class="compare-diff-stage__metrics">
+				<div v-if="dhashSimilarity" class="compare-diff-metric">
+					<dt>{{ t('duplicatefinder', 'Perceptual similarity (dHash)') }}</dt>
+					<dd>{{ dhashSimilarity.similarityPercent }}%</dd>
+				</div>
+				<div v-if="pixelMetrics" class="compare-diff-metric">
+					<dt>{{ t('duplicatefinder', 'Pixel match') }}</dt>
+					<dd>{{ pixelMetrics.pixelMatchPercent }}%</dd>
+				</div>
+				<div v-if="dhashSimilarity" class="compare-diff-metric">
+					<dt>{{ t('duplicatefinder', 'dHash distance') }}</dt>
+					<dd>{{ dhashSimilarity.distance }} / 64</dd>
+				</div>
+				<div v-if="pixelMetrics" class="compare-diff-metric">
+					<dt>{{ t('duplicatefinder', 'Mean channel delta') }}</dt>
+					<dd>{{ pixelMetrics.meanAbsoluteError }}</dd>
+				</div>
+				<div v-if="pixelMetrics" class="compare-diff-metric">
+					<dt>{{ t('duplicatefinder', 'Max channel delta') }}</dt>
+					<dd>{{ pixelMetrics.maxChannelDelta }} / 255</dd>
+				</div>
+			</dl>
+
+			<div
+				v-if="inspectionState === 'ready' && diffHeatmapUrl"
+				class="compare-diff-stage__heatmap-wrap">
+				<img
+					class="compare-diff-stage__heatmap"
+					:src="diffHeatmapUrl"
+					:alt="t('duplicatefinder', 'Visual pixel difference heatmap')"
+					:style="zoomImageStyle">
+			</div>
+			<p
+				v-else-if="inspectionState === 'inspecting'"
+				class="compare-diff-stage__fallback"
+				role="status"
+				aria-live="polite">
+				{{ t('duplicatefinder', 'Computing perceptual similarity and pixel difference map...') }}
+			</p>
+			<p
+				v-else
+				class="compare-diff-stage__fallback"
+				role="status"
+				aria-live="polite">
+				{{ t('duplicatefinder', 'Pixel canvas inspection is unavailable for this preview source. Compare dimensions, aspect ratios, and EXIF metadata below.') }}
+			</p>
+		</section>
+
 		<div class="compare-panes-grid">
 			<section
 				v-for="pane in panes"
@@ -119,10 +332,13 @@
 				<div class="compare-pane__preview">
 					<img
 						v-if="!previewErrors[pane.key] && pane.previewUrl"
+						:ref="'previewImg-' + pane.side"
 						class="compare-pane__image"
 						:src="pane.previewUrl"
 						:alt="pane.meta.fileName || pane.meta.normalizedPath"
+						:style="zoomImageStyle"
 						loading="lazy"
+						@load="onPaneImageLoad(pane.side, pane.file, $event)"
 						@error="markPreviewError(pane.key)">
 					<div
 						v-else
@@ -136,25 +352,60 @@
 						<strong class="compare-pane__filename">{{ pane.meta.fileName || pane.meta.normalizedPath }}</strong>
 					</div>
 					<div
-						v-if="pane.badges"
+						v-if="hasPaneBadges(pane)"
 						class="compare-pane__badges">
 						<span
-							v-if="pane.badges.isProtectedOrigin"
+							v-if="pane.visual && pane.visual.isResolutionWinner"
+							class="metadata-badge metadata-badge--winner">
+							{{ t('duplicatefinder', 'Resolution winner') }}
+						</span>
+						<span
+							v-else-if="pane.visual && pane.visual.isLowerResolution"
+							class="metadata-badge metadata-badge--lower-res">
+							{{ t('duplicatefinder', 'Lower resolution ({delta}%)', { delta: pane.visual.deltaVsBestPercent }) }}
+						</span>
+						<span
+							v-else-if="pane.visual && pane.visual.isExactDimensionMatch"
+							class="metadata-badge metadata-badge--dim-match">
+							{{ t('duplicatefinder', 'Exact resolution match') }}
+						</span>
+						<span
+							v-if="pane.visual && pane.visual.dimensions"
+							class="metadata-badge metadata-badge--dimensions">
+							{{ pane.visual.dimensions.formattedDimensions }} ({{ pane.visual.dimensions.aspectRatio }})
+						</span>
+						<span
+							v-if="pane.visual && pane.visual.dimensions && pane.visual.dimensions.megapixels"
+							class="metadata-badge metadata-badge--megapixels">
+							{{ pane.visual.dimensions.megapixels }}
+						</span>
+						<span
+							v-if="pane.exif && pane.exif.camera"
+							class="metadata-badge metadata-badge--camera">
+							{{ pane.exif.camera }}
+						</span>
+						<span
+							v-if="pane.exif && pane.exif.gpsPresent"
+							class="metadata-badge metadata-badge--gps">
+							{{ t('duplicatefinder', 'GPS EXIF') }}
+						</span>
+						<span
+							v-if="pane.badges && pane.badges.isProtectedOrigin"
 							class="metadata-badge metadata-badge--protected">
 							{{ t('duplicatefinder', 'Protected origin') }}
 						</span>
 						<span
-							v-if="pane.badges.isOldest"
+							v-if="pane.badges && pane.badges.isOldest"
 							class="metadata-badge metadata-badge--oldest">
 							{{ t('duplicatefinder', 'Oldest') }}
 						</span>
 						<span
-							v-if="pane.badges.isNewest"
+							v-if="pane.badges && pane.badges.isNewest"
 							class="metadata-badge metadata-badge--newest">
 							{{ t('duplicatefinder', 'Newest') }}
 						</span>
 						<span
-							v-if="pane.badges.isShortestPath"
+							v-if="pane.badges && pane.badges.isShortestPath"
 							class="metadata-badge metadata-badge--shortest">
 							{{ t('duplicatefinder', 'Shortest path') }}
 						</span>
@@ -272,7 +523,21 @@ import {
 	pickDefaultComparisonPair,
 } from '../tools/duplicateCompare'
 import { formatBytes } from '../tools/duplicateStats'
-import { fileKey, getParentFolderPath, getPreviewImage, isSameFile } from '../tools/utils'
+import { fileKey, getParentFolderPath, getPreviewImage, isSameFile, normalizeItemPath } from '../tools/utils'
+import {
+	buildVisualDiffRows,
+	computeDifferenceHash,
+	computeHammingSimilarity,
+	computePixelDiffMetrics,
+	evaluateResolutionWinners,
+	isRasterImageMimetype,
+	normalizeExifMetadata,
+	parseImageHeaderAndExif,
+	resolveVisualFileKey,
+	selectLowerResolutionKeys,
+} from '../tools/visualMediaInspector'
+
+const INSPECTION_GRID_SIZE = 128
 
 export default {
 	name: 'DuplicateCompareView',
@@ -293,12 +558,36 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+		initialInspectionMode: {
+			type: String,
+			default: 'side-by-side',
+		},
+		liveDimensionsByKey: {
+			type: Object,
+			default: () => ({}),
+		},
 	},
 	data() {
 		return {
 			leftIndex: 0,
 			rightIndex: 1,
 			showOnlyDiffs: false,
+			inspectionMode: 'side-by-side',
+			zoomScale: 1,
+			zoomLevels: [1, 1.5, 2, 4],
+			wipePercent: 50,
+			diffTolerance: 12,
+			inspectionState: 'idle',
+			exifFetchState: 'idle',
+			localDimensionsByKey: {},
+			parsedHeadersByKey: {},
+			dhashByKey: {},
+			loadedImagesBySide: {
+				left: null,
+				right: null,
+			},
+			pixelMetrics: null,
+			diffHeatmapUrl: '',
 			previewErrors: {},
 			copyStates: {
 				left: 'idle',
@@ -327,15 +616,142 @@ export default {
 		rightFile() {
 			return this.files[this.boundedPair.rightIndex] || null
 		},
+		mergedDimensionsByKey() {
+			return {
+				...(this.liveDimensionsByKey && typeof this.liveDimensionsByKey === 'object' ? this.liveDimensionsByKey : {}),
+				...this.localDimensionsByKey,
+			}
+		},
+		resolutionEvaluation() {
+			return evaluateResolutionWinners(this.files, this.mergedDimensionsByKey)
+		},
+		hasInspectableImages() {
+			return isRasterImageMimetype(this.leftFile?.mimetype) || isRasterImageMimetype(this.rightFile?.mimetype)
+		},
+		bothPanesHavePreview() {
+			return Boolean(
+				this.leftPane
+				&& this.rightPane
+				&& this.leftPane.previewUrl
+				&& this.rightPane.previewUrl
+				&& !this.previewErrors[this.leftPane.key]
+				&& !this.previewErrors[this.rightPane.key],
+			)
+		},
+		bothPanesHaveUrls() {
+			return Boolean(
+				(this.leftFile?.path || this.leftPane?.previewUrl)
+				&& (this.rightFile?.path || this.rightPane?.previewUrl),
+			)
+		},
+		zoomImageStyle() {
+			return {
+				transform: `scale(${this.zoomScale})`,
+				transformOrigin: 'center center',
+			}
+		},
+		wipeRightImageStyle() {
+			const clamped = Math.max(0, Math.min(100, Number(this.wipePercent) || 0))
+			return {
+				transform: `scale(${this.zoomScale})`,
+				transformOrigin: 'center center',
+				clipPath: `inset(0 0 0 ${clamped}%)`,
+			}
+		},
+		leftVisualInfo() {
+			return this.resolutionEvaluation.perFile[this.boundedPair.leftIndex] || null
+		},
+		rightVisualInfo() {
+			return this.resolutionEvaluation.perFile[this.boundedPair.rightIndex] || null
+		},
+		leftExifInfo() {
+			const key = resolveVisualFileKey(this.leftFile)
+			return normalizeExifMetadata(this.leftFile, key !== null ? this.parsedHeadersByKey[key] : null)
+		},
+		rightExifInfo() {
+			const key = resolveVisualFileKey(this.rightFile)
+			return normalizeExifMetadata(this.rightFile, key !== null ? this.parsedHeadersByKey[key] : null)
+		},
+		dhashSimilarity() {
+			const leftKey = resolveVisualFileKey(this.leftFile)
+			const rightKey = resolveVisualFileKey(this.rightFile)
+			const hashA = (leftKey !== null && this.dhashByKey[leftKey]) || this.leftFile?.imageHash || null
+			const hashB = (rightKey !== null && this.dhashByKey[rightKey]) || this.rightFile?.imageHash || null
+			return computeHammingSimilarity(hashA, hashB)
+		},
+		visualVerdictKind() {
+			if (this.inspectionState === 'inspecting') {
+				return 'inspecting'
+			}
+			if (this.pixelMetrics?.similarityVerdict) {
+				return this.pixelMetrics.similarityVerdict
+			}
+			if (this.dhashSimilarity) {
+				if (this.dhashSimilarity.similarityPercent === 100) {
+					return 'identical'
+				}
+				if (this.dhashSimilarity.similarityPercent >= 95) {
+					return 'near-identical'
+				}
+				return 'similar'
+			}
+			return 'metadata-only'
+		},
+		visualVerdictLabel() {
+			const kind = this.visualVerdictKind
+			if (kind === 'identical') {
+				return this.t('duplicatefinder', 'Identical pixels')
+			}
+			if (kind === 'near-identical') {
+				return this.t('duplicatefinder', 'Near-identical ({percent}% match)', {
+					percent: this.pixelMetrics?.pixelMatchPercent ?? this.dhashSimilarity?.similarityPercent ?? 99,
+				})
+			}
+			if (kind === 'similar') {
+				return this.t('duplicatefinder', 'Visually similar ({percent}% match)', {
+					percent: this.pixelMetrics?.pixelMatchPercent ?? this.dhashSimilarity?.similarityPercent ?? 85,
+				})
+			}
+			if (kind === 'different') {
+				return this.t('duplicatefinder', 'Visual differences detected ({percent}% match)', {
+					percent: this.pixelMetrics?.pixelMatchPercent ?? 0,
+				})
+			}
+			if (kind === 'inspecting') {
+				return this.t('duplicatefinder', 'Inspecting pixels...')
+			}
+			return this.t('duplicatefinder', 'Metadata inspection mode')
+		},
 		diffResult() {
 			const leftStatus = this.resolveStatus(this.leftFile, this.boundedPair.leftIndex).label
 			const rightStatus = this.resolveStatus(this.rightFile, this.boundedPair.rightIndex).label
-			return computeSideBySideDiffRows(this.leftFile, this.rightFile, {
+			const unavailableLabel = this.t('duplicatefinder', 'Unavailable')
+			const baseDiff = computeSideBySideDiffRows(this.leftFile, this.rightFile, {
 				formatSize: bytes => this.formatSize(bytes),
 				leftStatus,
 				rightStatus,
-				unavailableLabel: this.t('duplicatefinder', 'Unavailable'),
+				unavailableLabel,
 			})
+
+			const leftKey = resolveVisualFileKey(this.leftFile)
+			const rightKey = resolveVisualFileKey(this.rightFile)
+			const visualDiff = buildVisualDiffRows(this.leftFile, this.rightFile, {
+				leftDimensions: this.leftVisualInfo?.dimensions || null,
+				rightDimensions: this.rightVisualInfo?.dimensions || null,
+				leftExif: this.leftExifInfo,
+				rightExif: this.rightExifInfo,
+				leftQualityLabel: this.resolveQualityBadgeLabel(this.leftVisualInfo),
+				rightQualityLabel: this.resolveQualityBadgeLabel(this.rightVisualInfo),
+				leftDhash: leftKey !== null && this.dhashByKey[leftKey] ? this.dhashByKey[leftKey].hex : '',
+				rightDhash: rightKey !== null && this.dhashByKey[rightKey] ? this.dhashByKey[rightKey].hex : '',
+				unavailableLabel,
+			})
+
+			const mergedRows = [...baseDiff.rows, ...visualDiff.rows]
+			return {
+				rows: mergedRows,
+				diffCount: baseDiff.diffCount + visualDiff.diffCount,
+			}
 		},
 		visibleDiffRows() {
 			return filterComparisonDiffRows(this.diffResult.rows, this.showOnlyDiffs)
@@ -346,8 +762,33 @@ export default {
 				this.buildPane('right', this.boundedPair.rightIndex, this.t('duplicatefinder', 'Right copy (Compare)')),
 			].filter(Boolean)
 		},
+		leftPane() {
+			return this.panes.find(pane => pane.side === 'left') || null
+		},
+		rightPane() {
+			return this.panes.find(pane => pane.side === 'right') || null
+		},
 	},
 	watch: {
+		initialInspectionMode: {
+			immediate: true,
+			handler(nextMode) {
+				if (['side-by-side', 'wipe', 'diff'].includes(nextMode)) {
+					this.inspectionMode = nextMode
+				}
+			},
+		},
+		diffTolerance() {
+			if (this.inspectionMode === 'diff' || (this.loadedImagesBySide.left && this.loadedImagesBySide.right)) {
+				this.runCanvasVisualInspection()
+			}
+		},
+		boundedPair() {
+			this.loadedImagesBySide = { left: null, right: null }
+			this.pixelMetrics = null
+			this.diffHeatmapUrl = ''
+			this.inspectionState = this.hasInspectableImages ? 'idle' : 'unavailable'
+		},
 		files: {
 			immediate: true,
 			handler(nextFiles, prevFiles) {
@@ -358,6 +799,13 @@ export default {
 				}
 				if (!prevFiles || nextFiles !== prevFiles) {
 					this.previewErrors = {}
+					this.localDimensionsByKey = {}
+					this.parsedHeadersByKey = {}
+					this.dhashByKey = {}
+					this.exifFetchState = 'idle'
+					this.pixelMetrics = null
+					this.diffHeatmapUrl = ''
+					this.inspectionState = 'idle'
 					const pair = pickDefaultComparisonPair(nextFiles, {
 						isSelected: file => this.isFileSelected(file),
 					})
@@ -379,6 +827,197 @@ export default {
 		this.clearCopyTimer('right')
 	},
 	methods: {
+		setInspectionMode(mode) {
+			if (!['side-by-side', 'wipe', 'diff'].includes(mode)) {
+				return
+			}
+			this.inspectionMode = mode
+			if (mode === 'diff') {
+				this.runCanvasVisualInspection()
+			}
+		},
+		hasPaneBadges(pane) {
+			if (!pane) {
+				return false
+			}
+			return Boolean(
+				pane.badges
+				|| pane.visual?.dimensions
+				|| pane.visual?.isResolutionWinner
+				|| pane.visual?.isLowerResolution
+				|| pane.visual?.isExactDimensionMatch
+				|| pane.exif?.camera
+				|| pane.exif?.gpsPresent,
+			)
+		},
+		resolveQualityBadgeLabel(visualInfo) {
+			if (!visualInfo) {
+				return ''
+			}
+			if (visualInfo.isResolutionWinner) {
+				return this.t('duplicatefinder', 'Resolution winner')
+			}
+			if (visualInfo.isLowerResolution) {
+				return this.t('duplicatefinder', 'Lower resolution ({delta}%)', { delta: visualInfo.deltaVsBestPercent })
+			}
+			if (visualInfo.isExactDimensionMatch) {
+				return this.t('duplicatefinder', 'Exact resolution match')
+			}
+			return ''
+		},
+		onPaneImageLoad(side, file, event) {
+			const img = event?.target
+			if (!img || !file) {
+				return
+			}
+			const width = Number(img.naturalWidth)
+			const height = Number(img.naturalHeight)
+			const key = resolveVisualFileKey(file)
+			if (key !== null && width > 0 && height > 0) {
+				this.$set(this.localDimensionsByKey, key, { width, height })
+				this.$emit('visual-inspection-updated', {
+					dimensionsByKey: this.mergedDimensionsByKey,
+				})
+			}
+			this.loadedImagesBySide[side] = img
+			if (this.loadedImagesBySide.left && this.loadedImagesBySide.right) {
+				this.runCanvasVisualInspection()
+			}
+		},
+		runCanvasVisualInspection() {
+			const leftImg = this.loadedImagesBySide.left
+			const rightImg = this.loadedImagesBySide.right
+			if (!leftImg || !rightImg || typeof document === 'undefined' || typeof document.createElement !== 'function') {
+				this.inspectionState = this.hasInspectableImages ? 'metadata-only' : 'unavailable'
+				return
+			}
+			if (!isRasterImageMimetype(this.leftFile?.mimetype) || !isRasterImageMimetype(this.rightFile?.mimetype)) {
+				this.inspectionState = 'unavailable'
+				return
+			}
+
+			this.inspectionState = 'inspecting'
+			try {
+				const size = INSPECTION_GRID_SIZE
+				const leftCanvas = document.createElement('canvas')
+				const rightCanvas = document.createElement('canvas')
+				leftCanvas.width = size
+				leftCanvas.height = size
+				rightCanvas.width = size
+				rightCanvas.height = size
+				const leftCtx = leftCanvas.getContext && leftCanvas.getContext('2d')
+				const rightCtx = rightCanvas.getContext && rightCanvas.getContext('2d')
+				if (!leftCtx || !rightCtx) {
+					this.inspectionState = 'metadata-only'
+					return
+				}
+
+				leftCtx.drawImage(leftImg, 0, 0, size, size)
+				rightCtx.drawImage(rightImg, 0, 0, size, size)
+
+				const leftRgba = leftCtx.getImageData(0, 0, size, size).data
+				const rightRgba = rightCtx.getImageData(0, 0, size, size).data
+
+				const leftHash = computeDifferenceHash(leftRgba, size, size)
+				const rightHash = computeDifferenceHash(rightRgba, size, size)
+				const leftKey = resolveVisualFileKey(this.leftFile)
+				const rightKey = resolveVisualFileKey(this.rightFile)
+				if (leftKey !== null && leftHash) {
+					this.$set(this.dhashByKey, leftKey, leftHash)
+				}
+				if (rightKey !== null && rightHash) {
+					this.$set(this.dhashByKey, rightKey, rightHash)
+				}
+
+				const metrics = computePixelDiffMetrics(leftRgba, rightRgba, size, size, this.diffTolerance)
+				if (!metrics) {
+					this.inspectionState = 'metadata-only'
+					return
+				}
+				this.pixelMetrics = metrics
+
+				const outCanvas = document.createElement('canvas')
+				outCanvas.width = size
+				outCanvas.height = size
+				const outCtx = outCanvas.getContext && outCanvas.getContext('2d')
+				if (outCtx && typeof outCtx.createImageData === 'function') {
+					const outImageData = outCtx.createImageData(size, size)
+					outImageData.data.set(metrics.diffRgba)
+					outCtx.putImageData(outImageData, 0, 0)
+					this.diffHeatmapUrl = outCanvas.toDataURL('image/png')
+				}
+				this.inspectionState = 'ready'
+			} catch (error) {
+				this.pixelMetrics = null
+				this.diffHeatmapUrl = ''
+				this.inspectionState = 'metadata-only'
+			}
+		},
+		resolveHeaderInspectionUrl(file) {
+			if (!file || typeof file !== 'object') {
+				return ''
+			}
+			if (typeof file.downloadUrl === 'string' && /^https?:\/\//i.test(file.downloadUrl)) {
+				return file.downloadUrl
+			}
+			const relPath = typeof file.path === 'string' ? normalizeItemPath(file.path) : ''
+			const uid = typeof window !== 'undefined' && window.OC && typeof window.OC.getCurrentUser === 'function'
+				? window.OC.getCurrentUser()?.uid
+				: ''
+			if (relPath && uid && typeof window !== 'undefined' && window.OC && typeof window.OC.linkToRemoteBase === 'function') {
+				const encoded = relPath.split('/').map(seg => encodeURIComponent(seg)).join('/')
+				return window.OC.linkToRemoteBase(`dav/files/${encodeURIComponent(uid)}${encoded}`)
+			}
+			return getPreviewImage(file) || ''
+		},
+		async loadExifHeadersForCurrentPair() {
+			if (this.exifFetchState === 'loading' || typeof fetch !== 'function') {
+				this.exifFetchState = 'unavailable'
+				return
+			}
+			this.exifFetchState = 'loading'
+			let loadedAny = false
+			const targets = [this.leftFile, this.rightFile].filter(Boolean)
+			for (const file of targets) {
+				const key = resolveVisualFileKey(file)
+				const url = this.resolveHeaderInspectionUrl(file)
+				if (key === null || !url) {
+					continue
+				}
+				try {
+					const response = await fetch(url, {
+						headers: { Range: 'bytes=0-65535' },
+					})
+					if (!response || !response.ok || typeof response.arrayBuffer !== 'function') {
+						continue
+					}
+					const buffer = await response.arrayBuffer()
+					const parsed = parseImageHeaderAndExif(buffer)
+					if (parsed) {
+						this.$set(this.parsedHeadersByKey, key, parsed)
+						if (parsed.width > 0 && parsed.height > 0) {
+							this.$set(this.localDimensionsByKey, key, {
+								width: parsed.width,
+								height: parsed.height,
+							})
+							this.$emit('visual-inspection-updated', {
+								dimensionsByKey: this.mergedDimensionsByKey,
+							})
+						}
+						loadedAny = true
+					}
+				} catch (error) {
+					// Keep EXIF inspection resilient when remote source blocks range requests
+				}
+			}
+			this.exifFetchState = loadedAny ? 'ready' : 'unavailable'
+		},
+		selectLowerResolutionCopies() {
+			const keys = selectLowerResolutionKeys(this.files, this.mergedDimensionsByKey)
+			if (keys.length > 0) {
+				this.$emit('select-lower-res', keys)
+			}
+		},
 		syncSelectElements() {
 			if (!this.$el || typeof this.$el.querySelector !== 'function') {
 				return
@@ -427,6 +1066,9 @@ export default {
 			}
 			const meta = extractFileDisplayMeta(file, { formatSize: bytes => this.formatSize(bytes) })
 			const status = this.resolveStatus(file, index)
+			const key = resolveVisualFileKey(file)
+			const visual = this.resolutionEvaluation.perFile[index] || null
+			const exif = normalizeExifMetadata(file, key !== null ? this.parsedHeadersByKey[key] : null)
 			return {
 				side,
 				sideLabel,
@@ -440,6 +1082,8 @@ export default {
 				statusLabel: status.label,
 				previewUrl: getPreviewImage(file),
 				badges: this.metadataBadgesByIndex[index] || null,
+				visual,
+				exif,
 				pathSegments: Array.isArray(this.pathSegmentsByIndex[index]) ? this.pathSegmentsByIndex[index] : [],
 			}
 		},
@@ -456,6 +1100,18 @@ export default {
 				modifiedAt: this.t('duplicatefinder', 'Modified'),
 				mimetype: this.t('duplicatefinder', 'Type'),
 				status: this.t('duplicatefinder', 'Status'),
+				dimensions: this.t('duplicatefinder', 'Dimensions'),
+				aspectRatio: this.t('duplicatefinder', 'Aspect ratio'),
+				megapixels: this.t('duplicatefinder', 'Resolution'),
+				resolutionQuality: this.t('duplicatefinder', 'Quality verdict'),
+				imageHash: this.t('duplicatefinder', 'Perceptual hash'),
+				camera: this.t('duplicatefinder', 'Camera'),
+				lens: this.t('duplicatefinder', 'Lens'),
+				captureSettings: this.t('duplicatefinder', 'Capture settings'),
+				dateTaken: this.t('duplicatefinder', 'Date taken'),
+				colorSpace: this.t('duplicatefinder', 'Color space'),
+				orientation: this.t('duplicatefinder', 'Orientation'),
+				gpsMetadata: this.t('duplicatefinder', 'GPS EXIF'),
 			}
 			return labels[key] || key
 		},
@@ -1011,6 +1667,301 @@ export default {
 	font-size: 0.82rem;
 	font-weight: 600;
 	color: var(--color-text-maxcontrast);
+}
+
+.compare-visual-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding-block: 10px;
+	padding-inline: 14px;
+	border-radius: var(--border-radius-large, 10px);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-color: var(--color-main-background);
+	box-sizing: border-box;
+}
+
+.compare-visual-bar__modes,
+.compare-visual-bar__tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.compare-zoom-group {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+}
+
+.compare-zoom-group__label {
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--color-text-maxcontrast);
+	padding-inline-end: 4px;
+}
+
+.compare-zoom-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-inline-size: 44px;
+	min-block-size: 44px;
+	padding-block: 6px;
+	padding-inline: 10px;
+	border-radius: 8px;
+	border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 0.8rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+	box-sizing: border-box;
+}
+
+.compare-zoom-button.is-active {
+	background-color: rgba(0, 130, 201, 0.14);
+	border-color: var(--color-primary-element, #0082c9);
+}
+
+.compare-zoom-button:focus-visible,
+.compare-wipe-stage__slider:focus-visible,
+.compare-diff-stage__tolerance-slider:focus-visible {
+	outline: 2px solid var(--color-primary-element, #0082c9);
+	outline-offset: 2px;
+}
+
+.compare-wipe-stage,
+.compare-diff-stage {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px;
+	border-radius: var(--border-radius-large, 10px);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-color: var(--color-main-background);
+	box-sizing: border-box;
+}
+
+.compare-wipe-stage__header,
+.compare-diff-stage__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.compare-wipe-stage__caption {
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+	overflow-wrap: anywhere;
+}
+
+.compare-wipe-stage__ratio {
+	font-size: 0.82rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	padding-block: 3px;
+	padding-inline: 10px;
+	border-radius: 999px;
+	background-color: var(--color-background-hover);
+	border: 1px solid var(--color-border);
+	color: var(--color-main-text);
+}
+
+.compare-wipe-stage__viewport {
+	position: relative;
+	inline-size: 100%;
+	min-block-size: 240px;
+	block-size: 280px;
+	border-radius: 8px;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-background-dark);
+	overflow: hidden;
+}
+
+.compare-wipe-stage__img {
+	position: absolute;
+	inset: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: contain;
+	transition: transform 0.15s ease;
+}
+
+.compare-wipe-stage__divider {
+	position: absolute;
+	inset-block: 0;
+	inline-size: 2px;
+	background-color: var(--color-primary-element, #0082c9);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75);
+	pointer-events: none;
+}
+
+.compare-wipe-stage__controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+}
+
+.compare-wipe-stage__slider-label,
+.compare-diff-stage__tolerance-label {
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.compare-wipe-stage__slider,
+.compare-diff-stage__tolerance-slider {
+	flex: 1 1 200px;
+	min-block-size: 44px;
+	accent-color: var(--color-primary-element, #0082c9);
+}
+
+.compare-diff-stage__verdict-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.compare-diff-stage__verdict-badge {
+	display: inline-flex;
+	align-items: center;
+	padding-block: 4px;
+	padding-inline: 10px;
+	border-radius: 999px;
+	font-size: 0.82rem;
+	font-weight: 700;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-background-hover);
+	color: var(--color-main-text);
+}
+
+.compare-diff-stage__verdict-badge.is-identical,
+.compare-diff-stage__verdict-badge.is-near-identical {
+	background-color: rgba(46, 125, 50, 0.14);
+	border-color: rgba(46, 125, 50, 0.48);
+}
+
+.compare-diff-stage__verdict-badge.is-similar,
+.compare-diff-stage__verdict-badge.is-different {
+	background-color: rgba(217, 119, 6, 0.14);
+	border-color: rgba(217, 119, 6, 0.48);
+}
+
+.compare-diff-stage__subnote {
+	font-size: 0.8rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-text-maxcontrast);
+}
+
+.compare-diff-stage__tolerance {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.compare-diff-stage__metrics {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+}
+
+.compare-diff-metric {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 10px;
+	border-radius: 8px;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-background-hover);
+}
+
+.compare-diff-metric dt {
+	font-size: 0.76rem;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+.compare-diff-metric dd {
+	margin: 0;
+	font-size: 0.94rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-main-text);
+}
+
+.compare-diff-stage__heatmap-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-block-size: 180px;
+	max-block-size: 280px;
+	padding: 8px;
+	border-radius: 8px;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-background-dark);
+	overflow: hidden;
+}
+
+.compare-diff-stage__heatmap {
+	display: block;
+	max-inline-size: 100%;
+	max-block-size: 260px;
+	object-fit: contain;
+	border-radius: 4px;
+}
+
+.compare-diff-stage__fallback {
+	margin: 0;
+	padding: 12px;
+	border-radius: 8px;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-background-hover);
+	font-size: 0.84rem;
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.metadata-badge--winner {
+	background-color: rgba(46, 125, 50, 0.16);
+	border-color: rgba(46, 125, 50, 0.56);
+}
+
+.metadata-badge--lower-res {
+	background-color: rgba(217, 119, 6, 0.16);
+	border-color: rgba(217, 119, 6, 0.56);
+}
+
+.metadata-badge--dim-match {
+	background-color: rgba(0, 130, 201, 0.12);
+	border-color: rgba(0, 130, 201, 0.45);
+}
+
+.metadata-badge--dimensions,
+.metadata-badge--megapixels,
+.metadata-badge--camera {
+	background-color: var(--color-background-hover);
+	border-color: var(--color-border-dark, var(--color-border));
+	font-variant-numeric: tabular-nums;
+}
+
+.metadata-badge--gps {
+	background-color: rgba(211, 47, 47, 0.14);
+	border-color: rgba(211, 47, 47, 0.48);
 }
 
 @media (max-width: 800px) {

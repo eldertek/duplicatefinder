@@ -44,6 +44,7 @@ function createDetailsComponent(apiOverrides = {}, clipboardImpl) {
 		'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
+		'@/tools/visualMediaInspector': loadModule('src/tools/visualMediaInspector.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateCompareView.vue': { __esModule: true, default: { render: h => h('div') } },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },

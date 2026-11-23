@@ -32,12 +32,14 @@ function createDetailsWithCompare() {
 		'@nextcloud/router': { generateUrl: url => url },
 	})
 
+	const visualInspector = loadModule('src/tools/visualMediaInspector.js')
 	const CompareView = loadComponent('src/components/DuplicateCompareView.vue', {
 		'@nextcloud/router': { generateUrl: url => url },
 		'../tools/clipboardHelper': clipboardHelper,
 		'../tools/duplicateCompare': compare,
 		'../tools/duplicateStats': stats,
 		'../tools/utils': utils,
+		'../tools/visualMediaInspector': visualInspector,
 	})
 
 	Vue.component('NcLoadingSpinner', { render: h => h('span') })
@@ -51,6 +53,7 @@ function createDetailsWithCompare() {
 		'@/tools/deleteSafetyGuard': loadModule('src/tools/deleteSafetyGuard.js'),
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
+		'@/tools/visualMediaInspector': visualInspector,
 		'@/tools/clipboardHelper': clipboardHelper,
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
 		'./DuplicateCompareView.vue': { __esModule: true, default: CompareView },
