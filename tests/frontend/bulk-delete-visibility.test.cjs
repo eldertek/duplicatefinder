@@ -101,6 +101,7 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 		'./components/BatchAutoSelectWorkbench.vue': { __esModule: true, default: stub('batch-auto-select') },
 		'./components/FileHygieneInspector.vue': { __esModule: true, default: stub('file-hygiene') },
 		'./components/LinkDeduplicationSimulator.vue': { __esModule: true, default: stub('link-simulator') },
+		'./components/FolderPairMatrix.vue': { __esModule: true, default: stub('folder-matrix') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

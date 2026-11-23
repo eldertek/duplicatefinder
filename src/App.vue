@@ -302,6 +302,33 @@
 							<span>{{ t('duplicatefinder', 'Link Plan') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-folder-matrix-button"
+							:class="{ 'is-active': folderMatrixOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="folderMatrixOpen ? 'true' : 'false'"
+							aria-keyshortcuts="d"
+							:title="t('duplicatefinder', 'Toggle directory folder pair matrix')"
+							@click="toggleFolderMatrix">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v3" />
+								<rect x="3" y="10" width="8" height="10" rx="1" />
+								<rect x="13" y="10" width="8" height="10" rx="1" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Folder Matrix') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -433,6 +460,17 @@
 						@compare-duplicate="onLinkSimulatorCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="linkSimulatorOpen = false" />
+					<FolderPairMatrix
+						v-if="folderMatrixOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onFolderMatrixSelectDuplicate"
+						@compare-duplicate="onFolderMatrixCompareDuplicate"
+						@sync-folder-filter="onFolderMatrixSyncFolderFilter"
+						@folder-pair-delete-completed="onFolderMatrixDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="folderMatrixOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -872,6 +910,7 @@ import SimilarityInspector from './components/SimilarityInspector.vue';
 import BatchAutoSelectWorkbench from './components/BatchAutoSelectWorkbench.vue';
 import FileHygieneInspector from './components/FileHygieneInspector.vue';
 import LinkDeduplicationSimulator from './components/LinkDeduplicationSimulator.vue';
+import FolderPairMatrix from './components/FolderPairMatrix.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -940,6 +979,7 @@ export default {
 		BatchAutoSelectWorkbench,
 		FileHygieneInspector,
 		LinkDeduplicationSimulator,
+		FolderPairMatrix,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -975,6 +1015,7 @@ export default {
 			batchAutoSelectOpen: false,
 			hygieneOpen: false,
 			linkSimulatorOpen: false,
+			folderMatrixOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -1153,6 +1194,7 @@ export default {
 				'toggle-batch-auto-select': t('duplicatefinder', 'Toggle cross-group batch auto-select rules'),
 				'toggle-file-hygiene': t('duplicatefinder', 'Toggle file hygiene and bad-extension inspector'),
 				'toggle-link-simulator': t('duplicatefinder', 'Toggle hardlink and reference deduplication simulator'),
+				'toggle-folder-matrix': t('duplicatefinder', 'Toggle directory folder pair matrix'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1437,6 +1479,28 @@ export default {
 		},
 		onLinkSimulatorCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		toggleFolderMatrix() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.folderMatrixOpen = !this.folderMatrixOpen
+			return true
+		},
+		onFolderMatrixSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onFolderMatrixCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onFolderMatrixSyncFolderFilter(folderPath) {
+			this.onTreemapSyncFolderFilter(folderPath)
+		},
+		onFolderMatrixDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
 		},
 		onBatchDeleteCompleted({
 			deletedFiles = [],
@@ -1823,6 +1887,13 @@ export default {
 
 			if (action === 'toggle-link-simulator') {
 				if (this.toggleLinkSimulator() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-folder-matrix') {
+				if (this.toggleFolderMatrix() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -2733,7 +2804,8 @@ export default {
 .app-content-topbar .topbar-similarity-button,
 .app-content-topbar .topbar-batch-rules-button,
 .app-content-topbar .topbar-hygiene-button,
-.app-content-topbar .topbar-link-simulator-button {
+.app-content-topbar .topbar-link-simulator-button,
+.app-content-topbar .topbar-folder-matrix-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -2760,7 +2832,8 @@ export default {
 .app-content-topbar .topbar-similarity-button svg,
 .app-content-topbar .topbar-batch-rules-button svg,
 .app-content-topbar .topbar-hygiene-button svg,
-.app-content-topbar .topbar-link-simulator-button svg {
+.app-content-topbar .topbar-link-simulator-button svg,
+.app-content-topbar .topbar-folder-matrix-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -2780,7 +2853,9 @@ export default {
 .app-content-topbar .topbar-hygiene-button:hover:not(:disabled),
 .app-content-topbar .topbar-hygiene-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-link-simulator-button:hover:not(:disabled),
-.app-content-topbar .topbar-link-simulator-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-link-simulator-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-folder-matrix-button:hover:not(:disabled),
+.app-content-topbar .topbar-folder-matrix-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -2790,7 +2865,8 @@ export default {
 .app-content-topbar .topbar-similarity-button.is-active,
 .app-content-topbar .topbar-batch-rules-button.is-active,
 .app-content-topbar .topbar-hygiene-button.is-active,
-.app-content-topbar .topbar-link-simulator-button.is-active {
+.app-content-topbar .topbar-link-simulator-button.is-active,
+.app-content-topbar .topbar-folder-matrix-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -2800,7 +2876,8 @@ export default {
 .app-content-topbar .topbar-similarity-button:disabled,
 .app-content-topbar .topbar-batch-rules-button:disabled,
 .app-content-topbar .topbar-hygiene-button:disabled,
-.app-content-topbar .topbar-link-simulator-button:disabled {
+.app-content-topbar .topbar-link-simulator-button:disabled,
+.app-content-topbar .topbar-folder-matrix-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -2936,6 +3013,7 @@ export default {
 .app-content-topbar .topbar-batch-rules-button > *,
 .app-content-topbar .topbar-hygiene-button > *,
 .app-content-topbar .topbar-link-simulator-button > *,
+.app-content-topbar .topbar-folder-matrix-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -3027,6 +3105,7 @@ export default {
 	.app-content-topbar .topbar-batch-rules-button,
 	.app-content-topbar .topbar-hygiene-button,
 	.app-content-topbar .topbar-link-simulator-button,
+	.app-content-topbar .topbar-folder-matrix-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
