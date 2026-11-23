@@ -1,5 +1,5 @@
 <template>
-  <div class="duplicate-details-container">
+  <div class="duplicate-details-container" @keydown.esc="onDetailsEscape">
     <transition name="fade">
       <div v-show="!isLoadingNextDuplicate">
         <div v-if="duplicate && duplicate.files.length > 1" class="duplicate-details-content">
@@ -83,7 +83,7 @@
                 <span>{{ t('duplicatefinder', 'Preview') }}</span>
               </button>
 
-              <div class="dropdown" @keydown.esc="showDropdown = false">
+              <div class="dropdown" @keydown.esc.stop="showDropdown = false">
                 <button
                   type="button"
                   class="dropdown-toggle has-tooltip"
@@ -120,33 +120,51 @@
             </div>
 
             <div
-              v-if="deletionSafetyPlan.selectedCount > 0"
-              class="deletion-safety-summary"
-              :class="{
-                'is-danger': deletionSafetyPlan.wouldDeleteAllCopies || deletionSafetyPlan.includesProtectedOrigin,
-                'is-safe': deletionSafetyPlan.canProceedSafely
-              }"
-              role="status"
-              aria-live="polite">
-              <p class="deletion-safety-summary__text">
-                {{ t('duplicatefinder',
-                  'Deletion plan: {selectedCount} file(s) selected, {survivingCount} copy/copies kept, {reclaimableFormatted} freed.',
-                  {
-                    selectedCount: deletionSafetyPlan.selectedCount,
-                    survivingCount: deletionSafetyPlan.survivingCount,
-                    reclaimableFormatted: deletionSafetyPlan.reclaimableFormatted
-                  }) }}
-              </p>
-              <p
-                v-if="deletionSafetyPlan.wouldDeleteAllCopies"
-                class="deletion-safety-summary__warning">
-                {{ t('duplicatefinder', 'Warning: all copies in this group are selected. At least one copy should be kept to avoid data loss.') }}
-              </p>
-              <p
-                v-else-if="deletionSafetyPlan.includesProtectedOrigin"
-                class="deletion-safety-summary__warning">
-                {{ t('duplicatefinder', 'Protected files in origin folders cannot be deleted.') }}
-              </p>
+              v-if="deletionSafetyPlan.selectedCount > 0 || selectedFiles.length > 0"
+              class="deletion-safety-bar">
+              <div
+                v-if="deletionSafetyPlan.selectedCount > 0"
+                class="deletion-safety-summary"
+                :class="{
+                  'is-danger': deletionSafetyPlan.wouldDeleteAllCopies || deletionSafetyPlan.includesProtectedOrigin,
+                  'is-safe': deletionSafetyPlan.canProceedSafely
+                }"
+                role="status"
+                aria-live="polite">
+                <p class="deletion-safety-summary__text">
+                  {{ t('duplicatefinder',
+                    'Deletion plan: {selectedCount} file(s) selected, {survivingCount} copy/copies kept, {reclaimableFormatted} freed.',
+                    {
+                      selectedCount: deletionSafetyPlan.selectedCount,
+                      survivingCount: deletionSafetyPlan.survivingCount,
+                      reclaimableFormatted: deletionSafetyPlan.reclaimableFormatted
+                    }) }}
+                </p>
+                <p
+                  v-if="deletionSafetyPlan.wouldDeleteAllCopies"
+                  class="deletion-safety-summary__warning">
+                  {{ t('duplicatefinder', 'Warning: all copies in this group are selected. At least one copy should be kept to avoid data loss.') }}
+                </p>
+                <p
+                  v-else-if="deletionSafetyPlan.includesProtectedOrigin"
+                  class="deletion-safety-summary__warning">
+                  {{ t('duplicatefinder', 'Protected files in origin folders cannot be deleted.') }}
+                </p>
+              </div>
+
+              <button
+                v-if="selectedFiles.length > 0"
+                ref="clearSelectionButton"
+                type="button"
+                class="toolbar-button clear-selection-button"
+                :aria-label="t('duplicatefinder', 'Clear selection')"
+                @click="clearSelection({ restoreFocus: true })">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span>{{ t('duplicatefinder', 'Clear selection') }}</span>
+              </button>
             </div>
           </div>
 
@@ -230,7 +248,7 @@
       aria-labelledby="nc-confirm-delete-title"
       aria-describedby="nc-confirm-delete-desc"
       @cancel.prevent="resolveDeleteConfirm(false)"
-      @keydown.esc.prevent="resolveDeleteConfirm(false)"
+      @keydown.esc.prevent.stop="resolveDeleteConfirm(false)"
       @click.self="resolveDeleteConfirm(false)">
       <div class="nc-confirm-dialog__surface">
         <div class="nc-confirm-dialog__header">
@@ -564,6 +582,55 @@ export default {
         this.selectedFiles = [...this.defaultSelectAllTargetFiles];
       }
     },
+    clearSelection(options = {}) {
+      const shouldRestoreFocus = Boolean(
+        options && options.restoreFocus
+        && typeof document !== 'undefined'
+        && this.$refs.clearSelectionButton
+        && document.activeElement === this.$refs.clearSelectionButton
+      );
+      this.selectedFiles = [];
+      this.activeKeepRule = null;
+      if (shouldRestoreFocus) {
+        this.$nextTick(() => {
+          const selectAllBtn = this.$el && typeof this.$el.querySelector === 'function'
+            ? this.$el.querySelector('.select-all-button')
+            : null;
+          if (selectAllBtn && typeof selectAllBtn.focus === 'function') {
+            selectAllBtn.focus();
+          }
+        });
+      }
+    },
+    onDetailsEscape(event) {
+      if (
+        !this.duplicate
+        || !Array.isArray(this.duplicate.files)
+        || this.duplicate.files.length <= 1
+        || this.showDeleteConfirmDialog
+        || this.pendingDeleteResolver
+        || this.showDropdown
+      ) {
+        return;
+      }
+      if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
+        const hasOpenDialogOrMenu = document.querySelector(
+          'dialog[open], [role="dialog"]:not([aria-hidden="true"]), [role="alertdialog"]:not([aria-hidden="true"]), [aria-modal="true"]:not([aria-hidden="true"]), [role="menu"]:not([aria-hidden="true"]), [role="listbox"]:not([aria-hidden="true"])'
+        );
+        if (hasOpenDialogOrMenu) {
+          return;
+        }
+      }
+      if (event && event.defaultPrevented) {
+        return;
+      }
+      if (this.selectedFiles.length > 0) {
+        if (event && typeof event.preventDefault === 'function') {
+          event.preventDefault();
+        }
+        this.clearSelection();
+      }
+    },
     toggleSelectAllFromHeader() {
       if (this.defaultSelectAllTargetFiles.length === 0) {
         return;
@@ -740,8 +807,19 @@ export default {
   color: var(--color-primary-element, #0082c9);
 }
 
-.deletion-safety-summary {
+.deletion-safety-bar {
   inline-size: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.deletion-safety-summary {
+  flex: 1 1 260px;
+  min-inline-size: 0;
   box-sizing: border-box;
   padding-block: 10px;
   padding-inline: 14px;
@@ -777,6 +855,24 @@ export default {
   font-weight: 700;
   color: #b71c1c;
   line-height: 1.4;
+}
+
+.clear-selection-button {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  max-inline-size: 100%;
+  flex-shrink: 0;
+}
+
+.clear-selection-button:hover:not(:disabled),
+.clear-selection-button:focus-visible:not(:disabled) {
+  background-color: var(--color-background-dark);
+  border-color: var(--color-primary-element, #0082c9);
+}
+
+.clear-selection-button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #0082c9);
+  outline-offset: 2px;
 }
 
 .toolbar-button {

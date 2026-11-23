@@ -291,6 +291,133 @@ describe('Cycle 43: deleteSafetyGuard and DuplicateDetails anti-accidental-delet
 		wrapper.$destroy()
 	})
 
+	test('DuplicateDetails Clear selection button shows only when selectedFiles.length > 0 and clears selection in 1 click', async () => {
+		const Details = createDetailsComponent()
+		const duplicate = {
+			id: 88,
+			hash: 'hash-clear-88',
+			acknowledged: false,
+			files: [
+				{ id: 1, nodeId: 11, path: '/alice/files/a/report.pdf', size: 4096, mtime: 1000, mimetype: 'application/pdf', isInOriginFolder: false },
+				{ id: 2, nodeId: 12, path: '/alice/files/b/report.pdf', size: 4096, mtime: 2000, mimetype: 'application/pdf', isInOriginFolder: false },
+				{ id: 3, nodeId: 13, path: '/alice/files/c/report.pdf', size: 4096, mtime: 3000, mimetype: 'application/pdf', isInOriginFolder: false },
+			],
+		}
+
+		const wrapper = new Vue({
+			render(h) {
+				return h(Details, { props: { duplicate } })
+			},
+		}).$mount()
+		document.body.appendChild(wrapper.$el)
+		await settle()
+
+		const detailsVm = wrapper.$children[0]
+		assert.equal(detailsVm.$el.querySelector('button.clear-selection-button'), null, 'Clear selection hidden when 0 files selected')
+		assert.equal(detailsVm.$el.querySelector('button.delete-selected-button').disabled, true)
+
+		// Apply a keep rule -> selection populated, live summary + Clear selection button appear side-by-side
+		const keepOldestBtn = detailsVm.$el.querySelector('button.keep-rule-button')
+		keepOldestBtn.click()
+		await settle()
+
+		assert.equal(detailsVm.selectedFiles.length, 2)
+		assert.equal(detailsVm.activeKeepRule, 'oldest')
+		const safetyBar = detailsVm.$el.querySelector('.deletion-safety-bar')
+		assert.ok(safetyBar, 'renders safety bar wrapper')
+		assert.ok(safetyBar.querySelector('.deletion-safety-summary[aria-live="polite"]'))
+		const clearBtn = safetyBar.querySelector('button.clear-selection-button')
+		assert.ok(clearBtn, 'Clear selection button rendered next to live safety summary')
+		assert.equal(clearBtn.textContent.trim(), 'Clear selection')
+		assert.equal(clearBtn.getAttribute('aria-label'), 'Clear selection')
+		assert.equal(detailsVm.$el.querySelector('button.delete-selected-button').disabled, false)
+
+		// 1-click Clear selection wipes selection & activeKeepRule and hides both summary & button
+		clearBtn.click()
+		await settle()
+
+		assert.deepEqual(detailsVm.selectedFiles, [])
+		assert.equal(detailsVm.activeKeepRule, null)
+		assert.equal(detailsVm.$el.querySelector('button.clear-selection-button'), null, 'Clear selection hides after clearing')
+		assert.equal(detailsVm.$el.querySelector('.deletion-safety-summary'), null, 'safety summary hides after clearing')
+		assert.equal(detailsVm.$el.querySelector('button.delete-selected-button').disabled, true)
+		const checkboxes = Array.from(detailsVm.$el.querySelectorAll('input.file-row-checkbox:not(.file-header-checkbox)'))
+		assert.ok(checkboxes.every(cb => cb.checked === false), 'all file checkboxes are unchecked')
+
+		wrapper.$destroy()
+	})
+
+	test('DuplicateDetails Escape shortcut clears selection only when no dialog or menu is open', async () => {
+		const Details = createDetailsComponent()
+		const duplicate = {
+			id: 89,
+			hash: 'hash-esc-89',
+			acknowledged: false,
+			files: [
+				{ id: 10, nodeId: 110, path: '/alice/files/a/clip.mp4', size: 2048, mtime: 1000, mimetype: 'video/mp4', isInOriginFolder: false },
+				{ id: 11, nodeId: 111, path: '/alice/files/b/clip.mp4', size: 2048, mtime: 2000, mimetype: 'video/mp4', isInOriginFolder: false },
+				{ id: 12, nodeId: 112, path: '/alice/files/c/clip.mp4', size: 2048, mtime: 3000, mimetype: 'video/mp4', isInOriginFolder: false },
+			],
+		}
+
+		const wrapper = new Vue({
+			render(h) {
+				return h(Details, { props: { duplicate } })
+			},
+		}).$mount()
+		document.body.appendChild(wrapper.$el)
+		await settle()
+
+		const detailsVm = wrapper.$children[0]
+		const checkboxes = Array.from(detailsVm.$el.querySelectorAll('input.file-row-checkbox:not(.file-header-checkbox)'))
+		checkboxes[1].click()
+		checkboxes[2].click()
+		await settle()
+		assert.equal(detailsVm.selectedFiles.length, 2)
+
+		// 1. When More actions dropdown menu is open, Escape closes menu without clearing selection
+		const dropdownToggle = detailsVm.$el.querySelector('button.dropdown-toggle')
+		dropdownToggle.click()
+		await settle()
+		assert.equal(detailsVm.showDropdown, true)
+		dropdownToggle.dispatchEvent(new document.defaultView.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+		await settle()
+		assert.equal(detailsVm.showDropdown, false)
+		assert.equal(detailsVm.selectedFiles.length, 2, 'selection preserved when dropdown handled Escape')
+
+		// 2. When delete confirmation <dialog> is open, Escape cancels dialog without clearing selection
+		detailsVm.$el.querySelector('button.delete-selected-button').click()
+		await settle()
+		const dialog = detailsVm.$el.querySelector('dialog.nc-confirm-dialog')
+		assert.ok(dialog)
+		dialog.dispatchEvent(new document.defaultView.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+		await settle()
+		assert.equal(detailsVm.$el.querySelector('dialog.nc-confirm-dialog'), null)
+		assert.equal(detailsVm.selectedFiles.length, 2, 'selection preserved when confirm dialog handled Escape')
+
+		// 3. When an external dialog/menu is open in DOM, Escape inside group does not clear selection
+		const externalDialog = document.createElement('dialog')
+		externalDialog.setAttribute('open', '')
+		document.body.appendChild(externalDialog)
+		try {
+			checkboxes[1].dispatchEvent(new document.defaultView.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+			await settle()
+			assert.equal(detailsVm.selectedFiles.length, 2, 'selection preserved while external dialog is open')
+		} finally {
+			externalDialog.remove()
+		}
+
+		// 4. With no dialog or menu open, Escape in the duplicate group clears selection completely
+		checkboxes[1].dispatchEvent(new document.defaultView.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+		await settle()
+		assert.deepEqual(detailsVm.selectedFiles, [])
+		assert.equal(detailsVm.activeKeepRule, null)
+		assert.equal(detailsVm.$el.querySelector('button.clear-selection-button'), null)
+		assert.equal(detailsVm.$el.querySelector('.deletion-safety-summary'), null)
+
+		wrapper.$destroy()
+	})
+
 	test('deleteSafetyGuard and DuplicateDetails adhere to logical CSS, 44px targets, focus-visible, zero XSS, and zero dashes', () => {
 		const guardSource = readFileSync(resolve(root, 'src/tools/deleteSafetyGuard.js'), 'utf8')
 		const detailsSource = readFileSync(resolve(root, 'src/components/DuplicateDetails.vue'), 'utf8')
@@ -299,10 +426,14 @@ describe('Cycle 43: deleteSafetyGuard and DuplicateDetails anti-accidental-delet
 		assert.ok(!/[\u2013\u2014]/.test(detailsSource), 'DuplicateDetails.vue has zero U+2013/U+2014 dashes')
 		assert.ok(!/v-html|innerHTML|outerHTML|document\.write/.test(detailsSource), 'DuplicateDetails.vue has zero XSS sinks')
 
-		const summaryCssStart = detailsSource.indexOf('.deletion-safety-summary {')
+		const summaryCssStart = detailsSource.indexOf('.deletion-safety-bar {')
 		const summaryCssEnd = detailsSource.indexOf('.toolbar-button {')
 		const summaryCss = detailsSource.slice(summaryCssStart, summaryCssEnd)
 		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(summaryCss), 'safety summary CSS uses logical properties only')
+		assert.ok(summaryCss.includes('.clear-selection-button'), 'styles clear-selection-button')
+		assert.ok(summaryCss.includes('min-block-size: 44px'), 'clear-selection-button enforces >= 44px height')
+		assert.ok(summaryCss.includes('min-inline-size: 44px'), 'clear-selection-button enforces >= 44px width')
+		assert.ok(summaryCss.includes('.clear-selection-button:focus-visible'), 'clear-selection-button styles :focus-visible')
 
 		const dialogCssStart = detailsSource.indexOf('dialog.nc-confirm-dialog {')
 		const dialogCss = detailsSource.slice(dialogCssStart)
