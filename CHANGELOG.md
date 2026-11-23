@@ -1,3 +1,11 @@
+## 1.10.25 - 2026-11-23
+### Added
+- **Top-3 extension breakdown insights and largest-group jump** (`src/tools/duplicateStats.js`, `src/components/DuplicateNavigation.vue`). Added pure duplicate storage insights computing the Top-3 reclaimable extensions with interactive filter chips and a one-click `Largest` jump button to focus the highest-reclaimable duplicate group.
+- **Explicit empty-state machine for filtered vs initial duplicate lists** (`src/components/DuplicateNavigation.vue`). Distinguished `populated`, `filtered-empty` (with a one-click `Reset filters` action), and initial `empty` (`No duplicates found yet`) states across unacknowledged and acknowledged duplicate sections.
+
+### Fixed
+- **Restore Issue #193 `l10n-fallback/` translations in `l10n/`**. Re-applied missing fallback translation keys across all 40 locales (`l10n/*.json` and `l10n/*.js`) after Transifex sync `c9849d1` without overwriting existing Transifex translations.
+
 ## 1.10.24 - 2026-11-23
 ### Added
 - **Master copy metadata badges for duplicate triage** (`src/tools/duplicateMetadataBadges.js`, `DuplicateFileDisplay.vue`, `DuplicateDetails.vue`). Added deterministic per-copy metadata badges (`Oldest`, `Newest`, `Shortest path`, `Protected origin`, and normalized folder path labels) to help identify the master copy before deleting duplicates.
