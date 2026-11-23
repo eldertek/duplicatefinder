@@ -298,9 +298,10 @@
                             type="button"
                             class="largest-group-jump-button"
                             :class="{ 'active': currentDuplicateId === largestDuplicateGroup.id }"
+                            aria-keyshortcuts="g"
                             :title="t('duplicatefinder', 'Jump to largest duplicate group ({size})', { size: largestDuplicateFormattedSize })"
                             :aria-label="t('duplicatefinder', 'Jump to largest duplicate group ({size})', { size: largestDuplicateFormattedSize })"
-                            @click="openDuplicate(largestDuplicateGroup)">
+                            @click="jumpToLargestGroup">
                             {{ t('duplicatefinder', 'Largest: {size}', { size: largestDuplicateFormattedSize }) }}
                         </button>
                     </div>
@@ -1323,6 +1324,21 @@ export default {
                 this.unacknowledgedOpen = Boolean(isOpen);
                 saveUiPreferences({ unacknowledgedOpen: this.unacknowledgedOpen });
             }
+        },
+        /**
+         * Jump to the duplicate group with the largest reclaimable space.
+         * @returns {boolean} True when a target group was opened.
+         */
+        jumpToLargestGroup() {
+            const target = this.largestDuplicateGroup;
+            if (!target) {
+                return false;
+            }
+            this.openDuplicate(target);
+            this.$nextTick(() => {
+                this.scrollActiveDuplicateIntoView();
+            });
+            return true;
         },
         openDuplicate(duplicate) {
             if (duplicate && typeof duplicate.acknowledged === 'boolean') {

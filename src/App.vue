@@ -855,6 +855,7 @@ export default {
 			const descriptions = {
 				'next-duplicate': t('duplicatefinder', 'Select next duplicate group'),
 				'previous-duplicate': t('duplicatefinder', 'Select previous duplicate group'),
+				'jump-to-largest-group': t('duplicatefinder', 'Jump to largest reclaimable group'),
 				'keep-oldest': t('duplicatefinder', 'Keep oldest copy in active group'),
 				'keep-newest': t('duplicatefinder', 'Keep newest copy in active group'),
 				'keep-shortest-path': t('duplicatefinder', 'Keep shortest path copy in active group'),
@@ -965,6 +966,24 @@ export default {
 			}
 			if (navigation && navigation.hasActiveFilters && typeof navigation.resetFilters === 'function') {
 				navigation.resetFilters()
+				return true
+			}
+			return false
+		},
+		/**
+		 * Jump to the duplicate group with the largest reclaimable space in details view.
+		 * @returns {boolean} True when a group was selected.
+		 */
+		jumpToLargestDuplicateGroup() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			const navigation = this.$refs.duplicateNavigation
+			if (navigation && typeof navigation.jumpToLargestGroup === 'function') {
+				return navigation.jumpToLargestGroup()
+			}
+			if (navigation && navigation.largestDuplicateGroup) {
+				this.openDuplicate(navigation.largestDuplicateGroup)
 				return true
 			}
 			return false
@@ -1099,6 +1118,13 @@ export default {
 
 			if (action === 'reset-filters' || action === 'reset-all-filters') {
 				if (this.resetNavigationFilters() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'jump-to-largest-group') {
+				if (this.jumpToLargestDuplicateGroup() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return

@@ -14,6 +14,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'previous-duplicate',
 	},
 	{
+		id: 'jump-to-largest-group',
+		keys: ['g'],
+		action: 'jump-to-largest-group',
+	},
+	{
 		id: 'keep-oldest',
 		keys: ['o'],
 		action: 'keep-oldest',
@@ -70,6 +75,7 @@ const EDITABLE_TAG_NAMES = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 const SINGLE_KEY_ACTIONS = Object.freeze({
 	j: 'next-duplicate',
 	k: 'previous-duplicate',
+	g: 'jump-to-largest-group',
 	o: 'keep-oldest',
 	n: 'keep-newest',
 	s: 'keep-shortest-path',

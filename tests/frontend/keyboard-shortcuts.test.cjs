@@ -1787,3 +1787,295 @@ describe('Cycle 93: keyboard shortcut 0 (reset-all-filters) and aria-live filter
 		}
 	})
 })
+
+describe('Cycle 96: keyboard shortcut g (jump-to-largest-group)', () => {
+	test('resolveShortcutAction maps g to jump-to-largest-group, documents it in SHORTCUT_DEFINITIONS, and ignores modifiers, editable targets, and open <dialog>', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const jumpLargestDef = SHORTCUT_DEFINITIONS.find(def => def.id === 'jump-to-largest-group')
+		assert.deepEqual(jumpLargestDef, {
+			id: 'jump-to-largest-group',
+			keys: ['g'],
+			action: 'jump-to-largest-group',
+		})
+
+		assert.equal(resolveShortcutAction({ key: 'g' }), 'jump-to-largest-group')
+
+		// Browser find/navigation modifiers and Shift must never be hijacked (Ctrl+g / Cmd+g / Alt+g / Shift+g)
+		assert.equal(resolveShortcutAction({ key: 'g', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'g', metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'g', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'G', shiftKey: true }), null)
+
+		// Ignored when help dialog or blocking modal is open
+		assert.equal(resolveShortcutAction({ key: 'g' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'g' }, { hasBlockingModal: true }), null)
+
+		// Ignored in editable targets and inside open <dialog>
+		const input = document.createElement('input')
+		const textarea = document.createElement('textarea')
+		const select = document.createElement('select')
+		const editableDiv = document.createElement('div')
+		editableDiv.setAttribute('contenteditable', 'true')
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		const dialogButton = document.createElement('button')
+		dialog.appendChild(dialogButton)
+
+		for (const target of [input, textarea, select, editableDiv, dialog, dialogButton]) {
+			assert.equal(resolveShortcutAction({ key: 'g', target }), null)
+		}
+	})
+
+	test('App.vue -> DuplicateNavigation.vue jumps to largest reclaimable group on g, sets aria-keyshortcuts="g", updates help <dialog>, and ignores editable fields or open <dialog>', async () => {
+		window.localStorage.clear()
+		const MB = 1024 * 1024
+		const smallDocGroup = {
+			id: 401,
+			hash: 'hash-401',
+			acknowledged: false,
+			files: [
+				{ id: 4011, nodeId: 4011, path: '/alice/files/Docs/small.txt', size: 1024, mtime: 1000, mimetype: 'text/plain' },
+				{ id: 4012, nodeId: 4012, path: '/alice/files/Copy/small.txt', size: 1024, mtime: 2000, mimetype: 'text/plain' },
+			],
+		}
+		const mediumTwoCopyGroup = {
+			id: 402,
+			hash: 'hash-402',
+			acknowledged: false,
+			files: [
+				{ id: 4021, nodeId: 4021, path: '/alice/files/Media/clipA.mp4', size: 3 * MB, mtime: 1000, mimetype: 'video/mp4' },
+				{ id: 4022, nodeId: 4022, path: '/alice/files/Media/clipB.mp4', size: 3 * MB, mtime: 2000, mimetype: 'video/mp4' },
+			],
+		} // reclaimable: 3 MB
+		const largestThreeCopyGroup = {
+			id: 403,
+			hash: 'hash-403',
+			acknowledged: true,
+			files: [
+				{ id: 4031, nodeId: 4031, path: '/alice/files/Photos/raw1.jpg', size: 2 * MB, mtime: 1000, mimetype: 'image/jpeg' },
+				{ id: 4032, nodeId: 4032, path: '/alice/files/Photos/raw2.jpg', size: 2 * MB, mtime: 2000, mimetype: 'image/jpeg' },
+				{ id: 4033, nodeId: 4033, path: '/alice/files/Photos/raw3.jpg', size: 2 * MB, mtime: 3000, mimetype: 'image/jpeg' },
+			],
+		} // reclaimable: 4 MB
+
+		const { App } = createAppHarness({
+			acknowledged: [largestThreeCopyGroup],
+			unacknowledged: [smallDocGroup, mediumTwoCopyGroup],
+			useRealDetails: true,
+		})
+
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+
+		const externalTextarea = document.createElement('textarea')
+		const externalSelect = document.createElement('select')
+		const externalContentEditable = document.createElement('div')
+		externalContentEditable.setAttribute('contenteditable', 'true')
+		const externalDialog = document.createElement('dialog')
+		document.body.appendChild(externalTextarea)
+		document.body.appendChild(externalSelect)
+		document.body.appendChild(externalContentEditable)
+		document.body.appendChild(externalDialog)
+
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			const detailsVm = vm.$refs.duplicateDetails
+			assert.ok(navVm, 'DuplicateNavigation ref is mounted')
+			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
+			assert.equal(vm.currentDuplicate.id, 401)
+
+			const jumpBtn = navVm.$el.querySelector('button.largest-group-jump-button')
+			assert.ok(jumpBtn, 'largest group jump button is rendered')
+			assert.equal(jumpBtn.getAttribute('aria-keyshortcuts'), 'g')
+
+			// 1. Typing g inside editable fields must NOT jump
+			const searchInput = navVm.$el.querySelector('input.search-input')
+			const folderInput = navVm.$el.querySelector('input.folder-filter-input')
+			assert.ok(searchInput)
+			assert.ok(folderInput)
+			for (const field of [searchInput, folderInput, externalTextarea, externalSelect, externalContentEditable]) {
+				field.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }))
+			}
+			await settle()
+			assert.equal(vm.currentDuplicate.id, 401)
+
+			// 2. Modifiers (Ctrl+g / Cmd+g / Alt+g / Shift+g) must NOT jump or preventDefault
+			for (const init of [
+				{ key: 'g', ctrlKey: true },
+				{ key: 'g', metaKey: true },
+				{ key: 'g', altKey: true },
+				{ key: 'G', shiftKey: true },
+			]) {
+				const modEvent = new window.KeyboardEvent('keydown', { ...init, bubbles: true, cancelable: true })
+				window.dispatchEvent(modEvent)
+				assert.equal(modEvent.defaultPrevented, false)
+			}
+			await settle()
+			assert.equal(vm.currentDuplicate.id, 401)
+
+			// 3. ? help <dialog> documents g ("Jump to largest reclaimable group") and blocks g while open
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true, cancelable: true }))
+			await settle()
+			const helpDialog = vm.$el.querySelector('dialog.shortcuts-dialog')
+			assert.equal(helpDialog.open, true)
+			const kbdLabels = Array.from(helpDialog.querySelectorAll('kbd.shortcuts-dialog__kbd')).map(el => el.textContent.trim())
+			assert.ok(kbdLabels.includes('g'), 'help dialog documents g shortcut')
+			assert.ok(helpDialog.textContent.includes('Jump to largest reclaimable group'))
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(vm.currentDuplicate.id, 401)
+
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(helpDialog.open, false)
+
+			// 4. Delete confirmation <dialog> blocks g
+			detailsVm.applyKeepRule('oldest')
+			await settle()
+			detailsVm.$el.querySelector('button.delete-selected-button').click()
+			await settle()
+			assert.equal(detailsVm.showDeleteConfirmDialog, true)
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(vm.currentDuplicate.id, 401)
+			detailsVm.resolveDeleteConfirm(false)
+			await settle()
+
+			// 5. External <dialog open> blocks g
+			externalDialog.setAttribute('open', '')
+			window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }))
+			await settle()
+			assert.equal(vm.currentDuplicate.id, 401)
+			externalDialog.removeAttribute('open')
+
+			// 6. Pressing g jumps to the largest reclaimable group (id 403, 4 MB reclaimable)
+			const gEvent = new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true })
+			window.dispatchEvent(gEvent)
+			await settle()
+			assert.equal(gEvent.defaultPrevented, true)
+			assert.equal(vm.currentDuplicate.id, 403)
+			assert.equal(navVm.activeSection, 'acknowledged')
+
+			// 7. With category filter active ("videos"), g jumps to largest within active filtered set (id 402)
+			navVm.setCategoryFilter('videos')
+			await settle()
+			const filteredGEvent = new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true })
+			window.dispatchEvent(filteredGEvent)
+			await settle()
+			assert.equal(filteredGEvent.defaultPrevented, true)
+			assert.equal(vm.currentDuplicate.id, 402)
+			assert.equal(navVm.activeSection, 'unacknowledged')
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+			externalTextarea.remove()
+			externalSelect.remove()
+			externalContentEditable.remove()
+			externalDialog.remove()
+		}
+	})
+
+	test('g shortcut is a safe no-op when no groups are available or outside details view', async () => {
+		window.localStorage.clear()
+
+		// Empty duplicate lists -> safe no-op without preventDefault
+		const { App: EmptyApp } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [],
+			useRealDetails: true,
+		})
+		const emptyMount = document.createElement('div')
+		document.body.appendChild(emptyMount)
+		const emptyVm = new Vue(EmptyApp).$mount(emptyMount)
+		try {
+			await settle()
+			assert.equal(emptyVm.currentDuplicate, null)
+			const emptyG = new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true })
+			window.dispatchEvent(emptyG)
+			await settle()
+			assert.equal(emptyG.defaultPrevented, false)
+			assert.equal(emptyVm.currentDuplicate, null)
+		} finally {
+			emptyVm.$destroy()
+			emptyMount.remove()
+		}
+
+		// Non-details view (bulk-delete) and zero-match filter -> ignored; works again in details view
+		const smallGroup = makeDuplicate(410, 'small.txt')
+		const largeGroup = {
+			id: 411,
+			hash: 'hash-411',
+			acknowledged: false,
+			files: [
+				{ id: 4111, nodeId: 4111, path: '/alice/files/A/big.bin', size: 1024 * 1024, mtime: 1000, mimetype: 'application/octet-stream' },
+				{ id: 4112, nodeId: 4112, path: '/alice/files/B/big.bin', size: 1024 * 1024, mtime: 2000, mimetype: 'application/octet-stream' },
+			],
+		}
+		const { App } = createAppHarness({
+			acknowledged: [],
+			unacknowledged: [smallGroup, largeGroup],
+			useRealDetails: true,
+		})
+		const mountNode = document.createElement('div')
+		document.body.appendChild(mountNode)
+		const vm = new Vue(App).$mount(mountNode)
+		try {
+			await settle()
+			const navVm = vm.$refs.duplicateNavigation
+			assert.equal(vm.currentDuplicate.id, 410)
+
+			// Filtered to zero matches -> safe no-op
+			navVm.folderQuery = '/NoMatch'
+			await settle()
+			const noMatchG = new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true })
+			window.dispatchEvent(noMatchG)
+			await settle()
+			assert.equal(noMatchG.defaultPrevented, false)
+			assert.equal(vm.currentDuplicate.id, 410)
+
+			navVm.folderQuery = ''
+			await settle()
+
+			// Bulk-delete view -> ignored
+			vm.openBulkDelete()
+			await settle()
+			const bulkG = new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true })
+			window.dispatchEvent(bulkG)
+			await settle()
+			assert.equal(bulkG.defaultPrevented, false)
+			assert.equal(vm.activeView, 'bulk-delete')
+			assert.equal(vm.currentDuplicate, null)
+
+			// Return to details view -> g jumps to id 411
+			vm.closeBulkDelete()
+			await settle()
+			const detailsG = new window.KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true })
+			window.dispatchEvent(detailsG)
+			await settle()
+			assert.equal(detailsG.defaultPrevented, true)
+			assert.equal(vm.currentDuplicate.id, 411)
+		} finally {
+			vm.$destroy()
+			mountNode.remove()
+		}
+	})
+
+	test('Cycle 96 touched files preserve zero typographic dashes and zero XSS sinks', () => {
+		for (const relPath of [
+			'src/tools/keyboardShortcuts.js',
+			'src/App.vue',
+			'src/components/DuplicateNavigation.vue',
+		]) {
+			const source = readFileSync(resolve(root, relPath), 'utf8')
+			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
+			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
+		}
+	})
+})
