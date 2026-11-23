@@ -973,6 +973,34 @@
 							<span>{{ t('duplicatefinder', 'Forensic') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-inode-verifier-button"
+							:class="{ 'is-active': inodeVerifierOpen }"
+							:aria-pressed="inodeVerifierOpen ? 'true' : 'false'"
+							aria-keyshortcuts="'"
+							:title="t('duplicatefinder', 'Toggle cross-volume inode, hardlink-alias and storage-backend safety verifier')"
+							@click="toggleInodeVerifier">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle
+									cx="12"
+									cy="12"
+									r="3" />
+								<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Inodes') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1321,6 +1349,16 @@
 						@forensic-delete-completed="onForensicDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="forensicVerifierOpen = false" />
+					<InodeSafetyWorkbench
+						v-if="inodeVerifierOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onInodeSelectDuplicate"
+						@compare-duplicate="onInodeCompareDuplicate"
+						@inode-delete-completed="onInodeDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="inodeVerifierOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1781,6 +1819,7 @@ import BackupDriftWorkbench from './components/BackupDriftWorkbench.vue'
 import AutomationRulebookWorkbench from './components/AutomationRulebookWorkbench.vue'
 import MetadataConsolidationWorkbench from './components/MetadataConsolidationWorkbench.vue'
 import ForensicVerifierWorkbench from './components/ForensicVerifierWorkbench.vue'
+import InodeSafetyWorkbench from './components/InodeSafetyWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1870,6 +1909,7 @@ export default {
 		AutomationRulebookWorkbench,
 		MetadataConsolidationWorkbench,
 		ForensicVerifierWorkbench,
+		InodeSafetyWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -1926,6 +1966,7 @@ export default {
 			automationRulebookOpen: false,
 			metadataConsolidationOpen: false,
 			forensicVerifierOpen: false,
+			inodeVerifierOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2126,6 +2167,7 @@ export default {
 				'toggle-automation-rulebook': t('duplicatefinder', 'Toggle zero-touch scheduled retention rulebook and policy simulator'),
 				'toggle-metadata-consolidation': t('duplicatefinder', 'Toggle Nextcloud metadata, tag, favorite and share-link consolidation workbench'),
 				'toggle-forensic-verifier': t('duplicatefinder', 'Toggle zero-touch duplicate forensic diff and checksum chain verifier'),
+				'toggle-inode-verifier': t('duplicatefinder', 'Toggle cross-volume inode, hardlink-alias and storage-backend safety verifier'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2826,6 +2868,25 @@ export default {
 		onForensicDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleInodeVerifier() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.inodeVerifierOpen = !this.inodeVerifierOpen
+			return true
+		},
+		onInodeSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onInodeCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onInodeDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3373,6 +3434,13 @@ export default {
 
 			if (action === 'toggle-forensic-verifier') {
 				if (this.toggleForensicVerifier() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-inode-verifier') {
+				if (this.toggleInodeVerifier() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4304,7 +4372,8 @@ export default {
 .app-content-topbar .topbar-backup-drift-button,
 .app-content-topbar .topbar-automation-rulebook-button,
 .app-content-topbar .topbar-metadata-consolidation-button,
-.app-content-topbar .topbar-forensic-verifier-button {
+.app-content-topbar .topbar-forensic-verifier-button,
+.app-content-topbar .topbar-inode-verifier-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4352,7 +4421,8 @@ export default {
 .app-content-topbar .topbar-backup-drift-button svg,
 .app-content-topbar .topbar-automation-rulebook-button svg,
 .app-content-topbar .topbar-metadata-consolidation-button svg,
-.app-content-topbar .topbar-forensic-verifier-button svg {
+.app-content-topbar .topbar-forensic-verifier-button svg,
+.app-content-topbar .topbar-inode-verifier-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -4414,7 +4484,9 @@ export default {
 .app-content-topbar .topbar-metadata-consolidation-button:hover:not(:disabled),
 .app-content-topbar .topbar-metadata-consolidation-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-forensic-verifier-button:hover:not(:disabled),
-.app-content-topbar .topbar-forensic-verifier-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-forensic-verifier-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-inode-verifier-button:hover:not(:disabled),
+.app-content-topbar .topbar-inode-verifier-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -4445,7 +4517,8 @@ export default {
 .app-content-topbar .topbar-backup-drift-button.is-active,
 .app-content-topbar .topbar-automation-rulebook-button.is-active,
 .app-content-topbar .topbar-metadata-consolidation-button.is-active,
-.app-content-topbar .topbar-forensic-verifier-button.is-active {
+.app-content-topbar .topbar-forensic-verifier-button.is-active,
+.app-content-topbar .topbar-inode-verifier-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -4619,6 +4692,7 @@ export default {
 .app-content-topbar .topbar-automation-rulebook-button > *,
 .app-content-topbar .topbar-metadata-consolidation-button > *,
 .app-content-topbar .topbar-forensic-verifier-button > *,
+.app-content-topbar .topbar-inode-verifier-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -4731,6 +4805,7 @@ export default {
 	.app-content-topbar .topbar-automation-rulebook-button,
 	.app-content-topbar .topbar-metadata-consolidation-button,
 	.app-content-topbar .topbar-forensic-verifier-button,
+	.app-content-topbar .topbar-inode-verifier-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
