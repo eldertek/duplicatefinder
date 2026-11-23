@@ -161,6 +161,7 @@ describe('Cycle 35: logical CSS, mobile 375px ergonomics, and keyboard accessibi
 				fetchDuplicates: async () => ({ entities: [], pagination: { currentPage: 1, totalPages: 1 } }),
 			},
 			'@/tools/utils': utils,
+			'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
 		})
 
 		const navVm = new Vue({

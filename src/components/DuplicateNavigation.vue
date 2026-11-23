@@ -191,6 +191,40 @@
                 </div>
             </div>
 
+            <!-- Quick File-Type Filter Chips & Live Reclaimable Summary -->
+            <div class="quick-filter-panel">
+                <div
+                    class="quick-filter-chips"
+                    role="group"
+                    :aria-label="t('duplicatefinder', 'Filter duplicates by file type')">
+                    <button
+                        v-for="chip in categoryFilterChips"
+                        :key="chip.id"
+                        type="button"
+                        class="filter-chip"
+                        :class="{ 'active': selectedCategory === chip.id }"
+                        :aria-pressed="selectedCategory === chip.id ? 'true' : 'false'"
+                        @click="setCategoryFilter(chip.id)">
+                        {{ chip.label }}
+                    </button>
+                </div>
+                <div
+                    class="reclaimable-summary-badge"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true">
+                    <span class="reclaimable-summary-value">
+                        {{ t('duplicatefinder', 'Reclaimable: {size}', { size: reclaimableSummary.formatted }) }}
+                    </span>
+                    <span v-if="reclaimableSummary.groupCount > 0" class="reclaimable-summary-meta">
+                        {{ t('duplicatefinder', '{groups} groups, {copies} extra', {
+                            groups: reclaimableSummary.groupCount,
+                            copies: reclaimableSummary.redundantCopies,
+                        }) }}
+                    </span>
+                </div>
+            </div>
+
             <!-- Navigation for Acknowledged Duplicates -->
             <NcAppNavigationItem
                 class="duplicate-section-nav duplicate-section-acknowledged"
@@ -288,6 +322,11 @@ import FolderCog from 'vue-material-design-icons/FolderCog';
 import Folder from 'vue-material-design-icons/Folder';
 import { fetchDuplicates } from '@/tools/api';
 import { getTotalSizeOfDuplicate, loadUiPreferences, saveUiPreferences } from '@/tools/utils';
+import {
+    DUPLICATE_FILTER_CATEGORIES,
+    computeReclaimableSummary,
+    matchesDuplicateCategory,
+} from '@/tools/duplicateFilters';
 
 export default {
     components: {
@@ -375,6 +414,7 @@ export default {
             showSortMenu: false,
             showProjectsMenu: false,
             showHelpMenu: false,
+            selectedCategory: 'all',
             acknowledgedOpen: savedPreferences.acknowledgedOpen,
             unacknowledgedOpen: savedPreferences.unacknowledgedOpen,
             activeSection: 'unacknowledged',
@@ -457,6 +497,17 @@ export default {
         hasActiveSortOrFilter() {
             return this.sortOption !== 'none' || this.minSizeBytes > 0;
         },
+        categoryFilterChips() {
+            return [
+                { id: 'all', label: t('duplicatefinder', 'All') },
+                { id: 'images', label: t('duplicatefinder', 'Images') },
+                { id: 'videos', label: t('duplicatefinder', 'Videos') },
+                { id: 'audio', label: t('duplicatefinder', 'Audio') },
+                { id: 'documents', label: t('duplicatefinder', 'Documents') },
+                { id: 'archives', label: t('duplicatefinder', 'Archives') },
+                { id: 'large', label: t('duplicatefinder', '> 10 MB') },
+            ];
+        },
         minSizePresets() {
             return [
                 { bytes: 0, label: t('duplicatefinder', 'All sizes') },
@@ -511,6 +562,15 @@ export default {
 
             // Then apply sorting if needed
             return this.sortDuplicates(filtered);
+        },
+        reclaimableSummary() {
+            const unacknowledged = Array.isArray(this.filteredUnacknowledgedDuplicates)
+                ? this.filteredUnacknowledgedDuplicates
+                : [];
+            const acknowledged = Array.isArray(this.filteredAcknowledgedDuplicates)
+                ? this.filteredAcknowledgedDuplicates
+                : [];
+            return computeReclaimableSummary([...unacknowledged, ...acknowledged]);
         }
     },
     methods: {
@@ -631,6 +691,9 @@ export default {
 
             return sortedDuplicates;
         },
+        setCategoryFilter(category) {
+            this.selectedCategory = DUPLICATE_FILTER_CATEGORIES.includes(category) ? category : 'all';
+        },
         filterDuplicate(duplicate) {
             if (this.minSizeBytes > 0) {
                 const hasLargeEnoughCopy = Array.isArray(duplicate.files)
@@ -638,6 +701,10 @@ export default {
                 if (!hasLargeEnoughCopy) {
                     return false;
                 }
+            }
+
+            if (this.selectedCategory !== 'all' && !matchesDuplicateCategory(duplicate, this.selectedCategory)) {
+                return false;
             }
 
             if (!this.searchPattern) {
@@ -1097,6 +1164,7 @@ export default {
 .custom-size-input:focus-visible,
 .custom-size-apply:focus-visible,
 .fixed-nav-button:focus-visible,
+.filter-chip:focus-visible,
 .menu-item:focus-visible,
 .action-button:focus-visible,
 .menu-close-button:focus-visible,
@@ -1381,6 +1449,90 @@ export default {
 
 .load-more-button:hover {
     background-color: var(--color-primary-element-hover);
+}
+
+/* Quick File-Type Filter Chips & Live Reclaimable Summary */
+.quick-filter-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-block: 10px;
+    padding-inline: 10px;
+    border-block-end: 1px solid var(--color-border);
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.quick-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 6px;
+    padding-inline: 12px;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 999px;
+    background-color: var(--color-main-background);
+    color: var(--color-main-text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    box-sizing: border-box;
+}
+
+.filter-chip:hover {
+    background-color: var(--color-background-hover);
+}
+
+.filter-chip.active {
+    background-color: var(--color-primary-element);
+    border-color: var(--color-primary-element);
+    color: var(--color-primary-text);
+    font-weight: 600;
+}
+
+.filter-chip.active:hover {
+    background-color: var(--color-primary-element-hover);
+    border-color: var(--color-primary-element-hover);
+}
+
+.reclaimable-summary-badge {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 8px;
+    padding-block: 6px;
+    padding-inline: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: var(--color-background-hover);
+    color: var(--color-main-text);
+    font-size: 0.82rem;
+    line-height: 1.3;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.reclaimable-summary-value {
+    font-weight: 600;
+    color: var(--color-main-text);
+}
+
+.reclaimable-summary-meta {
+    color: var(--color-text-maxcontrast);
+    font-size: 0.78rem;
 }
 
 /* Consistent highlighting and full-row clickability for Acknowledged / Unacknowledged sections */

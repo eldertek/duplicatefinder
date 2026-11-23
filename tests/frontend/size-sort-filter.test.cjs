@@ -53,6 +53,7 @@ function navigationImports(fetchDuplicates) {
 		'vue-material-design-icons/Folder': icon,
 		'@/tools/api': { fetchDuplicates },
 		'@/tools/utils': loadModule('src/tools/utils.js', { './notifications': { showErrorNotification: () => {} } }),
+		'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
 	}
 }
 

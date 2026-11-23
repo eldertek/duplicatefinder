@@ -111,6 +111,7 @@ function createNavigationHarness() {
 			fetchDuplicates: async () => ({ entities: [], pagination: { currentPage: 1, totalPages: 1 } }),
 		},
 		'@/tools/utils': utils,
+		'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
 	})
 
 	return { DuplicateNavigation, DuplicateListItem, utils }

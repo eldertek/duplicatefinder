@@ -80,6 +80,7 @@ function createHarness(fetchDuplicatesImpl) {
 		'vue-material-design-icons/Folder': icon,
 		'@/tools/api': { fetchDuplicates: fetchDuplicatesImpl },
 		'@/tools/utils': utils,
+		'@/tools/duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
 	})
 
 	const stub = name => ({
