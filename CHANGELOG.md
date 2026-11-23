@@ -1,3 +1,7 @@
+## 1.10.33 - 2026-11-23
+### Added
+- **Individually removable active filter chips** (`src/tools/duplicateFilters.js`, `src/components/DuplicateNavigation.vue`). Added the pure `buildActiveFilterChips` helper producing ordered chip descriptors across all 6 triage filter dimensions (category, extension, folder query, minimum size preset, minimum copies preset, and search query) and rendered clickable, keyboard-accessible active filter chips (`removeFilterChip`, `clearSearchFilter`) in `DuplicateNavigation.vue` so each active filter can be cleared individually.
+
 ## 1.10.32 - 2026-11-23
 ### Added
 - **Live active filter counter (`Reset filters (N)`)** (`src/tools/duplicateFilters.js`, `src/components/DuplicateNavigation.vue`). Added the pure `countActiveTriageFilters` helper counting active triage filters across all 6 dimensions (category, extension, folder query, minimum size preset, minimum copies preset, and search query) and wired `activeTriageFilterCount` and `resetFiltersButtonLabel` (`Reset filters ({count})` with `aria-live="polite"` and `tabular-nums`) in `DuplicateNavigation.vue`.
