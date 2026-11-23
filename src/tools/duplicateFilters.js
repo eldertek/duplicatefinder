@@ -466,3 +466,61 @@ export function computeReclaimableSummary(duplicates) {
 		redundantCopies,
 	}
 }
+
+/**
+ * Count the number of active triage filters across all 6 filter dimensions.
+ *
+ * @param {object|null|undefined} [filters] - Active triage filter state.
+ * @param {string} [filters.category] - Selected file category ('all' or a specific category).
+ * @param {string} [filters.extension] - Selected file extension chip (e.g. '.jpg').
+ * @param {string} [filters.folderQuery] - Folder prefix filter query.
+ * @param {string} [filters.minSizePreset] - Minimum file size preset ('any', '1mb', '10mb', '100mb', 'custom').
+ * @param {string} [filters.minCopiesPreset] - Minimum copy count preset ('any', '3plus', '5plus').
+ * @param {string} [filters.searchQuery] - Filename or path search pattern.
+ * @return {number} Exact count of active filters in range 0..6.
+ */
+export function countActiveTriageFilters(filters = {}) {
+	if (!filters || typeof filters !== 'object' || Array.isArray(filters)) {
+		return 0
+	}
+
+	let activeCount = 0
+
+	const normalizedCategory = typeof filters.category === 'string'
+		? filters.category.trim().toLowerCase()
+		: ''
+	if (normalizedCategory && normalizedCategory !== 'all' && DUPLICATE_FILTER_CATEGORIES.includes(normalizedCategory)) {
+		activeCount += 1
+	}
+
+	if (typeof filters.extension === 'string' && filters.extension.trim() !== '') {
+		activeCount += 1
+	}
+
+	if (typeof filters.folderQuery === 'string' && filters.folderQuery.trim() !== '') {
+		activeCount += 1
+	}
+
+	const normalizedMinSize = typeof filters.minSizePreset === 'string'
+		? filters.minSizePreset.trim().toLowerCase()
+		: ''
+	if (
+		normalizedMinSize === 'custom'
+		|| (Object.prototype.hasOwnProperty.call(MIN_SIZE_PRESETS, normalizedMinSize) && MIN_SIZE_PRESETS[normalizedMinSize] > 0)
+	) {
+		activeCount += 1
+	}
+
+	const normalizedMinCopies = typeof filters.minCopiesPreset === 'string'
+		? filters.minCopiesPreset.trim().toLowerCase()
+		: ''
+	if (Object.prototype.hasOwnProperty.call(MIN_COPIES_PRESETS, normalizedMinCopies) && MIN_COPIES_PRESETS[normalizedMinCopies] > 0) {
+		activeCount += 1
+	}
+
+	if (typeof filters.searchQuery === 'string' && filters.searchQuery.trim() !== '') {
+		activeCount += 1
+	}
+
+	return activeCount
+}

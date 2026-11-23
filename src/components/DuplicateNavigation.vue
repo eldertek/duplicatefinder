@@ -331,9 +331,10 @@
                         type="button"
                         class="reset-filters-button"
                         :title="t('duplicatefinder', 'Reset all active filters and sorting')"
-                        :aria-label="t('duplicatefinder', 'Reset filters')"
+                        :aria-label="resetFiltersButtonLabel"
+                        aria-live="polite"
                         @click="resetFilters">
-                        {{ t('duplicatefinder', 'Reset filters') }}
+                        {{ resetFiltersButtonLabel }}
                     </button>
                     <button
                         type="button"
@@ -491,6 +492,7 @@ import {
     MIN_SIZE_PRESETS,
     computeCategoryCounts,
     computeReclaimableSummary,
+    countActiveTriageFilters,
     filterDuplicatesByMinCopies,
     filterDuplicatesByMinSize,
     matchesDuplicateCategory,
@@ -692,6 +694,24 @@ export default {
                 || this.selectedMinCopiesPreset !== 'any'
                 || this.sortOption !== 'none'
                 || Boolean(this.searchPattern);
+        },
+        activeTriageFilterCount() {
+            return countActiveTriageFilters({
+                category: this.selectedCategory,
+                extension: this.selectedExtension,
+                folderQuery: this.folderQuery,
+                minSizePreset: this.selectedMinSizePreset,
+                minCopiesPreset: this.selectedMinCopiesPreset,
+                searchQuery: this.searchPattern,
+            });
+        },
+        resetFiltersButtonLabel() {
+            if (this.activeTriageFilterCount > 0) {
+                return t('duplicatefinder', 'Reset filters ({count})', {
+                    count: this.activeTriageFilterCount,
+                });
+            }
+            return t('duplicatefinder', 'Reset filters');
         },
         baseDuplicatesForCategoryCounts() {
             const unacknowledged = Array.isArray(this.unacknowledgedDuplicates)
@@ -2206,6 +2226,7 @@ export default {
     color: var(--color-text-maxcontrast);
     font-size: 0.82rem;
     font-weight: 500;
+    font-variant-numeric: tabular-nums;
     line-height: 1.2;
     cursor: pointer;
     box-sizing: border-box;

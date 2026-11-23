@@ -1002,3 +1002,160 @@ describe('Cycle 68: MIN_COPIES_PRESETS, filterDuplicatesByMinCopies, and accessi
 		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS must use logical properties only')
 	})
 })
+
+describe('Cycle 71: countActiveTriageFilters and Reset filters (N) live counter', () => {
+	test('countActiveTriageFilters returns exact active count 0..6 across all filter dimensions and edge cases', () => {
+		const { countActiveTriageFilters } = loadModule('src/tools/duplicateFilters.js')
+
+		assert.equal(countActiveTriageFilters(), 0)
+		assert.equal(countActiveTriageFilters(null), 0)
+		assert.equal(countActiveTriageFilters(undefined), 0)
+		assert.equal(countActiveTriageFilters([]), 0)
+		assert.equal(countActiveTriageFilters('invalid'), 0)
+
+		// Default / whitespace / non-string / unknown inputs yield 0
+		assert.equal(countActiveTriageFilters({
+			category: 'all',
+			extension: '',
+			folderQuery: '   ',
+			minSizePreset: 'any',
+			minCopiesPreset: 'any',
+			searchQuery: '',
+		}), 0)
+		assert.equal(countActiveTriageFilters({
+			category: 'unknown',
+			extension: null,
+			folderQuery: 42,
+			minSizePreset: 'bogus',
+			minCopiesPreset: '2plus',
+			searchQuery: '   ',
+		}), 0)
+
+		// Individual dimensions each increment count by 1
+		assert.equal(countActiveTriageFilters({ category: 'images' }), 1)
+		assert.equal(countActiveTriageFilters({ category: ' LARGE ' }), 1)
+		assert.equal(countActiveTriageFilters({ extension: '.jpg' }), 1)
+		assert.equal(countActiveTriageFilters({ folderQuery: '/Photos' }), 1)
+		assert.equal(countActiveTriageFilters({ minSizePreset: '10mb' }), 1)
+		assert.equal(countActiveTriageFilters({ minSizePreset: 'custom' }), 1)
+		assert.equal(countActiveTriageFilters({ minCopiesPreset: ' 3PLUS ' }), 1)
+		assert.equal(countActiveTriageFilters({ searchQuery: 'holiday' }), 1)
+
+		// Cumulative counts 2..6
+		assert.equal(countActiveTriageFilters({
+			category: 'documents',
+			folderQuery: '!/Backups',
+		}), 2)
+		assert.equal(countActiveTriageFilters({
+			category: 'videos',
+			extension: '.mp4',
+			minSizePreset: '100mb',
+		}), 3)
+		assert.equal(countActiveTriageFilters({
+			category: 'images',
+			extension: '.jpg',
+			folderQuery: '/Photos',
+			minSizePreset: '1mb',
+			minCopiesPreset: '5plus',
+			searchQuery: 'IMG_',
+		}), 6)
+	})
+
+	test('DuplicateNavigation displays Reset filters (N) with aria-live="polite" across 1..6 active filters and resets cleanly', async () => {
+		window.localStorage.clear()
+		const DuplicateNavigation = createNavigationComponent()
+		const fifteenMb = 15 * 1024 * 1024
+
+		const vm = new Vue({
+			render(h) {
+				return h(DuplicateNavigation, {
+					ref: 'nav',
+					props: {
+						acknowledgedDuplicates: [],
+						unacknowledgedDuplicates: [
+							{
+								id: 1,
+								hash: 'photo-set',
+								files: [
+									{ id: 11, path: '/Photos/vacation.jpg', mimetype: 'image/jpeg', size: fifteenMb },
+									{ id: 12, path: '/Photos/vacation-copy.jpg', mimetype: 'image/jpeg', size: fifteenMb },
+									{ id: 13, path: '/Downloads/vacation.jpg', mimetype: 'image/jpeg', size: fifteenMb },
+								],
+							},
+						],
+					},
+				})
+			},
+		}).$mount()
+		await settle()
+
+		const nav = vm.$refs.nav
+		assert.equal(vm.$el.querySelector('button.reset-filters-button'), null)
+
+		// Sort-only keeps button label free of "(0)" while remaining accessible
+		nav.setSortOption('size-desc')
+		await settle()
+		let resetBtn = vm.$el.querySelector('button.reset-filters-button')
+		assert.ok(resetBtn)
+		assert.equal(resetBtn.getAttribute('aria-live'), 'polite')
+		assert.equal(resetBtn.textContent.trim(), 'Reset filters')
+		assert.equal(resetBtn.getAttribute('aria-label'), 'Reset filters')
+
+		// Activate all 6 triage filters progressively and verify 1..6
+		nav.setCategoryFilter('images')
+		await settle()
+		assert.equal(resetBtn.textContent.trim(), 'Reset filters (1)')
+		assert.equal(resetBtn.getAttribute('aria-label'), 'Reset filters (1)')
+
+		nav.toggleExtensionFilter('.jpg')
+		await settle()
+		assert.equal(resetBtn.textContent.trim(), 'Reset filters (2)')
+
+		nav.folderQuery = '/Photos'
+		await settle()
+		assert.equal(resetBtn.textContent.trim(), 'Reset filters (3)')
+
+		nav.setMinSizePreset('10mb')
+		await settle()
+		assert.equal(resetBtn.textContent.trim(), 'Reset filters (4)')
+
+		nav.setMinCopiesPreset('3plus')
+		await settle()
+		assert.equal(resetBtn.textContent.trim(), 'Reset filters (5)')
+
+		nav.handleSearch({ query: 'vacation', type: 'simple' })
+		await settle()
+		assert.equal(nav.activeTriageFilterCount, 6)
+		assert.equal(resetBtn.textContent.trim(), 'Reset filters (6)')
+		assert.equal(resetBtn.getAttribute('aria-label'), 'Reset filters (6)')
+
+		// Clicking Reset filters clears all filters & sorting and hides the button
+		resetBtn.click()
+		await settle()
+		assert.equal(nav.activeTriageFilterCount, 0)
+		assert.equal(vm.$el.querySelector('button.reset-filters-button'), null)
+
+		vm.$destroy()
+	})
+
+	test('Cycle 71 Reset filters counter adheres to >= 44px targets, :focus-visible, logical CSS, zero XSS, and zero dashes', () => {
+		const filtersSource = readFileSync(resolve(root, 'src/tools/duplicateFilters.js'), 'utf8')
+		const navSource = readFileSync(resolve(root, 'src/components/DuplicateNavigation.vue'), 'utf8')
+
+		for (const content of [filtersSource, navSource]) {
+			assert.ok(!/[\u2013\u2014]/.test(content), 'no U+2013/U+2014 dashes allowed')
+			assert.ok(!/v-html|innerHTML|outerHTML|document\.write/.test(content), 'no DOM XSS sinks allowed')
+		}
+
+		const filterCssStart = navSource.indexOf('/* Quick File-Type Filter Chips & Live Reclaimable Summary */')
+		const filterCssEnd = navSource.indexOf('/* Consistent highlighting')
+		const filterCssBlock = navSource.slice(filterCssStart, filterCssEnd)
+
+		assert.ok(filterCssBlock.includes('.reset-filters-button'))
+		assert.ok(filterCssBlock.includes('.reset-filters-button:focus-visible'))
+		assert.ok(filterCssBlock.includes('font-variant-numeric: tabular-nums'))
+		assert.ok(filterCssBlock.includes('min-inline-size: 44px'))
+		assert.ok(filterCssBlock.includes('min-block-size: 44px'))
+		assert.ok(!/(?:margin|padding|border)-(?:left|right|top|bottom)/.test(filterCssBlock), 'new CSS must use logical properties only')
+	})
+})
