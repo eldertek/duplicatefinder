@@ -191,6 +191,39 @@
 							<span>{{ t('duplicatefinder', 'History') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-similarity-button"
+							:class="{ 'is-active': similarityOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="similarityOpen ? 'true' : 'false'"
+							aria-keyshortcuts="f"
+							:title="t('duplicatefinder', 'Toggle similarity threshold and fuzzy match inspector')"
+							@click="toggleSimilarityInspector">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<line x1="4" y1="21" x2="4" y2="14" />
+								<line x1="4" y1="10" x2="4" y2="3" />
+								<line x1="12" y1="21" x2="12" y2="12" />
+								<line x1="12" y1="8" x2="12" y2="3" />
+								<line x1="20" y1="21" x2="20" y2="16" />
+								<line x1="20" y1="12" x2="20" y2="3" />
+								<line x1="1" y1="14" x2="7" y2="14" />
+								<line x1="9" y1="8" x2="15" y2="8" />
+								<line x1="17" y1="16" x2="23" y2="16" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Similarity') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -284,6 +317,14 @@
 						:current-backlog="currentReclamationBacklog"
 						@clear-history="onClearReclamationHistory"
 						@close="historyOpen = false" />
+					<SimilarityInspector
+						v-if="similarityOpen"
+						:duplicates="treemapSourceDuplicates"
+						:current-duplicate="currentDuplicate"
+						@select-duplicate="onSimilaritySelectDuplicate"
+						@compare-duplicate="onSimilarityCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="similarityOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -719,6 +760,7 @@ import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
 import DuplicateTreemap from './components/DuplicateTreemap.vue';
 import SpaceReclamationTimeline from './components/SpaceReclamationTimeline.vue';
+import SimilarityInspector from './components/SimilarityInspector.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -783,6 +825,7 @@ export default {
 		DuplicateDetails,
 		DuplicateTreemap,
 		SpaceReclamationTimeline,
+		SimilarityInspector,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -814,6 +857,7 @@ export default {
 			settingsOpen: false,
 			treemapOpen: false,
 			historyOpen: false,
+			similarityOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -988,6 +1032,7 @@ export default {
 				'toggle-compare-view': t('duplicatefinder', 'Toggle side-by-side visual comparison'),
 				'toggle-treemap': t('duplicatefinder', 'Toggle interactive storage treemap'),
 				'toggle-reclamation-history': t('duplicatefinder', 'Toggle scan history and reclamation timeline'),
+				'toggle-similarity-inspector': t('duplicatefinder', 'Toggle similarity threshold and fuzzy match inspector'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1196,6 +1241,31 @@ export default {
 			}
 			this.historyOpen = !this.historyOpen
 			return true
+		},
+		toggleSimilarityInspector() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.similarityOpen = !this.similarityOpen
+			return true
+		},
+		onSimilaritySelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onSimilarityCompareDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+			this.$nextTick(() => {
+				const detailsComponent = this.getActiveDuplicateDetailsComponent()
+				if (detailsComponent && typeof detailsComponent.openCompareMode === 'function') {
+					detailsComponent.openCompareMode()
+				}
+			})
 		},
 		recordCurrentScanSnapshot(trigger = 'sync') {
 			const updated = recordScanSnapshot(
@@ -1444,6 +1514,13 @@ export default {
 
 			if (action === 'toggle-reclamation-history') {
 				if (this.toggleHistory() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-similarity-inspector') {
+				if (this.toggleSimilarityInspector() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -2350,7 +2427,8 @@ export default {
 .app-content-topbar .topbar-scan-button,
 .app-content-topbar .topbar-empty-folders-button,
 .app-content-topbar .topbar-treemap-button,
-.app-content-topbar .topbar-history-button {
+.app-content-topbar .topbar-history-button,
+.app-content-topbar .topbar-similarity-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -2373,7 +2451,8 @@ export default {
 .app-content-topbar .topbar-scan-button svg,
 .app-content-topbar .topbar-empty-folders-button svg,
 .app-content-topbar .topbar-treemap-button svg,
-.app-content-topbar .topbar-history-button svg {
+.app-content-topbar .topbar-history-button svg,
+.app-content-topbar .topbar-similarity-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -2385,19 +2464,23 @@ export default {
 .app-content-topbar .topbar-treemap-button:hover:not(:disabled),
 .app-content-topbar .topbar-treemap-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-history-button:hover:not(:disabled),
-.app-content-topbar .topbar-history-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-history-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-similarity-button:hover:not(:disabled),
+.app-content-topbar .topbar-similarity-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
 
 .app-content-topbar .topbar-treemap-button.is-active,
-.app-content-topbar .topbar-history-button.is-active {
+.app-content-topbar .topbar-history-button.is-active,
+.app-content-topbar .topbar-similarity-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
 }
 
-.app-content-topbar .topbar-treemap-button:disabled {
+.app-content-topbar .topbar-treemap-button:disabled,
+.app-content-topbar .topbar-similarity-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -2528,6 +2611,8 @@ export default {
 .app-content-topbar .topbar-scan-button > *,
 .app-content-topbar .topbar-empty-folders-button > *,
 .app-content-topbar .topbar-treemap-button > *,
+.app-content-topbar .topbar-history-button > *,
+.app-content-topbar .topbar-similarity-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -2615,6 +2700,7 @@ export default {
 	.app-content-topbar .topbar-empty-folders-button,
 	.app-content-topbar .topbar-treemap-button,
 	.app-content-topbar .topbar-history-button,
+	.app-content-topbar .topbar-similarity-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
@@ -2924,6 +3010,8 @@ export default {
 .app-content-topbar .topbar-scan-button:focus-visible,
 .app-content-topbar .topbar-empty-folders-button:focus-visible,
 .app-content-topbar .topbar-treemap-button:focus-visible,
+.app-content-topbar .topbar-history-button:focus-visible,
+.app-content-topbar .topbar-similarity-button:focus-visible,
 .app-content-topbar .topbar-bulk-delete-button:focus-visible,
 .nc-confirm-dialog__button:focus-visible {
 	outline: 2px solid var(--color-primary-element, #0082c9) !important;

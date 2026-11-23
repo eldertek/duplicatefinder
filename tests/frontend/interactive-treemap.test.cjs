@@ -132,6 +132,7 @@ function createFullAppWithTreemap({ acknowledged = [], unacknowledged = [] } = {
 		'./components/DuplicateDetails.vue': { __esModule: true, default: stub('duplicate-details') },
 		'./components/DuplicateTreemap.vue': { __esModule: true, default: DuplicateTreemap },
 		'./components/SpaceReclamationTimeline.vue': { __esModule: true, default: stub('space-reclamation-timeline') },
+		'./components/SimilarityInspector.vue': { __esModule: true, default: stub('similarity-inspector') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

@@ -1028,6 +1028,17 @@ export default {
       this.compareMode = !this.compareMode;
       return true;
     },
+    openCompareMode() {
+      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+        return false;
+      }
+      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+        return false;
+      }
+      this.compareInitialMode = 'side-by-side';
+      this.compareMode = true;
+      return true;
+    },
     openVisualDiffCompare() {
       if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
         return false;
