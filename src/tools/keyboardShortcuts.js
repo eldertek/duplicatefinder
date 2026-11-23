@@ -1,0 +1,182 @@
+/**
+ * Pure keyboard shortcut helpers for fast duplicate triage.
+ */
+
+export const SHORTCUT_DEFINITIONS = Object.freeze([
+	{
+		id: 'next-duplicate',
+		keys: ['j', 'ArrowDown'],
+		action: 'next-duplicate',
+	},
+	{
+		id: 'previous-duplicate',
+		keys: ['k', 'ArrowUp'],
+		action: 'previous-duplicate',
+	},
+	{
+		id: 'focus-search',
+		keys: ['/'],
+		action: 'focus-search',
+	},
+	{
+		id: 'toggle-help',
+		keys: ['?'],
+		action: 'toggle-help',
+	},
+	{
+		id: 'close-help',
+		keys: ['Escape'],
+		action: 'close-help',
+	},
+])
+
+const EDITABLE_TAG_NAMES = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
+
+/**
+ * Checks whether an event target is an editable form control or contenteditable region.
+ *
+ * @param {EventTarget|null|undefined} target Event target element.
+ * @return {boolean} True when shortcuts must be ignored for this target.
+ */
+export function isEditableTarget(target) {
+	if (!target || typeof target !== 'object') {
+		return false
+	}
+
+	const tagName = typeof target.tagName === 'string'
+		? target.tagName.toUpperCase()
+		: ''
+	if (EDITABLE_TAG_NAMES.has(tagName)) {
+		return true
+	}
+
+	if (target.isContentEditable === true) {
+		return true
+	}
+
+	if (typeof target.getAttribute === 'function') {
+		const contentEditableAttr = target.getAttribute('contenteditable')
+		if (contentEditableAttr !== null && contentEditableAttr.toLowerCase() !== 'false') {
+			return true
+		}
+	}
+
+	if (typeof target.closest === 'function') {
+		const ancestor = target.closest('[contenteditable]')
+		if (ancestor && typeof ancestor.getAttribute === 'function') {
+			const ancestorValue = ancestor.getAttribute('contenteditable')
+			if (ancestorValue !== null && ancestorValue.toLowerCase() !== 'false') {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+/**
+ * Resolves a keyboard event into a deterministic triage shortcut action.
+ *
+ * @param {KeyboardEvent|object|null|undefined} event Keyboard event.
+ * @param {object} [options] Current UI modal state.
+ * @param {boolean} [options.isHelpOpen=false] Whether the shortcuts dialog is open.
+ * @param {boolean} [options.hasBlockingModal=false] Whether another modal or dialog is open.
+ * @return {string|null} Action identifier or null if ignored.
+ */
+export function resolveShortcutAction(event, options = {}) {
+	if (!event || typeof event.key !== 'string') {
+		return null
+	}
+
+	const isHelpOpen = Boolean(options.isHelpOpen)
+	const hasBlockingModal = Boolean(options.hasBlockingModal)
+	const key = event.key
+
+	if (key === 'Escape') {
+		return isHelpOpen ? 'close-help' : null
+	}
+
+	if (event.ctrlKey || event.metaKey || event.altKey) {
+		return null
+	}
+
+	if (isEditableTarget(event.target)) {
+		return null
+	}
+
+	if (key === '?') {
+		return hasBlockingModal && !isHelpOpen ? null : 'toggle-help'
+	}
+
+	if (isHelpOpen || hasBlockingModal) {
+		return null
+	}
+
+	if (key === '/') {
+		return 'focus-search'
+	}
+
+	const normalizedKey = !event.shiftKey && key.length === 1
+		? key.toLowerCase()
+		: key
+
+	if (normalizedKey === 'j' || key === 'ArrowDown') {
+		return 'next-duplicate'
+	}
+
+	if (normalizedKey === 'k' || key === 'ArrowUp') {
+		return 'previous-duplicate'
+	}
+
+	return null
+}
+
+/**
+ * Builds the flat ordered list of navigable duplicate groups across sections.
+ *
+ * @param {Array<object>} acknowledgedDuplicates Acknowledged duplicate groups.
+ * @param {Array<object>} unacknowledgedDuplicates Unacknowledged duplicate groups.
+ * @param {object} [options] Section visibility options.
+ * @param {boolean} [options.acknowledgedOpen=true] Whether acknowledged section is expanded.
+ * @param {boolean} [options.unacknowledgedOpen=true] Whether unacknowledged section is expanded.
+ * @return {Array<object>} Ordered list of duplicate groups.
+ */
+export function buildNavigableDuplicates(acknowledgedDuplicates, unacknowledgedDuplicates, options = {}) {
+	const acknowledgedOpen = options.acknowledgedOpen !== false
+	const unacknowledgedOpen = options.unacknowledgedOpen !== false
+
+	const acknowledgedList = acknowledgedOpen && Array.isArray(acknowledgedDuplicates)
+		? acknowledgedDuplicates.filter(Boolean)
+		: []
+	const unacknowledgedList = unacknowledgedOpen && Array.isArray(unacknowledgedDuplicates)
+		? unacknowledgedDuplicates.filter(Boolean)
+		: []
+
+	return [...acknowledgedList, ...unacknowledgedList]
+}
+
+/**
+ * Computes the next or previous duplicate group clamped to list bounds.
+ *
+ * @param {Array<object>} duplicates Ordered list of duplicate groups.
+ * @param {string|number|null|undefined} currentDuplicateId Currently selected duplicate ID.
+ * @param {'next'|'previous'} direction Navigation direction.
+ * @return {object|null} Target duplicate group or null when list is empty.
+ */
+export function stepDuplicateSelection(duplicates, currentDuplicateId, direction) {
+	if (!Array.isArray(duplicates) || duplicates.length === 0) {
+		return null
+	}
+
+	const currentIndex = currentDuplicateId !== null && currentDuplicateId !== undefined
+		? duplicates.findIndex(item => item && item.id === currentDuplicateId)
+		: -1
+
+	if (currentIndex === -1) {
+		return duplicates[0] || null
+	}
+
+	const delta = direction === 'previous' ? -1 : 1
+	const nextIndex = Math.max(0, Math.min(duplicates.length - 1, currentIndex + delta))
+	return duplicates[nextIndex] || null
+}

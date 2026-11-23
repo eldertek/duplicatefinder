@@ -162,6 +162,7 @@ function createAppHarness(apiOverrides = {}) {
 		'./components/FilterSettings.vue': { __esModule: true, default: stub('filter-settings') },
 		'@/tools/api': api,
 		'@/tools/utils': utils,
+		'@/tools/keyboardShortcuts': loadModule('src/tools/keyboardShortcuts.js'),
 		'vue-material-design-icons/Folder': icon,
 		'vue-material-design-icons/FolderRemove': icon,
 		'vue-material-design-icons/FolderMultiple': icon,

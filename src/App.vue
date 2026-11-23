@@ -571,6 +571,63 @@
 					</div>
 				</div>
 			</div>
+
+			<dialog
+				ref="shortcutsDialog"
+				class="shortcuts-dialog"
+				aria-labelledby="shortcuts-dialog-title"
+				@cancel.prevent="closeShortcutsDialog"
+				@close="onShortcutsDialogClose"
+				@click="onShortcutsDialogBackdropClick">
+				<div class="shortcuts-dialog__surface">
+					<header class="shortcuts-dialog__header">
+						<h3 id="shortcuts-dialog-title" class="shortcuts-dialog__title">
+							{{ t('duplicatefinder', 'Keyboard shortcuts') }}
+						</h3>
+						<button
+							type="button"
+							class="shortcuts-dialog__close"
+							:title="t('duplicatefinder', 'Close')"
+							:aria-label="t('duplicatefinder', 'Close')"
+							@click="closeShortcutsDialog">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<line x1="18" y1="6" x2="6" y2="18" />
+								<line x1="6" y1="6" x2="18" y2="18" />
+							</svg>
+						</button>
+					</header>
+					<div class="shortcuts-dialog__body">
+						<dl class="shortcuts-dialog__list">
+							<div
+								v-for="shortcut in keyboardShortcutItems"
+								:key="shortcut.id"
+								class="shortcuts-dialog__row">
+								<dt class="shortcuts-dialog__keys">
+									<kbd
+										v-for="keyLabel in shortcut.keyLabels"
+										:key="keyLabel"
+										class="shortcuts-dialog__kbd">
+										{{ keyLabel }}
+									</kbd>
+								</dt>
+								<dd class="shortcuts-dialog__description">
+									{{ shortcut.description }}
+								</dd>
+							</div>
+						</dl>
+					</div>
+				</div>
+			</dialog>
 		</template>
 	</NcContent>
 </template>
@@ -595,6 +652,12 @@ import {
 	saveUiPreferences,
 	formatScanEta,
 } from '@/tools/utils';
+import {
+	SHORTCUT_DEFINITIONS,
+	buildNavigableDuplicates,
+	resolveShortcutAction,
+	stepDuplicateSelection,
+} from '@/tools/keyboardShortcuts';
 import Folder from 'vue-material-design-icons/Folder';
 import FolderRemove from 'vue-material-design-icons/FolderRemove';
 import FolderMultiple from 'vue-material-design-icons/FolderMultiple';
@@ -704,6 +767,9 @@ export default {
 			wasTrackingActiveScan: false,
 			scanPollTimer: null,
 			visibilityHandler: null,
+			keydownHandler: null,
+			shortcutsDialogOpen: false,
+			lastFocusedBeforeShortcuts: null,
 		};
 	},
 	computed: {
@@ -778,7 +844,26 @@ export default {
 				faq: FAQ
 			}
 			return components[this.currentHelpSection]
-		}
+		},
+		keyboardShortcutItems() {
+			const descriptions = {
+				'next-duplicate': t('duplicatefinder', 'Select next duplicate group'),
+				'previous-duplicate': t('duplicatefinder', 'Select previous duplicate group'),
+				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
+				'toggle-help': t('duplicatefinder', 'Toggle keyboard shortcuts help'),
+				'close-help': t('duplicatefinder', 'Close keyboard shortcuts dialog'),
+			}
+			const keyLabelsMap = {
+				ArrowDown: '↓',
+				ArrowUp: '↑',
+				Escape: 'Esc',
+			}
+			return SHORTCUT_DEFINITIONS.map(item => ({
+				id: item.id,
+				keyLabels: item.keys.map(key => keyLabelsMap[key] || key),
+				description: descriptions[item.id] || item.id,
+			}))
+		},
 	},
 	async created() {
 		this.visibilityHandler = () => {
@@ -795,14 +880,173 @@ export default {
 		}
 		await this.loadInitialData()
 	},
+	mounted() {
+		this.keydownHandler = event => this.handleGlobalKeydown(event)
+		if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+			window.addEventListener('keydown', this.keydownHandler)
+		}
+	},
 	beforeDestroy() {
 		this.clearScanPollTimer()
 		if (this.visibilityHandler && typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
 			document.removeEventListener('visibilitychange', this.visibilityHandler)
 			this.visibilityHandler = null
 		}
+		if (this.keydownHandler && typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+			window.removeEventListener('keydown', this.keydownHandler)
+			this.keydownHandler = null
+		}
 	},
 	methods: {
+		getNavigableDuplicatesList() {
+			if (
+				this.$refs.duplicateNavigation
+				&& typeof this.$refs.duplicateNavigation.getNavigableDuplicates === 'function'
+			) {
+				return this.$refs.duplicateNavigation.getNavigableDuplicates()
+			}
+			return buildNavigableDuplicates(this.acknowledgedDuplicates, this.unacknowledgedDuplicates)
+		},
+		navigateDuplicateByShortcut(direction) {
+			const list = this.getNavigableDuplicatesList()
+			const currentId = this.currentDuplicate ? this.currentDuplicate.id : null
+			const targetDuplicate = stepDuplicateSelection(list, currentId, direction)
+			if (!targetDuplicate) {
+				return null
+			}
+			this.openDuplicate(targetDuplicate)
+			this.$nextTick(() => {
+				if (
+					this.$refs.duplicateNavigation
+					&& typeof this.$refs.duplicateNavigation.scrollActiveDuplicateIntoView === 'function'
+				) {
+					this.$refs.duplicateNavigation.scrollActiveDuplicateIntoView()
+				}
+			})
+			return targetDuplicate
+		},
+		focusSearchBar() {
+			if (
+				this.$refs.duplicateNavigation
+				&& typeof this.$refs.duplicateNavigation.focusSearch === 'function'
+				&& this.$refs.duplicateNavigation.focusSearch()
+			) {
+				return true
+			}
+			const fallbackInput = this.$el && typeof this.$el.querySelector === 'function'
+				? this.$el.querySelector('.search-input')
+				: null
+			if (fallbackInput && typeof fallbackInput.focus === 'function') {
+				fallbackInput.focus()
+				return true
+			}
+			return false
+		},
+		openShortcutsDialog() {
+			this.lastFocusedBeforeShortcuts = typeof document !== 'undefined' ? document.activeElement : null
+			this.shortcutsDialogOpen = true
+			this.$nextTick(() => {
+				const dialog = this.$refs.shortcutsDialog
+				if (!dialog) {
+					return
+				}
+				if (typeof dialog.showModal === 'function') {
+					if (!dialog.open) {
+						dialog.showModal()
+					}
+				} else {
+					dialog.setAttribute('open', '')
+				}
+			})
+		},
+		closeShortcutsDialog() {
+			this.shortcutsDialogOpen = false
+			const dialog = this.$refs.shortcutsDialog
+			if (dialog) {
+				if (typeof dialog.close === 'function') {
+					if (dialog.open) {
+						dialog.close()
+					}
+				} else {
+					dialog.removeAttribute('open')
+				}
+			}
+			const previousFocus = this.lastFocusedBeforeShortcuts
+			this.lastFocusedBeforeShortcuts = null
+			if (previousFocus && typeof previousFocus.focus === 'function' && previousFocus.isConnected) {
+				previousFocus.focus()
+			}
+		},
+		toggleShortcutsDialog() {
+			if (this.shortcutsDialogOpen) {
+				this.closeShortcutsDialog()
+			} else {
+				this.openShortcutsDialog()
+			}
+		},
+		onShortcutsDialogClose() {
+			this.shortcutsDialogOpen = false
+			const previousFocus = this.lastFocusedBeforeShortcuts
+			this.lastFocusedBeforeShortcuts = null
+			if (previousFocus && typeof previousFocus.focus === 'function' && previousFocus.isConnected) {
+				previousFocus.focus()
+			}
+		},
+		onShortcutsDialogBackdropClick(event) {
+			if (event && event.target === this.$refs.shortcutsDialog) {
+				this.closeShortcutsDialog()
+			}
+		},
+		handleGlobalKeydown(event) {
+			const hasBlockingModal = Boolean(
+				this.isLoading
+				|| this.settingsOpen
+				|| this.helpModalOpen
+				|| this.emptyFoldersModalOpen
+				|| (this.confirmDialog && this.confirmDialog.open)
+			)
+			const action = resolveShortcutAction(event, {
+				isHelpOpen: this.shortcutsDialogOpen,
+				hasBlockingModal,
+			})
+			if (!action) {
+				return
+			}
+
+			if (action === 'close-help') {
+				if (typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				this.closeShortcutsDialog()
+				return
+			}
+
+			if (action === 'toggle-help') {
+				if (typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				this.toggleShortcutsDialog()
+				return
+			}
+
+			if (action === 'focus-search') {
+				if (typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				this.focusSearchBar()
+				return
+			}
+
+			if (action === 'next-duplicate' || action === 'previous-duplicate') {
+				if (this.activeView !== 'details') {
+					return
+				}
+				if (typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				this.navigateDuplicateByShortcut(action === 'previous-duplicate' ? 'previous' : 'next')
+			}
+		},
 		onLoadMoreStart(section) {
 			if (section === 'acknowledged' || section === 'unacknowledged') {
 				this.pendingOffsetDelta[section] = 0
@@ -2330,5 +2574,155 @@ export default {
 	background-color: #b71c1c !important;
 	border-color: #b71c1c !important;
 	color: #ffffff !important;
+}
+
+.shortcuts-dialog {
+	margin-block: auto;
+	margin-inline: auto;
+	padding-block: 0;
+	padding-inline: 0;
+	inline-size: min(480px, calc(100vw - 24px));
+	max-inline-size: calc(100vw - 24px);
+	max-block-size: calc(100vh - 32px);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	border-radius: var(--border-radius-large, 10px);
+	background-color: var(--color-main-background, #ffffff);
+	color: var(--color-main-text);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+	box-sizing: border-box;
+	overflow: auto;
+}
+
+.shortcuts-dialog::backdrop {
+	background-color: rgba(0, 0, 0, 0.45);
+}
+
+.shortcuts-dialog__surface {
+	display: flex;
+	flex-direction: column;
+	min-inline-size: 0;
+}
+
+.shortcuts-dialog__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding-block: 14px;
+	padding-inline: 20px 12px;
+	border-block-end: 1px solid var(--color-border);
+}
+
+.shortcuts-dialog__title {
+	margin-block: 0;
+	margin-inline: 0;
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.shortcuts-dialog__close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-inline-size: 44px;
+	min-block-size: 44px;
+	padding-block: 0;
+	padding-inline: 0;
+	margin-block: 0;
+	margin-inline: 0;
+	border: 1px solid transparent;
+	border-radius: var(--border-radius-pill, 999px);
+	background-color: transparent;
+	color: var(--color-text-maxcontrast, var(--color-main-text));
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.shortcuts-dialog__close:hover {
+	background-color: var(--color-background-hover);
+	color: var(--color-main-text);
+}
+
+.shortcuts-dialog__close:focus-visible {
+	outline: 2px solid var(--color-primary-element, #0082c9);
+	outline-offset: 2px;
+}
+
+.shortcuts-dialog__body {
+	padding-block: 16px;
+	padding-inline: 20px;
+}
+
+.shortcuts-dialog__list {
+	display: grid;
+	gap: 10px;
+	margin-block: 0;
+	margin-inline: 0;
+}
+
+.shortcuts-dialog__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	padding-block: 8px;
+	padding-inline: 0;
+	border-block-end: 1px solid var(--color-border);
+}
+
+.shortcuts-dialog__row:last-child {
+	border-block-end: none;
+}
+
+.shortcuts-dialog__keys {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-inline: 0;
+}
+
+.shortcuts-dialog__kbd {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-inline-size: 28px;
+	min-block-size: 26px;
+	padding-block: 2px;
+	padding-inline: 8px;
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	border-radius: var(--border-radius, 4px);
+	background-color: var(--color-background-hover);
+	color: var(--color-main-text);
+	font-family: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	box-sizing: border-box;
+}
+
+.shortcuts-dialog__description {
+	margin-block: 0;
+	margin-inline: 0;
+	color: var(--color-main-text);
+	font-size: 0.92rem;
+	line-height: 1.4;
+	text-align: end;
+	flex: 1 1 180px;
+	min-inline-size: 0;
+}
+
+@media (max-width: 480px) {
+	.shortcuts-dialog__row {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.shortcuts-dialog__description {
+		text-align: start;
+		flex-basis: auto;
+	}
 }
 </style>

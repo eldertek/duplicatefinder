@@ -117,6 +117,7 @@ function createHarness(fetchDuplicatesImpl) {
 			fetchProjects: async () => [],
 		},
 		'@/tools/utils': utils,
+		'@/tools/keyboardShortcuts': loadModule('src/tools/keyboardShortcuts.js'),
 		'vue-material-design-icons/Folder': icon,
 		'vue-material-design-icons/FolderRemove': icon,
 		'vue-material-design-icons/FolderMultiple': icon,

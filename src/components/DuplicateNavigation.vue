@@ -3,7 +3,7 @@
         <template #list>
             <!-- Search Bar and Sort in One Line -->
             <div class="search-sort-container">
-                <SearchBar @search="handleSearch" />
+                <SearchBar ref="searchBar" @search="handleSearch" />
                 <div class="sort-dropdown" @keydown.esc="showSortMenu = false">
                     <button
                         type="button"
@@ -514,6 +514,27 @@ export default {
         }
     },
     methods: {
+        focusSearch() {
+            if (this.$refs.searchBar && typeof this.$refs.searchBar.focus === 'function') {
+                this.$refs.searchBar.focus();
+                return true;
+            }
+            return false;
+        },
+        getNavigableDuplicates() {
+            const acknowledged = this.acknowledgedOpen ? this.filteredAcknowledgedDuplicates : [];
+            const unacknowledged = this.unacknowledgedOpen ? this.filteredUnacknowledgedDuplicates : [];
+            return [...acknowledged, ...unacknowledged];
+        },
+        scrollActiveDuplicateIntoView() {
+            if (!this.$el || typeof this.$el.querySelector !== 'function') {
+                return;
+            }
+            const activeEl = this.$el.querySelector('.duplicate-item .is-active');
+            if (activeEl && typeof activeEl.scrollIntoView === 'function') {
+                activeEl.scrollIntoView({ block: 'nearest' });
+            }
+        },
         handleSearch({ query, type }) {
             this.searchPattern = query;
             this.searchType = type;

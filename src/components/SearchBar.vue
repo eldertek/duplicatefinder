@@ -3,12 +3,14 @@
     <div class="search-combined">
       <div class="search-wrapper">
         <input
+          ref="searchInput"
           v-model="searchQuery"
           type="text"
           class="search-input"
           :placeholder="searchPlaceholder"
           :aria-label="searchPlaceholder"
-          @input="onSearch" />
+          @input="onSearch"
+          @keydown.esc="onInputEscape" />
         <button
           type="button"
           class="search-type-toggle"
@@ -87,6 +89,23 @@ export default {
     }
   },
   methods: {
+    focus() {
+      if (this.$refs.searchInput && typeof this.$refs.searchInput.focus === 'function') {
+        this.$refs.searchInput.focus()
+        if (typeof this.$refs.searchInput.select === 'function') {
+          this.$refs.searchInput.select()
+        }
+      }
+    },
+    onInputEscape() {
+      if (this.showTypeSelector) {
+        this.showTypeSelector = false
+        return
+      }
+      if (this.$refs.searchInput && typeof this.$refs.searchInput.blur === 'function') {
+        this.$refs.searchInput.blur()
+      }
+    },
     selectSearchType(type) {
       this.searchType = type
       this.showTypeSelector = false
