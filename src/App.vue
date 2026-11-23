@@ -25,6 +25,8 @@
 					@view-project="viewProject"
 					@show-help="showHelp"
 					@query-options-changed="handleQueryOptionsChanged"
+					@filtered-duplicates-changed="onFilteredDuplicatesChanged"
+					@folder-filter-changed="onFolderFilterChanged"
 					@load-more-start="onLoadMoreStart"
 					@update-acknowledged-duplicates="updateAcknowledgedDuplicates"
 					@update-unacknowledged-duplicates="updateUnacknowledgedDuplicates" />
@@ -133,6 +135,34 @@
 							<span>{{ t('duplicatefinder', 'Empty Folders') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-treemap-button"
+							:class="{ 'is-active': treemapOpen }"
+							:disabled="!hasDuplicates"
+							:aria-pressed="treemapOpen ? 'true' : 'false'"
+							aria-keyshortcuts="t"
+							:title="t('duplicatefinder', 'Toggle interactive storage treemap')"
+							@click="toggleTreemap">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect x="3" y="3" width="11" height="11" rx="1"></rect>
+								<rect x="16" y="3" width="5" height="7" rx="1"></rect>
+								<rect x="16" y="12" width="5" height="9" rx="1"></rect>
+								<rect x="3" y="16" width="11" height="5" rx="1"></rect>
+							</svg>
+							<span>{{ t('duplicatefinder', 'Treemap') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -218,6 +248,15 @@
 						@duplicatesSearchCompleted="backToProject" />
 				</template>
 				<template v-else>
+					<DuplicateTreemap
+						v-if="treemapOpen"
+						:duplicates="treemapSourceDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						:current-duplicate-hash="currentDuplicate ? (currentDuplicate.hash || '') : ''"
+						:synced-folder-filter="treemapSyncedFolder"
+						@select-duplicate="onTreemapSelectDuplicate"
+						@sync-folder-filter="onTreemapSyncFolderFilter"
+						@close="treemapOpen = false" />
 					<DuplicateDetails
 						ref="duplicateDetails"
 						:duplicate="currentDuplicate"
@@ -639,6 +678,7 @@
 import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSettingsSection, NcButton, NcModal } from '@nextcloud/vue';
 import DuplicateNavigation from './components/DuplicateNavigation.vue';
 import DuplicateDetails from './components/DuplicateDetails.vue';
+import DuplicateTreemap from './components/DuplicateTreemap.vue';
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -693,6 +733,7 @@ export default {
 		NcModal,
 		DuplicateNavigation,
 		DuplicateDetails,
+		DuplicateTreemap,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -722,6 +763,9 @@ export default {
 			sortOption: savedPreferences.sortOption,
 			minSizeBytes: savedPreferences.minSizeBytes,
 			settingsOpen: false,
+			treemapOpen: false,
+			filteredDuplicatesForTreemap: null,
+			treemapSyncedFolder: '',
 			activeView: 'details',
 			acknowledgedPagination: {
 				currentPage: 1,
@@ -783,6 +827,14 @@ export default {
 	computed: {
 		hasDuplicates() {
 			return this.acknowledgedDuplicates.length > 0 || this.unacknowledgedDuplicates.length > 0
+		},
+		treemapSourceDuplicates() {
+			if (Array.isArray(this.filteredDuplicatesForTreemap)) {
+				return this.filteredDuplicatesForTreemap
+			}
+			const unacknowledged = Array.isArray(this.unacknowledgedDuplicates) ? this.unacknowledgedDuplicates : []
+			const acknowledged = Array.isArray(this.acknowledgedDuplicates) ? this.acknowledgedDuplicates : []
+			return [...unacknowledged, ...acknowledged]
 		},
 		activeModalEmptyFolders() {
 			const ignoredSet = new Set(this.ignoredEmptyFolders)
@@ -868,6 +920,7 @@ export default {
 				'export-json-report': t('duplicatefinder', 'Export current duplicate report (JSON)'),
 				'toggle-bulk-delete-view': t('duplicatefinder', 'Toggle Bulk Delete view'),
 				'toggle-compare-view': t('duplicatefinder', 'Toggle side-by-side visual comparison'),
+				'toggle-treemap': t('duplicatefinder', 'Toggle interactive storage treemap'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -1063,6 +1116,43 @@ export default {
 			}
 			return false
 		},
+		toggleTreemap() {
+			if (this.activeView !== 'details' || !this.hasDuplicates) {
+				return false
+			}
+			this.treemapOpen = !this.treemapOpen
+			return true
+		},
+		onFilteredDuplicatesChanged(list) {
+			this.filteredDuplicatesForTreemap = Array.isArray(list) ? list : []
+		},
+		onFolderFilterChanged(folderQuery) {
+			this.treemapSyncedFolder = typeof folderQuery === 'string' ? folderQuery.trim() : ''
+		},
+		onTreemapSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.openDuplicate(duplicate)
+			this.$nextTick(() => {
+				if (
+					this.$refs.duplicateNavigation
+					&& typeof this.$refs.duplicateNavigation.scrollActiveDuplicateIntoView === 'function'
+				) {
+					this.$refs.duplicateNavigation.scrollActiveDuplicateIntoView()
+				}
+			})
+		},
+		onTreemapSyncFolderFilter(folderPath) {
+			const normalized = typeof folderPath === 'string' ? folderPath.trim() : ''
+			this.treemapSyncedFolder = normalized
+			if (
+				this.$refs.duplicateNavigation
+				&& typeof this.$refs.duplicateNavigation.setFolderFilter === 'function'
+			) {
+				this.$refs.duplicateNavigation.setFolderFilter(normalized)
+			}
+		},
 		openShortcutsDialog() {
 			this.lastFocusedBeforeShortcuts = typeof document !== 'undefined' ? document.activeElement : null
 			this.shortcutsDialogOpen = true
@@ -1245,6 +1335,13 @@ export default {
 					return
 				}
 				if (detailsComponent.toggleCompareMode() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-treemap') {
+				if (this.toggleTreemap() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -2146,7 +2243,8 @@ export default {
 }
 
 .app-content-topbar .topbar-scan-button,
-.app-content-topbar .topbar-empty-folders-button {
+.app-content-topbar .topbar-empty-folders-button,
+.app-content-topbar .topbar-treemap-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -2167,7 +2265,8 @@ export default {
 }
 
 .app-content-topbar .topbar-scan-button svg,
-.app-content-topbar .topbar-empty-folders-button svg {
+.app-content-topbar .topbar-empty-folders-button svg,
+.app-content-topbar .topbar-treemap-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -2175,9 +2274,22 @@ export default {
 .app-content-topbar .topbar-scan-button:hover:not(:disabled),
 .app-content-topbar .topbar-scan-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-empty-folders-button:hover:not(:disabled),
-.app-content-topbar .topbar-empty-folders-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-empty-folders-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-treemap-button:hover:not(:disabled),
+.app-content-topbar .topbar-treemap-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
+}
+
+.app-content-topbar .topbar-treemap-button.is-active {
+	background-color: var(--color-primary-element-light);
+	border-color: var(--color-primary-element);
+	color: var(--color-primary-element-light-text, var(--color-main-text));
+}
+
+.app-content-topbar .topbar-treemap-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .app-content-topbar .topbar-scan-button:disabled {
@@ -2305,6 +2417,7 @@ export default {
 
 .app-content-topbar .topbar-scan-button > *,
 .app-content-topbar .topbar-empty-folders-button > *,
+.app-content-topbar .topbar-treemap-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -2390,6 +2503,7 @@ export default {
 
 	.app-content-topbar .topbar-scan-button,
 	.app-content-topbar .topbar-empty-folders-button,
+	.app-content-topbar .topbar-treemap-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
@@ -2698,6 +2812,7 @@ export default {
 .topbar-count-help:focus-visible,
 .app-content-topbar .topbar-scan-button:focus-visible,
 .app-content-topbar .topbar-empty-folders-button:focus-visible,
+.app-content-topbar .topbar-treemap-button:focus-visible,
 .app-content-topbar .topbar-bulk-delete-button:focus-visible,
 .nc-confirm-dialog__button:focus-visible {
 	outline: 2px solid var(--color-primary-element, #0082c9) !important;

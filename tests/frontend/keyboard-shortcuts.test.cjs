@@ -145,6 +145,17 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 		? createRealDuplicateDetails(utils, clipboardImpl, apiOverrides)
 		: stub('duplicate-details')
 
+	const statsModule = loadModule('src/tools/duplicateStats.js')
+	const treemapModule = loadModule('src/tools/duplicateTreemap.js', {
+		'./duplicateFilters': loadModule('src/tools/duplicateFilters.js'),
+		'./duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
+		'./duplicateStats': statsModule,
+	})
+	const DuplicateTreemap = loadComponent('src/components/DuplicateTreemap.vue', {
+		'../tools/duplicateStats': statsModule,
+		'../tools/duplicateTreemap': treemapModule,
+	})
+
 	const App = loadComponent('src/App.vue', {
 		'@nextcloud/vue': {
 			NcAppContent: slotBox('main'),
@@ -157,6 +168,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 		},
 		'./components/DuplicateNavigation.vue': { __esModule: true, default: DuplicateNavigation },
 		'./components/DuplicateDetails.vue': { __esModule: true, default: detailsComponent },
+		'./components/DuplicateTreemap.vue': { __esModule: true, default: DuplicateTreemap },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

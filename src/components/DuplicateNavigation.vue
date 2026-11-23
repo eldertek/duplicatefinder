@@ -739,7 +739,19 @@ export default {
             this.$nextTick(() => {
                 this.setupSentinelObservers();
             });
-        }
+        },
+        filteredDuplicatesForExport: {
+            immediate: true,
+            handler(nextList) {
+                this.$emit('filtered-duplicates-changed', Array.isArray(nextList) ? nextList : []);
+            },
+        },
+        folderQuery: {
+            immediate: true,
+            handler(nextQuery) {
+                this.$emit('folder-filter-changed', typeof nextQuery === 'string' ? nextQuery : '');
+            },
+        },
     },
     computed: {
         hasAnyDuplicates() {
@@ -1098,6 +1110,9 @@ export default {
                     allowedSortKeys: DEFAULT_ALLOWED_SORT_KEYS,
                 },
             );
+        },
+        setFolderFilter(folderPath) {
+            this.folderQuery = typeof folderPath === 'string' ? folderPath.trim() : '';
         },
         clearSearchFilter() {
             this.searchPattern = '';

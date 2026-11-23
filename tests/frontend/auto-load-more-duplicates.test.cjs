@@ -108,6 +108,7 @@ function createHarness(fetchDuplicatesImpl) {
 		},
 		'./components/DuplicateNavigation.vue': { __esModule: true, default: DuplicateNavigation },
 		'./components/DuplicateDetails.vue': { __esModule: true, default: stub('duplicate-details') },
+		'./components/DuplicateTreemap.vue': { __esModule: true, default: stub('duplicate-treemap') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

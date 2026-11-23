@@ -69,6 +69,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-compare-view',
 	},
 	{
+		id: 'toggle-treemap',
+		keys: ['t'],
+		action: 'toggle-treemap',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -121,6 +126,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	x: 'export-json-report',
 	b: 'toggle-bulk-delete-view',
 	v: 'toggle-compare-view',
+	t: 'toggle-treemap',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
