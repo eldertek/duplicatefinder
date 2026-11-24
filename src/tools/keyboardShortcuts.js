@@ -469,6 +469,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-robotics-ros-vault-auditor',
 	},
 	{
+		id: 'toggle-semiconductor-eda-vault-auditor',
+		keys: ['Shift+F5'],
+		action: 'toggle-semiconductor-eda-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -867,6 +872,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && key === 'F12') {
 		return 'toggle-robotics-ros-vault-auditor'
+	}
+
+	if (event.shiftKey && key === 'F5') {
+		return 'toggle-semiconductor-eda-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {

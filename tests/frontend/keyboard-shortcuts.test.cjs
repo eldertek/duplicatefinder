@@ -255,6 +255,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/GenomicsBioinformaticsVaultWorkbench.vue': { __esModule: true, default: stub('genomics-bioinformatics-vault-auditor') },
 			'./components/DfirSecurityVaultWorkbench.vue': { __esModule: true, default: stub('dfir-security-vault-auditor') },
 			'./components/RoboticsRosVaultWorkbench.vue': { __esModule: true, default: stub('robotics-ros-vault-auditor') },
+			'./components/SemiconductorEdaVaultWorkbench.vue': { __esModule: true, default: stub('semiconductor-eda-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4429,5 +4430,28 @@ describe('Cycle 199: Shift+F12 shortcut for Robotics, Autonomous Systems, ROS2 B
 		assert.equal(resolveShortcutAction({ key: 'F12', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F12', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F12', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 200: Shift+F5 shortcut for Semiconductor EDA, ASIC/FPGA RTL, IC Layout & Waveform Verification Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F5 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-semiconductor-eda-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-semiconductor-eda-vault-auditor',
+			keys: ['Shift+F5'],
+			action: 'toggle-semiconductor-eda-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true }), 'toggle-semiconductor-eda-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F5' }), null)
+		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
