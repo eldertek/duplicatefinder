@@ -1444,6 +1444,45 @@
 							<span>{{ t('duplicatefinder', 'Installers & ISOs') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-workbook-drift-button"
+							:class="{ 'is-active': workbookDriftOpen }"
+							:aria-pressed="workbookDriftOpen ? 'true' : 'false'"
+							aria-keyshortcuts=">"
+							:title="t('duplicatefinder', 'Toggle spreadsheet, BI report and financial workbook version-drift auditor')"
+							@click="toggleWorkbookDrift">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="3"
+									y="3"
+									width="18"
+									height="18"
+									rx="2" />
+								<line
+									x1="3"
+									y1="9"
+									x2="21"
+									y2="9" />
+								<line
+									x1="9"
+									y1="21"
+									x2="9"
+									y2="9" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Workbooks & BI') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1931,6 +1970,15 @@
 						@compare-duplicate="onInstallerRepoCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="installerRepoOpen = false" />
+					<WorkbookDriftWorkbench
+						v-if="workbookDriftOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onWorkbookDriftSelectDuplicate"
+						@compare-duplicate="onWorkbookDriftCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="workbookDriftOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2406,6 +2454,7 @@ import ScientificBundleWorkbench from './components/ScientificBundleWorkbench.vu
 import BrandKitAuditorWorkbench from './components/BrandKitAuditorWorkbench.vue'
 import LogTelemetryWorkbench from './components/LogTelemetryWorkbench.vue'
 import InstallerRepoWorkbench from './components/InstallerRepoWorkbench.vue'
+import WorkbookDriftWorkbench from './components/WorkbookDriftWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2510,6 +2559,7 @@ export default {
 		BrandKitAuditorWorkbench,
 		LogTelemetryWorkbench,
 		InstallerRepoWorkbench,
+		WorkbookDriftWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2581,6 +2631,7 @@ export default {
 			brandKitAuditorOpen: false,
 			logTelemetryOpen: false,
 			installerRepoOpen: false,
+			workbookDriftOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2796,6 +2847,7 @@ export default {
 				'toggle-brand-kit-auditor': t('duplicatefinder', 'Toggle creative brand kit, font family and vector/PSD master asset auditor'),
 				'toggle-log-telemetry-auditor': t('duplicatefinder', 'Toggle log rotation, telemetry dump and stale cache explosion auditor'),
 				'toggle-installer-repo-auditor': t('duplicatefinder', 'Toggle OS installer, firmware, package cache and ISO distribution repository auditor'),
+				'toggle-workbook-drift-auditor': t('duplicatefinder', 'Toggle spreadsheet, BI report and financial workbook version-drift auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3748,6 +3800,22 @@ export default {
 		onInstallerRepoCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleWorkbookDrift() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.workbookDriftOpen = !this.workbookDriftOpen
+			return true
+		},
+		onWorkbookDriftSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onWorkbookDriftCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4400,6 +4468,13 @@ export default {
 
 			if (action === 'toggle-installer-repo-auditor') {
 				if (this.toggleInstallerRepo() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-workbook-drift-auditor') {
+				if (this.toggleWorkbookDrift() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5346,7 +5421,8 @@ export default {
 .app-content-topbar .topbar-scientific-bundle-button,
 .app-content-topbar .topbar-brand-kit-button,
 .app-content-topbar .topbar-log-telemetry-button,
-.app-content-topbar .topbar-installer-repo-button {
+.app-content-topbar .topbar-installer-repo-button,
+.app-content-topbar .topbar-workbook-drift-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5375,7 +5451,8 @@ export default {
 .app-content-topbar .topbar-scientific-bundle-button,
 .app-content-topbar .topbar-brand-kit-button,
 .app-content-topbar .topbar-log-telemetry-button,
-.app-content-topbar .topbar-installer-repo-button {
+.app-content-topbar .topbar-installer-repo-button,
+.app-content-topbar .topbar-workbook-drift-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5423,7 +5500,8 @@ export default {
 .app-content-topbar .topbar-scientific-bundle-button svg,
 .app-content-topbar .topbar-brand-kit-button svg,
 .app-content-topbar .topbar-log-telemetry-button svg,
-.app-content-topbar .topbar-installer-repo-button svg {
+.app-content-topbar .topbar-installer-repo-button svg,
+.app-content-topbar .topbar-workbook-drift-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5515,7 +5593,9 @@ export default {
 .app-content-topbar .topbar-log-telemetry-button:hover:not(:disabled),
 .app-content-topbar .topbar-log-telemetry-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-installer-repo-button:hover:not(:disabled),
-.app-content-topbar .topbar-installer-repo-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-installer-repo-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-workbook-drift-button:hover:not(:disabled),
+.app-content-topbar .topbar-workbook-drift-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5561,7 +5641,8 @@ export default {
 .app-content-topbar .topbar-scientific-bundle-button.is-active,
 .app-content-topbar .topbar-brand-kit-button.is-active,
 .app-content-topbar .topbar-log-telemetry-button.is-active,
-.app-content-topbar .topbar-installer-repo-button.is-active {
+.app-content-topbar .topbar-installer-repo-button.is-active,
+.app-content-topbar .topbar-workbook-drift-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5750,6 +5831,7 @@ export default {
 .app-content-topbar .topbar-brand-kit-button > *,
 .app-content-topbar .topbar-log-telemetry-button > *,
 .app-content-topbar .topbar-installer-repo-button > *,
+.app-content-topbar .topbar-workbook-drift-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5877,6 +5959,7 @@ export default {
 	.app-content-topbar .topbar-brand-kit-button,
 	.app-content-topbar .topbar-log-telemetry-button,
 	.app-content-topbar .topbar-installer-repo-button,
+	.app-content-topbar .topbar-workbook-drift-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

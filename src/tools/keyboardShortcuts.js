@@ -279,6 +279,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-installer-repo-auditor',
 	},
 	{
+		id: 'toggle-workbook-drift-auditor',
+		keys: ['>'],
+		action: 'toggle-workbook-drift-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -525,6 +530,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '_') {
 		return 'toggle-installer-repo-auditor'
+	}
+
+	if (key === '>') {
+		return 'toggle-workbook-drift-auditor'
 	}
 
 	if (key === 'ArrowDown') {
