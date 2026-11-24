@@ -251,6 +251,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/IotFirmwareVaultWorkbench.vue': { __esModule: true, default: stub('iot-firmware-vault-auditor') },
 			'./components/MobileBuildVaultWorkbench.vue': { __esModule: true, default: stub('mobile-build-vault-auditor') },
 			'./components/K8sTerraformVaultWorkbench.vue': { __esModule: true, default: stub('k8s-terraform-vault-auditor') },
+			'./components/PublishingPrepressVaultWorkbench.vue': { __esModule: true, default: stub('publishing-prepress-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4333,5 +4334,28 @@ describe('Cycle 195: Shift+F2 shortcut for Kubernetes, Terraform & Infrastructur
 		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 196: Shift+F10 shortcut for Publishing, Prepress, Print-Ready PDF/X & Font Licensing Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F10 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-publishing-prepress-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-publishing-prepress-vault-auditor',
+			keys: ['Shift+F10'],
+			action: 'toggle-publishing-prepress-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true }), 'toggle-publishing-prepress-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F10' }), 'toggle-medical-dicom-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

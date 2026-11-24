@@ -2429,6 +2429,33 @@
 							<span>{{ t('duplicatefinder', 'K8s & Terraform Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-publishing-prepress-vault-button"
+							:class="{ 'is-active': publishingPrepressVaultOpen }"
+							:aria-pressed="publishingPrepressVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F10"
+							:title="t('duplicatefinder', 'Toggle Publishing, Prepress, Print-Ready PDF/X and Font Licensing Vault auditor')"
+							@click="togglePublishingPrepressVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+								<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+								<line x1="8" y1="7" x2="16" y2="7" />
+								<line x1="8" y1="11" x2="14" y2="11" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Publishing & Prepress Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3222,6 +3249,15 @@
 						@compare-duplicate="onK8sTerraformVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="k8sTerraformVaultOpen = false" />
+					<PublishingPrepressVaultWorkbench
+						v-if="publishingPrepressVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onPublishingPrepressVaultSelectDuplicate"
+						@compare-duplicate="onPublishingPrepressVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="publishingPrepressVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3731,6 +3767,7 @@ import FinanceTaxVaultWorkbench from './components/FinanceTaxVaultWorkbench.vue'
 import IotFirmwareVaultWorkbench from './components/IotFirmwareVaultWorkbench.vue'
 import MobileBuildVaultWorkbench from './components/MobileBuildVaultWorkbench.vue'
 import K8sTerraformVaultWorkbench from './components/K8sTerraformVaultWorkbench.vue'
+import PublishingPrepressVaultWorkbench from './components/PublishingPrepressVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3869,6 +3906,7 @@ export default {
 		IotFirmwareVaultWorkbench,
 		MobileBuildVaultWorkbench,
 		K8sTerraformVaultWorkbench,
+		PublishingPrepressVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3974,6 +4012,7 @@ export default {
 			iotFirmwareVaultOpen: false,
 			mobileBuildVaultOpen: false,
 			k8sTerraformVaultOpen: false,
+			publishingPrepressVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4222,6 +4261,7 @@ export default {
 				'toggle-iot-firmware-vault-auditor': t('duplicatefinder', 'Toggle IoT Firmware, Embedded ROM and Hardware Lab Vault auditor'),
 				'toggle-mobile-build-vault-auditor': t('duplicatefinder', 'Toggle Mobile App Build, iOS/Android Artifacts and Crash Symbol Vault auditor'),
 				'toggle-k8s-terraform-vault-auditor': t('duplicatefinder', 'Toggle Kubernetes, Terraform and Infrastructure-as-Code State Vault auditor'),
+				'toggle-publishing-prepress-vault-auditor': t('duplicatefinder', 'Toggle Publishing, Prepress, Print-Ready PDF/X and Font Licensing Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5718,6 +5758,22 @@ export default {
 		onK8sTerraformVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		togglePublishingPrepressVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.publishingPrepressVaultOpen = !this.publishingPrepressVaultOpen
+			return true
+		},
+		onPublishingPrepressVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onPublishingPrepressVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6608,6 +6664,13 @@ export default {
 
 			if (action === 'toggle-k8s-terraform-vault-auditor') {
 				if (this.toggleK8sTerraformVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-publishing-prepress-vault-auditor') {
+				if (this.togglePublishingPrepressVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7588,7 +7651,8 @@ export default {
 .app-content-topbar .topbar-finance-tax-vault-button,
 .app-content-topbar .topbar-iot-firmware-vault-button,
 .app-content-topbar .topbar-mobile-build-vault-button,
-.app-content-topbar .topbar-k8s-terraform-vault-button {
+.app-content-topbar .topbar-k8s-terraform-vault-button,
+.app-content-topbar .topbar-publishing-prepress-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7651,7 +7715,8 @@ export default {
 .app-content-topbar .topbar-finance-tax-vault-button,
 .app-content-topbar .topbar-iot-firmware-vault-button,
 .app-content-topbar .topbar-mobile-build-vault-button,
-.app-content-topbar .topbar-k8s-terraform-vault-button {
+.app-content-topbar .topbar-k8s-terraform-vault-button,
+.app-content-topbar .topbar-publishing-prepress-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7733,7 +7798,8 @@ export default {
 .app-content-topbar .topbar-finance-tax-vault-button svg,
 .app-content-topbar .topbar-iot-firmware-vault-button svg,
 .app-content-topbar .topbar-mobile-build-vault-button svg,
-.app-content-topbar .topbar-k8s-terraform-vault-button svg {
+.app-content-topbar .topbar-k8s-terraform-vault-button svg,
+.app-content-topbar .topbar-publishing-prepress-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -7893,7 +7959,9 @@ export default {
 .app-content-topbar .topbar-mobile-build-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-mobile-build-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-k8s-terraform-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-k8s-terraform-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-k8s-terraform-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-publishing-prepress-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-publishing-prepress-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7973,7 +8041,8 @@ export default {
 .app-content-topbar .topbar-finance-tax-vault-button.is-active,
 .app-content-topbar .topbar-iot-firmware-vault-button.is-active,
 .app-content-topbar .topbar-mobile-build-vault-button.is-active,
-.app-content-topbar .topbar-k8s-terraform-vault-button.is-active {
+.app-content-topbar .topbar-k8s-terraform-vault-button.is-active,
+.app-content-topbar .topbar-publishing-prepress-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -8196,6 +8265,7 @@ export default {
 .app-content-topbar .topbar-iot-firmware-vault-button > *,
 .app-content-topbar .topbar-mobile-build-vault-button > *,
 .app-content-topbar .topbar-k8s-terraform-vault-button > *,
+.app-content-topbar .topbar-publishing-prepress-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8357,6 +8427,7 @@ export default {
 	.app-content-topbar .topbar-iot-firmware-vault-button,
 	.app-content-topbar .topbar-mobile-build-vault-button,
 	.app-content-topbar .topbar-k8s-terraform-vault-button,
+	.app-content-topbar .topbar-publishing-prepress-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
