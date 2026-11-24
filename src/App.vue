@@ -2262,6 +2262,37 @@
 							<span>{{ t('duplicatefinder', 'SQL & Telemetry Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-broadcast-nle-vault-button"
+							:class="{ 'is-active': broadcastNleVaultOpen }"
+							:aria-pressed="broadcastNleVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F9"
+							:title="t('duplicatefinder', 'Toggle Broadcast Video, NLE Proxy and Camera Card Media Vault auditor')"
+							@click="toggleBroadcastNleVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+								<line x1="7" y1="2" x2="7" y2="22" />
+								<line x1="17" y1="2" x2="17" y2="22" />
+								<line x1="2" y1="12" x2="22" y2="12" />
+								<line x1="2" y1="7" x2="7" y2="7" />
+								<line x1="2" y1="17" x2="7" y2="17" />
+								<line x1="17" y1="17" x2="22" y2="17" />
+								<line x1="17" y1="7" x2="22" y2="7" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Broadcast & NLE Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3001,6 +3032,15 @@
 						@compare-duplicate="onDbSqlLogVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="dbSqlLogVaultOpen = false" />
+					<BroadcastNleVaultWorkbench
+						v-if="broadcastNleVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onBroadcastNleVaultSelectDuplicate"
+						@compare-duplicate="onBroadcastNleVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="broadcastNleVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3504,6 +3544,7 @@ import PhotoGradingVaultWorkbench from './components/PhotoGradingVaultWorkbench.
 import MlCheckpointVaultWorkbench from './components/MlCheckpointVaultWorkbench.vue'
 import VmBackupVaultWorkbench from './components/VmBackupVaultWorkbench.vue'
 import DbSqlLogVaultWorkbench from './components/DbSqlLogVaultWorkbench.vue'
+import BroadcastNleVaultWorkbench from './components/BroadcastNleVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3636,6 +3677,7 @@ export default {
 		MlCheckpointVaultWorkbench,
 		VmBackupVaultWorkbench,
 		DbSqlLogVaultWorkbench,
+		BroadcastNleVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3735,6 +3777,7 @@ export default {
 			mlCheckpointVaultOpen: false,
 			vmBackupVaultOpen: false,
 			dbSqlLogVaultOpen: false,
+			broadcastNleVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3977,6 +4020,7 @@ export default {
 				'toggle-photo-grading-vault-auditor': t('duplicatefinder', 'Toggle Photography RAW, Lightroom/Capture One and Color Grading Vault auditor'),
 				'toggle-ml-checkpoint-vault-auditor': t('duplicatefinder', 'Toggle Machine Learning, LLM Weights and Dataset Checkpoint Vault auditor'),
 				'toggle-db-sql-log-vault-auditor': t('duplicatefinder', 'Toggle Database Dump, SQL Backup and Telemetry Log Vault auditor'),
+				'toggle-broadcast-nle-vault-auditor': t('duplicatefinder', 'Toggle Broadcast Video, NLE Proxy and Camera Card Media Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5377,6 +5421,22 @@ export default {
 		onDbSqlLogVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleBroadcastNleVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.broadcastNleVaultOpen = !this.broadcastNleVaultOpen
+			return true
+		},
+		onBroadcastNleVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onBroadcastNleVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6225,6 +6285,13 @@ export default {
 
 			if (action === 'toggle-db-sql-log-vault-auditor') {
 				if (this.toggleDbSqlLogVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-broadcast-nle-vault-auditor') {
+				if (this.toggleBroadcastNleVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7199,7 +7266,8 @@ export default {
 .app-content-topbar .topbar-photo-grading-vault-button,
 .app-content-topbar .topbar-ml-checkpoint-vault-button,
 .app-content-topbar .topbar-vm-backup-vault-button,
-.app-content-topbar .topbar-db-sql-log-vault-button {
+.app-content-topbar .topbar-db-sql-log-vault-button,
+.app-content-topbar .topbar-broadcast-nle-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7256,7 +7324,8 @@ export default {
 .app-content-topbar .topbar-photo-grading-vault-button,
 .app-content-topbar .topbar-ml-checkpoint-vault-button,
 .app-content-topbar .topbar-vm-backup-vault-button,
-.app-content-topbar .topbar-db-sql-log-vault-button {
+.app-content-topbar .topbar-db-sql-log-vault-button,
+.app-content-topbar .topbar-broadcast-nle-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7332,7 +7401,8 @@ export default {
 .app-content-topbar .topbar-photo-grading-vault-button svg,
 .app-content-topbar .topbar-ml-checkpoint-vault-button svg,
 .app-content-topbar .topbar-vm-backup-vault-button svg,
-.app-content-topbar .topbar-db-sql-log-vault-button svg {
+.app-content-topbar .topbar-db-sql-log-vault-button svg,
+.app-content-topbar .topbar-broadcast-nle-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -7480,7 +7550,9 @@ export default {
 .app-content-topbar .topbar-vm-backup-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-vm-backup-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-db-sql-log-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-db-sql-log-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-db-sql-log-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-broadcast-nle-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-broadcast-nle-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7554,7 +7626,8 @@ export default {
 .app-content-topbar .topbar-photo-grading-vault-button.is-active,
 .app-content-topbar .topbar-ml-checkpoint-vault-button.is-active,
 .app-content-topbar .topbar-vm-backup-vault-button.is-active,
-.app-content-topbar .topbar-db-sql-log-vault-button.is-active {
+.app-content-topbar .topbar-db-sql-log-vault-button.is-active,
+.app-content-topbar .topbar-broadcast-nle-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -7771,6 +7844,7 @@ export default {
 .app-content-topbar .topbar-ml-checkpoint-vault-button > *,
 .app-content-topbar .topbar-vm-backup-vault-button > *,
 .app-content-topbar .topbar-db-sql-log-vault-button > *,
+.app-content-topbar .topbar-broadcast-nle-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -7926,6 +8000,7 @@ export default {
 	.app-content-topbar .topbar-ml-checkpoint-vault-button,
 	.app-content-topbar .topbar-vm-backup-vault-button,
 	.app-content-topbar .topbar-db-sql-log-vault-button,
+	.app-content-topbar .topbar-broadcast-nle-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

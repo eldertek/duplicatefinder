@@ -245,6 +245,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/MlCheckpointVaultWorkbench.vue': { __esModule: true, default: stub('ml-checkpoint-vault-auditor') },
 			'./components/VmBackupVaultWorkbench.vue': { __esModule: true, default: stub('vm-backup-vault-auditor') },
 			'./components/DbSqlLogVaultWorkbench.vue': { __esModule: true, default: stub('db-sql-log-vault-auditor') },
+			'./components/BroadcastNleVaultWorkbench.vue': { __esModule: true, default: stub('broadcast-nle-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4189,5 +4190,28 @@ describe('Cycle 189: Shift+F8 shortcut for Database Dump, SQL Backup & Telemetry
 		assert.equal(resolveShortcutAction({ key: 'F8', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F8', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F8', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 190: Shift+F9 shortcut for Broadcast Video, NLE Proxy & Camera Card Media Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F9 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-broadcast-nle-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-broadcast-nle-vault-auditor',
+			keys: ['Shift+F9'],
+			action: 'toggle-broadcast-nle-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true }), 'toggle-broadcast-nle-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F9' }), 'toggle-legal-contract-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
