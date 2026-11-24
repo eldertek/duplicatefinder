@@ -185,6 +185,7 @@ function createAppHarness(apiOverrides = {}) {
 			'./components/ForensicVerifierWorkbench.vue': { __esModule: true, default: stub('forensic-verifier') },
 			'./components/InodeSafetyWorkbench.vue': { __esModule: true, default: stub('inode-verifier') },
 			'./components/ShadowReclaimWorkbench.vue': { __esModule: true, default: stub('shadow-reclaim') },
+			'./components/JunkPairInspectorWorkbench.vue': { __esModule: true, default: stub('junk-pair') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

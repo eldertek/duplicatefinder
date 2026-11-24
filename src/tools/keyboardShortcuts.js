@@ -214,6 +214,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-shadow-reclaim',
 	},
 	{
+		id: 'toggle-junk-pair-inspector',
+		keys: ['~'],
+		action: 'toggle-junk-pair-inspector',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -408,6 +413,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '/') {
 		return 'focus-search'
+	}
+
+	if (key === '~') {
+		return 'toggle-junk-pair-inspector'
 	}
 
 	if (key === 'ArrowDown') {

@@ -315,6 +315,7 @@ describe('Cycle 127: Interactive Storage Footprint & Extension Analyzer (z short
 			'./components/ForensicVerifierWorkbench.vue': { __esModule: true, default: stub('forensic-verifier') },
 			'./components/InodeSafetyWorkbench.vue': { __esModule: true, default: stub('inode-verifier') },
 			'./components/ShadowReclaimWorkbench.vue': { __esModule: true, default: stub('shadow-reclaim') },
+			'./components/JunkPairInspectorWorkbench.vue': { __esModule: true, default: stub('junk-pair') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

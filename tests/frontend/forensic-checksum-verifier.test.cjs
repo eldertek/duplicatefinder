@@ -309,8 +309,10 @@ test('Cycle 146: Zero-Touch Forensic Diff & Checksum Chain Verifier', async t =>
 		const verifyAllBtn = Array.from(vm.$el.querySelectorAll('button')).find(b => b.textContent.includes('Verify Visible'))
 		assert.ok(verifyAllBtn)
 		verifyAllBtn.click()
-		await settle()
-		await new Promise(resolveDelay => setTimeout(resolveDelay, 25))
+		const deadline = Date.now() + 2000
+		while (vm.$el.textContent.includes('Pending Probe') && Date.now() < deadline) {
+			await settle()
+		}
 		await settle()
 
 		assert.ok(vm.$el.textContent.includes('Cleared'))
@@ -390,6 +392,7 @@ test('Cycle 146: Zero-Touch Forensic Diff & Checksum Chain Verifier', async t =>
 			'./components/ForensicVerifierWorkbench.vue': { __esModule: true, default: stub('forensic-verifier') },
 			'./components/InodeSafetyWorkbench.vue': { __esModule: true, default: stub('inode-verifier') },
 			'./components/ShadowReclaimWorkbench.vue': { __esModule: true, default: stub('shadow-reclaim') },
+			'./components/JunkPairInspectorWorkbench.vue': { __esModule: true, default: stub('junk-pair') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

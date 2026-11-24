@@ -1028,6 +1028,36 @@
 							<span>{{ t('duplicatefinder', 'Shadow') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-junk-pair-button"
+							:class="{ 'is-active': junkPairInspectorOpen }"
+							:aria-pressed="junkPairInspectorOpen ? 'true' : 'false'"
+							aria-keyshortcuts="~"
+							:title="t('duplicatefinder', 'Toggle zero-byte, truncated partial and AppleDouble junk pair inspector')"
+							@click="toggleJunkPairInspector">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+								<polyline points="14 2 14 8 20 8" />
+								<line
+									x1="9"
+									y1="15"
+									x2="15"
+									y2="15" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Junk Pairs') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1396,6 +1426,16 @@
 						@shadow-delete-completed="onShadowDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="shadowReclaimOpen = false" />
+					<JunkPairInspectorWorkbench
+						v-if="junkPairInspectorOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onJunkPairSelectDuplicate"
+						@compare-duplicate="onJunkPairCompareDuplicate"
+						@junk-pair-delete-completed="onJunkPairDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="junkPairInspectorOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1858,6 +1898,7 @@ import MetadataConsolidationWorkbench from './components/MetadataConsolidationWo
 import ForensicVerifierWorkbench from './components/ForensicVerifierWorkbench.vue'
 import InodeSafetyWorkbench from './components/InodeSafetyWorkbench.vue'
 import ShadowReclaimWorkbench from './components/ShadowReclaimWorkbench.vue'
+import JunkPairInspectorWorkbench from './components/JunkPairInspectorWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1949,6 +1990,7 @@ export default {
 		ForensicVerifierWorkbench,
 		InodeSafetyWorkbench,
 		ShadowReclaimWorkbench,
+		JunkPairInspectorWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2007,6 +2049,7 @@ export default {
 			forensicVerifierOpen: false,
 			inodeVerifierOpen: false,
 			shadowReclaimOpen: false,
+			junkPairInspectorOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2209,6 +2252,7 @@ export default {
 				'toggle-forensic-verifier': t('duplicatefinder', 'Toggle zero-touch duplicate forensic diff and checksum chain verifier'),
 				'toggle-inode-verifier': t('duplicatefinder', 'Toggle cross-volume inode, hardlink-alias and storage-backend safety verifier'),
 				'toggle-shadow-reclaim': t('duplicatefinder', 'Toggle Nextcloud versions, trashbin and appdata shadow-duplicate reclaimer'),
+				'toggle-junk-pair-inspector': t('duplicatefinder', 'Toggle zero-byte, truncated partial and AppleDouble junk pair inspector'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -2947,6 +2991,25 @@ export default {
 		onShadowDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleJunkPairInspector() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.junkPairInspectorOpen = !this.junkPairInspectorOpen
+			return true
+		},
+		onJunkPairSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onJunkPairCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onJunkPairDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3508,6 +3571,13 @@ export default {
 
 			if (action === 'toggle-shadow-reclaim') {
 				if (this.toggleShadowReclaim() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-junk-pair-inspector') {
+				if (this.toggleJunkPairInspector() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4441,7 +4511,8 @@ export default {
 .app-content-topbar .topbar-metadata-consolidation-button,
 .app-content-topbar .topbar-forensic-verifier-button,
 .app-content-topbar .topbar-inode-verifier-button,
-.app-content-topbar .topbar-shadow-reclaim-button {
+.app-content-topbar .topbar-shadow-reclaim-button,
+.app-content-topbar .topbar-junk-pair-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4491,7 +4562,8 @@ export default {
 .app-content-topbar .topbar-metadata-consolidation-button svg,
 .app-content-topbar .topbar-forensic-verifier-button svg,
 .app-content-topbar .topbar-inode-verifier-button svg,
-.app-content-topbar .topbar-shadow-reclaim-button svg {
+.app-content-topbar .topbar-shadow-reclaim-button svg,
+.app-content-topbar .topbar-junk-pair-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -4557,7 +4629,9 @@ export default {
 .app-content-topbar .topbar-inode-verifier-button:hover:not(:disabled),
 .app-content-topbar .topbar-inode-verifier-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-shadow-reclaim-button:hover:not(:disabled),
-.app-content-topbar .topbar-shadow-reclaim-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-shadow-reclaim-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-junk-pair-button:hover:not(:disabled),
+.app-content-topbar .topbar-junk-pair-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -4590,7 +4664,8 @@ export default {
 .app-content-topbar .topbar-metadata-consolidation-button.is-active,
 .app-content-topbar .topbar-forensic-verifier-button.is-active,
 .app-content-topbar .topbar-inode-verifier-button.is-active,
-.app-content-topbar .topbar-shadow-reclaim-button.is-active {
+.app-content-topbar .topbar-shadow-reclaim-button.is-active,
+.app-content-topbar .topbar-junk-pair-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -4766,6 +4841,7 @@ export default {
 .app-content-topbar .topbar-forensic-verifier-button > *,
 .app-content-topbar .topbar-inode-verifier-button > *,
 .app-content-topbar .topbar-shadow-reclaim-button > *,
+.app-content-topbar .topbar-junk-pair-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -4880,6 +4956,7 @@ export default {
 	.app-content-topbar .topbar-forensic-verifier-button,
 	.app-content-topbar .topbar-inode-verifier-button,
 	.app-content-topbar .topbar-shadow-reclaim-button,
+	.app-content-topbar .topbar-junk-pair-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
