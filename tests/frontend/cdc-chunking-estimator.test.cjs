@@ -377,6 +377,7 @@ test('Cycle 151: Content-Defined Chunking (CDC) / ZFS / Restic Sub-File Savings 
 			'./components/MediaFidelityWorkbench.vue': { __esModule: true, default: stub('media-fidelity') },
 			'./components/CdcChunkingWorkbench.vue': { __esModule: true, default: CdcWorkbench },
 			'./components/OpsScheduleWorkbench.vue': { __esModule: true, default: stub('ops-schedule') },
+			'./components/LegalHoldWorkbench.vue': { __esModule: true, default: stub('legal-hold') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

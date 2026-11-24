@@ -234,6 +234,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-ops-schedule-generator',
 	},
 	{
+		id: 'toggle-legal-hold-guard',
+		keys: ['!'],
+		action: 'toggle-legal-hold-guard',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -444,6 +449,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '@') {
 		return 'toggle-ops-schedule-generator'
+	}
+
+	if (key === '!') {
+		return 'toggle-legal-hold-guard'
 	}
 
 	if (key === 'ArrowDown') {
