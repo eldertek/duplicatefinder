@@ -558,8 +558,8 @@ OC.L10N.register(
     "Permission denied to delete file" : "Нет прав на удаление файла",
     "File is currently locked. Please try again later." : "Файл заблокирован. Повторите попытку позже.",
     "Error deleting file" : "Ошибка удаления файла",
-    "_%n file deleted_::_%n files deleted_" : ["%n файл удалён","%n файла удалено","%n файлов удалено","%n файла удалено"],
-    "_Failed to delete %n file_::_Failed to delete %n files_" : ["Не удалось удалить %n файл","Не удалось удалить %n файла","Не удалось удалить %n файлов","Не удалось удалить %n файла"],
+    "_%n file deleted_::_%n files deleted_" : ["%n файл удалён", "%n файла удалено", "%n файлов удалено", "%n файла удалено"],
+    "_Failed to delete %n file_::_Failed to delete %n files_" : ["Не удалось удалить %n файл", "Не удалось удалить %n файла", "Не удалось удалить %n файлов", "Не удалось удалить %n файла"],
     "Some folders could not be saved:\n{errors}" : "Некоторые папки не удалось сохранить:\n{errors}",
     "Origin folders saved successfully" : "Исходные папки сохранены",
     "Failed to save origin folders" : "Не удалось сохранить исходные папки",
@@ -586,9 +586,10 @@ OC.L10N.register(
     "Project scan initiated" : "Сканирование проекта запущено",
     "Failed to initiate project scan" : "Не удалось запустить сканирование проекта",
     "Failed to load project duplicates" : "Не удалось загрузить дубликаты проекта",
-    "_%n empty folder deleted_::_%n empty folders deleted_" : ["%n пустая папка удалена","%n пустые папки удалены","%n пустых папок удалено","%n пустые папки удалены"],
-    "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_" : ["Не удалось удалить %n пустую папку","Не удалось удалить %n пустые папки","Не удалось удалить %n пустых папок","Не удалось удалить %n пустые папки"],
+    "_%n empty folder deleted_::_%n empty folders deleted_" : ["%n пустая папка удалена", "%n пустые папки удалены", "%n пустых папок удалено", "%n пустые папки удалены"],
+    "_Failed to delete %n empty folder_::_Failed to delete %n empty folders_" : ["Не удалось удалить %n пустую папку", "Не удалось удалить %n пустые папки", "Не удалось удалить %n пустых папок", "Не удалось удалить %n пустые папки"],
     "Failed to scan duplicate folders." : "Не удалось выполнить поиск папок-дубликатов.",
-    "The viewer is not available" : "Программа просмотра недоступна"
+    "The viewer is not available" : "Программа просмотра недоступна",
+    "You're Ready!" : "Все готово!"
 },
 "nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);");
