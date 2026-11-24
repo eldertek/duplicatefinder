@@ -344,6 +344,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-game3d-asset-vault-auditor',
 	},
 	{
+		id: 'toggle-database-dump-log-auditor',
+		keys: ['Shift+Q'],
+		action: 'toggle-database-dump-log-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -642,6 +647,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'T' || key === 't')) {
 		return 'toggle-game3d-asset-vault-auditor'
+	}
+
+	if (event.shiftKey && (key === 'Q' || key === 'q')) {
+		return 'toggle-database-dump-log-auditor'
 	}
 
 	if (key === 'ArrowDown') {

@@ -416,6 +416,7 @@ describe('Cycle 138: Retention Age, Cold-Storage & Stale Artifact Pruner Workben
 			'./components/VmContainerImageWorkbench.vue': { __esModule: true, default: stub('vm-container-image-auditor') },
 			'./components/MlDatasetArtifactWorkbench.vue': { __esModule: true, default: stub('ml-dataset-artifact-auditor') },
 			'./components/Game3dAssetVaultWorkbench.vue': { __esModule: true, default: stub('game3d-asset-vault-auditor') },
+			'./components/DatabaseDumpLogWorkbench.vue': { __esModule: true, default: stub('database-dump-log-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
