@@ -635,6 +635,7 @@ describe('Cycle 206: Fiber-Optic, Telecom RF Spectrum, VNA S-Parameter & 5G Base
 			'./components/DigitalGridScadaVaultWorkbench.vue': { __esModule: true, default: stub('digital-grid-scada-vault-auditor') },
 			'./components/EnergySeismicVaultWorkbench.vue': { __esModule: true, default: stub('energy-seismic-vault-auditor') },
 			'./components/FiberTelecomRfVaultWorkbench.vue': { __esModule: true, default: FiberTelecomRfVaultWorkbench },
+			'./components/GeotechShmCivilVaultWorkbench.vue': { __esModule: true, default: stub('geotech-shm-civil-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

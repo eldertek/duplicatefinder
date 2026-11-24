@@ -504,6 +504,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-fiber-telecom-rf-vault-auditor',
 	},
 	{
+		id: 'toggle-geotech-shm-civil-vault-auditor',
+		keys: ['Alt+Shift+G'],
+		action: 'toggle-geotech-shm-civil-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -706,6 +711,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'F' || key === 'f')) {
 			return 'toggle-fiber-telecom-rf-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'G' || key === 'g')) {
+			return 'toggle-geotech-shm-civil-vault-auditor'
 		}
 		return null
 	}

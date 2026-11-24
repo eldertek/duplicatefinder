@@ -262,6 +262,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/DigitalGridScadaVaultWorkbench.vue': { __esModule: true, default: stub('digital-grid-scada-vault-auditor') },
 			'./components/EnergySeismicVaultWorkbench.vue': { __esModule: true, default: stub('energy-seismic-vault-auditor') },
 			'./components/FiberTelecomRfVaultWorkbench.vue': { __esModule: true, default: stub('fiber-telecom-rf-vault-auditor') },
+			'./components/GeotechShmCivilVaultWorkbench.vue': { __esModule: true, default: stub('geotech-shm-civil-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4615,5 +4616,31 @@ describe('Cycle 206: Alt+Shift+F shortcut for Fiber-Optic, Telecom RF Spectrum, 
 		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 207: Alt+Shift+G shortcut for Geotechnical, SHM, Tunneling TBM & Civil Sensor Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+G cleanly and preserves g while ignoring Shift+G, ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-geotech-shm-civil-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-geotech-shm-civil-vault-auditor',
+			keys: ['Alt+Shift+G'],
+			action: 'toggle-geotech-shm-civil-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true }), 'toggle-geotech-shm-civil-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'g', altKey: true, shiftKey: true }), 'toggle-geotech-shm-civil-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'G', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'g', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'g' }), 'jump-to-largest-group')
+		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
