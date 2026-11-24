@@ -209,6 +209,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-inode-verifier',
 	},
 	{
+		id: 'toggle-shadow-reclaim',
+		keys: ['`'],
+		action: 'toggle-shadow-reclaim',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -289,6 +294,7 @@ const SINGLE_KEY_ACTIONS = Object.freeze({
 	',': 'toggle-metadata-consolidation',
 	'.': 'toggle-forensic-verifier',
 	'\'': 'toggle-inode-verifier',
+	'`': 'toggle-shadow-reclaim',
 	u: 'toggle-acknowledge',
 	m: 'cycle-min-size-filter',
 	r: 'reset-filters',
