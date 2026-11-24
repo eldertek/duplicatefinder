@@ -374,6 +374,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-gis-map-archive-auditor',
 	},
 	{
+		id: 'toggle-photo-grading-vault-auditor',
+		keys: ['F4'],
+		action: 'toggle-photo-grading-vault-auditor',
+	},
+	{
 		id: 'toggle-game-dev-pipeline-vault-auditor',
 		keys: ['F6'],
 		action: 'toggle-game-dev-pipeline-vault-auditor',
@@ -721,6 +726,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'Z' || key === 'z')) {
 		return 'toggle-gis-map-archive-auditor'
+	}
+
+	if (!event.shiftKey && key === 'F4') {
+		return 'toggle-photo-grading-vault-auditor'
 	}
 
 	if (!event.shiftKey && key === 'F6') {

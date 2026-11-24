@@ -633,6 +633,7 @@ describe('Cycle 184: 3D Printing, CNC & Additive Manufacturing Vault Auditor', (
 			'./components/MedicalDicomVaultWorkbench.vue': { __esModule: true, default: stub('medical-dicom-vault-auditor') },
 			'./components/AdditiveManufacturingVaultWorkbench.vue': { __esModule: true, default: AdditiveManufacturingVaultWorkbench },
 			'./components/GameDevPipelineVaultWorkbench.vue': { __esModule: true, default: stub('game-dev-pipeline-vault-auditor') },
+			'./components/PhotoGradingVaultWorkbench.vue': { __esModule: true, default: stub('photo-grading-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

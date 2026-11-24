@@ -2158,6 +2158,31 @@
 							<span>{{ t('duplicatefinder', 'Game Dev Pipeline') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-photo-grading-vault-button"
+							:class="{ 'is-active': photoGradingVaultOpen }"
+							:aria-pressed="photoGradingVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="F4"
+							:title="t('duplicatefinder', 'Toggle Photography RAW, Lightroom/Capture One and Color Grading Vault auditor')"
+							@click="togglePhotoGradingVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+								<circle cx="12" cy="13" r="4" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'RAW & Grading Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2861,6 +2886,15 @@
 						@compare-duplicate="onGameDevPipelineVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="gameDevPipelineVaultOpen = false" />
+					<PhotoGradingVaultWorkbench
+						v-if="photoGradingVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onPhotoGradingVaultSelectDuplicate"
+						@compare-duplicate="onPhotoGradingVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="photoGradingVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3360,6 +3394,7 @@ import LegalContractVaultWorkbench from './components/LegalContractVaultWorkbenc
 import MedicalDicomVaultWorkbench from './components/MedicalDicomVaultWorkbench.vue'
 import AdditiveManufacturingVaultWorkbench from './components/AdditiveManufacturingVaultWorkbench.vue'
 import GameDevPipelineVaultWorkbench from './components/GameDevPipelineVaultWorkbench.vue'
+import PhotoGradingVaultWorkbench from './components/PhotoGradingVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3488,6 +3523,7 @@ export default {
 		MedicalDicomVaultWorkbench,
 		AdditiveManufacturingVaultWorkbench,
 		GameDevPipelineVaultWorkbench,
+		PhotoGradingVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3583,6 +3619,7 @@ export default {
 			medicalDicomVaultOpen: false,
 			additiveMfgVaultOpen: false,
 			gameDevPipelineVaultOpen: false,
+			photoGradingVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3822,6 +3859,7 @@ export default {
 				'toggle-medical-dicom-vault-auditor': t('duplicatefinder', 'Toggle Medical, DICOM and Health Imaging Vault auditor'),
 				'toggle-additive-mfg-vault-auditor': t('duplicatefinder', 'Toggle 3D Printing, CNC and Additive Manufacturing Vault auditor'),
 				'toggle-game-dev-pipeline-vault-auditor': t('duplicatefinder', 'Toggle Game Dev, Unity/Unreal and 3D Asset Pipeline Vault auditor'),
+				'toggle-photo-grading-vault-auditor': t('duplicatefinder', 'Toggle Photography RAW, Lightroom/Capture One and Color Grading Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5158,6 +5196,22 @@ export default {
 		onGameDevPipelineVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		togglePhotoGradingVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.photoGradingVaultOpen = !this.photoGradingVaultOpen
+			return true
+		},
+		onPhotoGradingVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onPhotoGradingVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5978,6 +6032,13 @@ export default {
 
 			if (action === 'toggle-game-dev-pipeline-vault-auditor') {
 				if (this.toggleGameDevPipelineVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-photo-grading-vault-auditor') {
+				if (this.togglePhotoGradingVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6948,7 +7009,8 @@ export default {
 .app-content-topbar .topbar-legal-contract-vault-button,
 .app-content-topbar .topbar-medical-dicom-vault-button,
 .app-content-topbar .topbar-additive-mfg-vault-button,
-.app-content-topbar .topbar-game-dev-pipeline-vault-button {
+.app-content-topbar .topbar-game-dev-pipeline-vault-button,
+.app-content-topbar .topbar-photo-grading-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7001,7 +7063,8 @@ export default {
 .app-content-topbar .topbar-legal-contract-vault-button,
 .app-content-topbar .topbar-medical-dicom-vault-button,
 .app-content-topbar .topbar-additive-mfg-vault-button,
-.app-content-topbar .topbar-game-dev-pipeline-vault-button {
+.app-content-topbar .topbar-game-dev-pipeline-vault-button,
+.app-content-topbar .topbar-photo-grading-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7073,7 +7136,8 @@ export default {
 .app-content-topbar .topbar-legal-contract-vault-button svg,
 .app-content-topbar .topbar-medical-dicom-vault-button svg,
 .app-content-topbar .topbar-additive-mfg-vault-button svg,
-.app-content-topbar .topbar-game-dev-pipeline-vault-button svg {
+.app-content-topbar .topbar-game-dev-pipeline-vault-button svg,
+.app-content-topbar .topbar-photo-grading-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -7213,7 +7277,9 @@ export default {
 .app-content-topbar .topbar-additive-mfg-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-additive-mfg-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-game-dev-pipeline-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-game-dev-pipeline-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-game-dev-pipeline-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-photo-grading-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-photo-grading-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7283,7 +7349,8 @@ export default {
 .app-content-topbar .topbar-legal-contract-vault-button.is-active,
 .app-content-topbar .topbar-medical-dicom-vault-button.is-active,
 .app-content-topbar .topbar-additive-mfg-vault-button.is-active,
-.app-content-topbar .topbar-game-dev-pipeline-vault-button.is-active {
+.app-content-topbar .topbar-game-dev-pipeline-vault-button.is-active,
+.app-content-topbar .topbar-photo-grading-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -7496,6 +7563,7 @@ export default {
 .app-content-topbar .topbar-medical-dicom-vault-button > *,
 .app-content-topbar .topbar-additive-mfg-vault-button > *,
 .app-content-topbar .topbar-game-dev-pipeline-vault-button > *,
+.app-content-topbar .topbar-photo-grading-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -7647,6 +7715,7 @@ export default {
 	.app-content-topbar .topbar-medical-dicom-vault-button,
 	.app-content-topbar .topbar-additive-mfg-vault-button,
 	.app-content-topbar .topbar-game-dev-pipeline-vault-button,
+	.app-content-topbar .topbar-photo-grading-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

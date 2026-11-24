@@ -579,6 +579,7 @@ describe('Cycle 176: Creative Design Package, Print Proof & Typography Font Arch
 			'./components/MedicalDicomVaultWorkbench.vue': { __esModule: true, default: stub('medical-dicom-vault-auditor') },
 			'./components/AdditiveManufacturingVaultWorkbench.vue': { __esModule: true, default: stub('additive-mfg-vault-auditor') },
 			'./components/GameDevPipelineVaultWorkbench.vue': { __esModule: true, default: stub('game-dev-pipeline-vault-auditor') },
+			'./components/PhotoGradingVaultWorkbench.vue': { __esModule: true, default: stub('photo-grading-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

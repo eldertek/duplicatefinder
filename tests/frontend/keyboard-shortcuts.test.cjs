@@ -241,6 +241,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/MedicalDicomVaultWorkbench.vue': { __esModule: true, default: stub('medical-dicom-vault-auditor') },
 			'./components/AdditiveManufacturingVaultWorkbench.vue': { __esModule: true, default: stub('additive-mfg-vault-auditor') },
 			'./components/GameDevPipelineVaultWorkbench.vue': { __esModule: true, default: stub('game-dev-pipeline-vault-auditor') },
+			'./components/PhotoGradingVaultWorkbench.vue': { __esModule: true, default: stub('photo-grading-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4093,5 +4094,28 @@ describe('Cycle 185: F6 shortcut for Game Dev, Unity/Unreal & 3D Asset Pipeline 
 		assert.equal(resolveShortcutAction({ key: 'F6' }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F6' }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F6', target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 186: F4 shortcut for Photography RAW, Lightroom/Capture One & Color Grading Vault Auditor', () => {
+	test('resolveShortcutAction maps F4 cleanly and ignores modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-photo-grading-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-photo-grading-vault-auditor',
+			keys: ['F4'],
+			action: 'toggle-photo-grading-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F4' }), 'toggle-photo-grading-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4' }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4', target: document.createElement('input') }), null)
 	})
 })
