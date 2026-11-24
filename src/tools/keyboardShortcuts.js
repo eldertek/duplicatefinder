@@ -319,6 +319,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-vfx-render-cache-auditor',
 	},
 	{
+		id: 'toggle-elearning-scorm-auditor',
+		keys: ['Shift+L'],
+		action: 'toggle-elearning-scorm-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -597,6 +602,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'D' || key === 'd')) {
 		return 'toggle-vfx-render-cache-auditor'
+	}
+
+	if (event.shiftKey && (key === 'L' || key === 'l')) {
+		return 'toggle-elearning-scorm-auditor'
 	}
 
 	if (key === 'ArrowDown') {

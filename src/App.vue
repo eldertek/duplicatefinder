@@ -1680,6 +1680,31 @@
 							<span>{{ t('duplicatefinder', '3D & VFX Cache') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-elearning-scorm-button"
+							:class="{ 'is-active': elearningScormOpen }"
+							:aria-pressed="elearningScormOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+L"
+							:title="t('duplicatefinder', 'Toggle e-learning SCORM/H5P package, lecture recording transcode and slide deck handout auditor')"
+							@click="toggleElearningScorm">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+								<path d="M6 12v5c0 2 2.7 3 6 3s6-1 6-3v-5" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Courses & SCORM') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2239,6 +2264,15 @@
 						@compare-duplicate="onVfxRenderCacheCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="vfxRenderCacheOpen = false" />
+					<ElearningScormWorkbench
+						v-if="elearningScormOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onElearningScormSelectDuplicate"
+						@compare-duplicate="onElearningScormCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="elearningScormOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2722,6 +2756,7 @@ import LegalDocumentOcrWorkbench from './components/LegalDocumentOcrWorkbench.vu
 import BackupTakeoutWorkbench from './components/BackupTakeoutWorkbench.vue'
 import DawAudioStemWorkbench from './components/DawAudioStemWorkbench.vue'
 import VfxRenderCacheWorkbench from './components/VfxRenderCacheWorkbench.vue'
+import ElearningScormWorkbench from './components/ElearningScormWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2834,6 +2869,7 @@ export default {
 		BackupTakeoutWorkbench,
 		DawAudioStemWorkbench,
 		VfxRenderCacheWorkbench,
+		ElearningScormWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2913,6 +2949,7 @@ export default {
 			backupTakeoutOpen: false,
 			dawAudioOpen: false,
 			vfxRenderCacheOpen: false,
+			elearningScormOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3136,6 +3173,7 @@ export default {
 				'toggle-backup-takeout-auditor': t('duplicatefinder', 'Toggle backup archive, cloud takeout bundle, dated snapshot and extracted-folder twin auditor'),
 				'toggle-daw-audio-stem-auditor': t('duplicatefinder', 'Toggle DAW session, lossless stem master, mixdown revision and peak cache auditor'),
 				'toggle-vfx-render-cache-auditor': t('duplicatefinder', 'Toggle 3D VFX scene, texture mip pyramid, bake sim cache and autosave auditor'),
+				'toggle-elearning-scorm-auditor': t('duplicatefinder', 'Toggle e-learning SCORM/H5P package, lecture recording transcode and slide deck handout auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4216,6 +4254,22 @@ export default {
 		onVfxRenderCacheCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleElearningScorm() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.elearningScormOpen = !this.elearningScormOpen
+			return true
+		},
+		onElearningScormSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onElearningScormCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4924,6 +4978,13 @@ export default {
 
 			if (action === 'toggle-vfx-render-cache-auditor') {
 				if (this.toggleVfxRenderCache() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-elearning-scorm-auditor') {
+				if (this.toggleElearningScorm() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5878,7 +5939,8 @@ export default {
 .app-content-topbar .topbar-legal-document-ocr-button,
 .app-content-topbar .topbar-backup-takeout-button,
 .app-content-topbar .topbar-daw-audio-button,
-.app-content-topbar .topbar-vfx-render-cache-button {
+.app-content-topbar .topbar-vfx-render-cache-button,
+.app-content-topbar .topbar-elearning-scorm-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5915,7 +5977,8 @@ export default {
 .app-content-topbar .topbar-legal-document-ocr-button,
 .app-content-topbar .topbar-backup-takeout-button,
 .app-content-topbar .topbar-daw-audio-button,
-.app-content-topbar .topbar-vfx-render-cache-button {
+.app-content-topbar .topbar-vfx-render-cache-button,
+.app-content-topbar .topbar-elearning-scorm-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5971,7 +6034,8 @@ export default {
 .app-content-topbar .topbar-legal-document-ocr-button svg,
 .app-content-topbar .topbar-backup-takeout-button svg,
 .app-content-topbar .topbar-daw-audio-button svg,
-.app-content-topbar .topbar-vfx-render-cache-button svg {
+.app-content-topbar .topbar-vfx-render-cache-button svg,
+.app-content-topbar .topbar-elearning-scorm-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6079,7 +6143,9 @@ export default {
 .app-content-topbar .topbar-daw-audio-button:hover:not(:disabled),
 .app-content-topbar .topbar-daw-audio-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-vfx-render-cache-button:hover:not(:disabled),
-.app-content-topbar .topbar-vfx-render-cache-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-vfx-render-cache-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-elearning-scorm-button:hover:not(:disabled),
+.app-content-topbar .topbar-elearning-scorm-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -6133,7 +6199,8 @@ export default {
 .app-content-topbar .topbar-legal-document-ocr-button.is-active,
 .app-content-topbar .topbar-backup-takeout-button.is-active,
 .app-content-topbar .topbar-daw-audio-button.is-active,
-.app-content-topbar .topbar-vfx-render-cache-button.is-active {
+.app-content-topbar .topbar-vfx-render-cache-button.is-active,
+.app-content-topbar .topbar-elearning-scorm-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6330,6 +6397,7 @@ export default {
 .app-content-topbar .topbar-backup-takeout-button > *,
 .app-content-topbar .topbar-daw-audio-button > *,
 .app-content-topbar .topbar-vfx-render-cache-button > *,
+.app-content-topbar .topbar-elearning-scorm-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6465,6 +6533,7 @@ export default {
 	.app-content-topbar .topbar-backup-takeout-button,
 	.app-content-topbar .topbar-daw-audio-button,
 	.app-content-topbar .topbar-vfx-render-cache-button,
+	.app-content-topbar .topbar-elearning-scorm-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
