@@ -239,6 +239,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/ScientificResearchVaultWorkbench.vue': { __esModule: true, default: stub('scientific-research-vault-auditor') },
 			'./components/LegalContractVaultWorkbench.vue': { __esModule: true, default: stub('legal-contract-vault-auditor') },
 			'./components/MedicalDicomVaultWorkbench.vue': { __esModule: true, default: stub('medical-dicom-vault-auditor') },
+			'./components/AdditiveManufacturingVaultWorkbench.vue': { __esModule: true, default: stub('additive-mfg-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4045,5 +4046,28 @@ describe('Cycle 115: keyboard shortcut u (toggle-acknowledge)', () => {
 			assert.equal(/[\u2013\u2014]/.test(source), false, `${relPath} must have zero U+2013/U+2014 dashes`)
 			assert.equal(/v-html|innerHTML|outerHTML|document\.write/.test(source), false, `${relPath} must have zero XSS sinks`)
 		}
+	})
+})
+
+describe('Cycle 184: F7 shortcut for 3D Printing, CNC & Additive Manufacturing Vault Auditor', () => {
+	test('resolveShortcutAction maps F7 cleanly and ignores modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-additive-mfg-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-additive-mfg-vault-auditor',
+			keys: ['F7'],
+			action: 'toggle-additive-mfg-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F7' }), 'toggle-additive-mfg-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7' }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7', target: document.createElement('input') }), null)
 	})
 })
