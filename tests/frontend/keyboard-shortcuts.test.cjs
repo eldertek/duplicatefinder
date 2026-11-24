@@ -240,6 +240,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/LegalContractVaultWorkbench.vue': { __esModule: true, default: stub('legal-contract-vault-auditor') },
 			'./components/MedicalDicomVaultWorkbench.vue': { __esModule: true, default: stub('medical-dicom-vault-auditor') },
 			'./components/AdditiveManufacturingVaultWorkbench.vue': { __esModule: true, default: stub('additive-mfg-vault-auditor') },
+			'./components/GameDevPipelineVaultWorkbench.vue': { __esModule: true, default: stub('game-dev-pipeline-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4069,5 +4070,28 @@ describe('Cycle 184: F7 shortcut for 3D Printing, CNC & Additive Manufacturing V
 		assert.equal(resolveShortcutAction({ key: 'F7' }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F7' }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F7', target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 185: F6 shortcut for Game Dev, Unity/Unreal & 3D Asset Pipeline Vault Auditor', () => {
+	test('resolveShortcutAction maps F6 cleanly and ignores modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-game-dev-pipeline-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-game-dev-pipeline-vault-auditor',
+			keys: ['F6'],
+			action: 'toggle-game-dev-pipeline-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F6' }), 'toggle-game-dev-pipeline-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6' }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6', target: document.createElement('input') }), null)
 	})
 })
