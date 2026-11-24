@@ -489,6 +489,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-chem-pharma-gmp-vault-auditor',
 	},
 	{
+		id: 'toggle-digital-grid-scada-vault-auditor',
+		keys: ['Alt+Shift+D'],
+		action: 'toggle-digital-grid-scada-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -682,6 +687,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'C' || key === 'c')) {
 			return 'toggle-chem-pharma-gmp-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'D' || key === 'd')) {
+			return 'toggle-digital-grid-scada-vault-auditor'
 		}
 		return null
 	}

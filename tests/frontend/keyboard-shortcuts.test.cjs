@@ -259,6 +259,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/AerospaceCfdVaultWorkbench.vue': { __esModule: true, default: stub('aerospace-cfd-vault-auditor') },
 			'./components/BatteryBmsVaultWorkbench.vue': { __esModule: true, default: stub('battery-bms-vault-auditor') },
 			'./components/ChemPharmaGmpVaultWorkbench.vue': { __esModule: true, default: stub('chem-pharma-gmp-vault-auditor') },
+			'./components/DigitalGridScadaVaultWorkbench.vue': { __esModule: true, default: stub('digital-grid-scada-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4534,5 +4535,31 @@ describe('Cycle 203: Alt+Shift+C shortcut for Chemical Process, Chromatography &
 		assert.equal(resolveShortcutAction({ key: 'C', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'C', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'C', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 204: Alt+Shift+D shortcut for Digital Grid, Substation SCADA & Synchrophasor Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+D cleanly and preserves Shift+D/d while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-digital-grid-scada-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-digital-grid-scada-vault-auditor',
+			keys: ['Alt+Shift+D'],
+			action: 'toggle-digital-grid-scada-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true }), 'toggle-digital-grid-scada-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'd', altKey: true, shiftKey: true }), 'toggle-digital-grid-scada-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'D', shiftKey: true }), 'toggle-vfx-render-cache-auditor')
+		assert.equal(resolveShortcutAction({ key: 'd', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'd' }), 'toggle-folder-matrix')
+		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

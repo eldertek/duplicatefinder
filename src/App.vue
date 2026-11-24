@@ -2649,6 +2649,30 @@
 							<span>{{ t('duplicatefinder', 'Chem & Pharma GMP Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-digital-grid-scada-vault-button"
+							:class="{ 'is-active': digitalGridScadaVaultOpen }"
+							:aria-pressed="digitalGridScadaVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+D"
+							:title="t('duplicatefinder', 'Toggle Digital Grid, Substation SCADA, Protection Relay and Synchrophasor Vault auditor')"
+							@click="toggleDigitalGridScadaVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Digital Grid Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3514,6 +3538,15 @@
 						@compare-duplicate="onChemPharmaGmpVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="chemPharmaGmpVaultOpen = false" />
+					<DigitalGridScadaVaultWorkbench
+						v-if="digitalGridScadaVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onDigitalGridScadaVaultSelectDuplicate"
+						@compare-duplicate="onDigitalGridScadaVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="digitalGridScadaVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4031,6 +4064,7 @@ import SemiconductorEdaVaultWorkbench from './components/SemiconductorEdaVaultWo
 import AerospaceCfdVaultWorkbench from './components/AerospaceCfdVaultWorkbench.vue'
 import BatteryBmsVaultWorkbench from './components/BatteryBmsVaultWorkbench.vue'
 import ChemPharmaGmpVaultWorkbench from './components/ChemPharmaGmpVaultWorkbench.vue'
+import DigitalGridScadaVaultWorkbench from './components/DigitalGridScadaVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4177,6 +4211,7 @@ export default {
 		AerospaceCfdVaultWorkbench,
 		BatteryBmsVaultWorkbench,
 		ChemPharmaGmpVaultWorkbench,
+		DigitalGridScadaVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4290,6 +4325,7 @@ export default {
 			aerospaceCfdVaultOpen: false,
 			batteryBmsVaultOpen: false,
 			chemPharmaGmpVaultOpen: false,
+			digitalGridScadaVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4546,6 +4582,7 @@ export default {
 				'toggle-aerospace-cfd-vault-auditor': t('duplicatefinder', 'Toggle Aerospace, CFD and Finite Element Simulation Vault auditor'),
 				'toggle-battery-bms-vault-auditor': t('duplicatefinder', 'Toggle Battery, EV Powertrain, BMS Telemetry and HIL Dyno Test Vault auditor'),
 				'toggle-chem-pharma-gmp-vault-auditor': t('duplicatefinder', 'Toggle Chemical Process, Chromatography, Spectroscopy and Pharma GMP Vault auditor'),
+				'toggle-digital-grid-scada-vault-auditor': t('duplicatefinder', 'Toggle Digital Grid, Substation SCADA, Protection Relay and Synchrophasor Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -6170,6 +6207,22 @@ export default {
 		onChemPharmaGmpVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleDigitalGridScadaVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.digitalGridScadaVaultOpen = !this.digitalGridScadaVaultOpen
+			return true
+		},
+		onDigitalGridScadaVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onDigitalGridScadaVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -7116,6 +7169,13 @@ export default {
 
 			if (action === 'toggle-chem-pharma-gmp-vault-auditor') {
 				if (this.toggleChemPharmaGmpVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-digital-grid-scada-vault-auditor') {
+				if (this.toggleDigitalGridScadaVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -8104,7 +8164,8 @@ export default {
 .app-content-topbar .topbar-semiconductor-eda-vault-button,
 .app-content-topbar .topbar-aerospace-cfd-vault-button,
 .app-content-topbar .topbar-battery-bms-vault-button,
-.app-content-topbar .topbar-chem-pharma-gmp-vault-button {
+.app-content-topbar .topbar-chem-pharma-gmp-vault-button,
+.app-content-topbar .topbar-digital-grid-scada-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -8175,7 +8236,8 @@ export default {
 .app-content-topbar .topbar-semiconductor-eda-vault-button,
 .app-content-topbar .topbar-aerospace-cfd-vault-button,
 .app-content-topbar .topbar-battery-bms-vault-button,
-.app-content-topbar .topbar-chem-pharma-gmp-vault-button {
+.app-content-topbar .topbar-chem-pharma-gmp-vault-button,
+.app-content-topbar .topbar-digital-grid-scada-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -8265,7 +8327,8 @@ export default {
 .app-content-topbar .topbar-semiconductor-eda-vault-button svg,
 .app-content-topbar .topbar-aerospace-cfd-vault-button svg,
 .app-content-topbar .topbar-battery-bms-vault-button svg,
-.app-content-topbar .topbar-chem-pharma-gmp-vault-button svg {
+.app-content-topbar .topbar-chem-pharma-gmp-vault-button svg,
+.app-content-topbar .topbar-digital-grid-scada-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -8441,7 +8504,9 @@ export default {
 .app-content-topbar .topbar-battery-bms-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-battery-bms-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-chem-pharma-gmp-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-chem-pharma-gmp-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-digital-grid-scada-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-digital-grid-scada-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -8529,7 +8594,8 @@ export default {
 .app-content-topbar .topbar-semiconductor-eda-vault-button.is-active,
 .app-content-topbar .topbar-aerospace-cfd-vault-button.is-active,
 .app-content-topbar .topbar-battery-bms-vault-button.is-active,
-.app-content-topbar .topbar-chem-pharma-gmp-vault-button.is-active {
+.app-content-topbar .topbar-chem-pharma-gmp-vault-button.is-active,
+.app-content-topbar .topbar-digital-grid-scada-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -8760,6 +8826,7 @@ export default {
 .app-content-topbar .topbar-aerospace-cfd-vault-button > *,
 .app-content-topbar .topbar-battery-bms-vault-button > *,
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button > *,
+.app-content-topbar .topbar-digital-grid-scada-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8929,6 +8996,7 @@ export default {
 	.app-content-topbar .topbar-aerospace-cfd-vault-button,
 	.app-content-topbar .topbar-battery-bms-vault-button,
 	.app-content-topbar .topbar-chem-pharma-gmp-vault-button,
+	.app-content-topbar .topbar-digital-grid-scada-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
