@@ -250,6 +250,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/FinanceTaxVaultWorkbench.vue': { __esModule: true, default: stub('finance-tax-vault-auditor') },
 			'./components/IotFirmwareVaultWorkbench.vue': { __esModule: true, default: stub('iot-firmware-vault-auditor') },
 			'./components/MobileBuildVaultWorkbench.vue': { __esModule: true, default: stub('mobile-build-vault-auditor') },
+			'./components/K8sTerraformVaultWorkbench.vue': { __esModule: true, default: stub('k8s-terraform-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4142,7 +4143,7 @@ describe('Cycle 187: F2 shortcut for Machine Learning, LLM Weights & Dataset Che
 			action: 'toggle-ml-checkpoint-vault-auditor',
 		})
 		assert.equal(resolveShortcutAction({ key: 'F2' }), 'toggle-ml-checkpoint-vault-auditor')
-		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true }), 'toggle-k8s-terraform-vault-auditor')
 		assert.equal(resolveShortcutAction({ key: 'F2', ctrlKey: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F2', altKey: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F2' }, { isHelpOpen: true }), null)
@@ -4309,5 +4310,28 @@ describe('Cycle 194: Shift+F3 shortcut for Mobile App Build, iOS/Android Artifac
 		assert.equal(resolveShortcutAction({ key: 'F3', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F3', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F3', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 195: Shift+F2 shortcut for Kubernetes, Terraform & Infrastructure-as-Code State Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F2 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-k8s-terraform-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-k8s-terraform-vault-auditor',
+			keys: ['Shift+F2'],
+			action: 'toggle-k8s-terraform-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true }), 'toggle-k8s-terraform-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F2' }), 'toggle-ml-checkpoint-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F2', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

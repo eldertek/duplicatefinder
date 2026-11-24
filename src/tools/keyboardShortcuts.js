@@ -389,6 +389,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-ml-checkpoint-vault-auditor',
 	},
 	{
+		id: 'toggle-k8s-terraform-vault-auditor',
+		keys: ['Shift+F2'],
+		action: 'toggle-k8s-terraform-vault-auditor',
+	},
+	{
 		id: 'toggle-vm-backup-vault-auditor',
 		keys: ['F3'],
 		action: 'toggle-vm-backup-vault-auditor',
@@ -770,6 +775,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (!event.shiftKey && key === 'F2') {
 		return 'toggle-ml-checkpoint-vault-auditor'
+	}
+
+	if (event.shiftKey && key === 'F2') {
+		return 'toggle-k8s-terraform-vault-auditor'
 	}
 
 	if (!event.shiftKey && key === 'F3') {
