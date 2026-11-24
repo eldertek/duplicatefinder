@@ -2319,6 +2319,32 @@
 							<span>{{ t('duplicatefinder', 'E-Commerce & PIM Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-finance-tax-vault-button"
+							:class="{ 'is-active': financeTaxVaultOpen }"
+							:aria-pressed="financeTaxVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F6"
+							:title="t('duplicatefinder', 'Toggle Financial, Accounting and Tax Compliance Vault auditor')"
+							@click="toggleFinanceTaxVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect x="2" y="3" width="20" height="18" rx="2" />
+								<line x1="2" y1="9" x2="22" y2="9" />
+								<line x1="9" y1="21" x2="9" y2="9" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Finance & Tax Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3076,6 +3102,15 @@
 						@compare-duplicate="onEcommercePimVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="ecommercePimVaultOpen = false" />
+					<FinanceTaxVaultWorkbench
+						v-if="financeTaxVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onFinanceTaxVaultSelectDuplicate"
+						@compare-duplicate="onFinanceTaxVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="financeTaxVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3581,6 +3616,7 @@ import VmBackupVaultWorkbench from './components/VmBackupVaultWorkbench.vue'
 import DbSqlLogVaultWorkbench from './components/DbSqlLogVaultWorkbench.vue'
 import BroadcastNleVaultWorkbench from './components/BroadcastNleVaultWorkbench.vue'
 import EcommercePimVaultWorkbench from './components/EcommercePimVaultWorkbench.vue'
+import FinanceTaxVaultWorkbench from './components/FinanceTaxVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3715,6 +3751,7 @@ export default {
 		DbSqlLogVaultWorkbench,
 		BroadcastNleVaultWorkbench,
 		EcommercePimVaultWorkbench,
+		FinanceTaxVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3816,6 +3853,7 @@ export default {
 			dbSqlLogVaultOpen: false,
 			broadcastNleVaultOpen: false,
 			ecommercePimVaultOpen: false,
+			financeTaxVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4060,6 +4098,7 @@ export default {
 				'toggle-db-sql-log-vault-auditor': t('duplicatefinder', 'Toggle Database Dump, SQL Backup and Telemetry Log Vault auditor'),
 				'toggle-broadcast-nle-vault-auditor': t('duplicatefinder', 'Toggle Broadcast Video, NLE Proxy and Camera Card Media Vault auditor'),
 				'toggle-ecommerce-pim-vault-auditor': t('duplicatefinder', 'Toggle E-Commerce, PIM Product Media and Brand Asset Vault auditor'),
+				'toggle-finance-tax-vault-auditor': t('duplicatefinder', 'Toggle Financial, Accounting and Tax Compliance Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5492,6 +5531,22 @@ export default {
 		onEcommercePimVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleFinanceTaxVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.financeTaxVaultOpen = !this.financeTaxVaultOpen
+			return true
+		},
+		onFinanceTaxVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onFinanceTaxVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6354,6 +6409,13 @@ export default {
 
 			if (action === 'toggle-ecommerce-pim-vault-auditor') {
 				if (this.toggleEcommercePimVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-finance-tax-vault-auditor') {
+				if (this.toggleFinanceTaxVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7330,7 +7392,8 @@ export default {
 .app-content-topbar .topbar-vm-backup-vault-button,
 .app-content-topbar .topbar-db-sql-log-vault-button,
 .app-content-topbar .topbar-broadcast-nle-vault-button,
-.app-content-topbar .topbar-ecommerce-pim-vault-button {
+.app-content-topbar .topbar-ecommerce-pim-vault-button,
+.app-content-topbar .topbar-finance-tax-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7389,7 +7452,8 @@ export default {
 .app-content-topbar .topbar-vm-backup-vault-button,
 .app-content-topbar .topbar-db-sql-log-vault-button,
 .app-content-topbar .topbar-broadcast-nle-vault-button,
-.app-content-topbar .topbar-ecommerce-pim-vault-button {
+.app-content-topbar .topbar-ecommerce-pim-vault-button,
+.app-content-topbar .topbar-finance-tax-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7467,7 +7531,8 @@ export default {
 .app-content-topbar .topbar-vm-backup-vault-button svg,
 .app-content-topbar .topbar-db-sql-log-vault-button svg,
 .app-content-topbar .topbar-broadcast-nle-vault-button svg,
-.app-content-topbar .topbar-ecommerce-pim-vault-button svg {
+.app-content-topbar .topbar-ecommerce-pim-vault-button svg,
+.app-content-topbar .topbar-finance-tax-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -7619,7 +7684,9 @@ export default {
 .app-content-topbar .topbar-broadcast-nle-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-broadcast-nle-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-ecommerce-pim-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-ecommerce-pim-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-ecommerce-pim-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-finance-tax-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-finance-tax-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7695,7 +7762,8 @@ export default {
 .app-content-topbar .topbar-vm-backup-vault-button.is-active,
 .app-content-topbar .topbar-db-sql-log-vault-button.is-active,
 .app-content-topbar .topbar-broadcast-nle-vault-button.is-active,
-.app-content-topbar .topbar-ecommerce-pim-vault-button.is-active {
+.app-content-topbar .topbar-ecommerce-pim-vault-button.is-active,
+.app-content-topbar .topbar-finance-tax-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -7914,6 +7982,7 @@ export default {
 .app-content-topbar .topbar-db-sql-log-vault-button > *,
 .app-content-topbar .topbar-broadcast-nle-vault-button > *,
 .app-content-topbar .topbar-ecommerce-pim-vault-button > *,
+.app-content-topbar .topbar-finance-tax-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8071,6 +8140,7 @@ export default {
 	.app-content-topbar .topbar-db-sql-log-vault-button,
 	.app-content-topbar .topbar-broadcast-nle-vault-button,
 	.app-content-topbar .topbar-ecommerce-pim-vault-button,
+	.app-content-topbar .topbar-finance-tax-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

@@ -247,6 +247,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/DbSqlLogVaultWorkbench.vue': { __esModule: true, default: stub('db-sql-log-vault-auditor') },
 			'./components/BroadcastNleVaultWorkbench.vue': { __esModule: true, default: stub('broadcast-nle-vault-auditor') },
 			'./components/EcommercePimVaultWorkbench.vue': { __esModule: true, default: stub('ecommerce-pim-vault-auditor') },
+			'./components/FinanceTaxVaultWorkbench.vue': { __esModule: true, default: stub('finance-tax-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4093,7 +4094,7 @@ describe('Cycle 185: F6 shortcut for Game Dev, Unity/Unreal & 3D Asset Pipeline 
 			action: 'toggle-game-dev-pipeline-vault-auditor',
 		})
 		assert.equal(resolveShortcutAction({ key: 'F6' }), 'toggle-game-dev-pipeline-vault-auditor')
-		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true }), 'toggle-finance-tax-vault-auditor')
 		assert.equal(resolveShortcutAction({ key: 'F6', ctrlKey: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F6', altKey: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F6' }, { isHelpOpen: true }), null)
@@ -4237,5 +4238,28 @@ describe('Cycle 191: Shift+F7 shortcut for E-Commerce, PIM Product Media & Brand
 		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 192: Shift+F6 shortcut for Financial, Accounting & Tax Compliance Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F6 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-finance-tax-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-finance-tax-vault-auditor',
+			keys: ['Shift+F6'],
+			action: 'toggle-finance-tax-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true }), 'toggle-finance-tax-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F6' }), 'toggle-game-dev-pipeline-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

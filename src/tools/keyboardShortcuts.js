@@ -404,6 +404,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-game-dev-pipeline-vault-auditor',
 	},
 	{
+		id: 'toggle-finance-tax-vault-auditor',
+		keys: ['Shift+F6'],
+		action: 'toggle-finance-tax-vault-auditor',
+	},
+	{
 		id: 'toggle-additive-mfg-vault-auditor',
 		keys: ['F7'],
 		action: 'toggle-additive-mfg-vault-auditor',
@@ -767,6 +772,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (!event.shiftKey && key === 'F6') {
 		return 'toggle-game-dev-pipeline-vault-auditor'
+	}
+
+	if (event.shiftKey && key === 'F6') {
+		return 'toggle-finance-tax-vault-auditor'
 	}
 
 	if (!event.shiftKey && key === 'F7') {
