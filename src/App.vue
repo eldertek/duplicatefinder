@@ -1775,6 +1775,36 @@
 							<span>{{ t('duplicatefinder', 'VM & ISO Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-ml-dataset-artifact-button"
+							:class="{ 'is-active': mlDatasetArtifactOpen }"
+							:aria-pressed="mlDatasetArtifactOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+W"
+							:title="t('duplicatefinder', 'Toggle ML weights, quantized checkpoints and dataset shard auditor')"
+							@click="toggleMlDatasetArtifact">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<ellipse
+									cx="12"
+									cy="5"
+									rx="9"
+									ry="3" />
+								<path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+								<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'ML & Datasets') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2361,6 +2391,15 @@
 						@compare-duplicate="onVmContainerImageCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="vmContainerImageOpen = false" />
+					<MlDatasetArtifactWorkbench
+						v-if="mlDatasetArtifactOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onMlDatasetArtifactSelectDuplicate"
+						@compare-duplicate="onMlDatasetArtifactCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="mlDatasetArtifactOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2847,6 +2886,7 @@ import VfxRenderCacheWorkbench from './components/VfxRenderCacheWorkbench.vue'
 import ElearningScormWorkbench from './components/ElearningScormWorkbench.vue'
 import PhotoRawCatalogWorkbench from './components/PhotoRawCatalogWorkbench.vue'
 import VmContainerImageWorkbench from './components/VmContainerImageWorkbench.vue'
+import MlDatasetArtifactWorkbench from './components/MlDatasetArtifactWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2962,6 +3002,7 @@ export default {
 		ElearningScormWorkbench,
 		PhotoRawCatalogWorkbench,
 		VmContainerImageWorkbench,
+		MlDatasetArtifactWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3044,6 +3085,7 @@ export default {
 			elearningScormOpen: false,
 			photoRawCatalogOpen: false,
 			vmContainerImageOpen: false,
+			mlDatasetArtifactOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3270,6 +3312,7 @@ export default {
 				'toggle-elearning-scorm-auditor': t('duplicatefinder', 'Toggle e-learning SCORM/H5P package, lecture recording transcode and slide deck handout auditor'),
 				'toggle-photo-raw-catalog-auditor': t('duplicatefinder', 'Toggle RAW photography catalog, preview pyramid, sidecar and export derivative auditor'),
 				'toggle-vm-container-image-auditor': t('duplicatefinder', 'Toggle VM, ISO and container image vault auditor'),
+				'toggle-ml-dataset-artifact-auditor': t('duplicatefinder', 'Toggle ML weights, quantized checkpoints and dataset shard auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4398,6 +4441,22 @@ export default {
 		onVmContainerImageCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleMlDatasetArtifact() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.mlDatasetArtifactOpen = !this.mlDatasetArtifactOpen
+			return true
+		},
+		onMlDatasetArtifactSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onMlDatasetArtifactCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5127,6 +5186,13 @@ export default {
 
 			if (action === 'toggle-vm-container-image-auditor') {
 				if (this.toggleVmContainerImage() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-ml-dataset-artifact-auditor') {
+				if (this.toggleMlDatasetArtifact() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6084,7 +6150,8 @@ export default {
 .app-content-topbar .topbar-vfx-render-cache-button,
 .app-content-topbar .topbar-elearning-scorm-button,
 .app-content-topbar .topbar-photo-raw-catalog-button,
-.app-content-topbar .topbar-vm-container-image-button {
+.app-content-topbar .topbar-vm-container-image-button,
+.app-content-topbar .topbar-ml-dataset-artifact-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -6124,7 +6191,8 @@ export default {
 .app-content-topbar .topbar-vfx-render-cache-button,
 .app-content-topbar .topbar-elearning-scorm-button,
 .app-content-topbar .topbar-photo-raw-catalog-button,
-.app-content-topbar .topbar-vm-container-image-button {
+.app-content-topbar .topbar-vm-container-image-button,
+.app-content-topbar .topbar-ml-dataset-artifact-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -6183,7 +6251,8 @@ export default {
 .app-content-topbar .topbar-vfx-render-cache-button svg,
 .app-content-topbar .topbar-elearning-scorm-button svg,
 .app-content-topbar .topbar-photo-raw-catalog-button svg,
-.app-content-topbar .topbar-vm-container-image-button svg {
+.app-content-topbar .topbar-vm-container-image-button svg,
+.app-content-topbar .topbar-ml-dataset-artifact-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6297,7 +6366,9 @@ export default {
 .app-content-topbar .topbar-photo-raw-catalog-button:hover:not(:disabled),
 .app-content-topbar .topbar-photo-raw-catalog-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-vm-container-image-button:hover:not(:disabled),
-.app-content-topbar .topbar-vm-container-image-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-vm-container-image-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-ml-dataset-artifact-button:hover:not(:disabled),
+.app-content-topbar .topbar-ml-dataset-artifact-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -6354,7 +6425,8 @@ export default {
 .app-content-topbar .topbar-vfx-render-cache-button.is-active,
 .app-content-topbar .topbar-elearning-scorm-button.is-active,
 .app-content-topbar .topbar-photo-raw-catalog-button.is-active,
-.app-content-topbar .topbar-vm-container-image-button.is-active {
+.app-content-topbar .topbar-vm-container-image-button.is-active,
+.app-content-topbar .topbar-ml-dataset-artifact-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6554,6 +6626,7 @@ export default {
 .app-content-topbar .topbar-elearning-scorm-button > *,
 .app-content-topbar .topbar-photo-raw-catalog-button > *,
 .app-content-topbar .topbar-vm-container-image-button > *,
+.app-content-topbar .topbar-ml-dataset-artifact-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6692,6 +6765,7 @@ export default {
 	.app-content-topbar .topbar-elearning-scorm-button,
 	.app-content-topbar .topbar-photo-raw-catalog-button,
 	.app-content-topbar .topbar-vm-container-image-button,
+	.app-content-topbar .topbar-ml-dataset-artifact-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

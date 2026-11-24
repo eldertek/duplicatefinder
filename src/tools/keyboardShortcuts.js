@@ -334,6 +334,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-vm-container-image-auditor',
 	},
 	{
+		id: 'toggle-ml-dataset-artifact-auditor',
+		keys: ['Shift+W'],
+		action: 'toggle-ml-dataset-artifact-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -624,6 +629,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'I' || key === 'i')) {
 		return 'toggle-vm-container-image-auditor'
+	}
+
+	if (event.shiftKey && (key === 'W' || key === 'w')) {
+		return 'toggle-ml-dataset-artifact-auditor'
 	}
 
 	if (key === 'ArrowDown') {
