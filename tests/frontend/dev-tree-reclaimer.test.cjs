@@ -469,6 +469,7 @@ describe('Cycle 155: Dev Workspace & Dependency Bloat Whole-Tree Reclaimer', () 
 			'./components/DevTreeReclaimerWorkbench.vue': { __esModule: true, default: DevTreeWorkbench },
 			'./components/ConflictStormWorkbench.vue': { __esModule: true, default: stub('conflict-storm') },
 			'./components/VmCowReflinkWorkbench.vue': { __esModule: true, default: stub('vm-cow') },
+			'./components/ScientificBundleWorkbench.vue': { __esModule: true, default: stub('scientific-bundle') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

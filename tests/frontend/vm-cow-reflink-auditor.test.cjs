@@ -419,6 +419,7 @@ describe('VM Disk, Database Dump & Container Image CoW Reflink Auditor', () => {
 			'./components/DevTreeReclaimerWorkbench.vue': { __esModule: true, default: stub('dev-tree') },
 			'./components/ConflictStormWorkbench.vue': { __esModule: true, default: stub('conflict-storm') },
 			'./components/VmCowReflinkWorkbench.vue': { __esModule: true, default: VmCowWorkbench },
+			'./components/ScientificBundleWorkbench.vue': { __esModule: true, default: stub('scientific-bundle') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
