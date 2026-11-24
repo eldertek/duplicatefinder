@@ -394,6 +394,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-vm-backup-vault-auditor',
 	},
 	{
+		id: 'toggle-mobile-build-vault-auditor',
+		keys: ['Shift+F3'],
+		action: 'toggle-mobile-build-vault-auditor',
+	},
+	{
 		id: 'toggle-db-sql-log-vault-auditor',
 		keys: ['Shift+F8'],
 		action: 'toggle-db-sql-log-vault-auditor',
@@ -769,6 +774,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (!event.shiftKey && key === 'F3') {
 		return 'toggle-vm-backup-vault-auditor'
+	}
+
+	if (event.shiftKey && key === 'F3') {
+		return 'toggle-mobile-build-vault-auditor'
 	}
 
 	if (!event.shiftKey && key === 'F4') {

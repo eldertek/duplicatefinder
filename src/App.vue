@@ -2377,6 +2377,31 @@
 							<span>{{ t('duplicatefinder', 'IoT & Firmware Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-mobile-build-vault-button"
+							:class="{ 'is-active': mobileBuildVaultOpen }"
+							:aria-pressed="mobileBuildVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F3"
+							:title="t('duplicatefinder', 'Toggle Mobile App Build, iOS/Android Artifacts and Crash Symbol Vault auditor')"
+							@click="toggleMobileBuildVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect x="6" y="2" width="12" height="20" rx="2" />
+								<line x1="12" y1="18" x2="12.01" y2="18" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Mobile & Crash Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3152,6 +3177,15 @@
 						@compare-duplicate="onIotFirmwareVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="iotFirmwareVaultOpen = false" />
+					<MobileBuildVaultWorkbench
+						v-if="mobileBuildVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onMobileBuildVaultSelectDuplicate"
+						@compare-duplicate="onMobileBuildVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="mobileBuildVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3659,6 +3693,7 @@ import BroadcastNleVaultWorkbench from './components/BroadcastNleVaultWorkbench.
 import EcommercePimVaultWorkbench from './components/EcommercePimVaultWorkbench.vue'
 import FinanceTaxVaultWorkbench from './components/FinanceTaxVaultWorkbench.vue'
 import IotFirmwareVaultWorkbench from './components/IotFirmwareVaultWorkbench.vue'
+import MobileBuildVaultWorkbench from './components/MobileBuildVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3795,6 +3830,7 @@ export default {
 		EcommercePimVaultWorkbench,
 		FinanceTaxVaultWorkbench,
 		IotFirmwareVaultWorkbench,
+		MobileBuildVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3898,6 +3934,7 @@ export default {
 			ecommercePimVaultOpen: false,
 			financeTaxVaultOpen: false,
 			iotFirmwareVaultOpen: false,
+			mobileBuildVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4144,6 +4181,7 @@ export default {
 				'toggle-ecommerce-pim-vault-auditor': t('duplicatefinder', 'Toggle E-Commerce, PIM Product Media and Brand Asset Vault auditor'),
 				'toggle-finance-tax-vault-auditor': t('duplicatefinder', 'Toggle Financial, Accounting and Tax Compliance Vault auditor'),
 				'toggle-iot-firmware-vault-auditor': t('duplicatefinder', 'Toggle IoT Firmware, Embedded ROM and Hardware Lab Vault auditor'),
+				'toggle-mobile-build-vault-auditor': t('duplicatefinder', 'Toggle Mobile App Build, iOS/Android Artifacts and Crash Symbol Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5608,6 +5646,22 @@ export default {
 		onIotFirmwareVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleMobileBuildVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.mobileBuildVaultOpen = !this.mobileBuildVaultOpen
+			return true
+		},
+		onMobileBuildVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onMobileBuildVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6484,6 +6538,13 @@ export default {
 
 			if (action === 'toggle-iot-firmware-vault-auditor') {
 				if (this.toggleIotFirmwareVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-mobile-build-vault-auditor') {
+				if (this.toggleMobileBuildVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7462,7 +7523,8 @@ export default {
 .app-content-topbar .topbar-broadcast-nle-vault-button,
 .app-content-topbar .topbar-ecommerce-pim-vault-button,
 .app-content-topbar .topbar-finance-tax-vault-button,
-.app-content-topbar .topbar-iot-firmware-vault-button {
+.app-content-topbar .topbar-iot-firmware-vault-button,
+.app-content-topbar .topbar-mobile-build-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7523,7 +7585,8 @@ export default {
 .app-content-topbar .topbar-broadcast-nle-vault-button,
 .app-content-topbar .topbar-ecommerce-pim-vault-button,
 .app-content-topbar .topbar-finance-tax-vault-button,
-.app-content-topbar .topbar-iot-firmware-vault-button {
+.app-content-topbar .topbar-iot-firmware-vault-button,
+.app-content-topbar .topbar-mobile-build-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7603,7 +7666,8 @@ export default {
 .app-content-topbar .topbar-broadcast-nle-vault-button svg,
 .app-content-topbar .topbar-ecommerce-pim-vault-button svg,
 .app-content-topbar .topbar-finance-tax-vault-button svg,
-.app-content-topbar .topbar-iot-firmware-vault-button svg {
+.app-content-topbar .topbar-iot-firmware-vault-button svg,
+.app-content-topbar .topbar-mobile-build-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -7759,7 +7823,9 @@ export default {
 .app-content-topbar .topbar-finance-tax-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-finance-tax-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-iot-firmware-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-iot-firmware-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-iot-firmware-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-mobile-build-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-mobile-build-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7837,7 +7903,8 @@ export default {
 .app-content-topbar .topbar-broadcast-nle-vault-button.is-active,
 .app-content-topbar .topbar-ecommerce-pim-vault-button.is-active,
 .app-content-topbar .topbar-finance-tax-vault-button.is-active,
-.app-content-topbar .topbar-iot-firmware-vault-button.is-active {
+.app-content-topbar .topbar-iot-firmware-vault-button.is-active,
+.app-content-topbar .topbar-mobile-build-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -8058,6 +8125,7 @@ export default {
 .app-content-topbar .topbar-ecommerce-pim-vault-button > *,
 .app-content-topbar .topbar-finance-tax-vault-button > *,
 .app-content-topbar .topbar-iot-firmware-vault-button > *,
+.app-content-topbar .topbar-mobile-build-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8217,6 +8285,7 @@ export default {
 	.app-content-topbar .topbar-ecommerce-pim-vault-button,
 	.app-content-topbar .topbar-finance-tax-vault-button,
 	.app-content-topbar .topbar-iot-firmware-vault-button,
+	.app-content-topbar .topbar-mobile-build-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
