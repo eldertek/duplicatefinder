@@ -324,6 +324,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-elearning-scorm-auditor',
 	},
 	{
+		id: 'toggle-photo-raw-catalog-auditor',
+		keys: ['Shift+P'],
+		action: 'toggle-photo-raw-catalog-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -606,6 +611,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'L' || key === 'l')) {
 		return 'toggle-elearning-scorm-auditor'
+	}
+
+	if (event.shiftKey && (key === 'P' || key === 'p')) {
+		return 'toggle-photo-raw-catalog-auditor'
 	}
 
 	if (key === 'ArrowDown') {
