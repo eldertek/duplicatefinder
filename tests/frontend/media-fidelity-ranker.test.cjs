@@ -456,6 +456,7 @@ test('Cycle 150: Media Fidelity & Transcode-Loss Ranker suite', async t => {
 			'./components/ShadowReclaimWorkbench.vue': { __esModule: true, default: stub('shadow-reclaim') },
 			'./components/JunkPairInspectorWorkbench.vue': { __esModule: true, default: stub('junk-pair') },
 			'./components/MediaFidelityWorkbench.vue': { __esModule: true, default: stub('media-fidelity') },
+			'./components/CdcChunkingWorkbench.vue': { __esModule: true, default: stub('cdc-chunking') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

@@ -224,6 +224,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-media-fidelity-ranker',
 	},
 	{
+		id: 'toggle-cdc-chunking-estimator',
+		keys: ['#'],
+		action: 'toggle-cdc-chunking-estimator',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -426,6 +431,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '%') {
 		return 'toggle-media-fidelity-ranker'
+	}
+
+	if (key === '#') {
+		return 'toggle-cdc-chunking-estimator'
 	}
 
 	if (key === 'ArrowDown') {

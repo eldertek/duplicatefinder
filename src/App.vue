@@ -1082,6 +1082,49 @@
 							<span>{{ t('duplicatefinder', 'Fidelity') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-cdc-chunking-button"
+							:class="{ 'is-active': cdcChunkingOpen }"
+							:aria-pressed="cdcChunkingOpen ? 'true' : 'false'"
+							aria-keyshortcuts="#"
+							:title="t('duplicatefinder', 'Toggle CDC / ZFS / Restic sub-file savings estimator')"
+							@click="toggleCdcChunkingEstimator">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<line
+									x1="4"
+									y1="9"
+									x2="20"
+									y2="9" />
+								<line
+									x1="4"
+									y1="15"
+									x2="20"
+									y2="15" />
+								<line
+									x1="10"
+									y1="3"
+									x2="8"
+									y2="21" />
+								<line
+									x1="16"
+									y1="3"
+									x2="14"
+									y2="21" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'CDC / ZFS') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1470,6 +1513,15 @@
 						@fidelity-delete-completed="onMediaFidelityDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="mediaFidelityOpen = false" />
+					<CdcChunkingWorkbench
+						v-if="cdcChunkingOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onCdcChunkingSelectDuplicate"
+						@compare-duplicate="onCdcChunkingCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="cdcChunkingOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1934,6 +1986,7 @@ import InodeSafetyWorkbench from './components/InodeSafetyWorkbench.vue'
 import ShadowReclaimWorkbench from './components/ShadowReclaimWorkbench.vue'
 import JunkPairInspectorWorkbench from './components/JunkPairInspectorWorkbench.vue'
 import MediaFidelityWorkbench from './components/MediaFidelityWorkbench.vue'
+import CdcChunkingWorkbench from './components/CdcChunkingWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2027,6 +2080,7 @@ export default {
 		ShadowReclaimWorkbench,
 		JunkPairInspectorWorkbench,
 		MediaFidelityWorkbench,
+		CdcChunkingWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2087,6 +2141,7 @@ export default {
 			shadowReclaimOpen: false,
 			junkPairInspectorOpen: false,
 			mediaFidelityOpen: false,
+			cdcChunkingOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2291,6 +2346,7 @@ export default {
 				'toggle-shadow-reclaim': t('duplicatefinder', 'Toggle Nextcloud versions, trashbin and appdata shadow-duplicate reclaimer'),
 				'toggle-junk-pair-inspector': t('duplicatefinder', 'Toggle zero-byte, truncated partial and AppleDouble junk pair inspector'),
 				'toggle-media-fidelity-ranker': t('duplicatefinder', 'Toggle near-duplicate media fidelity and transcode-loss ranker'),
+				'toggle-cdc-chunking-estimator': t('duplicatefinder', 'Toggle CDC / ZFS / Restic sub-file savings estimator'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3067,6 +3123,22 @@ export default {
 		onMediaFidelityDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleCdcChunkingEstimator() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.cdcChunkingOpen = !this.cdcChunkingOpen
+			return true
+		},
+		onCdcChunkingSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onCdcChunkingCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3642,6 +3714,13 @@ export default {
 
 			if (action === 'toggle-media-fidelity-ranker') {
 				if (this.toggleMediaFidelityRanker() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-cdc-chunking-estimator') {
+				if (this.toggleCdcChunkingEstimator() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4577,7 +4656,8 @@ export default {
 .app-content-topbar .topbar-inode-verifier-button,
 .app-content-topbar .topbar-shadow-reclaim-button,
 .app-content-topbar .topbar-junk-pair-button,
-.app-content-topbar .topbar-media-fidelity-button {
+.app-content-topbar .topbar-media-fidelity-button,
+.app-content-topbar .topbar-cdc-chunking-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4629,7 +4709,8 @@ export default {
 .app-content-topbar .topbar-inode-verifier-button svg,
 .app-content-topbar .topbar-shadow-reclaim-button svg,
 .app-content-topbar .topbar-junk-pair-button svg,
-.app-content-topbar .topbar-media-fidelity-button svg {
+.app-content-topbar .topbar-media-fidelity-button svg,
+.app-content-topbar .topbar-cdc-chunking-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -4699,7 +4780,9 @@ export default {
 .app-content-topbar .topbar-junk-pair-button:hover:not(:disabled),
 .app-content-topbar .topbar-junk-pair-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-media-fidelity-button:hover:not(:disabled),
-.app-content-topbar .topbar-media-fidelity-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-media-fidelity-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-cdc-chunking-button:hover:not(:disabled),
+.app-content-topbar .topbar-cdc-chunking-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -4734,7 +4817,8 @@ export default {
 .app-content-topbar .topbar-inode-verifier-button.is-active,
 .app-content-topbar .topbar-shadow-reclaim-button.is-active,
 .app-content-topbar .topbar-junk-pair-button.is-active,
-.app-content-topbar .topbar-media-fidelity-button.is-active {
+.app-content-topbar .topbar-media-fidelity-button.is-active,
+.app-content-topbar .topbar-cdc-chunking-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -4912,6 +4996,7 @@ export default {
 .app-content-topbar .topbar-shadow-reclaim-button > *,
 .app-content-topbar .topbar-junk-pair-button > *,
 .app-content-topbar .topbar-media-fidelity-button > *,
+.app-content-topbar .topbar-cdc-chunking-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5028,6 +5113,7 @@ export default {
 	.app-content-topbar .topbar-shadow-reclaim-button,
 	.app-content-topbar .topbar-junk-pair-button,
 	.app-content-topbar .topbar-media-fidelity-button,
+	.app-content-topbar .topbar-cdc-chunking-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
