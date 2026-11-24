@@ -229,6 +229,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-cdc-chunking-estimator',
 	},
 	{
+		id: 'toggle-ops-schedule-generator',
+		keys: ['@'],
+		action: 'toggle-ops-schedule-generator',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -435,6 +440,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '#') {
 		return 'toggle-cdc-chunking-estimator'
+	}
+
+	if (key === '@') {
+		return 'toggle-ops-schedule-generator'
 	}
 
 	if (key === 'ArrowDown') {

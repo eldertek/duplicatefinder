@@ -140,6 +140,7 @@ function createHarness(fetchDuplicatesImpl) {
 			'./components/JunkPairInspectorWorkbench.vue': { __esModule: true, default: stub('junk-pair') },
 			'./components/MediaFidelityWorkbench.vue': { __esModule: true, default: stub('media-fidelity') },
 			'./components/CdcChunkingWorkbench.vue': { __esModule: true, default: stub('cdc-chunking') },
+			'./components/OpsScheduleWorkbench.vue': { __esModule: true, default: stub('ops-schedule') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

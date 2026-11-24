@@ -1125,6 +1125,34 @@
 							<span>{{ t('duplicatefinder', 'CDC / ZFS') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-ops-schedule-button"
+							:class="{ 'is-active': opsScheduleOpen }"
+							:aria-pressed="opsScheduleOpen ? 'true' : 'false'"
+							aria-keyshortcuts="@"
+							:title="t('duplicatefinder', 'Toggle automated deduplication schedule, systemd/cron and flock/ionice generator')"
+							@click="toggleOpsScheduleGenerator">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle
+									cx="12"
+									cy="12"
+									r="9" />
+								<polyline points="12 7 12 12 15 14" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Ops Schedule') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1522,6 +1550,15 @@
 						@compare-duplicate="onCdcChunkingCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="cdcChunkingOpen = false" />
+					<OpsScheduleWorkbench
+						v-if="opsScheduleOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onOpsScheduleSelectDuplicate"
+						@compare-duplicate="onOpsScheduleCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="opsScheduleOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1987,6 +2024,7 @@ import ShadowReclaimWorkbench from './components/ShadowReclaimWorkbench.vue'
 import JunkPairInspectorWorkbench from './components/JunkPairInspectorWorkbench.vue'
 import MediaFidelityWorkbench from './components/MediaFidelityWorkbench.vue'
 import CdcChunkingWorkbench from './components/CdcChunkingWorkbench.vue'
+import OpsScheduleWorkbench from './components/OpsScheduleWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2081,6 +2119,7 @@ export default {
 		JunkPairInspectorWorkbench,
 		MediaFidelityWorkbench,
 		CdcChunkingWorkbench,
+		OpsScheduleWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2142,6 +2181,7 @@ export default {
 			junkPairInspectorOpen: false,
 			mediaFidelityOpen: false,
 			cdcChunkingOpen: false,
+			opsScheduleOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2347,6 +2387,7 @@ export default {
 				'toggle-junk-pair-inspector': t('duplicatefinder', 'Toggle zero-byte, truncated partial and AppleDouble junk pair inspector'),
 				'toggle-media-fidelity-ranker': t('duplicatefinder', 'Toggle near-duplicate media fidelity and transcode-loss ranker'),
 				'toggle-cdc-chunking-estimator': t('duplicatefinder', 'Toggle CDC / ZFS / Restic sub-file savings estimator'),
+				'toggle-ops-schedule-generator': t('duplicatefinder', 'Toggle automated deduplication schedule, systemd/cron and flock/ionice generator'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3139,6 +3180,22 @@ export default {
 		onCdcChunkingCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleOpsScheduleGenerator() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.opsScheduleOpen = !this.opsScheduleOpen
+			return true
+		},
+		onOpsScheduleSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onOpsScheduleCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3721,6 +3778,13 @@ export default {
 
 			if (action === 'toggle-cdc-chunking-estimator') {
 				if (this.toggleCdcChunkingEstimator() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-ops-schedule-generator') {
+				if (this.toggleOpsScheduleGenerator() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4657,7 +4721,8 @@ export default {
 .app-content-topbar .topbar-shadow-reclaim-button,
 .app-content-topbar .topbar-junk-pair-button,
 .app-content-topbar .topbar-media-fidelity-button,
-.app-content-topbar .topbar-cdc-chunking-button {
+.app-content-topbar .topbar-cdc-chunking-button,
+.app-content-topbar .topbar-ops-schedule-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4675,6 +4740,11 @@ export default {
 	cursor: pointer;
 	box-sizing: border-box;
 	transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.app-content-topbar .topbar-ops-schedule-button {
+	min-height: 44px;
+	min-width: 44px;
 }
 
 .app-content-topbar .topbar-scan-button svg,
@@ -4710,7 +4780,8 @@ export default {
 .app-content-topbar .topbar-shadow-reclaim-button svg,
 .app-content-topbar .topbar-junk-pair-button svg,
 .app-content-topbar .topbar-media-fidelity-button svg,
-.app-content-topbar .topbar-cdc-chunking-button svg {
+.app-content-topbar .topbar-cdc-chunking-button svg,
+.app-content-topbar .topbar-ops-schedule-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -4782,7 +4853,9 @@ export default {
 .app-content-topbar .topbar-media-fidelity-button:hover:not(:disabled),
 .app-content-topbar .topbar-media-fidelity-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-cdc-chunking-button:hover:not(:disabled),
-.app-content-topbar .topbar-cdc-chunking-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-cdc-chunking-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-ops-schedule-button:hover:not(:disabled),
+.app-content-topbar .topbar-ops-schedule-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -4818,7 +4891,8 @@ export default {
 .app-content-topbar .topbar-shadow-reclaim-button.is-active,
 .app-content-topbar .topbar-junk-pair-button.is-active,
 .app-content-topbar .topbar-media-fidelity-button.is-active,
-.app-content-topbar .topbar-cdc-chunking-button.is-active {
+.app-content-topbar .topbar-cdc-chunking-button.is-active,
+.app-content-topbar .topbar-ops-schedule-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -4997,6 +5071,7 @@ export default {
 .app-content-topbar .topbar-junk-pair-button > *,
 .app-content-topbar .topbar-media-fidelity-button > *,
 .app-content-topbar .topbar-cdc-chunking-button > *,
+.app-content-topbar .topbar-ops-schedule-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5114,6 +5189,7 @@ export default {
 	.app-content-topbar .topbar-junk-pair-button,
 	.app-content-topbar .topbar-media-fidelity-button,
 	.app-content-topbar .topbar-cdc-chunking-button,
+	.app-content-topbar .topbar-ops-schedule-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

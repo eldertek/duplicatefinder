@@ -459,6 +459,7 @@ test('Cycle 147: Cross-Volume Inode, Hardlink-Alias & Storage-Backend Safety Ver
 			'./components/JunkPairInspectorWorkbench.vue': { __esModule: true, default: stub('junk-pair') },
 			'./components/MediaFidelityWorkbench.vue': { __esModule: true, default: stub('media-fidelity') },
 			'./components/CdcChunkingWorkbench.vue': { __esModule: true, default: stub('cdc-chunking') },
+			'./components/OpsScheduleWorkbench.vue': { __esModule: true, default: stub('ops-schedule') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
