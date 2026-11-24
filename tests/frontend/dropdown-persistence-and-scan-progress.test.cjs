@@ -196,6 +196,7 @@ function createAppHarness(apiOverrides = {}) {
 			'./components/VmCowReflinkWorkbench.vue': { __esModule: true, default: stub('vm-cow') },
 			'./components/ScientificBundleWorkbench.vue': { __esModule: true, default: stub('scientific-bundle') },
 			'./components/BrandKitAuditorWorkbench.vue': { __esModule: true, default: stub('brand-kit-auditor') },
+			'./components/LogTelemetryWorkbench.vue': { __esModule: true, default: stub('log-telemetry-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },

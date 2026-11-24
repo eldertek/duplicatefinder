@@ -455,6 +455,7 @@ describe('Cycle 121: Interactive Similarity Threshold & Fuzzy Match Mode Inspect
 			'./components/VmCowReflinkWorkbench.vue': { __esModule: true, default: stub('vm-cow') },
 			'./components/ScientificBundleWorkbench.vue': { __esModule: true, default: stub('scientific-bundle') },
 			'./components/BrandKitAuditorWorkbench.vue': { __esModule: true, default: stub('brand-kit-auditor') },
+			'./components/LogTelemetryWorkbench.vue': { __esModule: true, default: stub('log-telemetry-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

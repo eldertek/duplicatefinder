@@ -1384,6 +1384,35 @@
 							<span>{{ t('duplicatefinder', 'Brand Kit') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-log-telemetry-button"
+							:class="{ 'is-active': logTelemetryOpen }"
+							:aria-pressed="logTelemetryOpen ? 'true' : 'false'"
+							aria-keyshortcuts="|"
+							:title="t('duplicatefinder', 'Toggle log rotation, telemetry dump and stale cache explosion auditor')"
+							@click="toggleLogTelemetry">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<polyline points="4 17 10 11 4 5" />
+								<line
+									x1="12"
+									y1="19"
+									x2="20"
+									y2="19" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Logs & Caches') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1853,6 +1882,15 @@
 						@compare-duplicate="onBrandKitCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="brandKitAuditorOpen = false" />
+					<LogTelemetryWorkbench
+						v-if="logTelemetryOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onLogTelemetrySelectDuplicate"
+						@compare-duplicate="onLogTelemetryCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="logTelemetryOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2326,6 +2364,7 @@ import ConflictStormWorkbench from './components/ConflictStormWorkbench.vue'
 import VmCowReflinkWorkbench from './components/VmCowReflinkWorkbench.vue'
 import ScientificBundleWorkbench from './components/ScientificBundleWorkbench.vue'
 import BrandKitAuditorWorkbench from './components/BrandKitAuditorWorkbench.vue'
+import LogTelemetryWorkbench from './components/LogTelemetryWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2428,6 +2467,7 @@ export default {
 		VmCowReflinkWorkbench,
 		ScientificBundleWorkbench,
 		BrandKitAuditorWorkbench,
+		LogTelemetryWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2497,6 +2537,7 @@ export default {
 			vmCowReflinkOpen: false,
 			scientificBundleOpen: false,
 			brandKitAuditorOpen: false,
+			logTelemetryOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2710,6 +2751,7 @@ export default {
 				'toggle-vm-cow-reflink-auditor': t('duplicatefinder', 'Toggle VM disk, database dump and container image CoW reflink auditor'),
 				'toggle-scientific-bundle-auditor': t('duplicatefinder', 'Toggle scientific, GIS, CAD/BIM and ML-shard companion-bundle auditor'),
 				'toggle-brand-kit-auditor': t('duplicatefinder', 'Toggle creative brand kit, font family and vector/PSD master asset auditor'),
+				'toggle-log-telemetry-auditor': t('duplicatefinder', 'Toggle log rotation, telemetry dump and stale cache explosion auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3630,6 +3672,22 @@ export default {
 		onBrandKitCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleLogTelemetry() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.logTelemetryOpen = !this.logTelemetryOpen
+			return true
+		},
+		onLogTelemetrySelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onLogTelemetryCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4268,6 +4326,13 @@ export default {
 
 			if (action === 'toggle-brand-kit-auditor') {
 				if (this.toggleBrandKitAuditor() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-log-telemetry-auditor') {
+				if (this.toggleLogTelemetry() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5212,7 +5277,8 @@ export default {
 .app-content-topbar .topbar-conflict-storm-button,
 .app-content-topbar .topbar-vm-cow-button,
 .app-content-topbar .topbar-scientific-bundle-button,
-.app-content-topbar .topbar-brand-kit-button {
+.app-content-topbar .topbar-brand-kit-button,
+.app-content-topbar .topbar-log-telemetry-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5239,7 +5305,8 @@ export default {
 .app-content-topbar .topbar-conflict-storm-button,
 .app-content-topbar .topbar-vm-cow-button,
 .app-content-topbar .topbar-scientific-bundle-button,
-.app-content-topbar .topbar-brand-kit-button {
+.app-content-topbar .topbar-brand-kit-button,
+.app-content-topbar .topbar-log-telemetry-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5285,7 +5352,8 @@ export default {
 .app-content-topbar .topbar-conflict-storm-button svg,
 .app-content-topbar .topbar-vm-cow-button svg,
 .app-content-topbar .topbar-scientific-bundle-button svg,
-.app-content-topbar .topbar-brand-kit-button svg {
+.app-content-topbar .topbar-brand-kit-button svg,
+.app-content-topbar .topbar-log-telemetry-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5373,7 +5441,9 @@ export default {
 .app-content-topbar .topbar-scientific-bundle-button:hover:not(:disabled),
 .app-content-topbar .topbar-scientific-bundle-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-brand-kit-button:hover:not(:disabled),
-.app-content-topbar .topbar-brand-kit-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-brand-kit-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-log-telemetry-button:hover:not(:disabled),
+.app-content-topbar .topbar-log-telemetry-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5417,7 +5487,8 @@ export default {
 .app-content-topbar .topbar-conflict-storm-button.is-active,
 .app-content-topbar .topbar-vm-cow-button.is-active,
 .app-content-topbar .topbar-scientific-bundle-button.is-active,
-.app-content-topbar .topbar-brand-kit-button.is-active {
+.app-content-topbar .topbar-brand-kit-button.is-active,
+.app-content-topbar .topbar-log-telemetry-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5604,6 +5675,7 @@ export default {
 .app-content-topbar .topbar-vm-cow-button > *,
 .app-content-topbar .topbar-scientific-bundle-button > *,
 .app-content-topbar .topbar-brand-kit-button > *,
+.app-content-topbar .topbar-log-telemetry-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5729,6 +5801,7 @@ export default {
 	.app-content-topbar .topbar-vm-cow-button,
 	.app-content-topbar .topbar-scientific-bundle-button,
 	.app-content-topbar .topbar-brand-kit-button,
+	.app-content-topbar .topbar-log-telemetry-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

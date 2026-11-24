@@ -269,6 +269,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-brand-kit-auditor',
 	},
 	{
+		id: 'toggle-log-telemetry-auditor',
+		keys: ['|'],
+		action: 'toggle-log-telemetry-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -507,6 +512,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === ':') {
 		return 'toggle-brand-kit-auditor'
+	}
+
+	if (key === '|') {
+		return 'toggle-log-telemetry-auditor'
 	}
 
 	if (key === 'ArrowDown') {
