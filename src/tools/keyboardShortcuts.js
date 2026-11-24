@@ -464,6 +464,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-dfir-security-vault-auditor',
 	},
 	{
+		id: 'toggle-robotics-ros-vault-auditor',
+		keys: ['Shift+F12'],
+		action: 'toggle-robotics-ros-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -858,6 +863,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && key === 'F11') {
 		return 'toggle-dfir-security-vault-auditor'
+	}
+
+	if (event.shiftKey && key === 'F12') {
+		return 'toggle-robotics-ros-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {

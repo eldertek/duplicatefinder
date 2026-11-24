@@ -2515,6 +2515,33 @@
 							<span>{{ t('duplicatefinder', 'DFIR & Security Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-robotics-ros-vault-button"
+							:class="{ 'is-active': roboticsRosVaultOpen }"
+							:aria-pressed="roboticsRosVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F12"
+							:title="t('duplicatefinder', 'Toggle Robotics, Autonomous Systems, ROS2 Bags and LiDAR Point Cloud Vault auditor')"
+							@click="toggleRoboticsRosVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect x="4" y="7" width="16" height="12" rx="2" />
+								<path d="M12 3v4" />
+								<circle cx="9" cy="13" r="1.5" />
+								<circle cx="15" cy="13" r="1.5" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Robotics & ROS2 Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3335,6 +3362,15 @@
 						@compare-duplicate="onDfirSecurityVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="dfirSecurityVaultOpen = false" />
+					<RoboticsRosVaultWorkbench
+						v-if="roboticsRosVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onRoboticsRosVaultSelectDuplicate"
+						@compare-duplicate="onRoboticsRosVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="roboticsRosVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3847,6 +3883,7 @@ import K8sTerraformVaultWorkbench from './components/K8sTerraformVaultWorkbench.
 import PublishingPrepressVaultWorkbench from './components/PublishingPrepressVaultWorkbench.vue'
 import GenomicsBioinformaticsVaultWorkbench from './components/GenomicsBioinformaticsVaultWorkbench.vue'
 import DfirSecurityVaultWorkbench from './components/DfirSecurityVaultWorkbench.vue'
+import RoboticsRosVaultWorkbench from './components/RoboticsRosVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3988,6 +4025,7 @@ export default {
 		PublishingPrepressVaultWorkbench,
 		GenomicsBioinformaticsVaultWorkbench,
 		DfirSecurityVaultWorkbench,
+		RoboticsRosVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4096,6 +4134,7 @@ export default {
 			publishingPrepressVaultOpen: false,
 			genomicsBioinformaticsVaultOpen: false,
 			dfirSecurityVaultOpen: false,
+			roboticsRosVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4347,6 +4386,7 @@ export default {
 				'toggle-publishing-prepress-vault-auditor': t('duplicatefinder', 'Toggle Publishing, Prepress, Print-Ready PDF/X and Font Licensing Vault auditor'),
 				'toggle-genomics-bioinformatics-vault-auditor': t('duplicatefinder', 'Toggle Genomics, Bioinformatics and Scientific Sequencing Data Vault auditor'),
 				'toggle-dfir-security-vault-auditor': t('duplicatefinder', 'Toggle Cybersecurity, DFIR Forensics, PCAP and Threat Intel Evidence Vault auditor'),
+				'toggle-robotics-ros-vault-auditor': t('duplicatefinder', 'Toggle Robotics, Autonomous Systems, ROS2 Bags and LiDAR Point Cloud Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5891,6 +5931,22 @@ export default {
 		onDfirSecurityVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleRoboticsRosVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.roboticsRosVaultOpen = !this.roboticsRosVaultOpen
+			return true
+		},
+		onRoboticsRosVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onRoboticsRosVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6802,6 +6858,13 @@ export default {
 
 			if (action === 'toggle-dfir-security-vault-auditor') {
 				if (this.toggleDfirSecurityVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-robotics-ros-vault-auditor') {
+				if (this.toggleRoboticsRosVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7785,7 +7848,8 @@ export default {
 .app-content-topbar .topbar-k8s-terraform-vault-button,
 .app-content-topbar .topbar-publishing-prepress-vault-button,
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button,
-.app-content-topbar .topbar-dfir-security-vault-button {
+.app-content-topbar .topbar-dfir-security-vault-button,
+.app-content-topbar .topbar-robotics-ros-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7851,7 +7915,8 @@ export default {
 .app-content-topbar .topbar-k8s-terraform-vault-button,
 .app-content-topbar .topbar-publishing-prepress-vault-button,
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button,
-.app-content-topbar .topbar-dfir-security-vault-button {
+.app-content-topbar .topbar-dfir-security-vault-button,
+.app-content-topbar .topbar-robotics-ros-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7936,7 +8001,8 @@ export default {
 .app-content-topbar .topbar-k8s-terraform-vault-button svg,
 .app-content-topbar .topbar-publishing-prepress-vault-button svg,
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button svg,
-.app-content-topbar .topbar-dfir-security-vault-button svg {
+.app-content-topbar .topbar-dfir-security-vault-button svg,
+.app-content-topbar .topbar-robotics-ros-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -8102,7 +8168,9 @@ export default {
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-dfir-security-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-dfir-security-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-dfir-security-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-robotics-ros-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-robotics-ros-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -8185,7 +8253,8 @@ export default {
 .app-content-topbar .topbar-k8s-terraform-vault-button.is-active,
 .app-content-topbar .topbar-publishing-prepress-vault-button.is-active,
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button.is-active,
-.app-content-topbar .topbar-dfir-security-vault-button.is-active {
+.app-content-topbar .topbar-dfir-security-vault-button.is-active,
+.app-content-topbar .topbar-robotics-ros-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -8411,6 +8480,7 @@ export default {
 .app-content-topbar .topbar-publishing-prepress-vault-button > *,
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button > *,
 .app-content-topbar .topbar-dfir-security-vault-button > *,
+.app-content-topbar .topbar-robotics-ros-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8575,6 +8645,7 @@ export default {
 	.app-content-topbar .topbar-publishing-prepress-vault-button,
 	.app-content-topbar .topbar-genomics-bioinformatics-vault-button,
 	.app-content-topbar .topbar-dfir-security-vault-button,
+	.app-content-topbar .topbar-robotics-ros-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
