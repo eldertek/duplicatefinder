@@ -244,6 +244,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-ransomware-canary-guard',
 	},
 	{
+		id: 'toggle-dev-tree-reclaimer',
+		keys: ['^'],
+		action: 'toggle-dev-tree-reclaimer',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -462,6 +467,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '*') {
 		return 'toggle-ransomware-canary-guard'
+	}
+
+	if (key === '^') {
+		return 'toggle-dev-tree-reclaimer'
 	}
 
 	if (key === 'ArrowDown') {

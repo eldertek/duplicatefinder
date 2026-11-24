@@ -1221,6 +1221,31 @@
 							<span>{{ t('duplicatefinder', 'Canary Guard') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-dev-tree-button"
+							:class="{ 'is-active': devTreeReclaimerOpen }"
+							:aria-pressed="devTreeReclaimerOpen ? 'true' : 'false'"
+							aria-keyshortcuts="^"
+							:title="t('duplicatefinder', 'Toggle dev workspace and dependency bloat whole-tree reclaimer')"
+							@click="toggleDevTreeReclaimer">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<polyline points="16 18 22 12 16 6" />
+								<polyline points="8 6 2 12 8 18" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Dev Trees') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1645,6 +1670,15 @@
 						@compare-duplicate="onRansomwareCanaryCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="ransomwareCanaryOpen = false" />
+					<DevTreeReclaimerWorkbench
+						v-if="devTreeReclaimerOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onDevTreeSelectDuplicate"
+						@compare-duplicate="onDevTreeCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="devTreeReclaimerOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2113,6 +2147,7 @@ import CdcChunkingWorkbench from './components/CdcChunkingWorkbench.vue'
 import OpsScheduleWorkbench from './components/OpsScheduleWorkbench.vue'
 import LegalHoldWorkbench from './components/LegalHoldWorkbench.vue'
 import RansomwareCanaryWorkbench from './components/RansomwareCanaryWorkbench.vue'
+import DevTreeReclaimerWorkbench from './components/DevTreeReclaimerWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2210,6 +2245,7 @@ export default {
 		OpsScheduleWorkbench,
 		LegalHoldWorkbench,
 		RansomwareCanaryWorkbench,
+		DevTreeReclaimerWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2274,6 +2310,7 @@ export default {
 			opsScheduleOpen: false,
 			legalHoldOpen: false,
 			ransomwareCanaryOpen: false,
+			devTreeReclaimerOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2482,6 +2519,7 @@ export default {
 				'toggle-ops-schedule-generator': t('duplicatefinder', 'Toggle automated deduplication schedule, systemd/cron and flock/ionice generator'),
 				'toggle-legal-hold-guard': t('duplicatefinder', 'Toggle compliance legal hold, evidence freeze and e-discovery guard'),
 				'toggle-ransomware-canary-guard': t('duplicatefinder', 'Toggle ransomware canary, extension drift and mass-entropy anomaly guard'),
+				'toggle-dev-tree-reclaimer': t('duplicatefinder', 'Toggle dev workspace and dependency bloat whole-tree reclaimer'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3322,6 +3360,22 @@ export default {
 		onRansomwareCanaryCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleDevTreeReclaimer() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.devTreeReclaimerOpen = !this.devTreeReclaimerOpen
+			return true
+		},
+		onDevTreeSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onDevTreeCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3925,6 +3979,13 @@ export default {
 
 			if (action === 'toggle-ransomware-canary-guard') {
 				if (this.toggleRansomwareCanaryGuard() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-dev-tree-reclaimer') {
+				if (this.toggleDevTreeReclaimer() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4864,7 +4925,8 @@ export default {
 .app-content-topbar .topbar-cdc-chunking-button,
 .app-content-topbar .topbar-ops-schedule-button,
 .app-content-topbar .topbar-legal-hold-button,
-.app-content-topbar .topbar-ransomware-canary-button {
+.app-content-topbar .topbar-ransomware-canary-button,
+.app-content-topbar .topbar-dev-tree-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4886,7 +4948,8 @@ export default {
 
 .app-content-topbar .topbar-ops-schedule-button,
 .app-content-topbar .topbar-legal-hold-button,
-.app-content-topbar .topbar-ransomware-canary-button {
+.app-content-topbar .topbar-ransomware-canary-button,
+.app-content-topbar .topbar-dev-tree-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -4927,7 +4990,8 @@ export default {
 .app-content-topbar .topbar-cdc-chunking-button svg,
 .app-content-topbar .topbar-ops-schedule-button svg,
 .app-content-topbar .topbar-legal-hold-button svg,
-.app-content-topbar .topbar-ransomware-canary-button svg {
+.app-content-topbar .topbar-ransomware-canary-button svg,
+.app-content-topbar .topbar-dev-tree-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5005,7 +5069,9 @@ export default {
 .app-content-topbar .topbar-legal-hold-button:hover:not(:disabled),
 .app-content-topbar .topbar-legal-hold-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-ransomware-canary-button:hover:not(:disabled),
-.app-content-topbar .topbar-ransomware-canary-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-ransomware-canary-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-dev-tree-button:hover:not(:disabled),
+.app-content-topbar .topbar-dev-tree-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5044,7 +5110,8 @@ export default {
 .app-content-topbar .topbar-cdc-chunking-button.is-active,
 .app-content-topbar .topbar-ops-schedule-button.is-active,
 .app-content-topbar .topbar-legal-hold-button.is-active,
-.app-content-topbar .topbar-ransomware-canary-button.is-active {
+.app-content-topbar .topbar-ransomware-canary-button.is-active,
+.app-content-topbar .topbar-dev-tree-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5226,6 +5293,7 @@ export default {
 .app-content-topbar .topbar-ops-schedule-button > *,
 .app-content-topbar .topbar-legal-hold-button > *,
 .app-content-topbar .topbar-ransomware-canary-button > *,
+.app-content-topbar .topbar-dev-tree-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5346,6 +5414,7 @@ export default {
 	.app-content-topbar .topbar-ops-schedule-button,
 	.app-content-topbar .topbar-legal-hold-button,
 	.app-content-topbar .topbar-ransomware-canary-button,
+	.app-content-topbar .topbar-dev-tree-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
