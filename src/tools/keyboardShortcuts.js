@@ -329,6 +329,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-photo-raw-catalog-auditor',
 	},
 	{
+		id: 'toggle-vm-container-image-auditor',
+		keys: ['Shift+I'],
+		action: 'toggle-vm-container-image-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -615,6 +620,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'P' || key === 'p')) {
 		return 'toggle-photo-raw-catalog-auditor'
+	}
+
+	if (event.shiftKey && (key === 'I' || key === 'i')) {
+		return 'toggle-vm-container-image-auditor'
 	}
 
 	if (key === 'ArrowDown') {

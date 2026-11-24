@@ -1730,6 +1730,51 @@
 							<span>{{ t('duplicatefinder', 'RAW & Previews') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-vm-container-image-button"
+							:class="{ 'is-active': vmContainerImageOpen }"
+							:aria-pressed="vmContainerImageOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+I"
+							:title="t('duplicatefinder', 'Toggle VM, ISO and container image vault auditor')"
+							@click="toggleVmContainerImage">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="2"
+									y="3"
+									width="20"
+									height="8"
+									rx="2" />
+								<rect
+									x="2"
+									y="13"
+									width="20"
+									height="8"
+									rx="2" />
+								<line
+									x1="6"
+									y1="7"
+									x2="6.01"
+									y2="7" />
+								<line
+									x1="6"
+									y1="17"
+									x2="6.01"
+									y2="17" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'VM & ISO Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2307,6 +2352,15 @@
 						@compare-duplicate="onPhotoRawCatalogCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="photoRawCatalogOpen = false" />
+					<VmContainerImageWorkbench
+						v-if="vmContainerImageOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onVmContainerImageSelectDuplicate"
+						@compare-duplicate="onVmContainerImageCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="vmContainerImageOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2792,6 +2846,7 @@ import DawAudioStemWorkbench from './components/DawAudioStemWorkbench.vue'
 import VfxRenderCacheWorkbench from './components/VfxRenderCacheWorkbench.vue'
 import ElearningScormWorkbench from './components/ElearningScormWorkbench.vue'
 import PhotoRawCatalogWorkbench from './components/PhotoRawCatalogWorkbench.vue'
+import VmContainerImageWorkbench from './components/VmContainerImageWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2906,6 +2961,7 @@ export default {
 		VfxRenderCacheWorkbench,
 		ElearningScormWorkbench,
 		PhotoRawCatalogWorkbench,
+		VmContainerImageWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2987,6 +3043,7 @@ export default {
 			vfxRenderCacheOpen: false,
 			elearningScormOpen: false,
 			photoRawCatalogOpen: false,
+			vmContainerImageOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3212,6 +3269,7 @@ export default {
 				'toggle-vfx-render-cache-auditor': t('duplicatefinder', 'Toggle 3D VFX scene, texture mip pyramid, bake sim cache and autosave auditor'),
 				'toggle-elearning-scorm-auditor': t('duplicatefinder', 'Toggle e-learning SCORM/H5P package, lecture recording transcode and slide deck handout auditor'),
 				'toggle-photo-raw-catalog-auditor': t('duplicatefinder', 'Toggle RAW photography catalog, preview pyramid, sidecar and export derivative auditor'),
+				'toggle-vm-container-image-auditor': t('duplicatefinder', 'Toggle VM, ISO and container image vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4324,6 +4382,22 @@ export default {
 		onPhotoRawCatalogCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleVmContainerImage() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.vmContainerImageOpen = !this.vmContainerImageOpen
+			return true
+		},
+		onVmContainerImageSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onVmContainerImageCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5046,6 +5120,13 @@ export default {
 
 			if (action === 'toggle-photo-raw-catalog-auditor') {
 				if (this.togglePhotoRawCatalog() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-vm-container-image-auditor') {
+				if (this.toggleVmContainerImage() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6002,7 +6083,8 @@ export default {
 .app-content-topbar .topbar-daw-audio-button,
 .app-content-topbar .topbar-vfx-render-cache-button,
 .app-content-topbar .topbar-elearning-scorm-button,
-.app-content-topbar .topbar-photo-raw-catalog-button {
+.app-content-topbar .topbar-photo-raw-catalog-button,
+.app-content-topbar .topbar-vm-container-image-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -6041,7 +6123,8 @@ export default {
 .app-content-topbar .topbar-daw-audio-button,
 .app-content-topbar .topbar-vfx-render-cache-button,
 .app-content-topbar .topbar-elearning-scorm-button,
-.app-content-topbar .topbar-photo-raw-catalog-button {
+.app-content-topbar .topbar-photo-raw-catalog-button,
+.app-content-topbar .topbar-vm-container-image-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -6099,7 +6182,8 @@ export default {
 .app-content-topbar .topbar-daw-audio-button svg,
 .app-content-topbar .topbar-vfx-render-cache-button svg,
 .app-content-topbar .topbar-elearning-scorm-button svg,
-.app-content-topbar .topbar-photo-raw-catalog-button svg {
+.app-content-topbar .topbar-photo-raw-catalog-button svg,
+.app-content-topbar .topbar-vm-container-image-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6211,7 +6295,9 @@ export default {
 .app-content-topbar .topbar-elearning-scorm-button:hover:not(:disabled),
 .app-content-topbar .topbar-elearning-scorm-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-photo-raw-catalog-button:hover:not(:disabled),
-.app-content-topbar .topbar-photo-raw-catalog-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-photo-raw-catalog-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-vm-container-image-button:hover:not(:disabled),
+.app-content-topbar .topbar-vm-container-image-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -6267,7 +6353,8 @@ export default {
 .app-content-topbar .topbar-daw-audio-button.is-active,
 .app-content-topbar .topbar-vfx-render-cache-button.is-active,
 .app-content-topbar .topbar-elearning-scorm-button.is-active,
-.app-content-topbar .topbar-photo-raw-catalog-button.is-active {
+.app-content-topbar .topbar-photo-raw-catalog-button.is-active,
+.app-content-topbar .topbar-vm-container-image-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6466,6 +6553,7 @@ export default {
 .app-content-topbar .topbar-vfx-render-cache-button > *,
 .app-content-topbar .topbar-elearning-scorm-button > *,
 .app-content-topbar .topbar-photo-raw-catalog-button > *,
+.app-content-topbar .topbar-vm-container-image-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6603,6 +6691,7 @@ export default {
 	.app-content-topbar .topbar-vfx-render-cache-button,
 	.app-content-topbar .topbar-elearning-scorm-button,
 	.app-content-topbar .topbar-photo-raw-catalog-button,
+	.app-content-topbar .topbar-vm-container-image-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
