@@ -289,6 +289,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-mailbox-archive-auditor',
 	},
 	{
+		id: 'toggle-cad-vault-auditor',
+		keys: ['{'],
+		action: 'toggle-cad-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -543,6 +548,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '<') {
 		return 'toggle-mailbox-archive-auditor'
+	}
+
+	if (key === '{') {
+		return 'toggle-cad-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {

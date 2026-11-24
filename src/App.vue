@@ -1513,6 +1513,36 @@
 							<span>{{ t('duplicatefinder', 'Mail & Attachments') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-cad-vault-button"
+							:class="{ 'is-active': cadVaultOpen }"
+							:aria-pressed="cadVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="{"
+							:title="t('duplicatefinder', 'Toggle CAD, 3D print, KiCad EDA and manufacturing release vault auditor')"
+							@click="toggleCadVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+								<polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+								<line
+									x1="12"
+									y1="22.08"
+									x2="12"
+									y2="12" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'CAD & EDA') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2018,6 +2048,15 @@
 						@compare-duplicate="onMailboxArchiveCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="mailboxArchiveOpen = false" />
+					<CadVaultWorkbench
+						v-if="cadVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onCadVaultSelectDuplicate"
+						@compare-duplicate="onCadVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="cadVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2495,6 +2534,7 @@ import LogTelemetryWorkbench from './components/LogTelemetryWorkbench.vue'
 import InstallerRepoWorkbench from './components/InstallerRepoWorkbench.vue'
 import WorkbookDriftWorkbench from './components/WorkbookDriftWorkbench.vue'
 import MailboxArchiveWorkbench from './components/MailboxArchiveWorkbench.vue'
+import CadVaultWorkbench from './components/CadVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2601,6 +2641,7 @@ export default {
 		InstallerRepoWorkbench,
 		WorkbookDriftWorkbench,
 		MailboxArchiveWorkbench,
+		CadVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2674,6 +2715,7 @@ export default {
 			installerRepoOpen: false,
 			workbookDriftOpen: false,
 			mailboxArchiveOpen: false,
+			cadVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2891,6 +2933,7 @@ export default {
 				'toggle-installer-repo-auditor': t('duplicatefinder', 'Toggle OS installer, firmware, package cache and ISO distribution repository auditor'),
 				'toggle-workbook-drift-auditor': t('duplicatefinder', 'Toggle spreadsheet, BI report and financial workbook version-drift auditor'),
 				'toggle-mailbox-archive-auditor': t('duplicatefinder', 'Toggle email archive, mailbox dump and extracted attachment redundancy auditor'),
+				'toggle-cad-vault-auditor': t('duplicatefinder', 'Toggle CAD, 3D print, KiCad EDA and manufacturing release vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3875,6 +3918,22 @@ export default {
 		onMailboxArchiveCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleCadVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.cadVaultOpen = !this.cadVaultOpen
+			return true
+		},
+		onCadVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onCadVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4541,6 +4600,13 @@ export default {
 
 			if (action === 'toggle-mailbox-archive-auditor') {
 				if (this.toggleMailboxArchive() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-cad-vault-auditor') {
+				if (this.toggleCadVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5489,7 +5555,8 @@ export default {
 .app-content-topbar .topbar-log-telemetry-button,
 .app-content-topbar .topbar-installer-repo-button,
 .app-content-topbar .topbar-workbook-drift-button,
-.app-content-topbar .topbar-mailbox-archive-button {
+.app-content-topbar .topbar-mailbox-archive-button,
+.app-content-topbar .topbar-cad-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5520,7 +5587,8 @@ export default {
 .app-content-topbar .topbar-log-telemetry-button,
 .app-content-topbar .topbar-installer-repo-button,
 .app-content-topbar .topbar-workbook-drift-button,
-.app-content-topbar .topbar-mailbox-archive-button {
+.app-content-topbar .topbar-mailbox-archive-button,
+.app-content-topbar .topbar-cad-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5570,7 +5638,8 @@ export default {
 .app-content-topbar .topbar-log-telemetry-button svg,
 .app-content-topbar .topbar-installer-repo-button svg,
 .app-content-topbar .topbar-workbook-drift-button svg,
-.app-content-topbar .topbar-mailbox-archive-button svg {
+.app-content-topbar .topbar-mailbox-archive-button svg,
+.app-content-topbar .topbar-cad-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5666,7 +5735,9 @@ export default {
 .app-content-topbar .topbar-workbook-drift-button:hover:not(:disabled),
 .app-content-topbar .topbar-workbook-drift-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-mailbox-archive-button:hover:not(:disabled),
-.app-content-topbar .topbar-mailbox-archive-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-mailbox-archive-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-cad-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-cad-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5714,7 +5785,8 @@ export default {
 .app-content-topbar .topbar-log-telemetry-button.is-active,
 .app-content-topbar .topbar-installer-repo-button.is-active,
 .app-content-topbar .topbar-workbook-drift-button.is-active,
-.app-content-topbar .topbar-mailbox-archive-button.is-active {
+.app-content-topbar .topbar-mailbox-archive-button.is-active,
+.app-content-topbar .topbar-cad-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5905,6 +5977,7 @@ export default {
 .app-content-topbar .topbar-installer-repo-button > *,
 .app-content-topbar .topbar-workbook-drift-button > *,
 .app-content-topbar .topbar-mailbox-archive-button > *,
+.app-content-topbar .topbar-cad-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6034,6 +6107,7 @@ export default {
 	.app-content-topbar .topbar-installer-repo-button,
 	.app-content-topbar .topbar-workbook-drift-button,
 	.app-content-topbar .topbar-mailbox-archive-button,
+	.app-content-topbar .topbar-cad-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

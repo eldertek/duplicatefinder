@@ -396,6 +396,7 @@ describe('Cycle 160: Log Rotation, Telemetry Dump & Stale Cache Explosion Audito
 			'./components/InstallerRepoWorkbench.vue': { __esModule: true, default: stub('installer-repo-auditor') },
 			'./components/WorkbookDriftWorkbench.vue': { __esModule: true, default: stub('workbook-drift-auditor') },
 			'./components/MailboxArchiveWorkbench.vue': { __esModule: true, default: stub('mailbox-archive-auditor') },
+			'./components/CadVaultWorkbench.vue': { __esModule: true, default: stub('cad-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
