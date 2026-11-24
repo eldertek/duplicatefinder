@@ -2490,6 +2490,31 @@
 							<span>{{ t('duplicatefinder', 'Genomics & Sequencing Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-dfir-security-vault-button"
+							:class="{ 'is-active': dfirSecurityVaultOpen }"
+							:aria-pressed="dfirSecurityVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F11"
+							:title="t('duplicatefinder', 'Toggle Cybersecurity, DFIR Forensics, PCAP and Threat Intel Evidence Vault auditor')"
+							@click="toggleDfirSecurityVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+								<path d="M9 12l2 2 4-4" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'DFIR & Security Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3301,6 +3326,15 @@
 						@compare-duplicate="onGenomicsBioinformaticsVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="genomicsBioinformaticsVaultOpen = false" />
+					<DfirSecurityVaultWorkbench
+						v-if="dfirSecurityVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onDfirSecurityVaultSelectDuplicate"
+						@compare-duplicate="onDfirSecurityVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="dfirSecurityVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3812,6 +3846,7 @@ import MobileBuildVaultWorkbench from './components/MobileBuildVaultWorkbench.vu
 import K8sTerraformVaultWorkbench from './components/K8sTerraformVaultWorkbench.vue'
 import PublishingPrepressVaultWorkbench from './components/PublishingPrepressVaultWorkbench.vue'
 import GenomicsBioinformaticsVaultWorkbench from './components/GenomicsBioinformaticsVaultWorkbench.vue'
+import DfirSecurityVaultWorkbench from './components/DfirSecurityVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3952,6 +3987,7 @@ export default {
 		K8sTerraformVaultWorkbench,
 		PublishingPrepressVaultWorkbench,
 		GenomicsBioinformaticsVaultWorkbench,
+		DfirSecurityVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4059,6 +4095,7 @@ export default {
 			k8sTerraformVaultOpen: false,
 			publishingPrepressVaultOpen: false,
 			genomicsBioinformaticsVaultOpen: false,
+			dfirSecurityVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4309,6 +4346,7 @@ export default {
 				'toggle-k8s-terraform-vault-auditor': t('duplicatefinder', 'Toggle Kubernetes, Terraform and Infrastructure-as-Code State Vault auditor'),
 				'toggle-publishing-prepress-vault-auditor': t('duplicatefinder', 'Toggle Publishing, Prepress, Print-Ready PDF/X and Font Licensing Vault auditor'),
 				'toggle-genomics-bioinformatics-vault-auditor': t('duplicatefinder', 'Toggle Genomics, Bioinformatics and Scientific Sequencing Data Vault auditor'),
+				'toggle-dfir-security-vault-auditor': t('duplicatefinder', 'Toggle Cybersecurity, DFIR Forensics, PCAP and Threat Intel Evidence Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5837,6 +5875,22 @@ export default {
 		onGenomicsBioinformaticsVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleDfirSecurityVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.dfirSecurityVaultOpen = !this.dfirSecurityVaultOpen
+			return true
+		},
+		onDfirSecurityVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onDfirSecurityVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6741,6 +6795,13 @@ export default {
 
 			if (action === 'toggle-genomics-bioinformatics-vault-auditor') {
 				if (this.toggleGenomicsBioinformaticsVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-dfir-security-vault-auditor') {
+				if (this.toggleDfirSecurityVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7723,7 +7784,8 @@ export default {
 .app-content-topbar .topbar-mobile-build-vault-button,
 .app-content-topbar .topbar-k8s-terraform-vault-button,
 .app-content-topbar .topbar-publishing-prepress-vault-button,
-.app-content-topbar .topbar-genomics-bioinformatics-vault-button {
+.app-content-topbar .topbar-genomics-bioinformatics-vault-button,
+.app-content-topbar .topbar-dfir-security-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7788,7 +7850,8 @@ export default {
 .app-content-topbar .topbar-mobile-build-vault-button,
 .app-content-topbar .topbar-k8s-terraform-vault-button,
 .app-content-topbar .topbar-publishing-prepress-vault-button,
-.app-content-topbar .topbar-genomics-bioinformatics-vault-button {
+.app-content-topbar .topbar-genomics-bioinformatics-vault-button,
+.app-content-topbar .topbar-dfir-security-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7872,7 +7935,8 @@ export default {
 .app-content-topbar .topbar-mobile-build-vault-button svg,
 .app-content-topbar .topbar-k8s-terraform-vault-button svg,
 .app-content-topbar .topbar-publishing-prepress-vault-button svg,
-.app-content-topbar .topbar-genomics-bioinformatics-vault-button svg {
+.app-content-topbar .topbar-genomics-bioinformatics-vault-button svg,
+.app-content-topbar .topbar-dfir-security-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -8036,7 +8100,9 @@ export default {
 .app-content-topbar .topbar-publishing-prepress-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-publishing-prepress-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-genomics-bioinformatics-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-genomics-bioinformatics-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-dfir-security-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-dfir-security-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -8118,7 +8184,8 @@ export default {
 .app-content-topbar .topbar-mobile-build-vault-button.is-active,
 .app-content-topbar .topbar-k8s-terraform-vault-button.is-active,
 .app-content-topbar .topbar-publishing-prepress-vault-button.is-active,
-.app-content-topbar .topbar-genomics-bioinformatics-vault-button.is-active {
+.app-content-topbar .topbar-genomics-bioinformatics-vault-button.is-active,
+.app-content-topbar .topbar-dfir-security-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -8343,6 +8410,7 @@ export default {
 .app-content-topbar .topbar-k8s-terraform-vault-button > *,
 .app-content-topbar .topbar-publishing-prepress-vault-button > *,
 .app-content-topbar .topbar-genomics-bioinformatics-vault-button > *,
+.app-content-topbar .topbar-dfir-security-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8506,6 +8574,7 @@ export default {
 	.app-content-topbar .topbar-k8s-terraform-vault-button,
 	.app-content-topbar .topbar-publishing-prepress-vault-button,
 	.app-content-topbar .topbar-genomics-bioinformatics-vault-button,
+	.app-content-topbar .topbar-dfir-security-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

@@ -253,6 +253,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/K8sTerraformVaultWorkbench.vue': { __esModule: true, default: stub('k8s-terraform-vault-auditor') },
 			'./components/PublishingPrepressVaultWorkbench.vue': { __esModule: true, default: stub('publishing-prepress-vault-auditor') },
 			'./components/GenomicsBioinformaticsVaultWorkbench.vue': { __esModule: true, default: stub('genomics-bioinformatics-vault-auditor') },
+			'./components/DfirSecurityVaultWorkbench.vue': { __esModule: true, default: stub('dfir-security-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4381,5 +4382,28 @@ describe('Cycle 197: Shift+F1 shortcut for Genomics, Bioinformatics & Scientific
 		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 198: Shift+F11 shortcut for Cybersecurity, DFIR Forensics, PCAP & Threat Intel Evidence Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F11 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-dfir-security-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-dfir-security-vault-auditor',
+			keys: ['Shift+F11'],
+			action: 'toggle-dfir-security-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F11', shiftKey: true }), 'toggle-dfir-security-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F11' }), null)
+		assert.equal(resolveShortcutAction({ key: 'F11', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F11', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F11', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F11', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F11', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

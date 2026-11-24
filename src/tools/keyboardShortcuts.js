@@ -459,6 +459,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-genomics-bioinformatics-vault-auditor',
 	},
 	{
+		id: 'toggle-dfir-security-vault-auditor',
+		keys: ['Shift+F11'],
+		action: 'toggle-dfir-security-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -849,6 +854,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && key === 'F1') {
 		return 'toggle-genomics-bioinformatics-vault-auditor'
+	}
+
+	if (event.shiftKey && key === 'F11') {
+		return 'toggle-dfir-security-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {
