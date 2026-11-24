@@ -252,6 +252,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/MobileBuildVaultWorkbench.vue': { __esModule: true, default: stub('mobile-build-vault-auditor') },
 			'./components/K8sTerraformVaultWorkbench.vue': { __esModule: true, default: stub('k8s-terraform-vault-auditor') },
 			'./components/PublishingPrepressVaultWorkbench.vue': { __esModule: true, default: stub('publishing-prepress-vault-auditor') },
+			'./components/GenomicsBioinformaticsVaultWorkbench.vue': { __esModule: true, default: stub('genomics-bioinformatics-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4357,5 +4358,28 @@ describe('Cycle 196: Shift+F10 shortcut for Publishing, Prepress, Print-Ready PD
 		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F10', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 197: Shift+F1 shortcut for Genomics, Bioinformatics & Scientific Sequencing Data Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F1 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-genomics-bioinformatics-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-genomics-bioinformatics-vault-auditor',
+			keys: ['Shift+F1'],
+			action: 'toggle-genomics-bioinformatics-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true }), 'toggle-genomics-bioinformatics-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F1' }), null)
+		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F1', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
