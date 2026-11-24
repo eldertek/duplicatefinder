@@ -263,6 +263,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/EnergySeismicVaultWorkbench.vue': { __esModule: true, default: stub('energy-seismic-vault-auditor') },
 			'./components/FiberTelecomRfVaultWorkbench.vue': { __esModule: true, default: stub('fiber-telecom-rf-vault-auditor') },
 			'./components/GeotechShmCivilVaultWorkbench.vue': { __esModule: true, default: stub('geotech-shm-civil-vault-auditor') },
+			'./components/HydrographyMarineVaultWorkbench.vue': { __esModule: true, default: stub('hydrography-marine-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4642,5 +4643,31 @@ describe('Cycle 207: Alt+Shift+G shortcut for Geotechnical, SHM, Tunneling TBM &
 		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'G', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 208: Alt+Shift+H shortcut for Marine Hydrography, Multibeam Sonar & Subsea ROV Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+H cleanly and preserves Shift+H and h while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-hydrography-marine-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-hydrography-marine-vault-auditor',
+			keys: ['Alt+Shift+H'],
+			action: 'toggle-hydrography-marine-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true }), 'toggle-hydrography-marine-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'h', altKey: true, shiftKey: true }), 'toggle-hydrography-marine-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'H', shiftKey: true }), 'toggle-email-archive-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'h', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'h' }), 'toggle-reclamation-history')
+		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
