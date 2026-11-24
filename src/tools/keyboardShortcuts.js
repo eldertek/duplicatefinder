@@ -484,6 +484,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-battery-bms-vault-auditor',
 	},
 	{
+		id: 'toggle-chem-pharma-gmp-vault-auditor',
+		keys: ['Alt+Shift+C'],
+		action: 'toggle-chem-pharma-gmp-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -674,6 +679,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'B' || key === 'b')) {
 			return 'toggle-battery-bms-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'C' || key === 'c')) {
+			return 'toggle-chem-pharma-gmp-vault-auditor'
 		}
 		return null
 	}
