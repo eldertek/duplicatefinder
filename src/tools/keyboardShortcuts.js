@@ -249,6 +249,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-dev-tree-reclaimer',
 	},
 	{
+		id: 'toggle-conflict-storm-resolver',
+		keys: ['&'],
+		action: 'toggle-conflict-storm-resolver',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -471,6 +476,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '^') {
 		return 'toggle-dev-tree-reclaimer'
+	}
+
+	if (key === '&') {
+		return 'toggle-conflict-storm-resolver'
 	}
 
 	if (key === 'ArrowDown') {

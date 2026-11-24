@@ -387,6 +387,7 @@ test('Cycle 149: Zero-Byte, Truncated Partial & AppleDouble Junk Pair Inspector'
 			'./components/LegalHoldWorkbench.vue': { __esModule: true, default: stub('legal-hold') },
 			'./components/RansomwareCanaryWorkbench.vue': { __esModule: true, default: stub('ransomware-canary') },
 			'./components/DevTreeReclaimerWorkbench.vue': { __esModule: true, default: stub('dev-tree') },
+			'./components/ConflictStormWorkbench.vue': { __esModule: true, default: stub('conflict-storm') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
