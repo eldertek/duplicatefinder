@@ -284,6 +284,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-workbook-drift-auditor',
 	},
 	{
+		id: 'toggle-mailbox-archive-auditor',
+		keys: ['<'],
+		action: 'toggle-mailbox-archive-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -534,6 +539,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '>') {
 		return 'toggle-workbook-drift-auditor'
+	}
+
+	if (key === '<') {
+		return 'toggle-mailbox-archive-auditor'
 	}
 
 	if (key === 'ArrowDown') {

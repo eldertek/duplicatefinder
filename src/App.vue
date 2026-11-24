@@ -1483,6 +1483,36 @@
 							<span>{{ t('duplicatefinder', 'Workbooks & BI') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-mailbox-archive-button"
+							:class="{ 'is-active': mailboxArchiveOpen }"
+							:aria-pressed="mailboxArchiveOpen ? 'true' : 'false'"
+							aria-keyshortcuts="<"
+							:title="t('duplicatefinder', 'Toggle email archive, mailbox dump and extracted attachment redundancy auditor')"
+							@click="toggleMailboxArchive">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="2"
+									y="4"
+									width="20"
+									height="16"
+									rx="2" />
+								<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Mail & Attachments') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1979,6 +2009,15 @@
 						@compare-duplicate="onWorkbookDriftCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="workbookDriftOpen = false" />
+					<MailboxArchiveWorkbench
+						v-if="mailboxArchiveOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onMailboxArchiveSelectDuplicate"
+						@compare-duplicate="onMailboxArchiveCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="mailboxArchiveOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2455,6 +2494,7 @@ import BrandKitAuditorWorkbench from './components/BrandKitAuditorWorkbench.vue'
 import LogTelemetryWorkbench from './components/LogTelemetryWorkbench.vue'
 import InstallerRepoWorkbench from './components/InstallerRepoWorkbench.vue'
 import WorkbookDriftWorkbench from './components/WorkbookDriftWorkbench.vue'
+import MailboxArchiveWorkbench from './components/MailboxArchiveWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2560,6 +2600,7 @@ export default {
 		LogTelemetryWorkbench,
 		InstallerRepoWorkbench,
 		WorkbookDriftWorkbench,
+		MailboxArchiveWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2632,6 +2673,7 @@ export default {
 			logTelemetryOpen: false,
 			installerRepoOpen: false,
 			workbookDriftOpen: false,
+			mailboxArchiveOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2848,6 +2890,7 @@ export default {
 				'toggle-log-telemetry-auditor': t('duplicatefinder', 'Toggle log rotation, telemetry dump and stale cache explosion auditor'),
 				'toggle-installer-repo-auditor': t('duplicatefinder', 'Toggle OS installer, firmware, package cache and ISO distribution repository auditor'),
 				'toggle-workbook-drift-auditor': t('duplicatefinder', 'Toggle spreadsheet, BI report and financial workbook version-drift auditor'),
+				'toggle-mailbox-archive-auditor': t('duplicatefinder', 'Toggle email archive, mailbox dump and extracted attachment redundancy auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3816,6 +3859,22 @@ export default {
 		onWorkbookDriftCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleMailboxArchive() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.mailboxArchiveOpen = !this.mailboxArchiveOpen
+			return true
+		},
+		onMailboxArchiveSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onMailboxArchiveCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4475,6 +4534,13 @@ export default {
 
 			if (action === 'toggle-workbook-drift-auditor') {
 				if (this.toggleWorkbookDrift() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-mailbox-archive-auditor') {
+				if (this.toggleMailboxArchive() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5422,7 +5488,8 @@ export default {
 .app-content-topbar .topbar-brand-kit-button,
 .app-content-topbar .topbar-log-telemetry-button,
 .app-content-topbar .topbar-installer-repo-button,
-.app-content-topbar .topbar-workbook-drift-button {
+.app-content-topbar .topbar-workbook-drift-button,
+.app-content-topbar .topbar-mailbox-archive-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5452,7 +5519,8 @@ export default {
 .app-content-topbar .topbar-brand-kit-button,
 .app-content-topbar .topbar-log-telemetry-button,
 .app-content-topbar .topbar-installer-repo-button,
-.app-content-topbar .topbar-workbook-drift-button {
+.app-content-topbar .topbar-workbook-drift-button,
+.app-content-topbar .topbar-mailbox-archive-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5501,7 +5569,8 @@ export default {
 .app-content-topbar .topbar-brand-kit-button svg,
 .app-content-topbar .topbar-log-telemetry-button svg,
 .app-content-topbar .topbar-installer-repo-button svg,
-.app-content-topbar .topbar-workbook-drift-button svg {
+.app-content-topbar .topbar-workbook-drift-button svg,
+.app-content-topbar .topbar-mailbox-archive-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5595,7 +5664,9 @@ export default {
 .app-content-topbar .topbar-installer-repo-button:hover:not(:disabled),
 .app-content-topbar .topbar-installer-repo-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-workbook-drift-button:hover:not(:disabled),
-.app-content-topbar .topbar-workbook-drift-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-workbook-drift-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-mailbox-archive-button:hover:not(:disabled),
+.app-content-topbar .topbar-mailbox-archive-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5642,7 +5713,8 @@ export default {
 .app-content-topbar .topbar-brand-kit-button.is-active,
 .app-content-topbar .topbar-log-telemetry-button.is-active,
 .app-content-topbar .topbar-installer-repo-button.is-active,
-.app-content-topbar .topbar-workbook-drift-button.is-active {
+.app-content-topbar .topbar-workbook-drift-button.is-active,
+.app-content-topbar .topbar-mailbox-archive-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5832,6 +5904,7 @@ export default {
 .app-content-topbar .topbar-log-telemetry-button > *,
 .app-content-topbar .topbar-installer-repo-button > *,
 .app-content-topbar .topbar-workbook-drift-button > *,
+.app-content-topbar .topbar-mailbox-archive-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5960,6 +6033,7 @@ export default {
 	.app-content-topbar .topbar-log-telemetry-button,
 	.app-content-topbar .topbar-installer-repo-button,
 	.app-content-topbar .topbar-workbook-drift-button,
+	.app-content-topbar .topbar-mailbox-archive-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

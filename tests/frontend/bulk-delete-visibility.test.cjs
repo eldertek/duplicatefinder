@@ -138,6 +138,7 @@ function createAppComponent({ acknowledgedResponse, unacknowledgedResponse }) {
 			'./components/LogTelemetryWorkbench.vue': { __esModule: true, default: stub('log-telemetry-auditor') },
 			'./components/InstallerRepoWorkbench.vue': { __esModule: true, default: stub('installer-repo-auditor') },
 			'./components/WorkbookDriftWorkbench.vue': { __esModule: true, default: stub('workbook-drift-auditor') },
+			'./components/MailboxArchiveWorkbench.vue': { __esModule: true, default: stub('mailbox-archive-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin-folders') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded-folders') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk-deletion') },
