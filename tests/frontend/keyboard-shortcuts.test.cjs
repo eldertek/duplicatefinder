@@ -261,6 +261,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/ChemPharmaGmpVaultWorkbench.vue': { __esModule: true, default: stub('chem-pharma-gmp-vault-auditor') },
 			'./components/DigitalGridScadaVaultWorkbench.vue': { __esModule: true, default: stub('digital-grid-scada-vault-auditor') },
 			'./components/EnergySeismicVaultWorkbench.vue': { __esModule: true, default: stub('energy-seismic-vault-auditor') },
+			'./components/FiberTelecomRfVaultWorkbench.vue': { __esModule: true, default: stub('fiber-telecom-rf-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4588,5 +4589,31 @@ describe('Cycle 205: Alt+Shift+E shortcut for Energy, Seismic SEG-Y, Well-Log & 
 		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 206: Alt+Shift+F shortcut for Fiber-Optic, Telecom RF Spectrum, VNA S-Parameter & 5G Baseband IQ Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+F cleanly and preserves Shift+F and f while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-fiber-telecom-rf-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-fiber-telecom-rf-vault-auditor',
+			keys: ['Alt+Shift+F'],
+			action: 'toggle-fiber-telecom-rf-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true }), 'toggle-fiber-telecom-rf-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'f', altKey: true, shiftKey: true }), 'toggle-fiber-telecom-rf-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F', shiftKey: true }), 'toggle-design-publishing-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'f', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'f' }), 'toggle-similarity-inspector')
+		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

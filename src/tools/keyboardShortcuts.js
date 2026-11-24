@@ -499,6 +499,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-energy-seismic-vault-auditor',
 	},
 	{
+		id: 'toggle-fiber-telecom-rf-vault-auditor',
+		keys: ['Alt+Shift+F'],
+		action: 'toggle-fiber-telecom-rf-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -698,6 +703,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'E' || key === 'e')) {
 			return 'toggle-energy-seismic-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'F' || key === 'f')) {
+			return 'toggle-fiber-telecom-rf-vault-auditor'
 		}
 		return null
 	}
