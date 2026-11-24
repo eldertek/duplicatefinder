@@ -1576,6 +1576,32 @@
 							<span>{{ t('duplicatefinder', 'Web & Media') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-legal-document-ocr-button"
+							:class="{ 'is-active': legalDocumentOcrOpen }"
+							:aria-pressed="legalDocumentOcrOpen ? 'true' : 'false'"
+							aria-keyshortcuts="("
+							:title="t('duplicatefinder', 'Toggle legal contract, e-signature, OCR dual-scan and Office-PDF derivative auditor')"
+							@click="toggleLegalDocumentOcr">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+								<polyline points="14 2 14 8 20 8" />
+								<path d="M9 15l2 2 4-4" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Docs & OCR') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2099,6 +2125,15 @@
 						@compare-duplicate="onWebBuildMediaCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="webBuildMediaOpen = false" />
+					<LegalDocumentOcrWorkbench
+						v-if="legalDocumentOcrOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onLegalDocumentOcrSelectDuplicate"
+						@compare-duplicate="onLegalDocumentOcrCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="legalDocumentOcrOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2578,6 +2613,7 @@ import WorkbookDriftWorkbench from './components/WorkbookDriftWorkbench.vue'
 import MailboxArchiveWorkbench from './components/MailboxArchiveWorkbench.vue'
 import CadVaultWorkbench from './components/CadVaultWorkbench.vue'
 import WebBuildMediaWorkbench from './components/WebBuildMediaWorkbench.vue'
+import LegalDocumentOcrWorkbench from './components/LegalDocumentOcrWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2686,6 +2722,7 @@ export default {
 		MailboxArchiveWorkbench,
 		CadVaultWorkbench,
 		WebBuildMediaWorkbench,
+		LegalDocumentOcrWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2761,6 +2798,7 @@ export default {
 			mailboxArchiveOpen: false,
 			cadVaultOpen: false,
 			webBuildMediaOpen: false,
+			legalDocumentOcrOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2980,6 +3018,7 @@ export default {
 				'toggle-mailbox-archive-auditor': t('duplicatefinder', 'Toggle email archive, mailbox dump and extracted attachment redundancy auditor'),
 				'toggle-cad-vault-auditor': t('duplicatefinder', 'Toggle CAD, 3D print, KiCad EDA and manufacturing release vault auditor'),
 				'toggle-web-build-media-auditor': t('duplicatefinder', 'Toggle web build output, responsive image pyramid, HLS/DASH chunks and source-map bloat auditor'),
+				'toggle-legal-document-ocr-auditor': t('duplicatefinder', 'Toggle legal contract, e-signature, OCR dual-scan and Office-PDF derivative auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3996,6 +4035,22 @@ export default {
 		onWebBuildMediaCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleLegalDocumentOcr() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.legalDocumentOcrOpen = !this.legalDocumentOcrOpen
+			return true
+		},
+		onLegalDocumentOcrSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onLegalDocumentOcrCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4676,6 +4731,13 @@ export default {
 
 			if (action === 'toggle-web-build-media-auditor') {
 				if (this.toggleWebBuildMedia() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-legal-document-ocr-auditor') {
+				if (this.toggleLegalDocumentOcr() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5626,7 +5688,8 @@ export default {
 .app-content-topbar .topbar-workbook-drift-button,
 .app-content-topbar .topbar-mailbox-archive-button,
 .app-content-topbar .topbar-cad-vault-button,
-.app-content-topbar .topbar-web-build-media-button {
+.app-content-topbar .topbar-web-build-media-button,
+.app-content-topbar .topbar-legal-document-ocr-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5659,7 +5722,8 @@ export default {
 .app-content-topbar .topbar-workbook-drift-button,
 .app-content-topbar .topbar-mailbox-archive-button,
 .app-content-topbar .topbar-cad-vault-button,
-.app-content-topbar .topbar-web-build-media-button {
+.app-content-topbar .topbar-web-build-media-button,
+.app-content-topbar .topbar-legal-document-ocr-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5711,7 +5775,8 @@ export default {
 .app-content-topbar .topbar-workbook-drift-button svg,
 .app-content-topbar .topbar-mailbox-archive-button svg,
 .app-content-topbar .topbar-cad-vault-button svg,
-.app-content-topbar .topbar-web-build-media-button svg {
+.app-content-topbar .topbar-web-build-media-button svg,
+.app-content-topbar .topbar-legal-document-ocr-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5811,7 +5876,9 @@ export default {
 .app-content-topbar .topbar-cad-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-cad-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-web-build-media-button:hover:not(:disabled),
-.app-content-topbar .topbar-web-build-media-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-web-build-media-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-legal-document-ocr-button:hover:not(:disabled),
+.app-content-topbar .topbar-legal-document-ocr-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5861,7 +5928,8 @@ export default {
 .app-content-topbar .topbar-workbook-drift-button.is-active,
 .app-content-topbar .topbar-mailbox-archive-button.is-active,
 .app-content-topbar .topbar-cad-vault-button.is-active,
-.app-content-topbar .topbar-web-build-media-button.is-active {
+.app-content-topbar .topbar-web-build-media-button.is-active,
+.app-content-topbar .topbar-legal-document-ocr-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6054,6 +6122,7 @@ export default {
 .app-content-topbar .topbar-mailbox-archive-button > *,
 .app-content-topbar .topbar-cad-vault-button > *,
 .app-content-topbar .topbar-web-build-media-button > *,
+.app-content-topbar .topbar-legal-document-ocr-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6185,6 +6254,7 @@ export default {
 	.app-content-topbar .topbar-mailbox-archive-button,
 	.app-content-topbar .topbar-cad-vault-button,
 	.app-content-topbar .topbar-web-build-media-button,
+	.app-content-topbar .topbar-legal-document-ocr-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

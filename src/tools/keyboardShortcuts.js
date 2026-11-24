@@ -299,6 +299,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-web-build-media-auditor',
 	},
 	{
+		id: 'toggle-legal-document-ocr-auditor',
+		keys: ['('],
+		action: 'toggle-legal-document-ocr-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -561,6 +566,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '}') {
 		return 'toggle-web-build-media-auditor'
+	}
+
+	if (key === '(') {
+		return 'toggle-legal-document-ocr-auditor'
 	}
 
 	if (key === 'ArrowDown') {

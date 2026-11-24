@@ -458,6 +458,7 @@ describe('Web Build Output, Responsive Image Pyramid, HLS/DASH Chunks & Source-M
 			'./components/MailboxArchiveWorkbench.vue': { __esModule: true, default: stub('mailbox-archive-auditor') },
 			'./components/CadVaultWorkbench.vue': { __esModule: true, default: stub('cad-vault-auditor') },
 			'./components/WebBuildMediaWorkbench.vue': { __esModule: true, default: WebWorkbench },
+			'./components/LegalDocumentOcrWorkbench.vue': { __esModule: true, default: stub('legal-document-ocr-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
