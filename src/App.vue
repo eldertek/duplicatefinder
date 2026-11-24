@@ -2236,6 +2236,32 @@
 							<span>{{ t('duplicatefinder', 'VM & Backup Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-db-sql-log-vault-button"
+							:class="{ 'is-active': dbSqlLogVaultOpen }"
+							:aria-pressed="dbSqlLogVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F8"
+							:title="t('duplicatefinder', 'Toggle Database Dump, SQL Backup and Telemetry Log Vault auditor')"
+							@click="toggleDbSqlLogVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<ellipse cx="12" cy="5" rx="9" ry="3" />
+								<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+								<path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'SQL & Telemetry Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2966,6 +2992,15 @@
 						@compare-duplicate="onVmBackupVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="vmBackupVaultOpen = false" />
+					<DbSqlLogVaultWorkbench
+						v-if="dbSqlLogVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onDbSqlLogVaultSelectDuplicate"
+						@compare-duplicate="onDbSqlLogVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="dbSqlLogVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3468,6 +3503,7 @@ import GameDevPipelineVaultWorkbench from './components/GameDevPipelineVaultWork
 import PhotoGradingVaultWorkbench from './components/PhotoGradingVaultWorkbench.vue'
 import MlCheckpointVaultWorkbench from './components/MlCheckpointVaultWorkbench.vue'
 import VmBackupVaultWorkbench from './components/VmBackupVaultWorkbench.vue'
+import DbSqlLogVaultWorkbench from './components/DbSqlLogVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3599,6 +3635,7 @@ export default {
 		PhotoGradingVaultWorkbench,
 		MlCheckpointVaultWorkbench,
 		VmBackupVaultWorkbench,
+		DbSqlLogVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3697,6 +3734,7 @@ export default {
 			photoGradingVaultOpen: false,
 			mlCheckpointVaultOpen: false,
 			vmBackupVaultOpen: false,
+			dbSqlLogVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3938,6 +3976,7 @@ export default {
 				'toggle-game-dev-pipeline-vault-auditor': t('duplicatefinder', 'Toggle Game Dev, Unity/Unreal and 3D Asset Pipeline Vault auditor'),
 				'toggle-photo-grading-vault-auditor': t('duplicatefinder', 'Toggle Photography RAW, Lightroom/Capture One and Color Grading Vault auditor'),
 				'toggle-ml-checkpoint-vault-auditor': t('duplicatefinder', 'Toggle Machine Learning, LLM Weights and Dataset Checkpoint Vault auditor'),
+				'toggle-db-sql-log-vault-auditor': t('duplicatefinder', 'Toggle Database Dump, SQL Backup and Telemetry Log Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5322,6 +5361,22 @@ export default {
 		onVmBackupVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleDbSqlLogVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.dbSqlLogVaultOpen = !this.dbSqlLogVaultOpen
+			return true
+		},
+		onDbSqlLogVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onDbSqlLogVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6163,6 +6218,13 @@ export default {
 
 			if (action === 'toggle-vm-backup-vault-auditor') {
 				if (this.toggleVmBackupVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-db-sql-log-vault-auditor') {
+				if (this.toggleDbSqlLogVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7136,7 +7198,8 @@ export default {
 .app-content-topbar .topbar-game-dev-pipeline-vault-button,
 .app-content-topbar .topbar-photo-grading-vault-button,
 .app-content-topbar .topbar-ml-checkpoint-vault-button,
-.app-content-topbar .topbar-vm-backup-vault-button {
+.app-content-topbar .topbar-vm-backup-vault-button,
+.app-content-topbar .topbar-db-sql-log-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7192,7 +7255,8 @@ export default {
 .app-content-topbar .topbar-game-dev-pipeline-vault-button,
 .app-content-topbar .topbar-photo-grading-vault-button,
 .app-content-topbar .topbar-ml-checkpoint-vault-button,
-.app-content-topbar .topbar-vm-backup-vault-button {
+.app-content-topbar .topbar-vm-backup-vault-button,
+.app-content-topbar .topbar-db-sql-log-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7267,7 +7331,8 @@ export default {
 .app-content-topbar .topbar-game-dev-pipeline-vault-button svg,
 .app-content-topbar .topbar-photo-grading-vault-button svg,
 .app-content-topbar .topbar-ml-checkpoint-vault-button svg,
-.app-content-topbar .topbar-vm-backup-vault-button svg {
+.app-content-topbar .topbar-vm-backup-vault-button svg,
+.app-content-topbar .topbar-db-sql-log-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -7413,7 +7478,9 @@ export default {
 .app-content-topbar .topbar-ml-checkpoint-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-ml-checkpoint-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-vm-backup-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-vm-backup-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-vm-backup-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-db-sql-log-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-db-sql-log-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7486,7 +7553,8 @@ export default {
 .app-content-topbar .topbar-game-dev-pipeline-vault-button.is-active,
 .app-content-topbar .topbar-photo-grading-vault-button.is-active,
 .app-content-topbar .topbar-ml-checkpoint-vault-button.is-active,
-.app-content-topbar .topbar-vm-backup-vault-button.is-active {
+.app-content-topbar .topbar-vm-backup-vault-button.is-active,
+.app-content-topbar .topbar-db-sql-log-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -7702,6 +7770,7 @@ export default {
 .app-content-topbar .topbar-photo-grading-vault-button > *,
 .app-content-topbar .topbar-ml-checkpoint-vault-button > *,
 .app-content-topbar .topbar-vm-backup-vault-button > *,
+.app-content-topbar .topbar-db-sql-log-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -7856,6 +7925,7 @@ export default {
 	.app-content-topbar .topbar-photo-grading-vault-button,
 	.app-content-topbar .topbar-ml-checkpoint-vault-button,
 	.app-content-topbar .topbar-vm-backup-vault-button,
+	.app-content-topbar .topbar-db-sql-log-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
