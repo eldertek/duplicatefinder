@@ -453,6 +453,7 @@ test('Cycle 148: Nextcloud Versions, Trashbin & Appdata Shadow-Duplicate Reclaim
 			'./components/ScientificBundleWorkbench.vue': { __esModule: true, default: stub('scientific-bundle') },
 			'./components/BrandKitAuditorWorkbench.vue': { __esModule: true, default: stub('brand-kit-auditor') },
 			'./components/LogTelemetryWorkbench.vue': { __esModule: true, default: stub('log-telemetry-auditor') },
+			'./components/InstallerRepoWorkbench.vue': { __esModule: true, default: stub('installer-repo-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

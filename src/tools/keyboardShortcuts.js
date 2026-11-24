@@ -274,6 +274,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-log-telemetry-auditor',
 	},
 	{
+		id: 'toggle-installer-repo-auditor',
+		keys: ['_'],
+		action: 'toggle-installer-repo-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -516,6 +521,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '|') {
 		return 'toggle-log-telemetry-auditor'
+	}
+
+	if (key === '_') {
+		return 'toggle-installer-repo-auditor'
 	}
 
 	if (key === 'ArrowDown') {

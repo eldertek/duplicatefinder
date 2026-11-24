@@ -1413,6 +1413,37 @@
 							<span>{{ t('duplicatefinder', 'Logs & Caches') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-installer-repo-button"
+							:class="{ 'is-active': installerRepoOpen }"
+							:aria-pressed="installerRepoOpen ? 'true' : 'false'"
+							aria-keyshortcuts="_"
+							:title="t('duplicatefinder', 'Toggle OS installer, firmware, package cache and ISO distribution repository auditor')"
+							@click="toggleInstallerRepo">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle
+									cx="12"
+									cy="12"
+									r="9" />
+								<circle
+									cx="12"
+									cy="12"
+									r="3" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Installers & ISOs') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1891,6 +1922,15 @@
 						@compare-duplicate="onLogTelemetryCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="logTelemetryOpen = false" />
+					<InstallerRepoWorkbench
+						v-if="installerRepoOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onInstallerRepoSelectDuplicate"
+						@compare-duplicate="onInstallerRepoCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="installerRepoOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2365,6 +2405,7 @@ import VmCowReflinkWorkbench from './components/VmCowReflinkWorkbench.vue'
 import ScientificBundleWorkbench from './components/ScientificBundleWorkbench.vue'
 import BrandKitAuditorWorkbench from './components/BrandKitAuditorWorkbench.vue'
 import LogTelemetryWorkbench from './components/LogTelemetryWorkbench.vue'
+import InstallerRepoWorkbench from './components/InstallerRepoWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2468,6 +2509,7 @@ export default {
 		ScientificBundleWorkbench,
 		BrandKitAuditorWorkbench,
 		LogTelemetryWorkbench,
+		InstallerRepoWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2538,6 +2580,7 @@ export default {
 			scientificBundleOpen: false,
 			brandKitAuditorOpen: false,
 			logTelemetryOpen: false,
+			installerRepoOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2752,6 +2795,7 @@ export default {
 				'toggle-scientific-bundle-auditor': t('duplicatefinder', 'Toggle scientific, GIS, CAD/BIM and ML-shard companion-bundle auditor'),
 				'toggle-brand-kit-auditor': t('duplicatefinder', 'Toggle creative brand kit, font family and vector/PSD master asset auditor'),
 				'toggle-log-telemetry-auditor': t('duplicatefinder', 'Toggle log rotation, telemetry dump and stale cache explosion auditor'),
+				'toggle-installer-repo-auditor': t('duplicatefinder', 'Toggle OS installer, firmware, package cache and ISO distribution repository auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3688,6 +3732,22 @@ export default {
 		onLogTelemetryCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleInstallerRepo() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.installerRepoOpen = !this.installerRepoOpen
+			return true
+		},
+		onInstallerRepoSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onInstallerRepoCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4333,6 +4393,13 @@ export default {
 
 			if (action === 'toggle-log-telemetry-auditor') {
 				if (this.toggleLogTelemetry() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-installer-repo-auditor') {
+				if (this.toggleInstallerRepo() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5278,7 +5345,8 @@ export default {
 .app-content-topbar .topbar-vm-cow-button,
 .app-content-topbar .topbar-scientific-bundle-button,
 .app-content-topbar .topbar-brand-kit-button,
-.app-content-topbar .topbar-log-telemetry-button {
+.app-content-topbar .topbar-log-telemetry-button,
+.app-content-topbar .topbar-installer-repo-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5306,7 +5374,8 @@ export default {
 .app-content-topbar .topbar-vm-cow-button,
 .app-content-topbar .topbar-scientific-bundle-button,
 .app-content-topbar .topbar-brand-kit-button,
-.app-content-topbar .topbar-log-telemetry-button {
+.app-content-topbar .topbar-log-telemetry-button,
+.app-content-topbar .topbar-installer-repo-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5353,7 +5422,8 @@ export default {
 .app-content-topbar .topbar-vm-cow-button svg,
 .app-content-topbar .topbar-scientific-bundle-button svg,
 .app-content-topbar .topbar-brand-kit-button svg,
-.app-content-topbar .topbar-log-telemetry-button svg {
+.app-content-topbar .topbar-log-telemetry-button svg,
+.app-content-topbar .topbar-installer-repo-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5443,7 +5513,9 @@ export default {
 .app-content-topbar .topbar-brand-kit-button:hover:not(:disabled),
 .app-content-topbar .topbar-brand-kit-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-log-telemetry-button:hover:not(:disabled),
-.app-content-topbar .topbar-log-telemetry-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-log-telemetry-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-installer-repo-button:hover:not(:disabled),
+.app-content-topbar .topbar-installer-repo-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5488,7 +5560,8 @@ export default {
 .app-content-topbar .topbar-vm-cow-button.is-active,
 .app-content-topbar .topbar-scientific-bundle-button.is-active,
 .app-content-topbar .topbar-brand-kit-button.is-active,
-.app-content-topbar .topbar-log-telemetry-button.is-active {
+.app-content-topbar .topbar-log-telemetry-button.is-active,
+.app-content-topbar .topbar-installer-repo-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5676,6 +5749,7 @@ export default {
 .app-content-topbar .topbar-scientific-bundle-button > *,
 .app-content-topbar .topbar-brand-kit-button > *,
 .app-content-topbar .topbar-log-telemetry-button > *,
+.app-content-topbar .topbar-installer-repo-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5802,6 +5876,7 @@ export default {
 	.app-content-topbar .topbar-scientific-bundle-button,
 	.app-content-topbar .topbar-brand-kit-button,
 	.app-content-topbar .topbar-log-telemetry-button,
+	.app-content-topbar .topbar-installer-repo-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
