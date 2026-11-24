@@ -349,6 +349,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-database-dump-log-auditor',
 	},
 	{
+		id: 'toggle-design-publishing-vault-auditor',
+		keys: ['Shift+F'],
+		action: 'toggle-design-publishing-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -651,6 +656,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'Q' || key === 'q')) {
 		return 'toggle-database-dump-log-auditor'
+	}
+
+	if (event.shiftKey && (key === 'F' || key === 'f')) {
+		return 'toggle-design-publishing-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {

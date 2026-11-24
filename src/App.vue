@@ -1861,6 +1861,36 @@
 							<span>{{ t('duplicatefinder', 'DB & Log Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-design-publishing-vault-button"
+							:class="{ 'is-active': designPublishingVaultOpen }"
+							:aria-pressed="designPublishingVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F"
+							:title="t('duplicatefinder', 'Toggle Creative Design Package, Print Proof and Typography Font Archive auditor')"
+							@click="toggleDesignPublishingVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M12 19l7-7 3 3-7 7-3-3z" />
+								<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+								<path d="M2 2l7.586 7.586" />
+								<circle
+									cx="11"
+									cy="11"
+									r="2" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Print & Font Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2474,6 +2504,15 @@
 						@compare-duplicate="onDatabaseDumpLogCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="databaseDumpLogOpen = false" />
+					<DesignPublishingVaultWorkbench
+						v-if="designPublishingVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onDesignPublishingVaultSelectDuplicate"
+						@compare-duplicate="onDesignPublishingVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="designPublishingVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2963,6 +3002,7 @@ import VmContainerImageWorkbench from './components/VmContainerImageWorkbench.vu
 import MlDatasetArtifactWorkbench from './components/MlDatasetArtifactWorkbench.vue'
 import Game3dAssetVaultWorkbench from './components/Game3dAssetVaultWorkbench.vue'
 import DatabaseDumpLogWorkbench from './components/DatabaseDumpLogWorkbench.vue'
+import DesignPublishingVaultWorkbench from './components/DesignPublishingVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3081,6 +3121,7 @@ export default {
 		MlDatasetArtifactWorkbench,
 		Game3dAssetVaultWorkbench,
 		DatabaseDumpLogWorkbench,
+		DesignPublishingVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3166,6 +3207,7 @@ export default {
 			mlDatasetArtifactOpen: false,
 			game3dAssetVaultOpen: false,
 			databaseDumpLogOpen: false,
+			designPublishingVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3395,6 +3437,7 @@ export default {
 				'toggle-ml-dataset-artifact-auditor': t('duplicatefinder', 'Toggle ML weights, quantized checkpoints and dataset shard auditor'),
 				'toggle-game3d-asset-vault-auditor': t('duplicatefinder', 'Toggle Game Engine, Blender backup and 3D PBR texture vault auditor'),
 				'toggle-database-dump-log-auditor': t('duplicatefinder', 'Toggle Database Dump, Backup Snapshot and Log Rotation Vault auditor'),
+				'toggle-design-publishing-vault-auditor': t('duplicatefinder', 'Toggle Creative Design Package, Print Proof and Typography Font Archive auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4571,6 +4614,22 @@ export default {
 		onDatabaseDumpLogCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleDesignPublishingVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.designPublishingVaultOpen = !this.designPublishingVaultOpen
+			return true
+		},
+		onDesignPublishingVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onDesignPublishingVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5321,6 +5380,13 @@ export default {
 
 			if (action === 'toggle-database-dump-log-auditor') {
 				if (this.toggleDatabaseDumpLog() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-design-publishing-vault-auditor') {
+				if (this.toggleDesignPublishingVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6281,7 +6347,8 @@ export default {
 .app-content-topbar .topbar-vm-container-image-button,
 .app-content-topbar .topbar-ml-dataset-artifact-button,
 .app-content-topbar .topbar-game3d-asset-vault-button,
-.app-content-topbar .topbar-database-dump-log-button {
+.app-content-topbar .topbar-database-dump-log-button,
+.app-content-topbar .topbar-design-publishing-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -6324,7 +6391,8 @@ export default {
 .app-content-topbar .topbar-vm-container-image-button,
 .app-content-topbar .topbar-ml-dataset-artifact-button,
 .app-content-topbar .topbar-game3d-asset-vault-button,
-.app-content-topbar .topbar-database-dump-log-button {
+.app-content-topbar .topbar-database-dump-log-button,
+.app-content-topbar .topbar-design-publishing-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -6386,7 +6454,8 @@ export default {
 .app-content-topbar .topbar-vm-container-image-button svg,
 .app-content-topbar .topbar-ml-dataset-artifact-button svg,
 .app-content-topbar .topbar-game3d-asset-vault-button svg,
-.app-content-topbar .topbar-database-dump-log-button svg {
+.app-content-topbar .topbar-database-dump-log-button svg,
+.app-content-topbar .topbar-design-publishing-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6506,7 +6575,9 @@ export default {
 .app-content-topbar .topbar-game3d-asset-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-game3d-asset-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-database-dump-log-button:hover:not(:disabled),
-.app-content-topbar .topbar-database-dump-log-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-database-dump-log-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-design-publishing-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-design-publishing-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -6566,7 +6637,8 @@ export default {
 .app-content-topbar .topbar-vm-container-image-button.is-active,
 .app-content-topbar .topbar-ml-dataset-artifact-button.is-active,
 .app-content-topbar .topbar-game3d-asset-vault-button.is-active,
-.app-content-topbar .topbar-database-dump-log-button.is-active {
+.app-content-topbar .topbar-database-dump-log-button.is-active,
+.app-content-topbar .topbar-design-publishing-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6769,6 +6841,7 @@ export default {
 .app-content-topbar .topbar-ml-dataset-artifact-button > *,
 .app-content-topbar .topbar-game3d-asset-vault-button > *,
 .app-content-topbar .topbar-database-dump-log-button > *,
+.app-content-topbar .topbar-design-publishing-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6910,6 +6983,7 @@ export default {
 	.app-content-topbar .topbar-ml-dataset-artifact-button,
 	.app-content-topbar .topbar-game3d-asset-vault-button,
 	.app-content-topbar .topbar-database-dump-log-button,
+	.app-content-topbar .topbar-design-publishing-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
