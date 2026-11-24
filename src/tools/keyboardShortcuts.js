@@ -384,6 +384,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-legal-contract-vault-auditor',
 	},
 	{
+		id: 'toggle-medical-dicom-vault-auditor',
+		keys: ['F10'],
+		action: 'toggle-medical-dicom-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -714,6 +719,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (!event.shiftKey && key === 'F9') {
 		return 'toggle-legal-contract-vault-auditor'
+	}
+
+	if (!event.shiftKey && key === 'F10') {
+		return 'toggle-medical-dicom-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {
