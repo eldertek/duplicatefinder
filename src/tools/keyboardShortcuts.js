@@ -374,6 +374,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-gis-map-archive-auditor',
 	},
 	{
+		id: 'toggle-scientific-research-vault-auditor',
+		keys: ['F8'],
+		action: 'toggle-scientific-research-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -696,6 +701,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'Z' || key === 'z')) {
 		return 'toggle-gis-map-archive-auditor'
+	}
+
+	if (!event.shiftKey && key === 'F8') {
+		return 'toggle-scientific-research-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {

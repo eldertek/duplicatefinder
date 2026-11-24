@@ -2012,6 +2012,41 @@
 							<span>{{ t('duplicatefinder', 'GIS & Map Archive') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-scientific-research-vault-button"
+							:class="{ 'is-active': scientificResearchVaultOpen }"
+							:aria-pressed="scientificResearchVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="F8"
+							:title="t('duplicatefinder', 'Toggle Academic Research, LaTeX/BibTeX and Scientific Dataset Vault auditor')"
+							@click="toggleScientificResearchVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+								<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+								<line
+									x1="9"
+									y1="7"
+									x2="16"
+									y2="7" />
+								<line
+									x1="9"
+									y1="11"
+									x2="16"
+									y2="11" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Research & Datasets') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2670,6 +2705,15 @@
 						@compare-duplicate="onGisMapArchiveCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="gisMapArchiveOpen = false" />
+					<ScientificResearchVaultWorkbench
+						v-if="scientificResearchVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onScientificResearchVaultSelectDuplicate"
+						@compare-duplicate="onScientificResearchVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="scientificResearchVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3164,6 +3208,7 @@ import ReleaseBinaryArtifactWorkbench from './components/ReleaseBinaryArtifactWo
 import EmailArchiveVaultWorkbench from './components/EmailArchiveVaultWorkbench.vue'
 import AudioDawVaultWorkbench from './components/AudioDawVaultWorkbench.vue'
 import GisMapArchiveWorkbench from './components/GisMapArchiveWorkbench.vue'
+import ScientificResearchVaultWorkbench from './components/ScientificResearchVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3287,6 +3332,7 @@ export default {
 		EmailArchiveVaultWorkbench,
 		AudioDawVaultWorkbench,
 		GisMapArchiveWorkbench,
+		ScientificResearchVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3377,6 +3423,7 @@ export default {
 			emailArchiveVaultOpen: false,
 			audioDawVaultOpen: false,
 			gisMapArchiveOpen: false,
+			scientificResearchVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3611,6 +3658,7 @@ export default {
 				'toggle-email-archive-vault-auditor': t('duplicatefinder', 'Toggle Email Archive, Mailbox Export and Attachment Vault auditor'),
 				'toggle-audio-daw-vault-auditor': t('duplicatefinder', 'Toggle Audio Production, DAW Project and Sample Library Vault auditor'),
 				'toggle-gis-map-archive-auditor': t('duplicatefinder', 'Toggle GIS, GeoSpatial Tile and CAD/BIM Map Archive Vault auditor'),
+				'toggle-scientific-research-vault-auditor': t('duplicatefinder', 'Toggle Academic Research, LaTeX/BibTeX and Scientific Dataset Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4867,6 +4915,22 @@ export default {
 		onGisMapArchiveCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleScientificResearchVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.scientificResearchVaultOpen = !this.scientificResearchVaultOpen
+			return true
+		},
+		onScientificResearchVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onScientificResearchVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5652,6 +5716,13 @@ export default {
 
 			if (action === 'toggle-gis-map-archive-auditor') {
 				if (this.toggleGisMapArchive() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-scientific-research-vault-auditor') {
+				if (this.toggleScientificResearchVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6617,7 +6688,8 @@ export default {
 .app-content-topbar .topbar-release-binary-artifact-button,
 .app-content-topbar .topbar-email-archive-vault-button,
 .app-content-topbar .topbar-audio-daw-vault-button,
-.app-content-topbar .topbar-gis-map-archive-button {
+.app-content-topbar .topbar-gis-map-archive-button,
+.app-content-topbar .topbar-scientific-research-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -6665,7 +6737,8 @@ export default {
 .app-content-topbar .topbar-release-binary-artifact-button,
 .app-content-topbar .topbar-email-archive-vault-button,
 .app-content-topbar .topbar-audio-daw-vault-button,
-.app-content-topbar .topbar-gis-map-archive-button {
+.app-content-topbar .topbar-gis-map-archive-button,
+.app-content-topbar .topbar-scientific-research-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -6732,7 +6805,8 @@ export default {
 .app-content-topbar .topbar-release-binary-artifact-button svg,
 .app-content-topbar .topbar-email-archive-vault-button svg,
 .app-content-topbar .topbar-audio-daw-vault-button svg,
-.app-content-topbar .topbar-gis-map-archive-button svg {
+.app-content-topbar .topbar-gis-map-archive-button svg,
+.app-content-topbar .topbar-scientific-research-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6862,7 +6936,9 @@ export default {
 .app-content-topbar .topbar-audio-daw-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-audio-daw-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-gis-map-archive-button:hover:not(:disabled),
-.app-content-topbar .topbar-gis-map-archive-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-gis-map-archive-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-scientific-research-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-scientific-research-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -6927,7 +7003,8 @@ export default {
 .app-content-topbar .topbar-release-binary-artifact-button.is-active,
 .app-content-topbar .topbar-email-archive-vault-button.is-active,
 .app-content-topbar .topbar-audio-daw-vault-button.is-active,
-.app-content-topbar .topbar-gis-map-archive-button.is-active {
+.app-content-topbar .topbar-gis-map-archive-button.is-active,
+.app-content-topbar .topbar-scientific-research-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -7135,6 +7212,7 @@ export default {
 .app-content-topbar .topbar-email-archive-vault-button > *,
 .app-content-topbar .topbar-audio-daw-vault-button > *,
 .app-content-topbar .topbar-gis-map-archive-button > *,
+.app-content-topbar .topbar-scientific-research-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -7281,6 +7359,7 @@ export default {
 	.app-content-topbar .topbar-email-archive-vault-button,
 	.app-content-topbar .topbar-audio-daw-vault-button,
 	.app-content-topbar .topbar-gis-map-archive-button,
+	.app-content-topbar .topbar-scientific-research-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
