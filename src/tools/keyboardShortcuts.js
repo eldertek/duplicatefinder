@@ -479,6 +479,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-aerospace-cfd-vault-auditor',
 	},
 	{
+		id: 'toggle-battery-bms-vault-auditor',
+		keys: ['Alt+Shift+B'],
+		action: 'toggle-battery-bms-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -666,6 +671,9 @@ export function resolveShortcutAction(event, options = {}) {
 	if (event.altKey) {
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'A' || key === 'a')) {
 			return 'toggle-aerospace-cfd-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'B' || key === 'b')) {
+			return 'toggle-battery-bms-vault-auditor'
 		}
 		return null
 	}

@@ -2592,6 +2592,37 @@
 							<span>{{ t('duplicatefinder', 'Aerospace & CFD Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-battery-bms-vault-button"
+							:class="{ 'is-active': batteryBmsVaultOpen }"
+							:aria-pressed="batteryBmsVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+B"
+							:title="t('duplicatefinder', 'Toggle Battery, EV Powertrain, BMS Telemetry and HIL Dyno Test Vault auditor')"
+							@click="toggleBatteryBmsVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="2"
+									y="7"
+									width="18"
+									height="10"
+									rx="2" />
+								<path d="M22 11v2" />
+								<path d="M11 9l-2 3h3l-2 3" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Battery & BMS Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3439,6 +3470,15 @@
 						@compare-duplicate="onAerospaceCfdVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="aerospaceCfdVaultOpen = false" />
+					<BatteryBmsVaultWorkbench
+						v-if="batteryBmsVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onBatteryBmsVaultSelectDuplicate"
+						@compare-duplicate="onBatteryBmsVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="batteryBmsVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3954,6 +3994,7 @@ import DfirSecurityVaultWorkbench from './components/DfirSecurityVaultWorkbench.
 import RoboticsRosVaultWorkbench from './components/RoboticsRosVaultWorkbench.vue'
 import SemiconductorEdaVaultWorkbench from './components/SemiconductorEdaVaultWorkbench.vue'
 import AerospaceCfdVaultWorkbench from './components/AerospaceCfdVaultWorkbench.vue'
+import BatteryBmsVaultWorkbench from './components/BatteryBmsVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4098,6 +4139,7 @@ export default {
 		RoboticsRosVaultWorkbench,
 		SemiconductorEdaVaultWorkbench,
 		AerospaceCfdVaultWorkbench,
+		BatteryBmsVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4209,6 +4251,7 @@ export default {
 			roboticsRosVaultOpen: false,
 			semiconductorEdaVaultOpen: false,
 			aerospaceCfdVaultOpen: false,
+			batteryBmsVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4463,6 +4506,7 @@ export default {
 				'toggle-robotics-ros-vault-auditor': t('duplicatefinder', 'Toggle Robotics, Autonomous Systems, ROS2 Bags and LiDAR Point Cloud Vault auditor'),
 				'toggle-semiconductor-eda-vault-auditor': t('duplicatefinder', 'Toggle Semiconductor EDA, ASIC/FPGA RTL, IC Layout and Waveform Verification Vault auditor'),
 				'toggle-aerospace-cfd-vault-auditor': t('duplicatefinder', 'Toggle Aerospace, CFD and Finite Element Simulation Vault auditor'),
+				'toggle-battery-bms-vault-auditor': t('duplicatefinder', 'Toggle Battery, EV Powertrain, BMS Telemetry and HIL Dyno Test Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -6055,6 +6099,22 @@ export default {
 		onAerospaceCfdVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleBatteryBmsVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.batteryBmsVaultOpen = !this.batteryBmsVaultOpen
+			return true
+		},
+		onBatteryBmsVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onBatteryBmsVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6987,6 +7047,13 @@ export default {
 
 			if (action === 'toggle-aerospace-cfd-vault-auditor') {
 				if (this.toggleAerospaceCfdVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-battery-bms-vault-auditor') {
+				if (this.toggleBatteryBmsVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7973,7 +8040,8 @@ export default {
 .app-content-topbar .topbar-dfir-security-vault-button,
 .app-content-topbar .topbar-robotics-ros-vault-button,
 .app-content-topbar .topbar-semiconductor-eda-vault-button,
-.app-content-topbar .topbar-aerospace-cfd-vault-button {
+.app-content-topbar .topbar-aerospace-cfd-vault-button,
+.app-content-topbar .topbar-battery-bms-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -8042,7 +8110,8 @@ export default {
 .app-content-topbar .topbar-dfir-security-vault-button,
 .app-content-topbar .topbar-robotics-ros-vault-button,
 .app-content-topbar .topbar-semiconductor-eda-vault-button,
-.app-content-topbar .topbar-aerospace-cfd-vault-button {
+.app-content-topbar .topbar-aerospace-cfd-vault-button,
+.app-content-topbar .topbar-battery-bms-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -8130,7 +8199,8 @@ export default {
 .app-content-topbar .topbar-dfir-security-vault-button svg,
 .app-content-topbar .topbar-robotics-ros-vault-button svg,
 .app-content-topbar .topbar-semiconductor-eda-vault-button svg,
-.app-content-topbar .topbar-aerospace-cfd-vault-button svg {
+.app-content-topbar .topbar-aerospace-cfd-vault-button svg,
+.app-content-topbar .topbar-battery-bms-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -8302,7 +8372,9 @@ export default {
 .app-content-topbar .topbar-semiconductor-eda-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-semiconductor-eda-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-aerospace-cfd-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-aerospace-cfd-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-aerospace-cfd-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-battery-bms-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-battery-bms-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -8388,7 +8460,8 @@ export default {
 .app-content-topbar .topbar-dfir-security-vault-button.is-active,
 .app-content-topbar .topbar-robotics-ros-vault-button.is-active,
 .app-content-topbar .topbar-semiconductor-eda-vault-button.is-active,
-.app-content-topbar .topbar-aerospace-cfd-vault-button.is-active {
+.app-content-topbar .topbar-aerospace-cfd-vault-button.is-active,
+.app-content-topbar .topbar-battery-bms-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -8617,6 +8690,7 @@ export default {
 .app-content-topbar .topbar-robotics-ros-vault-button > *,
 .app-content-topbar .topbar-semiconductor-eda-vault-button > *,
 .app-content-topbar .topbar-aerospace-cfd-vault-button > *,
+.app-content-topbar .topbar-battery-bms-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8784,6 +8858,7 @@ export default {
 	.app-content-topbar .topbar-robotics-ros-vault-button,
 	.app-content-topbar .topbar-semiconductor-eda-vault-button,
 	.app-content-topbar .topbar-aerospace-cfd-vault-button,
+	.app-content-topbar .topbar-battery-bms-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

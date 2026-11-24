@@ -257,6 +257,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/RoboticsRosVaultWorkbench.vue': { __esModule: true, default: stub('robotics-ros-vault-auditor') },
 			'./components/SemiconductorEdaVaultWorkbench.vue': { __esModule: true, default: stub('semiconductor-eda-vault-auditor') },
 			'./components/AerospaceCfdVaultWorkbench.vue': { __esModule: true, default: stub('aerospace-cfd-vault-auditor') },
+			'./components/BatteryBmsVaultWorkbench.vue': { __esModule: true, default: stub('battery-bms-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4480,5 +4481,31 @@ describe('Cycle 201: Alt+Shift+A shortcut for Aerospace, CFD & Finite Element Si
 		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 202: Alt+Shift+B shortcut for Battery, EV Powertrain, BMS Telemetry & HIL Dyno Test Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+B cleanly and ignores ctrl/meta modifiers, single Alt/Shift, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-battery-bms-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-battery-bms-vault-auditor',
+			keys: ['Alt+Shift+B'],
+			action: 'toggle-battery-bms-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'B', altKey: true, shiftKey: true }), 'toggle-battery-bms-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'b', altKey: true, shiftKey: true }), 'toggle-battery-bms-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'B', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'b', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'b' }), 'toggle-bulk-delete-view')
+		assert.equal(resolveShortcutAction({ key: 'B', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'B', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'B', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'B', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'B', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
