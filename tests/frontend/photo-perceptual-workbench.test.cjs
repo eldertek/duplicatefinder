@@ -447,6 +447,7 @@ describe('Cycle 136: Similar-Photo Perceptual pHash/dHash, EXIF Resolution, Hist
 			'./components/RansomwareCanaryWorkbench.vue': { __esModule: true, default: stub('ransomware-canary') },
 			'./components/DevTreeReclaimerWorkbench.vue': { __esModule: true, default: stub('dev-tree') },
 			'./components/ConflictStormWorkbench.vue': { __esModule: true, default: stub('conflict-storm') },
+			'./components/VmCowReflinkWorkbench.vue': { __esModule: true, default: stub('vm-cow') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

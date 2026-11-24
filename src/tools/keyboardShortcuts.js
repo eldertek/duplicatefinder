@@ -254,6 +254,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-conflict-storm-resolver',
 	},
 	{
+		id: 'toggle-vm-cow-reflink-auditor',
+		keys: ['$'],
+		action: 'toggle-vm-cow-reflink-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -480,6 +485,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '&') {
 		return 'toggle-conflict-storm-resolver'
+	}
+
+	if (key === '$') {
+		return 'toggle-vm-cow-reflink-auditor'
 	}
 
 	if (key === 'ArrowDown') {

@@ -449,6 +449,7 @@ describe('Cycle 156: Sync-Conflict Storm & Cloud Import Fork Resolver', () => {
 			'./components/RansomwareCanaryWorkbench.vue': { __esModule: true, default: stub('ransomware-canary') },
 			'./components/DevTreeReclaimerWorkbench.vue': { __esModule: true, default: stub('dev-tree') },
 			'./components/ConflictStormWorkbench.vue': { __esModule: true, default: ConflictWorkbench },
+			'./components/VmCowReflinkWorkbench.vue': { __esModule: true, default: stub('vm-cow') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

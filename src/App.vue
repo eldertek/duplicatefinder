@@ -1283,6 +1283,51 @@
 							<span>{{ t('duplicatefinder', 'Conflicts') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-vm-cow-button"
+							:class="{ 'is-active': vmCowReflinkOpen }"
+							:aria-pressed="vmCowReflinkOpen ? 'true' : 'false'"
+							aria-keyshortcuts="$"
+							:title="t('duplicatefinder', 'Toggle VM disk, database dump and container image CoW reflink auditor')"
+							@click="toggleVmCowReflinkAuditor">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="2"
+									y="3"
+									width="20"
+									height="8"
+									rx="2" />
+								<rect
+									x="2"
+									y="13"
+									width="20"
+									height="8"
+									rx="2" />
+								<line
+									x1="6"
+									y1="7"
+									x2="6.01"
+									y2="7" />
+								<line
+									x1="6"
+									y1="17"
+									x2="6.01"
+									y2="17" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'VM / CoW') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1725,6 +1770,15 @@
 						@compare-duplicate="onConflictStormCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="conflictStormOpen = false" />
+					<VmCowReflinkWorkbench
+						v-if="vmCowReflinkOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onVmCowSelectDuplicate"
+						@compare-duplicate="onVmCowCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="vmCowReflinkOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2195,6 +2249,7 @@ import LegalHoldWorkbench from './components/LegalHoldWorkbench.vue'
 import RansomwareCanaryWorkbench from './components/RansomwareCanaryWorkbench.vue'
 import DevTreeReclaimerWorkbench from './components/DevTreeReclaimerWorkbench.vue'
 import ConflictStormWorkbench from './components/ConflictStormWorkbench.vue'
+import VmCowReflinkWorkbench from './components/VmCowReflinkWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2294,6 +2349,7 @@ export default {
 		RansomwareCanaryWorkbench,
 		DevTreeReclaimerWorkbench,
 		ConflictStormWorkbench,
+		VmCowReflinkWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2360,6 +2416,7 @@ export default {
 			ransomwareCanaryOpen: false,
 			devTreeReclaimerOpen: false,
 			conflictStormOpen: false,
+			vmCowReflinkOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2570,6 +2627,7 @@ export default {
 				'toggle-ransomware-canary-guard': t('duplicatefinder', 'Toggle ransomware canary, extension drift and mass-entropy anomaly guard'),
 				'toggle-dev-tree-reclaimer': t('duplicatefinder', 'Toggle dev workspace and dependency bloat whole-tree reclaimer'),
 				'toggle-conflict-storm-resolver': t('duplicatefinder', 'Toggle sync-conflict storm and cloud import fork resolver'),
+				'toggle-vm-cow-reflink-auditor': t('duplicatefinder', 'Toggle VM disk, database dump and container image CoW reflink auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3442,6 +3500,22 @@ export default {
 		onConflictStormCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleVmCowReflinkAuditor() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.vmCowReflinkOpen = !this.vmCowReflinkOpen
+			return true
+		},
+		onVmCowSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onVmCowCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4059,6 +4133,13 @@ export default {
 
 			if (action === 'toggle-conflict-storm-resolver') {
 				if (this.toggleConflictStormResolver() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-vm-cow-reflink-auditor') {
+				if (this.toggleVmCowReflinkAuditor() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5000,7 +5081,8 @@ export default {
 .app-content-topbar .topbar-legal-hold-button,
 .app-content-topbar .topbar-ransomware-canary-button,
 .app-content-topbar .topbar-dev-tree-button,
-.app-content-topbar .topbar-conflict-storm-button {
+.app-content-topbar .topbar-conflict-storm-button,
+.app-content-topbar .topbar-vm-cow-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5024,7 +5106,8 @@ export default {
 .app-content-topbar .topbar-legal-hold-button,
 .app-content-topbar .topbar-ransomware-canary-button,
 .app-content-topbar .topbar-dev-tree-button,
-.app-content-topbar .topbar-conflict-storm-button {
+.app-content-topbar .topbar-conflict-storm-button,
+.app-content-topbar .topbar-vm-cow-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5067,7 +5150,8 @@ export default {
 .app-content-topbar .topbar-legal-hold-button svg,
 .app-content-topbar .topbar-ransomware-canary-button svg,
 .app-content-topbar .topbar-dev-tree-button svg,
-.app-content-topbar .topbar-conflict-storm-button svg {
+.app-content-topbar .topbar-conflict-storm-button svg,
+.app-content-topbar .topbar-vm-cow-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5149,7 +5233,9 @@ export default {
 .app-content-topbar .topbar-dev-tree-button:hover:not(:disabled),
 .app-content-topbar .topbar-dev-tree-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-conflict-storm-button:hover:not(:disabled),
-.app-content-topbar .topbar-conflict-storm-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-conflict-storm-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-vm-cow-button:hover:not(:disabled),
+.app-content-topbar .topbar-vm-cow-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5190,7 +5276,8 @@ export default {
 .app-content-topbar .topbar-legal-hold-button.is-active,
 .app-content-topbar .topbar-ransomware-canary-button.is-active,
 .app-content-topbar .topbar-dev-tree-button.is-active,
-.app-content-topbar .topbar-conflict-storm-button.is-active {
+.app-content-topbar .topbar-conflict-storm-button.is-active,
+.app-content-topbar .topbar-vm-cow-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5374,6 +5461,7 @@ export default {
 .app-content-topbar .topbar-ransomware-canary-button > *,
 .app-content-topbar .topbar-dev-tree-button > *,
 .app-content-topbar .topbar-conflict-storm-button > *,
+.app-content-topbar .topbar-vm-cow-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5496,6 +5584,7 @@ export default {
 	.app-content-topbar .topbar-ransomware-canary-button,
 	.app-content-topbar .topbar-dev-tree-button,
 	.app-content-topbar .topbar-conflict-storm-button,
+	.app-content-topbar .topbar-vm-cow-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
