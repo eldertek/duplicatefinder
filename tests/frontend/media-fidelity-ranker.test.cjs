@@ -464,6 +464,7 @@ test('Cycle 150: Media Fidelity & Transcode-Loss Ranker suite', async t => {
 			'./components/ConflictStormWorkbench.vue': { __esModule: true, default: stub('conflict-storm') },
 			'./components/VmCowReflinkWorkbench.vue': { __esModule: true, default: stub('vm-cow') },
 			'./components/ScientificBundleWorkbench.vue': { __esModule: true, default: stub('scientific-bundle') },
+			'./components/BrandKitAuditorWorkbench.vue': { __esModule: true, default: stub('brand-kit-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

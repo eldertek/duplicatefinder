@@ -264,6 +264,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-scientific-bundle-auditor',
 	},
 	{
+		id: 'toggle-brand-kit-auditor',
+		keys: [':'],
+		action: 'toggle-brand-kit-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -498,6 +503,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '+') {
 		return 'toggle-scientific-bundle-auditor'
+	}
+
+	if (key === ':') {
+		return 'toggle-brand-kit-auditor'
 	}
 
 	if (key === 'ArrowDown') {

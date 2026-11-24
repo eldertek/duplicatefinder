@@ -1354,6 +1354,36 @@
 							<span>{{ t('duplicatefinder', 'Bundles') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-brand-kit-button"
+							:class="{ 'is-active': brandKitAuditorOpen }"
+							:aria-pressed="brandKitAuditorOpen ? 'true' : 'false'"
+							aria-keyshortcuts=":"
+							:title="t('duplicatefinder', 'Toggle creative brand kit, font family and vector/PSD master asset auditor')"
+							@click="toggleBrandKitAuditor">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M12 19l7-7 3 3-7 7-3-3z" />
+								<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+								<path d="M2 2l7.586 7.586" />
+								<circle
+									cx="11"
+									cy="11"
+									r="2" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Brand Kit') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1814,6 +1844,15 @@
 						@compare-duplicate="onScientificBundleCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="scientificBundleOpen = false" />
+					<BrandKitAuditorWorkbench
+						v-if="brandKitAuditorOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onBrandKitSelectDuplicate"
+						@compare-duplicate="onBrandKitCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="brandKitAuditorOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2286,6 +2325,7 @@ import DevTreeReclaimerWorkbench from './components/DevTreeReclaimerWorkbench.vu
 import ConflictStormWorkbench from './components/ConflictStormWorkbench.vue'
 import VmCowReflinkWorkbench from './components/VmCowReflinkWorkbench.vue'
 import ScientificBundleWorkbench from './components/ScientificBundleWorkbench.vue'
+import BrandKitAuditorWorkbench from './components/BrandKitAuditorWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2387,6 +2427,7 @@ export default {
 		ConflictStormWorkbench,
 		VmCowReflinkWorkbench,
 		ScientificBundleWorkbench,
+		BrandKitAuditorWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2455,6 +2496,7 @@ export default {
 			conflictStormOpen: false,
 			vmCowReflinkOpen: false,
 			scientificBundleOpen: false,
+			brandKitAuditorOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2667,6 +2709,7 @@ export default {
 				'toggle-conflict-storm-resolver': t('duplicatefinder', 'Toggle sync-conflict storm and cloud import fork resolver'),
 				'toggle-vm-cow-reflink-auditor': t('duplicatefinder', 'Toggle VM disk, database dump and container image CoW reflink auditor'),
 				'toggle-scientific-bundle-auditor': t('duplicatefinder', 'Toggle scientific, GIS, CAD/BIM and ML-shard companion-bundle auditor'),
+				'toggle-brand-kit-auditor': t('duplicatefinder', 'Toggle creative brand kit, font family and vector/PSD master asset auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3571,6 +3614,22 @@ export default {
 		onScientificBundleCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleBrandKitAuditor() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.brandKitAuditorOpen = !this.brandKitAuditorOpen
+			return true
+		},
+		onBrandKitSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onBrandKitCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4202,6 +4261,13 @@ export default {
 
 			if (action === 'toggle-scientific-bundle-auditor') {
 				if (this.toggleScientificBundleAuditor() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-brand-kit-auditor') {
+				if (this.toggleBrandKitAuditor() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5145,7 +5211,8 @@ export default {
 .app-content-topbar .topbar-dev-tree-button,
 .app-content-topbar .topbar-conflict-storm-button,
 .app-content-topbar .topbar-vm-cow-button,
-.app-content-topbar .topbar-scientific-bundle-button {
+.app-content-topbar .topbar-scientific-bundle-button,
+.app-content-topbar .topbar-brand-kit-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5171,7 +5238,8 @@ export default {
 .app-content-topbar .topbar-dev-tree-button,
 .app-content-topbar .topbar-conflict-storm-button,
 .app-content-topbar .topbar-vm-cow-button,
-.app-content-topbar .topbar-scientific-bundle-button {
+.app-content-topbar .topbar-scientific-bundle-button,
+.app-content-topbar .topbar-brand-kit-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5216,7 +5284,8 @@ export default {
 .app-content-topbar .topbar-dev-tree-button svg,
 .app-content-topbar .topbar-conflict-storm-button svg,
 .app-content-topbar .topbar-vm-cow-button svg,
-.app-content-topbar .topbar-scientific-bundle-button svg {
+.app-content-topbar .topbar-scientific-bundle-button svg,
+.app-content-topbar .topbar-brand-kit-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5302,7 +5371,9 @@ export default {
 .app-content-topbar .topbar-vm-cow-button:hover:not(:disabled),
 .app-content-topbar .topbar-vm-cow-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-scientific-bundle-button:hover:not(:disabled),
-.app-content-topbar .topbar-scientific-bundle-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-scientific-bundle-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-brand-kit-button:hover:not(:disabled),
+.app-content-topbar .topbar-brand-kit-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5345,7 +5416,8 @@ export default {
 .app-content-topbar .topbar-dev-tree-button.is-active,
 .app-content-topbar .topbar-conflict-storm-button.is-active,
 .app-content-topbar .topbar-vm-cow-button.is-active,
-.app-content-topbar .topbar-scientific-bundle-button.is-active {
+.app-content-topbar .topbar-scientific-bundle-button.is-active,
+.app-content-topbar .topbar-brand-kit-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5531,6 +5603,7 @@ export default {
 .app-content-topbar .topbar-conflict-storm-button > *,
 .app-content-topbar .topbar-vm-cow-button > *,
 .app-content-topbar .topbar-scientific-bundle-button > *,
+.app-content-topbar .topbar-brand-kit-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5655,6 +5728,7 @@ export default {
 	.app-content-topbar .topbar-conflict-storm-button,
 	.app-content-topbar .topbar-vm-cow-button,
 	.app-content-topbar .topbar-scientific-bundle-button,
+	.app-content-topbar .topbar-brand-kit-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
