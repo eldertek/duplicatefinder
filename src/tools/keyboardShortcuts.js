@@ -369,6 +369,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-audio-daw-vault-auditor',
 	},
 	{
+		id: 'toggle-gis-map-archive-auditor',
+		keys: ['Shift+Z'],
+		action: 'toggle-gis-map-archive-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -687,6 +692,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'J' || key === 'j')) {
 		return 'toggle-audio-daw-vault-auditor'
+	}
+
+	if (event.shiftKey && (key === 'Z' || key === 'z')) {
+		return 'toggle-gis-map-archive-auditor'
 	}
 
 	if (key === 'ArrowDown') {
