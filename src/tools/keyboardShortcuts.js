@@ -474,6 +474,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-semiconductor-eda-vault-auditor',
 	},
 	{
+		id: 'toggle-aerospace-cfd-vault-auditor',
+		keys: ['Alt+Shift+A'],
+		action: 'toggle-aerospace-cfd-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -650,11 +655,18 @@ export function resolveShortcutAction(event, options = {}) {
 		return isHelpOpen ? 'close-help' : null
 	}
 
-	if (event.ctrlKey || event.metaKey || event.altKey) {
+	if (event.ctrlKey || event.metaKey) {
 		return null
 	}
 
 	if (isEditableTarget(event.target)) {
+		return null
+	}
+
+	if (event.altKey) {
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'A' || key === 'a')) {
+			return 'toggle-aerospace-cfd-vault-auditor'
+		}
 		return null
 	}
 

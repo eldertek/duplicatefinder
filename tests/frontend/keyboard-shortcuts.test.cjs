@@ -256,6 +256,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/DfirSecurityVaultWorkbench.vue': { __esModule: true, default: stub('dfir-security-vault-auditor') },
 			'./components/RoboticsRosVaultWorkbench.vue': { __esModule: true, default: stub('robotics-ros-vault-auditor') },
 			'./components/SemiconductorEdaVaultWorkbench.vue': { __esModule: true, default: stub('semiconductor-eda-vault-auditor') },
+			'./components/AerospaceCfdVaultWorkbench.vue': { __esModule: true, default: stub('aerospace-cfd-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4453,5 +4454,31 @@ describe('Cycle 200: Shift+F5 shortcut for Semiconductor EDA, ASIC/FPGA RTL, IC 
 		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F5', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 201: Alt+Shift+A shortcut for Aerospace, CFD & Finite Element Simulation Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+A cleanly and ignores ctrl/meta modifiers, single Alt/Shift, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-aerospace-cfd-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-aerospace-cfd-vault-auditor',
+			keys: ['Alt+Shift+A'],
+			action: 'toggle-aerospace-cfd-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true }), 'toggle-aerospace-cfd-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'a', altKey: true, shiftKey: true }), 'toggle-aerospace-cfd-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'A', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'a', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'a' }), 'select-duplicate-copies')
+		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'A', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

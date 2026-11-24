@@ -784,6 +784,7 @@ describe('Cycle 200: Semiconductor EDA, ASIC/FPGA RTL, IC Layout & Waveform Veri
 			'./components/DfirSecurityVaultWorkbench.vue': { __esModule: true, default: stub('dfir-security-vault-auditor') },
 			'./components/RoboticsRosVaultWorkbench.vue': { __esModule: true, default: stub('robotics-ros-vault-auditor') },
 			'./components/SemiconductorEdaVaultWorkbench.vue': { __esModule: true, default: SemiconductorEdaVaultWorkbench },
+			'./components/AerospaceCfdVaultWorkbench.vue': { __esModule: true, default: stub('aerospace-cfd-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
