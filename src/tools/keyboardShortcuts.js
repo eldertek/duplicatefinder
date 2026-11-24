@@ -304,6 +304,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-legal-document-ocr-auditor',
 	},
 	{
+		id: 'toggle-backup-takeout-auditor',
+		keys: [')'],
+		action: 'toggle-backup-takeout-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -570,6 +575,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '(') {
 		return 'toggle-legal-document-ocr-auditor'
+	}
+
+	if (key === ')') {
+		return 'toggle-backup-takeout-auditor'
 	}
 
 	if (key === 'ArrowDown') {
