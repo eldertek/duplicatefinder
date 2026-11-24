@@ -239,6 +239,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-legal-hold-guard',
 	},
 	{
+		id: 'toggle-ransomware-canary-guard',
+		keys: ['*'],
+		action: 'toggle-ransomware-canary-guard',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -453,6 +458,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '!') {
 		return 'toggle-legal-hold-guard'
+	}
+
+	if (key === '*') {
+		return 'toggle-ransomware-canary-guard'
 	}
 
 	if (key === 'ArrowDown') {

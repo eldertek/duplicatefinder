@@ -1187,6 +1187,40 @@
 							<span>{{ t('duplicatefinder', 'Legal Hold') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-ransomware-canary-button"
+							:class="{ 'is-active': ransomwareCanaryOpen }"
+							:aria-pressed="ransomwareCanaryOpen ? 'true' : 'false'"
+							aria-keyshortcuts="*"
+							:title="t('duplicatefinder', 'Toggle ransomware canary, extension drift and mass-entropy anomaly guard')"
+							@click="toggleRansomwareCanaryGuard">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<polygon points="12 2 22 20 2 20 12 2" />
+								<line
+									x1="12"
+									y1="9"
+									x2="12"
+									y2="13" />
+								<line
+									x1="12"
+									y1="17"
+									x2="12.01"
+									y2="17" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Canary Guard') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1602,6 +1636,15 @@
 						@compare-duplicate="onLegalHoldCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="legalHoldOpen = false" />
+					<RansomwareCanaryWorkbench
+						v-if="ransomwareCanaryOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onRansomwareCanarySelectDuplicate"
+						@compare-duplicate="onRansomwareCanaryCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="ransomwareCanaryOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2069,6 +2112,7 @@ import MediaFidelityWorkbench from './components/MediaFidelityWorkbench.vue'
 import CdcChunkingWorkbench from './components/CdcChunkingWorkbench.vue'
 import OpsScheduleWorkbench from './components/OpsScheduleWorkbench.vue'
 import LegalHoldWorkbench from './components/LegalHoldWorkbench.vue'
+import RansomwareCanaryWorkbench from './components/RansomwareCanaryWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2165,6 +2209,7 @@ export default {
 		CdcChunkingWorkbench,
 		OpsScheduleWorkbench,
 		LegalHoldWorkbench,
+		RansomwareCanaryWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2228,6 +2273,7 @@ export default {
 			cdcChunkingOpen: false,
 			opsScheduleOpen: false,
 			legalHoldOpen: false,
+			ransomwareCanaryOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2435,6 +2481,7 @@ export default {
 				'toggle-cdc-chunking-estimator': t('duplicatefinder', 'Toggle CDC / ZFS / Restic sub-file savings estimator'),
 				'toggle-ops-schedule-generator': t('duplicatefinder', 'Toggle automated deduplication schedule, systemd/cron and flock/ionice generator'),
 				'toggle-legal-hold-guard': t('duplicatefinder', 'Toggle compliance legal hold, evidence freeze and e-discovery guard'),
+				'toggle-ransomware-canary-guard': t('duplicatefinder', 'Toggle ransomware canary, extension drift and mass-entropy anomaly guard'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3259,6 +3306,22 @@ export default {
 		onLegalHoldCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleRansomwareCanaryGuard() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.ransomwareCanaryOpen = !this.ransomwareCanaryOpen
+			return true
+		},
+		onRansomwareCanarySelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onRansomwareCanaryCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3855,6 +3918,13 @@ export default {
 
 			if (action === 'toggle-legal-hold-guard') {
 				if (this.toggleLegalHoldGuard() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-ransomware-canary-guard') {
+				if (this.toggleRansomwareCanaryGuard() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4793,7 +4863,8 @@ export default {
 .app-content-topbar .topbar-media-fidelity-button,
 .app-content-topbar .topbar-cdc-chunking-button,
 .app-content-topbar .topbar-ops-schedule-button,
-.app-content-topbar .topbar-legal-hold-button {
+.app-content-topbar .topbar-legal-hold-button,
+.app-content-topbar .topbar-ransomware-canary-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4814,7 +4885,8 @@ export default {
 }
 
 .app-content-topbar .topbar-ops-schedule-button,
-.app-content-topbar .topbar-legal-hold-button {
+.app-content-topbar .topbar-legal-hold-button,
+.app-content-topbar .topbar-ransomware-canary-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -4854,7 +4926,8 @@ export default {
 .app-content-topbar .topbar-media-fidelity-button svg,
 .app-content-topbar .topbar-cdc-chunking-button svg,
 .app-content-topbar .topbar-ops-schedule-button svg,
-.app-content-topbar .topbar-legal-hold-button svg {
+.app-content-topbar .topbar-legal-hold-button svg,
+.app-content-topbar .topbar-ransomware-canary-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -4930,7 +5003,9 @@ export default {
 .app-content-topbar .topbar-ops-schedule-button:hover:not(:disabled),
 .app-content-topbar .topbar-ops-schedule-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-legal-hold-button:hover:not(:disabled),
-.app-content-topbar .topbar-legal-hold-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-legal-hold-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-ransomware-canary-button:hover:not(:disabled),
+.app-content-topbar .topbar-ransomware-canary-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -4968,7 +5043,8 @@ export default {
 .app-content-topbar .topbar-media-fidelity-button.is-active,
 .app-content-topbar .topbar-cdc-chunking-button.is-active,
 .app-content-topbar .topbar-ops-schedule-button.is-active,
-.app-content-topbar .topbar-legal-hold-button.is-active {
+.app-content-topbar .topbar-legal-hold-button.is-active,
+.app-content-topbar .topbar-ransomware-canary-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5149,6 +5225,7 @@ export default {
 .app-content-topbar .topbar-cdc-chunking-button > *,
 .app-content-topbar .topbar-ops-schedule-button > *,
 .app-content-topbar .topbar-legal-hold-button > *,
+.app-content-topbar .topbar-ransomware-canary-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -5268,6 +5345,7 @@ export default {
 	.app-content-topbar .topbar-cdc-chunking-button,
 	.app-content-topbar .topbar-ops-schedule-button,
 	.app-content-topbar .topbar-legal-hold-button,
+	.app-content-topbar .topbar-ransomware-canary-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
