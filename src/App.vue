@@ -2209,6 +2209,33 @@
 							<span>{{ t('duplicatefinder', 'ML & LLM Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-vm-backup-vault-button"
+							:class="{ 'is-active': vmBackupVaultOpen }"
+							:aria-pressed="vmBackupVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="F3"
+							:title="t('duplicatefinder', 'Toggle Virtualization, VM Disk Images and Container Backup Vault auditor')"
+							@click="toggleVmBackupVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect x="2" y="3" width="20" height="7" rx="2" />
+								<rect x="2" y="14" width="20" height="7" rx="2" />
+								<line x1="6" y1="6.5" x2="6.01" y2="6.5" />
+								<line x1="6" y1="17.5" x2="6.01" y2="17.5" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'VM & Backup Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2930,6 +2957,15 @@
 						@compare-duplicate="onMlCheckpointVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="mlCheckpointVaultOpen = false" />
+					<VmBackupVaultWorkbench
+						v-if="vmBackupVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onVmBackupVaultSelectDuplicate"
+						@compare-duplicate="onVmBackupVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="vmBackupVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3431,6 +3467,7 @@ import AdditiveManufacturingVaultWorkbench from './components/AdditiveManufactur
 import GameDevPipelineVaultWorkbench from './components/GameDevPipelineVaultWorkbench.vue'
 import PhotoGradingVaultWorkbench from './components/PhotoGradingVaultWorkbench.vue'
 import MlCheckpointVaultWorkbench from './components/MlCheckpointVaultWorkbench.vue'
+import VmBackupVaultWorkbench from './components/VmBackupVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3561,6 +3598,7 @@ export default {
 		GameDevPipelineVaultWorkbench,
 		PhotoGradingVaultWorkbench,
 		MlCheckpointVaultWorkbench,
+		VmBackupVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3658,6 +3696,7 @@ export default {
 			gameDevPipelineVaultOpen: false,
 			photoGradingVaultOpen: false,
 			mlCheckpointVaultOpen: false,
+			vmBackupVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -5267,6 +5306,22 @@ export default {
 		onMlCheckpointVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleVmBackupVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.vmBackupVaultOpen = !this.vmBackupVaultOpen
+			return true
+		},
+		onVmBackupVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onVmBackupVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6101,6 +6156,13 @@ export default {
 
 			if (action === 'toggle-ml-checkpoint-vault-auditor') {
 				if (this.toggleMlCheckpointVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-vm-backup-vault-auditor') {
+				if (this.toggleVmBackupVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7073,7 +7135,8 @@ export default {
 .app-content-topbar .topbar-additive-mfg-vault-button,
 .app-content-topbar .topbar-game-dev-pipeline-vault-button,
 .app-content-topbar .topbar-photo-grading-vault-button,
-.app-content-topbar .topbar-ml-checkpoint-vault-button {
+.app-content-topbar .topbar-ml-checkpoint-vault-button,
+.app-content-topbar .topbar-vm-backup-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7128,7 +7191,8 @@ export default {
 .app-content-topbar .topbar-additive-mfg-vault-button,
 .app-content-topbar .topbar-game-dev-pipeline-vault-button,
 .app-content-topbar .topbar-photo-grading-vault-button,
-.app-content-topbar .topbar-ml-checkpoint-vault-button {
+.app-content-topbar .topbar-ml-checkpoint-vault-button,
+.app-content-topbar .topbar-vm-backup-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7202,7 +7266,8 @@ export default {
 .app-content-topbar .topbar-additive-mfg-vault-button svg,
 .app-content-topbar .topbar-game-dev-pipeline-vault-button svg,
 .app-content-topbar .topbar-photo-grading-vault-button svg,
-.app-content-topbar .topbar-ml-checkpoint-vault-button svg {
+.app-content-topbar .topbar-ml-checkpoint-vault-button svg,
+.app-content-topbar .topbar-vm-backup-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -7346,7 +7411,9 @@ export default {
 .app-content-topbar .topbar-photo-grading-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-photo-grading-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-ml-checkpoint-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-ml-checkpoint-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-ml-checkpoint-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-vm-backup-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-vm-backup-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7418,7 +7485,8 @@ export default {
 .app-content-topbar .topbar-additive-mfg-vault-button.is-active,
 .app-content-topbar .topbar-game-dev-pipeline-vault-button.is-active,
 .app-content-topbar .topbar-photo-grading-vault-button.is-active,
-.app-content-topbar .topbar-ml-checkpoint-vault-button.is-active {
+.app-content-topbar .topbar-ml-checkpoint-vault-button.is-active,
+.app-content-topbar .topbar-vm-backup-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -7633,6 +7701,7 @@ export default {
 .app-content-topbar .topbar-game-dev-pipeline-vault-button > *,
 .app-content-topbar .topbar-photo-grading-vault-button > *,
 .app-content-topbar .topbar-ml-checkpoint-vault-button > *,
+.app-content-topbar .topbar-vm-backup-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -7786,6 +7855,7 @@ export default {
 	.app-content-topbar .topbar-game-dev-pipeline-vault-button,
 	.app-content-topbar .topbar-photo-grading-vault-button,
 	.app-content-topbar .topbar-ml-checkpoint-vault-button,
+	.app-content-topbar .topbar-vm-backup-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

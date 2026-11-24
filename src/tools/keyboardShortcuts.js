@@ -384,6 +384,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-ml-checkpoint-vault-auditor',
 	},
 	{
+		id: 'toggle-vm-backup-vault-auditor',
+		keys: ['F3'],
+		action: 'toggle-vm-backup-vault-auditor',
+	},
+	{
 		id: 'toggle-game-dev-pipeline-vault-auditor',
 		keys: ['F6'],
 		action: 'toggle-game-dev-pipeline-vault-auditor',
@@ -735,6 +740,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (!event.shiftKey && key === 'F2') {
 		return 'toggle-ml-checkpoint-vault-auditor'
+	}
+
+	if (!event.shiftKey && key === 'F3') {
+		return 'toggle-vm-backup-vault-auditor'
 	}
 
 	if (!event.shiftKey && key === 'F4') {

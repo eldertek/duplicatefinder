@@ -243,6 +243,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/GameDevPipelineVaultWorkbench.vue': { __esModule: true, default: stub('game-dev-pipeline-vault-auditor') },
 			'./components/PhotoGradingVaultWorkbench.vue': { __esModule: true, default: stub('photo-grading-vault-auditor') },
 			'./components/MlCheckpointVaultWorkbench.vue': { __esModule: true, default: stub('ml-checkpoint-vault-auditor') },
+			'./components/VmBackupVaultWorkbench.vue': { __esModule: true, default: stub('vm-backup-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4141,5 +4142,28 @@ describe('Cycle 187: F2 shortcut for Machine Learning, LLM Weights & Dataset Che
 		assert.equal(resolveShortcutAction({ key: 'F2' }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F2' }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F2', target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 188: F3 shortcut for Virtualization, VM Disk Images & Container Backup Vault Auditor', () => {
+	test('resolveShortcutAction maps F3 cleanly and ignores modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-vm-backup-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-vm-backup-vault-auditor',
+			keys: ['F3'],
+			action: 'toggle-vm-backup-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F3' }), 'toggle-vm-backup-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F3', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F3', ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F3', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F3' }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F3' }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F3', target: document.createElement('input') }), null)
 	})
 })
