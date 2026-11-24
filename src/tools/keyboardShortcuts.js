@@ -359,6 +359,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-release-binary-artifact-auditor',
 	},
 	{
+		id: 'toggle-email-archive-vault-auditor',
+		keys: ['Shift+H'],
+		action: 'toggle-email-archive-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -669,6 +674,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'K' || key === 'k')) {
 		return 'toggle-release-binary-artifact-auditor'
+	}
+
+	if (event.shiftKey && (key === 'H' || key === 'h')) {
+		return 'toggle-email-archive-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {

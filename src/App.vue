@@ -1916,6 +1916,36 @@
 							<span>{{ t('duplicatefinder', 'Release & SBOM Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-email-archive-vault-button"
+							:class="{ 'is-active': emailArchiveVaultOpen }"
+							:aria-pressed="emailArchiveVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+H"
+							:title="t('duplicatefinder', 'Toggle Email Archive, Mailbox Export and Attachment Vault auditor')"
+							@click="toggleEmailArchiveVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="2"
+									y="4"
+									width="20"
+									height="16"
+									rx="2" />
+								<path d="M22 7l-10 7L2 7" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Email Archive Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2547,6 +2577,15 @@
 						@compare-duplicate="onReleaseBinaryArtifactCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="releaseBinaryArtifactOpen = false" />
+					<EmailArchiveVaultWorkbench
+						v-if="emailArchiveVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onEmailArchiveVaultSelectDuplicate"
+						@compare-duplicate="onEmailArchiveVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="emailArchiveVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3038,6 +3077,7 @@ import Game3dAssetVaultWorkbench from './components/Game3dAssetVaultWorkbench.vu
 import DatabaseDumpLogWorkbench from './components/DatabaseDumpLogWorkbench.vue'
 import DesignPublishingVaultWorkbench from './components/DesignPublishingVaultWorkbench.vue'
 import ReleaseBinaryArtifactWorkbench from './components/ReleaseBinaryArtifactWorkbench.vue'
+import EmailArchiveVaultWorkbench from './components/EmailArchiveVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3158,6 +3198,7 @@ export default {
 		DatabaseDumpLogWorkbench,
 		DesignPublishingVaultWorkbench,
 		ReleaseBinaryArtifactWorkbench,
+		EmailArchiveVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3245,6 +3286,7 @@ export default {
 			databaseDumpLogOpen: false,
 			designPublishingVaultOpen: false,
 			releaseBinaryArtifactOpen: false,
+			emailArchiveVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3476,6 +3518,7 @@ export default {
 				'toggle-database-dump-log-auditor': t('duplicatefinder', 'Toggle Database Dump, Backup Snapshot and Log Rotation Vault auditor'),
 				'toggle-design-publishing-vault-auditor': t('duplicatefinder', 'Toggle Creative Design Package, Print Proof and Typography Font Archive auditor'),
 				'toggle-release-binary-artifact-auditor': t('duplicatefinder', 'Toggle Release Binary, Signed Installer and SBOM Artifact Vault auditor'),
+				'toggle-email-archive-vault-auditor': t('duplicatefinder', 'Toggle Email Archive, Mailbox Export and Attachment Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4684,6 +4727,22 @@ export default {
 		onReleaseBinaryArtifactCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleEmailArchiveVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.emailArchiveVaultOpen = !this.emailArchiveVaultOpen
+			return true
+		},
+		onEmailArchiveVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onEmailArchiveVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5448,6 +5507,13 @@ export default {
 
 			if (action === 'toggle-release-binary-artifact-auditor') {
 				if (this.toggleReleaseBinaryArtifact() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-email-archive-vault-auditor') {
+				if (this.toggleEmailArchiveVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6410,7 +6476,8 @@ export default {
 .app-content-topbar .topbar-game3d-asset-vault-button,
 .app-content-topbar .topbar-database-dump-log-button,
 .app-content-topbar .topbar-design-publishing-vault-button,
-.app-content-topbar .topbar-release-binary-artifact-button {
+.app-content-topbar .topbar-release-binary-artifact-button,
+.app-content-topbar .topbar-email-archive-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -6455,7 +6522,8 @@ export default {
 .app-content-topbar .topbar-game3d-asset-vault-button,
 .app-content-topbar .topbar-database-dump-log-button,
 .app-content-topbar .topbar-design-publishing-vault-button,
-.app-content-topbar .topbar-release-binary-artifact-button {
+.app-content-topbar .topbar-release-binary-artifact-button,
+.app-content-topbar .topbar-email-archive-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -6519,7 +6587,8 @@ export default {
 .app-content-topbar .topbar-game3d-asset-vault-button svg,
 .app-content-topbar .topbar-database-dump-log-button svg,
 .app-content-topbar .topbar-design-publishing-vault-button svg,
-.app-content-topbar .topbar-release-binary-artifact-button svg {
+.app-content-topbar .topbar-release-binary-artifact-button svg,
+.app-content-topbar .topbar-email-archive-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6643,7 +6712,9 @@ export default {
 .app-content-topbar .topbar-design-publishing-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-design-publishing-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-release-binary-artifact-button:hover:not(:disabled),
-.app-content-topbar .topbar-release-binary-artifact-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-release-binary-artifact-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-email-archive-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-email-archive-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -6705,7 +6776,8 @@ export default {
 .app-content-topbar .topbar-game3d-asset-vault-button.is-active,
 .app-content-topbar .topbar-database-dump-log-button.is-active,
 .app-content-topbar .topbar-design-publishing-vault-button.is-active,
-.app-content-topbar .topbar-release-binary-artifact-button.is-active {
+.app-content-topbar .topbar-release-binary-artifact-button.is-active,
+.app-content-topbar .topbar-email-archive-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6910,6 +6982,7 @@ export default {
 .app-content-topbar .topbar-database-dump-log-button > *,
 .app-content-topbar .topbar-design-publishing-vault-button > *,
 .app-content-topbar .topbar-release-binary-artifact-button > *,
+.app-content-topbar .topbar-email-archive-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -7053,6 +7126,7 @@ export default {
 	.app-content-topbar .topbar-database-dump-log-button,
 	.app-content-topbar .topbar-design-publishing-vault-button,
 	.app-content-topbar .topbar-release-binary-artifact-button,
+	.app-content-topbar .topbar-email-archive-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
