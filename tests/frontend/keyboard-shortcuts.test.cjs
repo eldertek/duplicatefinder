@@ -260,6 +260,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/BatteryBmsVaultWorkbench.vue': { __esModule: true, default: stub('battery-bms-vault-auditor') },
 			'./components/ChemPharmaGmpVaultWorkbench.vue': { __esModule: true, default: stub('chem-pharma-gmp-vault-auditor') },
 			'./components/DigitalGridScadaVaultWorkbench.vue': { __esModule: true, default: stub('digital-grid-scada-vault-auditor') },
+			'./components/EnergySeismicVaultWorkbench.vue': { __esModule: true, default: stub('energy-seismic-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4561,5 +4562,31 @@ describe('Cycle 204: Alt+Shift+D shortcut for Digital Grid, Substation SCADA & S
 		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'D', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 205: Alt+Shift+E shortcut for Energy, Seismic SEG-Y, Well-Log & Reservoir Simulation Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+E cleanly and preserves e while ignoring Shift+E, ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-energy-seismic-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-energy-seismic-vault-auditor',
+			keys: ['Alt+Shift+E'],
+			action: 'toggle-energy-seismic-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true }), 'toggle-energy-seismic-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'e', altKey: true, shiftKey: true }), 'toggle-energy-seismic-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'E', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'e', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'e' }), 'export-csv-report')
+		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'E', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

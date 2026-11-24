@@ -2673,6 +2673,30 @@
 							<span>{{ t('duplicatefinder', 'Digital Grid Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-energy-seismic-vault-button"
+							:class="{ 'is-active': energySeismicVaultOpen }"
+							:aria-pressed="energySeismicVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+E"
+							:title="t('duplicatefinder', 'Toggle Energy, Seismic SEG-Y, Well-Log and Reservoir Simulation Vault auditor')"
+							@click="toggleEnergySeismicVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M3 12h3l2-6 4 12 3-8 2 2h4" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Energy & Seismic Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3547,6 +3571,15 @@
 						@compare-duplicate="onDigitalGridScadaVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="digitalGridScadaVaultOpen = false" />
+					<EnergySeismicVaultWorkbench
+						v-if="energySeismicVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onEnergySeismicVaultSelectDuplicate"
+						@compare-duplicate="onEnergySeismicVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="energySeismicVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4065,6 +4098,7 @@ import AerospaceCfdVaultWorkbench from './components/AerospaceCfdVaultWorkbench.
 import BatteryBmsVaultWorkbench from './components/BatteryBmsVaultWorkbench.vue'
 import ChemPharmaGmpVaultWorkbench from './components/ChemPharmaGmpVaultWorkbench.vue'
 import DigitalGridScadaVaultWorkbench from './components/DigitalGridScadaVaultWorkbench.vue'
+import EnergySeismicVaultWorkbench from './components/EnergySeismicVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4212,6 +4246,7 @@ export default {
 		BatteryBmsVaultWorkbench,
 		ChemPharmaGmpVaultWorkbench,
 		DigitalGridScadaVaultWorkbench,
+		EnergySeismicVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4326,6 +4361,7 @@ export default {
 			batteryBmsVaultOpen: false,
 			chemPharmaGmpVaultOpen: false,
 			digitalGridScadaVaultOpen: false,
+			energySeismicVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4583,6 +4619,7 @@ export default {
 				'toggle-battery-bms-vault-auditor': t('duplicatefinder', 'Toggle Battery, EV Powertrain, BMS Telemetry and HIL Dyno Test Vault auditor'),
 				'toggle-chem-pharma-gmp-vault-auditor': t('duplicatefinder', 'Toggle Chemical Process, Chromatography, Spectroscopy and Pharma GMP Vault auditor'),
 				'toggle-digital-grid-scada-vault-auditor': t('duplicatefinder', 'Toggle Digital Grid, Substation SCADA, Protection Relay and Synchrophasor Vault auditor'),
+				'toggle-energy-seismic-vault-auditor': t('duplicatefinder', 'Toggle Energy, Seismic SEG-Y, Well-Log and Reservoir Simulation Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -6223,6 +6260,22 @@ export default {
 		onDigitalGridScadaVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleEnergySeismicVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.energySeismicVaultOpen = !this.energySeismicVaultOpen
+			return true
+		},
+		onEnergySeismicVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onEnergySeismicVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -7176,6 +7229,13 @@ export default {
 
 			if (action === 'toggle-digital-grid-scada-vault-auditor') {
 				if (this.toggleDigitalGridScadaVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-energy-seismic-vault-auditor') {
+				if (this.toggleEnergySeismicVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -8165,7 +8225,8 @@ export default {
 .app-content-topbar .topbar-aerospace-cfd-vault-button,
 .app-content-topbar .topbar-battery-bms-vault-button,
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button,
-.app-content-topbar .topbar-digital-grid-scada-vault-button {
+.app-content-topbar .topbar-digital-grid-scada-vault-button,
+.app-content-topbar .topbar-energy-seismic-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -8237,7 +8298,8 @@ export default {
 .app-content-topbar .topbar-aerospace-cfd-vault-button,
 .app-content-topbar .topbar-battery-bms-vault-button,
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button,
-.app-content-topbar .topbar-digital-grid-scada-vault-button {
+.app-content-topbar .topbar-digital-grid-scada-vault-button,
+.app-content-topbar .topbar-energy-seismic-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -8328,7 +8390,8 @@ export default {
 .app-content-topbar .topbar-aerospace-cfd-vault-button svg,
 .app-content-topbar .topbar-battery-bms-vault-button svg,
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button svg,
-.app-content-topbar .topbar-digital-grid-scada-vault-button svg {
+.app-content-topbar .topbar-digital-grid-scada-vault-button svg,
+.app-content-topbar .topbar-energy-seismic-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -8506,7 +8569,9 @@ export default {
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-digital-grid-scada-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-digital-grid-scada-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-digital-grid-scada-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-energy-seismic-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-energy-seismic-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -8595,7 +8660,8 @@ export default {
 .app-content-topbar .topbar-aerospace-cfd-vault-button.is-active,
 .app-content-topbar .topbar-battery-bms-vault-button.is-active,
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button.is-active,
-.app-content-topbar .topbar-digital-grid-scada-vault-button.is-active {
+.app-content-topbar .topbar-digital-grid-scada-vault-button.is-active,
+.app-content-topbar .topbar-energy-seismic-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -8827,6 +8893,7 @@ export default {
 .app-content-topbar .topbar-battery-bms-vault-button > *,
 .app-content-topbar .topbar-chem-pharma-gmp-vault-button > *,
 .app-content-topbar .topbar-digital-grid-scada-vault-button > *,
+.app-content-topbar .topbar-energy-seismic-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8997,6 +9064,7 @@ export default {
 	.app-content-topbar .topbar-battery-bms-vault-button,
 	.app-content-topbar .topbar-chem-pharma-gmp-vault-button,
 	.app-content-topbar .topbar-digital-grid-scada-vault-button,
+	.app-content-topbar .topbar-energy-seismic-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

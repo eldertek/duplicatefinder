@@ -494,6 +494,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-digital-grid-scada-vault-auditor',
 	},
 	{
+		id: 'toggle-energy-seismic-vault-auditor',
+		keys: ['Alt+Shift+E'],
+		action: 'toggle-energy-seismic-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -690,6 +695,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'D' || key === 'd')) {
 			return 'toggle-digital-grid-scada-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'E' || key === 'e')) {
+			return 'toggle-energy-seismic-vault-auditor'
 		}
 		return null
 	}

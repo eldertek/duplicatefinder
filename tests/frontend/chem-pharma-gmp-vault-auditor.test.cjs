@@ -674,6 +674,7 @@ describe('Cycle 203: ChemPharmaGmpVaultWorkbench Vue component & App.vue Alt+Shi
 			'./components/BatteryBmsVaultWorkbench.vue': { __esModule: true, default: stub('battery-bms-vault-auditor') },
 			'./components/ChemPharmaGmpVaultWorkbench.vue': { __esModule: true, default: ChemPharmaGmpVaultWorkbench },
 			'./components/DigitalGridScadaVaultWorkbench.vue': { __esModule: true, default: stub('digital-grid-scada-vault-auditor') },
+			'./components/EnergySeismicVaultWorkbench.vue': { __esModule: true, default: stub('energy-seismic-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
