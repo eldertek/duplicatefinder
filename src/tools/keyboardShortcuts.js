@@ -409,6 +409,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-additive-mfg-vault-auditor',
 	},
 	{
+		id: 'toggle-ecommerce-pim-vault-auditor',
+		keys: ['Shift+F7'],
+		action: 'toggle-ecommerce-pim-vault-auditor',
+	},
+	{
 		id: 'toggle-scientific-research-vault-auditor',
 		keys: ['F8'],
 		action: 'toggle-scientific-research-vault-auditor',
@@ -766,6 +771,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (!event.shiftKey && key === 'F7') {
 		return 'toggle-additive-mfg-vault-auditor'
+	}
+
+	if (event.shiftKey && key === 'F7') {
+		return 'toggle-ecommerce-pim-vault-auditor'
 	}
 
 	if (!event.shiftKey && key === 'F8') {

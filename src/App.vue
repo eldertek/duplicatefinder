@@ -2293,6 +2293,32 @@
 							<span>{{ t('duplicatefinder', 'Broadcast & NLE Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-ecommerce-pim-vault-button"
+							:class="{ 'is-active': ecommercePimVaultOpen }"
+							:aria-pressed="ecommercePimVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+F7"
+							:title="t('duplicatefinder', 'Toggle E-Commerce, PIM Product Media and Brand Asset Vault auditor')"
+							@click="toggleEcommercePimVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+								<line x1="3" y1="6" x2="21" y2="6" />
+								<path d="M16 10a4 4 0 0 1-8 0" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'E-Commerce & PIM Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3041,6 +3067,15 @@
 						@compare-duplicate="onBroadcastNleVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="broadcastNleVaultOpen = false" />
+					<EcommercePimVaultWorkbench
+						v-if="ecommercePimVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onEcommercePimVaultSelectDuplicate"
+						@compare-duplicate="onEcommercePimVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="ecommercePimVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3545,6 +3580,7 @@ import MlCheckpointVaultWorkbench from './components/MlCheckpointVaultWorkbench.
 import VmBackupVaultWorkbench from './components/VmBackupVaultWorkbench.vue'
 import DbSqlLogVaultWorkbench from './components/DbSqlLogVaultWorkbench.vue'
 import BroadcastNleVaultWorkbench from './components/BroadcastNleVaultWorkbench.vue'
+import EcommercePimVaultWorkbench from './components/EcommercePimVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3678,6 +3714,7 @@ export default {
 		VmBackupVaultWorkbench,
 		DbSqlLogVaultWorkbench,
 		BroadcastNleVaultWorkbench,
+		EcommercePimVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3778,6 +3815,7 @@ export default {
 			vmBackupVaultOpen: false,
 			dbSqlLogVaultOpen: false,
 			broadcastNleVaultOpen: false,
+			ecommercePimVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4021,6 +4059,7 @@ export default {
 				'toggle-ml-checkpoint-vault-auditor': t('duplicatefinder', 'Toggle Machine Learning, LLM Weights and Dataset Checkpoint Vault auditor'),
 				'toggle-db-sql-log-vault-auditor': t('duplicatefinder', 'Toggle Database Dump, SQL Backup and Telemetry Log Vault auditor'),
 				'toggle-broadcast-nle-vault-auditor': t('duplicatefinder', 'Toggle Broadcast Video, NLE Proxy and Camera Card Media Vault auditor'),
+				'toggle-ecommerce-pim-vault-auditor': t('duplicatefinder', 'Toggle E-Commerce, PIM Product Media and Brand Asset Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -5437,6 +5476,22 @@ export default {
 		onBroadcastNleVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleEcommercePimVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.ecommercePimVaultOpen = !this.ecommercePimVaultOpen
+			return true
+		},
+		onEcommercePimVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onEcommercePimVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -6292,6 +6347,13 @@ export default {
 
 			if (action === 'toggle-broadcast-nle-vault-auditor') {
 				if (this.toggleBroadcastNleVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-ecommerce-pim-vault-auditor') {
+				if (this.toggleEcommercePimVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -7267,7 +7329,8 @@ export default {
 .app-content-topbar .topbar-ml-checkpoint-vault-button,
 .app-content-topbar .topbar-vm-backup-vault-button,
 .app-content-topbar .topbar-db-sql-log-vault-button,
-.app-content-topbar .topbar-broadcast-nle-vault-button {
+.app-content-topbar .topbar-broadcast-nle-vault-button,
+.app-content-topbar .topbar-ecommerce-pim-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -7325,7 +7388,8 @@ export default {
 .app-content-topbar .topbar-ml-checkpoint-vault-button,
 .app-content-topbar .topbar-vm-backup-vault-button,
 .app-content-topbar .topbar-db-sql-log-vault-button,
-.app-content-topbar .topbar-broadcast-nle-vault-button {
+.app-content-topbar .topbar-broadcast-nle-vault-button,
+.app-content-topbar .topbar-ecommerce-pim-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -7402,7 +7466,8 @@ export default {
 .app-content-topbar .topbar-ml-checkpoint-vault-button svg,
 .app-content-topbar .topbar-vm-backup-vault-button svg,
 .app-content-topbar .topbar-db-sql-log-vault-button svg,
-.app-content-topbar .topbar-broadcast-nle-vault-button svg {
+.app-content-topbar .topbar-broadcast-nle-vault-button svg,
+.app-content-topbar .topbar-ecommerce-pim-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -7552,7 +7617,9 @@ export default {
 .app-content-topbar .topbar-db-sql-log-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-db-sql-log-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-broadcast-nle-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-broadcast-nle-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-broadcast-nle-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-ecommerce-pim-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-ecommerce-pim-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7627,7 +7694,8 @@ export default {
 .app-content-topbar .topbar-ml-checkpoint-vault-button.is-active,
 .app-content-topbar .topbar-vm-backup-vault-button.is-active,
 .app-content-topbar .topbar-db-sql-log-vault-button.is-active,
-.app-content-topbar .topbar-broadcast-nle-vault-button.is-active {
+.app-content-topbar .topbar-broadcast-nle-vault-button.is-active,
+.app-content-topbar .topbar-ecommerce-pim-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -7845,6 +7913,7 @@ export default {
 .app-content-topbar .topbar-vm-backup-vault-button > *,
 .app-content-topbar .topbar-db-sql-log-vault-button > *,
 .app-content-topbar .topbar-broadcast-nle-vault-button > *,
+.app-content-topbar .topbar-ecommerce-pim-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -8001,6 +8070,7 @@ export default {
 	.app-content-topbar .topbar-vm-backup-vault-button,
 	.app-content-topbar .topbar-db-sql-log-vault-button,
 	.app-content-topbar .topbar-broadcast-nle-vault-button,
+	.app-content-topbar .topbar-ecommerce-pim-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

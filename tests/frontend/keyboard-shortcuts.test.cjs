@@ -246,6 +246,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/VmBackupVaultWorkbench.vue': { __esModule: true, default: stub('vm-backup-vault-auditor') },
 			'./components/DbSqlLogVaultWorkbench.vue': { __esModule: true, default: stub('db-sql-log-vault-auditor') },
 			'./components/BroadcastNleVaultWorkbench.vue': { __esModule: true, default: stub('broadcast-nle-vault-auditor') },
+			'./components/EcommercePimVaultWorkbench.vue': { __esModule: true, default: stub('ecommerce-pim-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4069,7 +4070,7 @@ describe('Cycle 184: F7 shortcut for 3D Printing, CNC & Additive Manufacturing V
 			action: 'toggle-additive-mfg-vault-auditor',
 		})
 		assert.equal(resolveShortcutAction({ key: 'F7' }), 'toggle-additive-mfg-vault-auditor')
-		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true }), 'toggle-ecommerce-pim-vault-auditor')
 		assert.equal(resolveShortcutAction({ key: 'F7', ctrlKey: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F7', altKey: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F7' }, { isHelpOpen: true }), null)
@@ -4213,5 +4214,28 @@ describe('Cycle 190: Shift+F9 shortcut for Broadcast Video, NLE Proxy & Camera C
 		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F9', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 191: Shift+F7 shortcut for E-Commerce, PIM Product Media & Brand Asset Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F7 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-ecommerce-pim-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-ecommerce-pim-vault-auditor',
+			keys: ['Shift+F7'],
+			action: 'toggle-ecommerce-pim-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true }), 'toggle-ecommerce-pim-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F7' }), 'toggle-additive-mfg-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F7', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
