@@ -1543,6 +1543,39 @@
 							<span>{{ t('duplicatefinder', 'CAD & EDA') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-web-build-media-button"
+							:class="{ 'is-active': webBuildMediaOpen }"
+							:aria-pressed="webBuildMediaOpen ? 'true' : 'false'"
+							aria-keyshortcuts="}"
+							:title="t('duplicatefinder', 'Toggle web build output, responsive image pyramid, HLS/DASH chunks and source-map bloat auditor')"
+							@click="toggleWebBuildMedia">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="3"
+									y="3"
+									width="18"
+									height="14"
+									rx="2" />
+								<path d="M8 21h8" />
+								<path d="M12 17v4" />
+								<path d="m7 9 3 2-3 2" />
+								<path d="M13 13h4" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Web & Media') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2057,6 +2090,15 @@
 						@compare-duplicate="onCadVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="cadVaultOpen = false" />
+					<WebBuildMediaWorkbench
+						v-if="webBuildMediaOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onWebBuildMediaSelectDuplicate"
+						@compare-duplicate="onWebBuildMediaCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="webBuildMediaOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2535,6 +2577,7 @@ import InstallerRepoWorkbench from './components/InstallerRepoWorkbench.vue'
 import WorkbookDriftWorkbench from './components/WorkbookDriftWorkbench.vue'
 import MailboxArchiveWorkbench from './components/MailboxArchiveWorkbench.vue'
 import CadVaultWorkbench from './components/CadVaultWorkbench.vue'
+import WebBuildMediaWorkbench from './components/WebBuildMediaWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2642,6 +2685,7 @@ export default {
 		WorkbookDriftWorkbench,
 		MailboxArchiveWorkbench,
 		CadVaultWorkbench,
+		WebBuildMediaWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2716,6 +2760,7 @@ export default {
 			workbookDriftOpen: false,
 			mailboxArchiveOpen: false,
 			cadVaultOpen: false,
+			webBuildMediaOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2934,6 +2979,7 @@ export default {
 				'toggle-workbook-drift-auditor': t('duplicatefinder', 'Toggle spreadsheet, BI report and financial workbook version-drift auditor'),
 				'toggle-mailbox-archive-auditor': t('duplicatefinder', 'Toggle email archive, mailbox dump and extracted attachment redundancy auditor'),
 				'toggle-cad-vault-auditor': t('duplicatefinder', 'Toggle CAD, 3D print, KiCad EDA and manufacturing release vault auditor'),
+				'toggle-web-build-media-auditor': t('duplicatefinder', 'Toggle web build output, responsive image pyramid, HLS/DASH chunks and source-map bloat auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3934,6 +3980,22 @@ export default {
 		onCadVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleWebBuildMedia() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.webBuildMediaOpen = !this.webBuildMediaOpen
+			return true
+		},
+		onWebBuildMediaSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onWebBuildMediaCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4607,6 +4669,13 @@ export default {
 
 			if (action === 'toggle-cad-vault-auditor') {
 				if (this.toggleCadVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-web-build-media-auditor') {
+				if (this.toggleWebBuildMedia() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5556,7 +5625,8 @@ export default {
 .app-content-topbar .topbar-installer-repo-button,
 .app-content-topbar .topbar-workbook-drift-button,
 .app-content-topbar .topbar-mailbox-archive-button,
-.app-content-topbar .topbar-cad-vault-button {
+.app-content-topbar .topbar-cad-vault-button,
+.app-content-topbar .topbar-web-build-media-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5588,7 +5658,8 @@ export default {
 .app-content-topbar .topbar-installer-repo-button,
 .app-content-topbar .topbar-workbook-drift-button,
 .app-content-topbar .topbar-mailbox-archive-button,
-.app-content-topbar .topbar-cad-vault-button {
+.app-content-topbar .topbar-cad-vault-button,
+.app-content-topbar .topbar-web-build-media-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5639,7 +5710,8 @@ export default {
 .app-content-topbar .topbar-installer-repo-button svg,
 .app-content-topbar .topbar-workbook-drift-button svg,
 .app-content-topbar .topbar-mailbox-archive-button svg,
-.app-content-topbar .topbar-cad-vault-button svg {
+.app-content-topbar .topbar-cad-vault-button svg,
+.app-content-topbar .topbar-web-build-media-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5737,7 +5809,9 @@ export default {
 .app-content-topbar .topbar-mailbox-archive-button:hover:not(:disabled),
 .app-content-topbar .topbar-mailbox-archive-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-cad-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-cad-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-cad-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-web-build-media-button:hover:not(:disabled),
+.app-content-topbar .topbar-web-build-media-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5786,7 +5860,8 @@ export default {
 .app-content-topbar .topbar-installer-repo-button.is-active,
 .app-content-topbar .topbar-workbook-drift-button.is-active,
 .app-content-topbar .topbar-mailbox-archive-button.is-active,
-.app-content-topbar .topbar-cad-vault-button.is-active {
+.app-content-topbar .topbar-cad-vault-button.is-active,
+.app-content-topbar .topbar-web-build-media-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -5978,6 +6053,7 @@ export default {
 .app-content-topbar .topbar-workbook-drift-button > *,
 .app-content-topbar .topbar-mailbox-archive-button > *,
 .app-content-topbar .topbar-cad-vault-button > *,
+.app-content-topbar .topbar-web-build-media-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6108,6 +6184,7 @@ export default {
 	.app-content-topbar .topbar-workbook-drift-button,
 	.app-content-topbar .topbar-mailbox-archive-button,
 	.app-content-topbar .topbar-cad-vault-button,
+	.app-content-topbar .topbar-web-build-media-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

@@ -294,6 +294,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-cad-vault-auditor',
 	},
 	{
+		id: 'toggle-web-build-media-auditor',
+		keys: ['}'],
+		action: 'toggle-web-build-media-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -552,6 +557,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '{') {
 		return 'toggle-cad-vault-auditor'
+	}
+
+	if (key === '}') {
+		return 'toggle-web-build-media-auditor'
 	}
 
 	if (key === 'ArrowDown') {
