@@ -339,6 +339,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-ml-dataset-artifact-auditor',
 	},
 	{
+		id: 'toggle-game3d-asset-vault-auditor',
+		keys: ['Shift+T'],
+		action: 'toggle-game3d-asset-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -633,6 +638,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'W' || key === 'w')) {
 		return 'toggle-ml-dataset-artifact-auditor'
+	}
+
+	if (event.shiftKey && (key === 'T' || key === 't')) {
+		return 'toggle-game3d-asset-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {

@@ -1805,6 +1805,32 @@
 							<span>{{ t('duplicatefinder', 'ML & Datasets') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-game3d-asset-vault-button"
+							:class="{ 'is-active': game3dAssetVaultOpen }"
+							:aria-pressed="game3dAssetVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+T"
+							:title="t('duplicatefinder', 'Toggle Game Engine, Blender Backup and 3D PBR Texture Vault auditor')"
+							@click="toggleGame3dAssetVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M12 2 2 7l10 5 10-5-10-5z" />
+								<path d="M2 17l10 5 10-5" />
+								<path d="M2 12l10 5 10-5" />
+							</svg>
+							<span>{{ t('duplicatefinder', '3D & Game Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2400,6 +2426,15 @@
 						@compare-duplicate="onMlDatasetArtifactCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="mlDatasetArtifactOpen = false" />
+					<Game3dAssetVaultWorkbench
+						v-if="game3dAssetVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onGame3dAssetVaultSelectDuplicate"
+						@compare-duplicate="onGame3dAssetVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="game3dAssetVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2887,6 +2922,7 @@ import ElearningScormWorkbench from './components/ElearningScormWorkbench.vue'
 import PhotoRawCatalogWorkbench from './components/PhotoRawCatalogWorkbench.vue'
 import VmContainerImageWorkbench from './components/VmContainerImageWorkbench.vue'
 import MlDatasetArtifactWorkbench from './components/MlDatasetArtifactWorkbench.vue'
+import Game3dAssetVaultWorkbench from './components/Game3dAssetVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3003,6 +3039,7 @@ export default {
 		PhotoRawCatalogWorkbench,
 		VmContainerImageWorkbench,
 		MlDatasetArtifactWorkbench,
+		Game3dAssetVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3086,6 +3123,7 @@ export default {
 			photoRawCatalogOpen: false,
 			vmContainerImageOpen: false,
 			mlDatasetArtifactOpen: false,
+			game3dAssetVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3313,6 +3351,7 @@ export default {
 				'toggle-photo-raw-catalog-auditor': t('duplicatefinder', 'Toggle RAW photography catalog, preview pyramid, sidecar and export derivative auditor'),
 				'toggle-vm-container-image-auditor': t('duplicatefinder', 'Toggle VM, ISO and container image vault auditor'),
 				'toggle-ml-dataset-artifact-auditor': t('duplicatefinder', 'Toggle ML weights, quantized checkpoints and dataset shard auditor'),
+				'toggle-game3d-asset-vault-auditor': t('duplicatefinder', 'Toggle Game Engine, Blender backup and 3D PBR texture vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4457,6 +4496,22 @@ export default {
 		onMlDatasetArtifactCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleGame3dAssetVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.game3dAssetVaultOpen = !this.game3dAssetVaultOpen
+			return true
+		},
+		onGame3dAssetVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onGame3dAssetVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5193,6 +5248,13 @@ export default {
 
 			if (action === 'toggle-ml-dataset-artifact-auditor') {
 				if (this.toggleMlDatasetArtifact() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-game3d-asset-vault-auditor') {
+				if (this.toggleGame3dAssetVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6151,7 +6213,8 @@ export default {
 .app-content-topbar .topbar-elearning-scorm-button,
 .app-content-topbar .topbar-photo-raw-catalog-button,
 .app-content-topbar .topbar-vm-container-image-button,
-.app-content-topbar .topbar-ml-dataset-artifact-button {
+.app-content-topbar .topbar-ml-dataset-artifact-button,
+.app-content-topbar .topbar-game3d-asset-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -6192,7 +6255,8 @@ export default {
 .app-content-topbar .topbar-elearning-scorm-button,
 .app-content-topbar .topbar-photo-raw-catalog-button,
 .app-content-topbar .topbar-vm-container-image-button,
-.app-content-topbar .topbar-ml-dataset-artifact-button {
+.app-content-topbar .topbar-ml-dataset-artifact-button,
+.app-content-topbar .topbar-game3d-asset-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -6252,7 +6316,8 @@ export default {
 .app-content-topbar .topbar-elearning-scorm-button svg,
 .app-content-topbar .topbar-photo-raw-catalog-button svg,
 .app-content-topbar .topbar-vm-container-image-button svg,
-.app-content-topbar .topbar-ml-dataset-artifact-button svg {
+.app-content-topbar .topbar-ml-dataset-artifact-button svg,
+.app-content-topbar .topbar-game3d-asset-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6368,7 +6433,9 @@ export default {
 .app-content-topbar .topbar-vm-container-image-button:hover:not(:disabled),
 .app-content-topbar .topbar-vm-container-image-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-ml-dataset-artifact-button:hover:not(:disabled),
-.app-content-topbar .topbar-ml-dataset-artifact-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-ml-dataset-artifact-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-game3d-asset-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-game3d-asset-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -6426,7 +6493,8 @@ export default {
 .app-content-topbar .topbar-elearning-scorm-button.is-active,
 .app-content-topbar .topbar-photo-raw-catalog-button.is-active,
 .app-content-topbar .topbar-vm-container-image-button.is-active,
-.app-content-topbar .topbar-ml-dataset-artifact-button.is-active {
+.app-content-topbar .topbar-ml-dataset-artifact-button.is-active,
+.app-content-topbar .topbar-game3d-asset-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6627,6 +6695,7 @@ export default {
 .app-content-topbar .topbar-photo-raw-catalog-button > *,
 .app-content-topbar .topbar-vm-container-image-button > *,
 .app-content-topbar .topbar-ml-dataset-artifact-button > *,
+.app-content-topbar .topbar-game3d-asset-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6766,6 +6835,7 @@ export default {
 	.app-content-topbar .topbar-photo-raw-catalog-button,
 	.app-content-topbar .topbar-vm-container-image-button,
 	.app-content-topbar .topbar-ml-dataset-artifact-button,
+	.app-content-topbar .topbar-game3d-asset-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
