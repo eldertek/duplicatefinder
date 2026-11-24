@@ -379,6 +379,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-scientific-research-vault-auditor',
 	},
 	{
+		id: 'toggle-legal-contract-vault-auditor',
+		keys: ['F9'],
+		action: 'toggle-legal-contract-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -705,6 +710,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (!event.shiftKey && key === 'F8') {
 		return 'toggle-scientific-research-vault-auditor'
+	}
+
+	if (!event.shiftKey && key === 'F9') {
+		return 'toggle-legal-contract-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {

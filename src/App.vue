@@ -2047,6 +2047,31 @@
 							<span>{{ t('duplicatefinder', 'Research & Datasets') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-legal-contract-vault-button"
+							:class="{ 'is-active': legalContractVaultOpen }"
+							:aria-pressed="legalContractVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="F9"
+							:title="t('duplicatefinder', 'Toggle Legal, Compliance and Signed Contract Vault auditor')"
+							@click="toggleLegalContractVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+								<path d="M9 12l2 2 4-4" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Legal & Contracts') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2714,6 +2739,15 @@
 						@compare-duplicate="onScientificResearchVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="scientificResearchVaultOpen = false" />
+					<LegalContractVaultWorkbench
+						v-if="legalContractVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onLegalContractVaultSelectDuplicate"
+						@compare-duplicate="onLegalContractVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="legalContractVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3209,6 +3243,7 @@ import EmailArchiveVaultWorkbench from './components/EmailArchiveVaultWorkbench.
 import AudioDawVaultWorkbench from './components/AudioDawVaultWorkbench.vue'
 import GisMapArchiveWorkbench from './components/GisMapArchiveWorkbench.vue'
 import ScientificResearchVaultWorkbench from './components/ScientificResearchVaultWorkbench.vue'
+import LegalContractVaultWorkbench from './components/LegalContractVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3333,6 +3368,7 @@ export default {
 		AudioDawVaultWorkbench,
 		GisMapArchiveWorkbench,
 		ScientificResearchVaultWorkbench,
+		LegalContractVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3424,6 +3460,7 @@ export default {
 			audioDawVaultOpen: false,
 			gisMapArchiveOpen: false,
 			scientificResearchVaultOpen: false,
+			legalContractVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3659,6 +3696,7 @@ export default {
 				'toggle-audio-daw-vault-auditor': t('duplicatefinder', 'Toggle Audio Production, DAW Project and Sample Library Vault auditor'),
 				'toggle-gis-map-archive-auditor': t('duplicatefinder', 'Toggle GIS, GeoSpatial Tile and CAD/BIM Map Archive Vault auditor'),
 				'toggle-scientific-research-vault-auditor': t('duplicatefinder', 'Toggle Academic Research, LaTeX/BibTeX and Scientific Dataset Vault auditor'),
+				'toggle-legal-contract-vault-auditor': t('duplicatefinder', 'Toggle Legal, Compliance and Signed Contract Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4931,6 +4969,22 @@ export default {
 		onScientificResearchVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleLegalContractVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.legalContractVaultOpen = !this.legalContractVaultOpen
+			return true
+		},
+		onLegalContractVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onLegalContractVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5723,6 +5777,13 @@ export default {
 
 			if (action === 'toggle-scientific-research-vault-auditor') {
 				if (this.toggleScientificResearchVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-legal-contract-vault-auditor') {
+				if (this.toggleLegalContractVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6689,7 +6750,8 @@ export default {
 .app-content-topbar .topbar-email-archive-vault-button,
 .app-content-topbar .topbar-audio-daw-vault-button,
 .app-content-topbar .topbar-gis-map-archive-button,
-.app-content-topbar .topbar-scientific-research-vault-button {
+.app-content-topbar .topbar-scientific-research-vault-button,
+.app-content-topbar .topbar-legal-contract-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -6738,7 +6800,8 @@ export default {
 .app-content-topbar .topbar-email-archive-vault-button,
 .app-content-topbar .topbar-audio-daw-vault-button,
 .app-content-topbar .topbar-gis-map-archive-button,
-.app-content-topbar .topbar-scientific-research-vault-button {
+.app-content-topbar .topbar-scientific-research-vault-button,
+.app-content-topbar .topbar-legal-contract-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -6806,7 +6869,8 @@ export default {
 .app-content-topbar .topbar-email-archive-vault-button svg,
 .app-content-topbar .topbar-audio-daw-vault-button svg,
 .app-content-topbar .topbar-gis-map-archive-button svg,
-.app-content-topbar .topbar-scientific-research-vault-button svg {
+.app-content-topbar .topbar-scientific-research-vault-button svg,
+.app-content-topbar .topbar-legal-contract-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6938,7 +7002,9 @@ export default {
 .app-content-topbar .topbar-gis-map-archive-button:hover:not(:disabled),
 .app-content-topbar .topbar-gis-map-archive-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-scientific-research-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-scientific-research-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-scientific-research-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-legal-contract-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-legal-contract-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -7004,7 +7070,8 @@ export default {
 .app-content-topbar .topbar-email-archive-vault-button.is-active,
 .app-content-topbar .topbar-audio-daw-vault-button.is-active,
 .app-content-topbar .topbar-gis-map-archive-button.is-active,
-.app-content-topbar .topbar-scientific-research-vault-button.is-active {
+.app-content-topbar .topbar-scientific-research-vault-button.is-active,
+.app-content-topbar .topbar-legal-contract-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -7213,6 +7280,7 @@ export default {
 .app-content-topbar .topbar-audio-daw-vault-button > *,
 .app-content-topbar .topbar-gis-map-archive-button > *,
 .app-content-topbar .topbar-scientific-research-vault-button > *,
+.app-content-topbar .topbar-legal-contract-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -7360,6 +7428,7 @@ export default {
 	.app-content-topbar .topbar-audio-daw-vault-button,
 	.app-content-topbar .topbar-gis-map-archive-button,
 	.app-content-topbar .topbar-scientific-research-vault-button,
+	.app-content-topbar .topbar-legal-contract-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
