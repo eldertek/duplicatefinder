@@ -1946,6 +1946,38 @@
 							<span>{{ t('duplicatefinder', 'Email Archive Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-audio-daw-vault-button"
+							:class="{ 'is-active': audioDawVaultOpen }"
+							:aria-pressed="audioDawVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Shift+J"
+							:title="t('duplicatefinder', 'Toggle Audio Production, DAW Project and Sample Library Vault auditor')"
+							@click="toggleAudioDawVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M9 18V5l12-2v13" />
+								<circle
+									cx="6"
+									cy="18"
+									r="3" />
+								<circle
+									cx="18"
+									cy="16"
+									r="3" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Audio DAW Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2586,6 +2618,15 @@
 						@compare-duplicate="onEmailArchiveVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="emailArchiveVaultOpen = false" />
+					<AudioDawVaultWorkbench
+						v-if="audioDawVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onAudioDawVaultSelectDuplicate"
+						@compare-duplicate="onAudioDawVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="audioDawVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -3078,6 +3119,7 @@ import DatabaseDumpLogWorkbench from './components/DatabaseDumpLogWorkbench.vue'
 import DesignPublishingVaultWorkbench from './components/DesignPublishingVaultWorkbench.vue'
 import ReleaseBinaryArtifactWorkbench from './components/ReleaseBinaryArtifactWorkbench.vue'
 import EmailArchiveVaultWorkbench from './components/EmailArchiveVaultWorkbench.vue'
+import AudioDawVaultWorkbench from './components/AudioDawVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -3199,6 +3241,7 @@ export default {
 		DesignPublishingVaultWorkbench,
 		ReleaseBinaryArtifactWorkbench,
 		EmailArchiveVaultWorkbench,
+		AudioDawVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -3287,6 +3330,7 @@ export default {
 			designPublishingVaultOpen: false,
 			releaseBinaryArtifactOpen: false,
 			emailArchiveVaultOpen: false,
+			audioDawVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3519,6 +3563,7 @@ export default {
 				'toggle-design-publishing-vault-auditor': t('duplicatefinder', 'Toggle Creative Design Package, Print Proof and Typography Font Archive auditor'),
 				'toggle-release-binary-artifact-auditor': t('duplicatefinder', 'Toggle Release Binary, Signed Installer and SBOM Artifact Vault auditor'),
 				'toggle-email-archive-vault-auditor': t('duplicatefinder', 'Toggle Email Archive, Mailbox Export and Attachment Vault auditor'),
+				'toggle-audio-daw-vault-auditor': t('duplicatefinder', 'Toggle Audio Production, DAW Project and Sample Library Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4743,6 +4788,22 @@ export default {
 		onEmailArchiveVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleAudioDawVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.audioDawVaultOpen = !this.audioDawVaultOpen
+			return true
+		},
+		onAudioDawVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onAudioDawVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -5514,6 +5575,13 @@ export default {
 
 			if (action === 'toggle-email-archive-vault-auditor') {
 				if (this.toggleEmailArchiveVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-audio-daw-vault-auditor') {
+				if (this.toggleAudioDawVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -6477,7 +6545,8 @@ export default {
 .app-content-topbar .topbar-database-dump-log-button,
 .app-content-topbar .topbar-design-publishing-vault-button,
 .app-content-topbar .topbar-release-binary-artifact-button,
-.app-content-topbar .topbar-email-archive-vault-button {
+.app-content-topbar .topbar-email-archive-vault-button,
+.app-content-topbar .topbar-audio-daw-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -6523,7 +6592,8 @@ export default {
 .app-content-topbar .topbar-database-dump-log-button,
 .app-content-topbar .topbar-design-publishing-vault-button,
 .app-content-topbar .topbar-release-binary-artifact-button,
-.app-content-topbar .topbar-email-archive-vault-button {
+.app-content-topbar .topbar-email-archive-vault-button,
+.app-content-topbar .topbar-audio-daw-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -6588,7 +6658,8 @@ export default {
 .app-content-topbar .topbar-database-dump-log-button svg,
 .app-content-topbar .topbar-design-publishing-vault-button svg,
 .app-content-topbar .topbar-release-binary-artifact-button svg,
-.app-content-topbar .topbar-email-archive-vault-button svg {
+.app-content-topbar .topbar-email-archive-vault-button svg,
+.app-content-topbar .topbar-audio-daw-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -6714,7 +6785,9 @@ export default {
 .app-content-topbar .topbar-release-binary-artifact-button:hover:not(:disabled),
 .app-content-topbar .topbar-release-binary-artifact-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-email-archive-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-email-archive-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-email-archive-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-audio-daw-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-audio-daw-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -6777,7 +6850,8 @@ export default {
 .app-content-topbar .topbar-database-dump-log-button.is-active,
 .app-content-topbar .topbar-design-publishing-vault-button.is-active,
 .app-content-topbar .topbar-release-binary-artifact-button.is-active,
-.app-content-topbar .topbar-email-archive-vault-button.is-active {
+.app-content-topbar .topbar-email-archive-vault-button.is-active,
+.app-content-topbar .topbar-audio-daw-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6983,6 +7057,7 @@ export default {
 .app-content-topbar .topbar-design-publishing-vault-button > *,
 .app-content-topbar .topbar-release-binary-artifact-button > *,
 .app-content-topbar .topbar-email-archive-vault-button > *,
+.app-content-topbar .topbar-audio-daw-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -7127,6 +7202,7 @@ export default {
 	.app-content-topbar .topbar-design-publishing-vault-button,
 	.app-content-topbar .topbar-release-binary-artifact-button,
 	.app-content-topbar .topbar-email-archive-vault-button,
+	.app-content-topbar .topbar-audio-daw-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

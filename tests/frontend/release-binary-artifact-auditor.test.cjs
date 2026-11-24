@@ -493,6 +493,7 @@ describe('Cycle 177: Release Binary, Signed Installer & SBOM Artifact Vault Audi
 			'./components/DesignPublishingVaultWorkbench.vue': { __esModule: true, default: stub('designpub') },
 			'./components/ReleaseBinaryArtifactWorkbench.vue': { __esModule: true, default: ReleaseBinaryArtifactWorkbench },
 			'./components/EmailArchiveVaultWorkbench.vue': { __esModule: true, default: stub('email-archive-vault-auditor') },
+			'./components/AudioDawVaultWorkbench.vue': { __esModule: true, default: stub('audio-daw-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

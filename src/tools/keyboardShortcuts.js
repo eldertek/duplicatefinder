@@ -364,6 +364,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-email-archive-vault-auditor',
 	},
 	{
+		id: 'toggle-audio-daw-vault-auditor',
+		keys: ['Shift+J'],
+		action: 'toggle-audio-daw-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -678,6 +683,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (event.shiftKey && (key === 'H' || key === 'h')) {
 		return 'toggle-email-archive-vault-auditor'
+	}
+
+	if (event.shiftKey && (key === 'J' || key === 'j')) {
+		return 'toggle-audio-daw-vault-auditor'
 	}
 
 	if (key === 'ArrowDown') {
