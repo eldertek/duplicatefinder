@@ -379,6 +379,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-photo-grading-vault-auditor',
 	},
 	{
+		id: 'toggle-iot-firmware-vault-auditor',
+		keys: ['Shift+F4'],
+		action: 'toggle-iot-firmware-vault-auditor',
+	},
+	{
 		id: 'toggle-ml-checkpoint-vault-auditor',
 		keys: ['F2'],
 		action: 'toggle-ml-checkpoint-vault-auditor',
@@ -768,6 +773,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (!event.shiftKey && key === 'F4') {
 		return 'toggle-photo-grading-vault-auditor'
+	}
+
+	if (event.shiftKey && key === 'F4') {
+		return 'toggle-iot-firmware-vault-auditor'
 	}
 
 	if (!event.shiftKey && key === 'F6') {

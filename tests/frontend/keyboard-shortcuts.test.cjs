@@ -248,6 +248,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/BroadcastNleVaultWorkbench.vue': { __esModule: true, default: stub('broadcast-nle-vault-auditor') },
 			'./components/EcommercePimVaultWorkbench.vue': { __esModule: true, default: stub('ecommerce-pim-vault-auditor') },
 			'./components/FinanceTaxVaultWorkbench.vue': { __esModule: true, default: stub('finance-tax-vault-auditor') },
+			'./components/IotFirmwareVaultWorkbench.vue': { __esModule: true, default: stub('iot-firmware-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4117,7 +4118,7 @@ describe('Cycle 186: F4 shortcut for Photography RAW, Lightroom/Capture One & Co
 			action: 'toggle-photo-grading-vault-auditor',
 		})
 		assert.equal(resolveShortcutAction({ key: 'F4' }), 'toggle-photo-grading-vault-auditor')
-		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true }), 'toggle-iot-firmware-vault-auditor')
 		assert.equal(resolveShortcutAction({ key: 'F4', ctrlKey: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F4', altKey: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F4' }, { isHelpOpen: true }), null)
@@ -4261,5 +4262,28 @@ describe('Cycle 192: Shift+F6 shortcut for Financial, Accounting & Tax Complianc
 		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'F6', shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 193: Shift+F4 shortcut for IoT Firmware, Embedded ROM & Hardware Lab Vault Auditor', () => {
+	test('resolveShortcutAction maps Shift+F4 cleanly and ignores ctrl/alt modifiers, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-iot-firmware-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-iot-firmware-vault-auditor',
+			keys: ['Shift+F4'],
+			action: 'toggle-iot-firmware-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true }), 'toggle-iot-firmware-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F4' }), 'toggle-photo-grading-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true, altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'F4', shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
