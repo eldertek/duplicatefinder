@@ -219,6 +219,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-junk-pair-inspector',
 	},
 	{
+		id: 'toggle-media-fidelity-ranker',
+		keys: ['%'],
+		action: 'toggle-media-fidelity-ranker',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -417,6 +422,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === '~') {
 		return 'toggle-junk-pair-inspector'
+	}
+
+	if (key === '%') {
+		return 'toggle-media-fidelity-ranker'
 	}
 
 	if (key === 'ArrowDown') {

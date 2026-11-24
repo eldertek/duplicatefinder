@@ -1058,6 +1058,30 @@
 							<span>{{ t('duplicatefinder', 'Junk Pairs') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-media-fidelity-button"
+							:class="{ 'is-active': mediaFidelityOpen }"
+							:aria-pressed="mediaFidelityOpen ? 'true' : 'false'"
+							aria-keyshortcuts="%"
+							:title="t('duplicatefinder', 'Toggle near-duplicate media fidelity and transcode-loss ranker')"
+							@click="toggleMediaFidelityRanker">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Fidelity') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -1436,6 +1460,16 @@
 						@junk-pair-delete-completed="onJunkPairDeleteCompleted"
 						@start-scan="triggerScan"
 						@close="junkPairInspectorOpen = false" />
+					<MediaFidelityWorkbench
+						v-if="mediaFidelityOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onMediaFidelitySelectDuplicate"
+						@compare-duplicate="onMediaFidelityCompareDuplicate"
+						@fidelity-delete-completed="onMediaFidelityDeleteCompleted"
+						@start-scan="triggerScan"
+						@close="mediaFidelityOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -1899,6 +1933,7 @@ import ForensicVerifierWorkbench from './components/ForensicVerifierWorkbench.vu
 import InodeSafetyWorkbench from './components/InodeSafetyWorkbench.vue'
 import ShadowReclaimWorkbench from './components/ShadowReclaimWorkbench.vue'
 import JunkPairInspectorWorkbench from './components/JunkPairInspectorWorkbench.vue'
+import MediaFidelityWorkbench from './components/MediaFidelityWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -1991,6 +2026,7 @@ export default {
 		InodeSafetyWorkbench,
 		ShadowReclaimWorkbench,
 		JunkPairInspectorWorkbench,
+		MediaFidelityWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2050,6 +2086,7 @@ export default {
 			inodeVerifierOpen: false,
 			shadowReclaimOpen: false,
 			junkPairInspectorOpen: false,
+			mediaFidelityOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -2253,6 +2290,7 @@ export default {
 				'toggle-inode-verifier': t('duplicatefinder', 'Toggle cross-volume inode, hardlink-alias and storage-backend safety verifier'),
 				'toggle-shadow-reclaim': t('duplicatefinder', 'Toggle Nextcloud versions, trashbin and appdata shadow-duplicate reclaimer'),
 				'toggle-junk-pair-inspector': t('duplicatefinder', 'Toggle zero-byte, truncated partial and AppleDouble junk pair inspector'),
+				'toggle-media-fidelity-ranker': t('duplicatefinder', 'Toggle near-duplicate media fidelity and transcode-loss ranker'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -3010,6 +3048,25 @@ export default {
 		onJunkPairDeleteCompleted(payload) {
 			this.onBatchDeleteCompleted(payload)
 		},
+		toggleMediaFidelityRanker() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.mediaFidelityOpen = !this.mediaFidelityOpen
+			return true
+		},
+		onMediaFidelitySelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onMediaFidelityCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
+		onMediaFidelityDeleteCompleted(payload) {
+			this.onBatchDeleteCompleted(payload)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -3578,6 +3635,13 @@ export default {
 
 			if (action === 'toggle-junk-pair-inspector') {
 				if (this.toggleJunkPairInspector() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-media-fidelity-ranker') {
+				if (this.toggleMediaFidelityRanker() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -4512,7 +4576,8 @@ export default {
 .app-content-topbar .topbar-forensic-verifier-button,
 .app-content-topbar .topbar-inode-verifier-button,
 .app-content-topbar .topbar-shadow-reclaim-button,
-.app-content-topbar .topbar-junk-pair-button {
+.app-content-topbar .topbar-junk-pair-button,
+.app-content-topbar .topbar-media-fidelity-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -4563,7 +4628,8 @@ export default {
 .app-content-topbar .topbar-forensic-verifier-button svg,
 .app-content-topbar .topbar-inode-verifier-button svg,
 .app-content-topbar .topbar-shadow-reclaim-button svg,
-.app-content-topbar .topbar-junk-pair-button svg {
+.app-content-topbar .topbar-junk-pair-button svg,
+.app-content-topbar .topbar-media-fidelity-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -4631,7 +4697,9 @@ export default {
 .app-content-topbar .topbar-shadow-reclaim-button:hover:not(:disabled),
 .app-content-topbar .topbar-shadow-reclaim-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-junk-pair-button:hover:not(:disabled),
-.app-content-topbar .topbar-junk-pair-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-junk-pair-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-media-fidelity-button:hover:not(:disabled),
+.app-content-topbar .topbar-media-fidelity-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -4665,7 +4733,8 @@ export default {
 .app-content-topbar .topbar-forensic-verifier-button.is-active,
 .app-content-topbar .topbar-inode-verifier-button.is-active,
 .app-content-topbar .topbar-shadow-reclaim-button.is-active,
-.app-content-topbar .topbar-junk-pair-button.is-active {
+.app-content-topbar .topbar-junk-pair-button.is-active,
+.app-content-topbar .topbar-media-fidelity-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -4842,6 +4911,7 @@ export default {
 .app-content-topbar .topbar-inode-verifier-button > *,
 .app-content-topbar .topbar-shadow-reclaim-button > *,
 .app-content-topbar .topbar-junk-pair-button > *,
+.app-content-topbar .topbar-media-fidelity-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -4957,6 +5027,7 @@ export default {
 	.app-content-topbar .topbar-inode-verifier-button,
 	.app-content-topbar .topbar-shadow-reclaim-button,
 	.app-content-topbar .topbar-junk-pair-button,
+	.app-content-topbar .topbar-media-fidelity-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
