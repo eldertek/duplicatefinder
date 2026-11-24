@@ -309,6 +309,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-backup-takeout-auditor',
 	},
 	{
+		id: 'toggle-daw-audio-stem-auditor',
+		keys: ['"'],
+		action: 'toggle-daw-audio-stem-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -579,6 +584,10 @@ export function resolveShortcutAction(event, options = {}) {
 
 	if (key === ')') {
 		return 'toggle-backup-takeout-auditor'
+	}
+
+	if (key === '"') {
+		return 'toggle-daw-audio-stem-auditor'
 	}
 
 	if (key === 'ArrowDown') {

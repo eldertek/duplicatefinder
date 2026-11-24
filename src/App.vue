@@ -1628,6 +1628,32 @@
 							<span>{{ t('duplicatefinder', 'Backups & Takeout') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-daw-audio-button"
+							:class="{ 'is-active': dawAudioOpen }"
+							:aria-pressed="dawAudioOpen ? 'true' : 'false'"
+							aria-keyshortcuts="&quot;"
+							:title="t('duplicatefinder', 'Toggle DAW session, lossless stem master, mixdown revision and peak cache auditor')"
+							@click="toggleDawAudio">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M9 18V5l12-2v13" />
+								<circle cx="6" cy="18" r="3" />
+								<circle cx="18" cy="16" r="3" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Audio & DAW') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -2169,6 +2195,15 @@
 						@compare-duplicate="onBackupTakeoutCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="backupTakeoutOpen = false" />
+					<DawAudioStemWorkbench
+						v-if="dawAudioOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onDawAudioSelectDuplicate"
+						@compare-duplicate="onDawAudioCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="dawAudioOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -2650,6 +2685,7 @@ import CadVaultWorkbench from './components/CadVaultWorkbench.vue'
 import WebBuildMediaWorkbench from './components/WebBuildMediaWorkbench.vue'
 import LegalDocumentOcrWorkbench from './components/LegalDocumentOcrWorkbench.vue'
 import BackupTakeoutWorkbench from './components/BackupTakeoutWorkbench.vue'
+import DawAudioStemWorkbench from './components/DawAudioStemWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -2760,6 +2796,7 @@ export default {
 		WebBuildMediaWorkbench,
 		LegalDocumentOcrWorkbench,
 		BackupTakeoutWorkbench,
+		DawAudioStemWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -2837,6 +2874,7 @@ export default {
 			webBuildMediaOpen: false,
 			legalDocumentOcrOpen: false,
 			backupTakeoutOpen: false,
+			dawAudioOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -3058,6 +3096,7 @@ export default {
 				'toggle-web-build-media-auditor': t('duplicatefinder', 'Toggle web build output, responsive image pyramid, HLS/DASH chunks and source-map bloat auditor'),
 				'toggle-legal-document-ocr-auditor': t('duplicatefinder', 'Toggle legal contract, e-signature, OCR dual-scan and Office-PDF derivative auditor'),
 				'toggle-backup-takeout-auditor': t('duplicatefinder', 'Toggle backup archive, cloud takeout bundle, dated snapshot and extracted-folder twin auditor'),
+				'toggle-daw-audio-stem-auditor': t('duplicatefinder', 'Toggle DAW session, lossless stem master, mixdown revision and peak cache auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -4106,6 +4145,22 @@ export default {
 		onBackupTakeoutCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleDawAudio() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.dawAudioOpen = !this.dawAudioOpen
+			return true
+		},
+		onDawAudioSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onDawAudioCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -4800,6 +4855,13 @@ export default {
 
 			if (action === 'toggle-backup-takeout-auditor') {
 				if (this.toggleBackupTakeout() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-daw-audio-stem-auditor') {
+				if (this.toggleDawAudio() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -5752,7 +5814,8 @@ export default {
 .app-content-topbar .topbar-cad-vault-button,
 .app-content-topbar .topbar-web-build-media-button,
 .app-content-topbar .topbar-legal-document-ocr-button,
-.app-content-topbar .topbar-backup-takeout-button {
+.app-content-topbar .topbar-backup-takeout-button,
+.app-content-topbar .topbar-daw-audio-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -5787,7 +5850,8 @@ export default {
 .app-content-topbar .topbar-cad-vault-button,
 .app-content-topbar .topbar-web-build-media-button,
 .app-content-topbar .topbar-legal-document-ocr-button,
-.app-content-topbar .topbar-backup-takeout-button {
+.app-content-topbar .topbar-backup-takeout-button,
+.app-content-topbar .topbar-daw-audio-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -5841,7 +5905,8 @@ export default {
 .app-content-topbar .topbar-cad-vault-button svg,
 .app-content-topbar .topbar-web-build-media-button svg,
 .app-content-topbar .topbar-legal-document-ocr-button svg,
-.app-content-topbar .topbar-backup-takeout-button svg {
+.app-content-topbar .topbar-backup-takeout-button svg,
+.app-content-topbar .topbar-daw-audio-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -5945,7 +6010,9 @@ export default {
 .app-content-topbar .topbar-legal-document-ocr-button:hover:not(:disabled),
 .app-content-topbar .topbar-legal-document-ocr-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-backup-takeout-button:hover:not(:disabled),
-.app-content-topbar .topbar-backup-takeout-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-backup-takeout-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-daw-audio-button:hover:not(:disabled),
+.app-content-topbar .topbar-daw-audio-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -5997,7 +6064,8 @@ export default {
 .app-content-topbar .topbar-cad-vault-button.is-active,
 .app-content-topbar .topbar-web-build-media-button.is-active,
 .app-content-topbar .topbar-legal-document-ocr-button.is-active,
-.app-content-topbar .topbar-backup-takeout-button.is-active {
+.app-content-topbar .topbar-backup-takeout-button.is-active,
+.app-content-topbar .topbar-daw-audio-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -6192,6 +6260,7 @@ export default {
 .app-content-topbar .topbar-web-build-media-button > *,
 .app-content-topbar .topbar-legal-document-ocr-button > *,
 .app-content-topbar .topbar-backup-takeout-button > *,
+.app-content-topbar .topbar-daw-audio-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -6325,6 +6394,7 @@ export default {
 	.app-content-topbar .topbar-web-build-media-button,
 	.app-content-topbar .topbar-legal-document-ocr-button,
 	.app-content-topbar .topbar-backup-takeout-button,
+	.app-content-topbar .topbar-daw-audio-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
