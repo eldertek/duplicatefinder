@@ -544,6 +544,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-neuroscience-electrophys-vault-auditor',
 	},
 	{
+		id: 'toggle-orbital-spacecraft-vault-auditor',
+		keys: ['Alt+Shift+O'],
+		action: 'toggle-orbital-spacecraft-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -770,6 +775,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'N' || key === 'n')) {
 			return 'toggle-neuroscience-electrophys-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'O' || key === 'o')) {
+			return 'toggle-orbital-spacecraft-vault-auditor'
 		}
 		return null
 	}
