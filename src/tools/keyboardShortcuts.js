@@ -539,6 +539,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-mocap-biomechanics-vault-auditor',
 	},
 	{
+		id: 'toggle-neuroscience-electrophys-vault-auditor',
+		keys: ['Alt+Shift+N'],
+		action: 'toggle-neuroscience-electrophys-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -762,6 +767,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'M' || key === 'm')) {
 			return 'toggle-mocap-biomechanics-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'N' || key === 'n')) {
+			return 'toggle-neuroscience-electrophys-vault-auditor'
 		}
 		return null
 	}

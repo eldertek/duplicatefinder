@@ -269,6 +269,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/MaterialsMicroscopyVaultWorkbench.vue': { __esModule: true, default: stub('materials-microscopy-vault-auditor') },
 			'./components/LidarPhotogrammetryVaultWorkbench.vue': { __esModule: true, default: stub('lidar-photogrammetry-vault-auditor') },
 			'./components/MocapBiomechanicsVaultWorkbench.vue': { __esModule: true, default: stub('mocap-biomechanics-vault-auditor') },
+			'./components/NeuroscienceElectrophysVaultWorkbench.vue': { __esModule: true, default: stub('neuroscience-electrophys-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4804,5 +4805,31 @@ describe('Cycle 213: Alt+Shift+M shortcut for Motion Capture, Biomechanics & Opt
 		assert.equal(resolveShortcutAction({ key: 'M', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'M', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'M', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 214: Alt+Shift+N shortcut for Neuroscience, Electrophysiology & BIDS Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+N cleanly and preserves Shift+N and n while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-neuroscience-electrophys-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-neuroscience-electrophys-vault-auditor',
+			keys: ['Alt+Shift+N'],
+			action: 'toggle-neuroscience-electrophys-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'N', altKey: true, shiftKey: true }), 'toggle-neuroscience-electrophys-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'n', altKey: true, shiftKey: true }), 'toggle-neuroscience-electrophys-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'N', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'n', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'n' }), 'keep-newest')
+		assert.equal(resolveShortcutAction({ key: 'N', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'N', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'N', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'N', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'N', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
