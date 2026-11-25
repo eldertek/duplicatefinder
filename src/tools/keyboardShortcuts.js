@@ -579,6 +579,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-urban-water-utility-pipeline-vault-auditor',
 	},
 	{
+		id: 'toggle-veterinary-equine-genomics-vault-auditor',
+		keys: ['Alt+Shift+V'],
+		action: 'toggle-veterinary-equine-genomics-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -826,6 +831,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'U' || key === 'u')) {
 			return 'toggle-urban-water-utility-pipeline-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'V' || key === 'v')) {
+			return 'toggle-veterinary-equine-genomics-vault-auditor'
 		}
 		return null
 	}

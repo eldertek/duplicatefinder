@@ -3168,6 +3168,31 @@
 							<span>{{ t('duplicatefinder', 'Water & Pipeline') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-veterinary-equine-genomics-vault-button"
+							:class="{ 'is-active': veterinaryEquineGenomicsVaultOpen }"
+							:aria-pressed="veterinaryEquineGenomicsVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+V"
+							:title="t('duplicatefinder', 'Toggle Veterinary Imaging, Equine Biomechanics and Livestock Genomics Vault auditor')"
+							@click="toggleVeterinaryEquineGenomicsVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+								<path d="M9 15l3-3 4 4 6-6" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Vet & Equine') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -4195,6 +4220,15 @@
 						@compare-duplicate="onUrbanWaterUtilityPipelineVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="urbanWaterUtilityPipelineVaultOpen = false" />
+					<VeterinaryEquineGenomicsVaultWorkbench
+						v-if="veterinaryEquineGenomicsVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onVeterinaryEquineGenomicsVaultSelectDuplicate"
+						@compare-duplicate="onVeterinaryEquineGenomicsVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="veterinaryEquineGenomicsVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4730,6 +4764,7 @@ import RailwaySignalingTelemetryVaultWorkbench from './components/RailwaySignali
 import SpeechAsrBioacousticsVaultWorkbench from './components/SpeechAsrBioacousticsVaultWorkbench.vue'
 import TrafficItsV2xVaultWorkbench from './components/TrafficItsV2xVaultWorkbench.vue'
 import UrbanWaterUtilityPipelineVaultWorkbench from './components/UrbanWaterUtilityPipelineVaultWorkbench.vue'
+import VeterinaryEquineGenomicsVaultWorkbench from './components/VeterinaryEquineGenomicsVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4894,6 +4929,7 @@ export default {
 		SpeechAsrBioacousticsVaultWorkbench,
 		TrafficItsV2xVaultWorkbench,
 		UrbanWaterUtilityPipelineVaultWorkbench,
+		VeterinaryEquineGenomicsVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -5025,6 +5061,7 @@ export default {
 			speechAsrBioacousticsVaultOpen: false,
 			trafficItsV2xVaultOpen: false,
 			urbanWaterUtilityPipelineVaultOpen: false,
+			veterinaryEquineGenomicsVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -5299,6 +5336,7 @@ export default {
 				'toggle-speech-asr-bioacoustics-vault-auditor': t('duplicatefinder', 'Toggle Speech, Bioacoustics and Multilingual ASR Alignment Vault auditor'),
 				'toggle-traffic-its-v2x-vault-auditor': t('duplicatefinder', 'Toggle Traffic ITS, V2X Connected Mobility and Corridor Signal Vault auditor'),
 				'toggle-urban-water-utility-pipeline-vault-auditor': t('duplicatefinder', 'Toggle Urban Water Utility, Hydraulic Network and Pipeline Telemetry Vault auditor'),
+				'toggle-veterinary-equine-genomics-vault-auditor': t('duplicatefinder', 'Toggle Veterinary Imaging, Equine Biomechanics and Livestock Genomics Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -7211,6 +7249,22 @@ export default {
 		onUrbanWaterUtilityPipelineVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleVeterinaryEquineGenomicsVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.veterinaryEquineGenomicsVaultOpen = !this.veterinaryEquineGenomicsVaultOpen
+			return true
+		},
+		onVeterinaryEquineGenomicsVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onVeterinaryEquineGenomicsVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -8288,6 +8342,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-veterinary-equine-genomics-vault-auditor') {
+				if (this.toggleVeterinaryEquineGenomicsVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -9289,7 +9350,8 @@ export default {
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
 .app-content-topbar .topbar-traffic-its-v2x-vault-button,
-.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button {
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
+.app-content-topbar .topbar-veterinary-equine-genomics-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -9378,7 +9440,8 @@ export default {
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
 .app-content-topbar .topbar-traffic-its-v2x-vault-button,
-.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button {
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
+.app-content-topbar .topbar-veterinary-equine-genomics-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -9486,7 +9549,8 @@ export default {
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button svg,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button svg,
 .app-content-topbar .topbar-traffic-its-v2x-vault-button svg,
-.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button svg {
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button svg,
+.app-content-topbar .topbar-veterinary-equine-genomics-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -9698,7 +9762,9 @@ export default {
 .app-content-topbar .topbar-traffic-its-v2x-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-traffic-its-v2x-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-veterinary-equine-genomics-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-veterinary-equine-genomics-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -9804,7 +9870,8 @@ export default {
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button.is-active,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button.is-active,
 .app-content-topbar .topbar-traffic-its-v2x-vault-button.is-active,
-.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button.is-active {
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button.is-active,
+.app-content-topbar .topbar-veterinary-equine-genomics-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -10053,6 +10120,7 @@ export default {
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button > *,
 .app-content-topbar .topbar-traffic-its-v2x-vault-button > *,
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button > *,
+.app-content-topbar .topbar-veterinary-equine-genomics-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -10240,6 +10308,7 @@ export default {
 	.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
 	.app-content-topbar .topbar-traffic-its-v2x-vault-button,
 	.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
+	.app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
