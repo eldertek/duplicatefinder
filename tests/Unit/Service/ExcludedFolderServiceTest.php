@@ -5,11 +5,13 @@ namespace OCA\DuplicateFinder\Tests\Unit\Service;
 use OCA\DuplicateFinder\Db\ExcludedFolder;
 use OCA\DuplicateFinder\Db\ExcludedFolderMapper;
 use OCA\DuplicateFinder\Service\ExcludedFolderService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class ExcludedFolderServiceTest extends TestCase
 {
@@ -22,7 +24,10 @@ class ExcludedFolderServiceTest extends TestCase
     /** @var IRootFolder|MockObject */
     private $rootFolder;
 
-    private $userId = 'testuser';
+    /** @var LoggerInterface|MockObject */
+    private $logger;
+
+    private string $userId = 'testuser';
 
     protected function setUp(): void
     {
@@ -30,29 +35,27 @@ class ExcludedFolderServiceTest extends TestCase
 
         $this->mapper = $this->createMock(ExcludedFolderMapper::class);
         $this->rootFolder = $this->createMock(IRootFolder::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->service = new ExcludedFolderService(
             $this->mapper,
             $this->rootFolder,
-            $this->userId
+            $this->userId,
+            $this->logger
         );
     }
 
-    /**
-     * Test adding an excluded folder
-     */
-    public function testAddExcludedFolder(): void
+    public function testCreateExcludedFolder(): void
     {
         $path = '/Photos/Private';
-
         $userFolder = $this->createMock(Folder::class);
         $targetFolder = $this->createMock(Folder::class);
+        $targetFolder->method('getId')->willReturn(77);
 
         $this->rootFolder->expects($this->once())
             ->method('getUserFolder')
             ->with($this->userId)
             ->willReturn($userFolder);
-
         $userFolder->expects($this->once())
             ->method('get')
             ->with($path)
@@ -60,167 +63,127 @@ class ExcludedFolderServiceTest extends TestCase
 
         $this->mapper->expects($this->once())
             ->method('insert')
-            ->willReturnCallback(function ($folder) use ($path) {
-                $this->assertEquals($this->userId, $folder->getOwner());
-                $this->assertEquals($path, $folder->getPath());
+            ->willReturnCallback(function (ExcludedFolder $folder) use ($path): ExcludedFolder {
+                $this->assertSame($this->userId, $folder->getUserId());
+                $this->assertSame($path, $folder->getFolderPath());
                 $folder->setId(1);
 
                 return $folder;
             });
 
-        $result = $this->service->add($path);
+        $result = $this->service->create('Photos/Private/');
 
         $this->assertInstanceOf(ExcludedFolder::class, $result);
-        $this->assertEquals($path, $result->getPath());
+        $this->assertSame($path, $result->getFolderPath());
     }
 
-    /**
-     * Test adding non-existent folder throws exception
-     */
-    public function testAddNonExistentFolderThrowsException(): void
+    public function testCreateNonExistentFolderThrowsRuntimeException(): void
     {
-        $path = '/NonExistent';
-
         $userFolder = $this->createMock(Folder::class);
-
-        $this->rootFolder->expects($this->once())
-            ->method('getUserFolder')
-            ->willReturn($userFolder);
-
+        $this->rootFolder->expects($this->once())->method('getUserFolder')->willReturn($userFolder);
         $userFolder->expects($this->once())
             ->method('get')
-            ->with($path)
+            ->with('/NonExistent')
             ->willThrowException(new NotFoundException());
 
-        $this->expectException(NotFoundException::class);
-
-        $this->service->add($path);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Folder does not exist: /NonExistent');
+        $this->service->create('/NonExistent');
     }
 
-    /**
-     * Test checking if path is excluded
-     */
-    public function testIsPathExcluded(): void
+    public function testIsPathExcludedMatchesSubtreesOnlyAndNormalizesUserPrefix(): void
     {
         $excludedFolder1 = new ExcludedFolder();
-        $excludedFolder1->setPath('/Photos/Private');
-        $excludedFolder1->setOwner($this->userId);
+        $excludedFolder1->setFolderPath('/Photos/Private');
+        $excludedFolder1->setUserId($this->userId);
 
         $excludedFolder2 = new ExcludedFolder();
-        $excludedFolder2->setPath('/Documents/Secret');
-        $excludedFolder2->setOwner($this->userId);
+        $excludedFolder2->setFolderPath('/Documents/Secret');
+        $excludedFolder2->setUserId($this->userId);
 
         $this->mapper->expects($this->once())
-            ->method('findAll')
+            ->method('findAllForUser')
             ->with($this->userId)
             ->willReturn([$excludedFolder1, $excludedFolder2]);
 
-        // Test excluded paths
-        $this->assertTrue($this->service->isPathExcluded('/Photos/Private/vacation.jpg'));
-        $this->assertTrue($this->service->isPathExcluded('/Photos/Private/subfolder/photo.jpg'));
+        $this->assertTrue($this->service->isPathExcluded('/testuser/files/Photos/Private/vacation.jpg'));
         $this->assertTrue($this->service->isPathExcluded('/Documents/Secret/file.doc'));
-
-        // Test non-excluded paths
-        $this->assertFalse($this->service->isPathExcluded('/Photos/Public/photo.jpg'));
+        $this->assertFalse($this->service->isPathExcluded('/Photos/PrivateCopy/photo.jpg'));
         $this->assertFalse($this->service->isPathExcluded('/Documents/Public/file.doc'));
-        $this->assertFalse($this->service->isPathExcluded('/Music/song.mp3'));
     }
 
-    /**
-     * Test getting all excluded folders
-     */
     public function testFindAll(): void
     {
         $folder1 = new ExcludedFolder();
-        $folder1->setPath('/Path1');
-
+        $folder1->setFolderPath('/Path1');
         $folder2 = new ExcludedFolder();
-        $folder2->setPath('/Path2');
+        $folder2->setFolderPath('/Path2');
 
         $this->mapper->expects($this->once())
-            ->method('findAll')
+            ->method('findAllForUser')
             ->with($this->userId)
             ->willReturn([$folder1, $folder2]);
 
         $result = $this->service->findAll();
 
         $this->assertCount(2, $result);
-        $this->assertEquals('/Path1', $result[0]->getPath());
-        $this->assertEquals('/Path2', $result[1]->getPath());
+        $this->assertSame('/Path1', $result[0]->getFolderPath());
+        $this->assertSame('/Path2', $result[1]->getFolderPath());
     }
 
-    /**
-     * Test deleting excluded folder
-     */
-    public function testDelete(): void
+    public function testDeleteCallsMapperAndThrowsWhenMissing(): void
     {
         $folder = new ExcludedFolder();
         $folder->setId(123);
-        $folder->setOwner($this->userId);
+        $folder->setFolderPath('/Photos/Private');
+        $folder->setUserId($this->userId);
 
-        $this->mapper->expects($this->once())
-            ->method('find')
-            ->with(123, $this->userId)
-            ->willReturn($folder);
-
-        $this->mapper->expects($this->once())
-            ->method('delete')
-            ->with($folder)
-            ->willReturn($folder);
-
-        $result = $this->service->delete(123);
-
-        $this->assertSame($folder, $result);
-    }
-
-    /**
-     * Test caching of excluded folders
-     */
-    public function testCachingOfExcludedFolders(): void
-    {
-        $folder = new ExcludedFolder();
-        $folder->setPath('/Cached');
-
-        // Mapper should only be called once due to caching
-        $this->mapper->expects($this->once())
-            ->method('findAll')
-            ->willReturn([$folder]);
-
-        // Call multiple times
-        $this->service->isPathExcluded('/Cached/file1.txt');
-        $this->service->isPathExcluded('/Cached/file2.txt');
-        $this->service->isPathExcluded('/Other/file.txt');
-
-        // Cache should be used for subsequent calls
-    }
-
-    /**
-     * Test cache invalidation on add
-     */
-    public function testCacheInvalidationOnAdd(): void
-    {
-        $folder = new ExcludedFolder();
-        $folder->setPath('/OldPath');
-
-        // First call loads cache
         $this->mapper->expects($this->exactly(2))
-            ->method('findAll')
+            ->method('findByIdAndUser')
+            ->withConsecutive([123, $this->userId], [999, $this->userId])
             ->willReturnOnConsecutiveCalls(
-                [$folder], // First call
-                [$folder, new ExcludedFolder()] // After add
+                $folder,
+                $this->throwException(new DoesNotExistException('missing'))
             );
 
-        $this->service->isPathExcluded('/Test');
+        $this->mapper->expects($this->once())->method('delete')->with($folder);
 
-        // Add new folder should invalidate cache
+        $this->service->delete(123);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Excluded folder not found');
+        $this->service->delete(999);
+    }
+
+    public function testCachingAndInvalidationOnCreate(): void
+    {
+        $oldFolder = new ExcludedFolder();
+        $oldFolder->setFolderPath('/OldPath');
+
+        $newFolder = new ExcludedFolder();
+        $newFolder->setFolderPath('/NewPath');
+        $newFolder->setCreatedAt(new \DateTime());
+
+        $this->mapper->expects($this->exactly(2))
+            ->method('findAllForUser')
+            ->with($this->userId)
+            ->willReturnOnConsecutiveCalls(
+                [$oldFolder],
+                [$oldFolder, $newFolder]
+            );
+
+        $this->assertTrue($this->service->isPathExcluded('/OldPath/file1.txt'));
+        $this->assertFalse($this->service->isPathExcluded('/NewPath/file2.txt'));
+
         $userFolder = $this->createMock(Folder::class);
+        $targetFolder = $this->createMock(Folder::class);
+        $targetFolder->method('getId')->willReturn(55);
         $this->rootFolder->method('getUserFolder')->willReturn($userFolder);
-        $userFolder->method('get')->willReturn($this->createMock(Folder::class));
-        $this->mapper->method('insert')->willReturn(new ExcludedFolder());
+        $userFolder->method('get')->willReturn($targetFolder);
+        $this->mapper->method('insert')->willReturn($newFolder);
 
-        $this->service->add('/NewPath');
+        $this->service->create('/NewPath');
 
-        // Next call should reload from database
-        $this->service->isPathExcluded('/Test');
+        $this->assertTrue($this->service->isPathExcluded('/NewPath/file2.txt'));
     }
 }

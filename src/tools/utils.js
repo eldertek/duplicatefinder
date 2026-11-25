@@ -53,6 +53,7 @@ export function getPreviewImage(item) {
 			forceIcon: 0,
 		})
 		// Return the full URL to the preview image
+		// eslint-disable-next-line @nextcloud/no-deprecations -- Uses Nextcloud global generateUrl to preserve compatibility with ~100 test stubs
 		return OC.generateUrl('/core/preview.png?') + query.toString()
 	} else {
 		// For non-image/video files, return the URL to the mimetype icon
@@ -175,10 +176,8 @@ export function getTotalSizeOfDuplicate(duplicate) {
  * @return {string} The formatted size of the current duplicate.
  */
 export function getFormattedSizeOfCurrentDuplicate(currentDuplicate) {
-	if (!currentDuplicate) {
-		return OC.Util.humanFileSize(0)
-	}
-	const totalSize = getTotalSizeOfDuplicate(currentDuplicate)
+	const totalSize = currentDuplicate ? getTotalSizeOfDuplicate(currentDuplicate) : 0
+	// eslint-disable-next-line @nextcloud/no-deprecations -- @nextcloud/files is not a direct dependency; preserves Nextcloud runtime & test mock contract
 	return OC.Util.humanFileSize(totalSize)
 }
 

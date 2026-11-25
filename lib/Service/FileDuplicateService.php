@@ -181,7 +181,7 @@ class FileDuplicateService
                         $result[] = $entity;
                     } elseif ($type === 'unacknowledged' && !$entity->isAcknowledged()) {
                         $result[] = $entity;
-                    } elseif ($type === 'all') {
+                    } elseif ($type === 'all' || $type === null) {
                         $result[] = $entity;
                     }
                     if (count($result) >= $pageSize) {

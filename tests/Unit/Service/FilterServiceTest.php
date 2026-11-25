@@ -140,7 +140,7 @@ class FilterServiceTest extends TestCase
         $folders = ['/' => $root];
         sort($paths);
         foreach ($paths as $path) {
-            $parentPath = dirname($path);
+            $parentPath = str_replace('\\', '/', dirname($path));
             $folder = $this->createMock(Folder::class);
             $folder->method('getPath')->willReturn($path);
             $folder->method('getParent')->willReturn($folders[$parentPath]);

@@ -4,11 +4,15 @@ namespace OCA\DuplicateFinder\Tests\Unit\Service;
 
 use OCA\DuplicateFinder\Db\OriginFolder;
 use OCA\DuplicateFinder\Db\OriginFolderMapper;
-use OCA\DuplicateFinder\Service\ConfigService;
+use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCA\DuplicateFinder\Service\OriginFolderService;
-use OCP\IUser;
+use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class OriginFolderServiceTest extends TestCase
 {
@@ -18,245 +22,121 @@ class OriginFolderServiceTest extends TestCase
     /** @var OriginFolderMapper|MockObject */
     private $mapper;
 
-    /** @var ConfigService|MockObject */
-    private $configService;
+    /** @var IRootFolder|MockObject */
+    private $rootFolder;
 
-    /** @var IUser|MockObject */
-    private $user;
+    /** @var LoggerInterface|MockObject */
+    private $logger;
 
-    private $userId = 'testuser';
+    private string $userId = 'testuser';
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->mapper = $this->createMock(OriginFolderMapper::class);
-        $this->configService = $this->createMock(ConfigService::class);
-        $this->user = $this->createMock(IUser::class);
-        $this->user->method('getUID')->willReturn($this->userId);
+        $this->rootFolder = $this->createMock(IRootFolder::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->service = new OriginFolderService(
             $this->mapper,
-            $this->configService,
-            $this->user
+            $this->rootFolder,
+            $this->userId,
+            $this->logger
         );
     }
 
-    /**
-     * Test adding an origin folder
-     */
-    public function testAddOriginFolder(): void
+    public function testCreateOriginFolderWhenFolderExistsAndNotYetProtected(): void
     {
         $path = '/Photos/Originals';
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->expects($this->once())->method('nodeExists')->with($path)->willReturn(true);
+        $this->rootFolder->expects($this->once())->method('getUserFolder')->with($this->userId)->willReturn($userFolder);
+        $this->mapper->expects($this->once())->method('exists')->with($this->userId, $path)->willReturn(false);
 
         $this->mapper->expects($this->once())
             ->method('insert')
-            ->willReturnCallback(function ($folder) use ($path) {
-                $this->assertEquals($this->userId, $folder->getUserId());
-                $this->assertEquals($path, $folder->getPath());
+            ->willReturnCallback(function (OriginFolder $folder) use ($path): OriginFolder {
+                $this->assertSame($this->userId, $folder->getUserId());
+                $this->assertSame($path, $folder->getFolderPath());
                 $folder->setId(1);
 
                 return $folder;
             });
 
-        $result = $this->service->add($path);
+        $result = $this->service->create($path);
 
-        $this->assertInstanceOf(OriginFolder::class, $result);
-        $this->assertEquals($path, $result->getPath());
-        $this->assertEquals($this->userId, $result->getUserId());
+        $this->assertSame(1, $result->getId());
+        $this->assertSame($path, $result->getFolderPath());
     }
 
-    /**
-     * Test checking if path is in origin folder
-     */
-    public function testIsPathInOriginFolder(): void
+    public function testCreateThrowsNotFoundWhenFolderDoesNotExist(): void
+    {
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->method('nodeExists')->with('/Missing')->willReturn(false);
+        $this->rootFolder->method('getUserFolder')->with($this->userId)->willReturn($userFolder);
+
+        $this->expectException(NotFoundException::class);
+        $this->service->create('/Missing');
+    }
+
+    public function testCreateThrowsWhenOriginFolderAlreadyExists(): void
+    {
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->method('nodeExists')->with('/Photos')->willReturn(true);
+        $this->rootFolder->method('getUserFolder')->with($this->userId)->willReturn($userFolder);
+        $this->mapper->method('exists')->with($this->userId, '/Photos')->willReturn(true);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Folder is already an origin folder: /Photos');
+        $this->service->create('/Photos');
+    }
+
+    public function testIsPathProtectedAndAssertNotProtected(): void
     {
         $origin1 = new OriginFolder();
-        $origin1->setPath('/Photos/Originals');
+        $origin1->setFolderPath('/Photos/Originals');
         $origin1->setUserId($this->userId);
 
         $origin2 = new OriginFolder();
-        $origin2->setPath('/Documents/Masters');
+        $origin2->setFolderPath('/Documents/Masters');
         $origin2->setUserId($this->userId);
 
-        $this->mapper->expects($this->once())
-            ->method('findAll')
-            ->with($this->userId)
-            ->willReturn([$origin1, $origin2]);
+        $this->mapper->method('findAll')->with($this->userId)->willReturn([$origin1, $origin2]);
 
-        // Test paths in origin folders
-        $this->assertTrue($this->service->isPathInOriginFolder('/Photos/Originals/vacation.jpg'));
-        $this->assertTrue($this->service->isPathInOriginFolder('/Photos/Originals/subfolder/photo.jpg'));
-        $this->assertTrue($this->service->isPathInOriginFolder('/Documents/Masters/document.doc'));
+        $exact = $this->service->isPathProtected('/Photos/Originals');
+        $this->assertTrue($exact['isProtected']);
+        $this->assertSame('/Photos/Originals', $exact['protectingFolder']);
 
-        // Test paths not in origin folders
-        $this->assertFalse($this->service->isPathInOriginFolder('/Photos/Copies/photo.jpg'));
-        $this->assertFalse($this->service->isPathInOriginFolder('/Downloads/file.pdf'));
+        $child = $this->service->isPathProtected('/Documents/Masters/2026/contract.pdf');
+        $this->assertTrue($child['isProtected']);
+        $this->assertSame('/Documents/Masters', $child['protectingFolder']);
 
-        // Test exact match
-        $this->assertTrue($this->service->isPathInOriginFolder('/Photos/Originals'));
+        $unprotected = $this->service->isPathProtected('/Photos/OriginalsCopy/img.jpg');
+        $this->assertFalse($unprotected['isProtected']);
+        $this->assertNull($unprotected['protectingFolder']);
+
+        $this->expectException(OriginFolderProtectionException::class);
+        $this->service->assertNotProtected('/Photos/Originals/img.jpg');
     }
 
-    /**
-     * Test finding all origin folders
-     */
-    public function testFindAll(): void
+    public function testDeleteRejectsOtherUsersOriginFolder(): void
     {
-        $folder1 = new OriginFolder();
-        $folder1->setPath('/Path1');
-        $folder1->setUserId($this->userId);
+        $other = new OriginFolder();
+        $other->setId(5);
+        $other->setUserId('otheruser');
+        $this->mapper->method('find')->with(5)->willReturn($other);
 
-        $folder2 = new OriginFolder();
-        $folder2->setPath('/Path2');
-        $folder2->setUserId($this->userId);
-
-        $this->mapper->expects($this->once())
-            ->method('findAll')
-            ->with($this->userId)
-            ->willReturn([$folder1, $folder2]);
-
-        $result = $this->service->findAll();
-
-        $this->assertCount(2, $result);
-        $this->assertEquals('/Path1', $result[0]->getPath());
-        $this->assertEquals('/Path2', $result[1]->getPath());
+        $this->expectException(DoesNotExistException::class);
+        $this->service->delete(5);
     }
 
-    /**
-     * Test deleting origin folder
-     */
-    public function testDelete(): void
+    public function testMissingUserContextThrowsRuntimeException(): void
     {
-        $folderId = 123;
+        $this->service->setUserId(null);
 
-        $folder = new OriginFolder();
-        $folder->setId($folderId);
-        $folder->setUserId($this->userId);
-
-        $this->mapper->expects($this->once())
-            ->method('find')
-            ->with($folderId, $this->userId)
-            ->willReturn($folder);
-
-        $this->mapper->expects($this->once())
-            ->method('delete')
-            ->with($folder)
-            ->willReturn($folder);
-
-        $result = $this->service->delete($folderId);
-
-        $this->assertSame($folder, $result);
-    }
-
-    /**
-     * Test caching of origin folders
-     */
-    public function testCachingOfOriginFolders(): void
-    {
-        $folder = new OriginFolder();
-        $folder->setPath('/Cached');
-        $folder->setUserId($this->userId);
-
-        // Mapper should only be called once due to caching
-        $this->mapper->expects($this->once())
-            ->method('findAll')
-            ->willReturn([$folder]);
-
-        // Call multiple times
-        $this->service->isPathInOriginFolder('/Cached/file1.txt');
-        $this->service->isPathInOriginFolder('/Cached/file2.txt');
-        $this->service->isPathInOriginFolder('/Other/file.txt');
-
-        // Cache should be used for subsequent calls
-    }
-
-    /**
-     * Test cache invalidation on add
-     */
-    public function testCacheInvalidationOnAdd(): void
-    {
-        $folder = new OriginFolder();
-        $folder->setPath('/OldPath');
-        $folder->setUserId($this->userId);
-
-        // First call loads cache
-        $this->mapper->expects($this->exactly(2))
-            ->method('findAll')
-            ->willReturnOnConsecutiveCalls(
-                [$folder], // First call
-                [$folder, new OriginFolder()] // After add
-            );
-
-        $this->service->isPathInOriginFolder('/Test');
-
-        // Add new folder should invalidate cache
-        $this->mapper->method('insert')->willReturn(new OriginFolder());
-
-        $this->service->add('/NewPath');
-
-        // Next call should reload from database
-        $this->service->isPathInOriginFolder('/Test');
-    }
-
-    /**
-     * Test bulk delete protection
-     */
-    public function testBulkDeleteProtection(): void
-    {
-        $origin = new OriginFolder();
-        $origin->setPath('/Photos/Originals');
-        $origin->setUserId($this->userId);
-
-        $this->mapper->method('findAll')->willReturn([$origin]);
-
-        // Files to check for protection
-        $protectedFile = '/Photos/Originals/important.jpg';
-        $unprotectedFile = '/Photos/Copies/copy.jpg';
-
-        $filesToDelete = [
-            $protectedFile,
-            $unprotectedFile,
-        ];
-
-        $protectedFiles = array_filter($filesToDelete, function ($path) {
-            return $this->service->isPathInOriginFolder($path);
-        });
-
-        $this->assertCount(1, $protectedFiles);
-        $this->assertContains($protectedFile, $protectedFiles);
-        $this->assertNotContains($unprotectedFile, $protectedFiles);
-    }
-
-    /**
-     * Test origin folder with trailing slash
-     */
-    public function testOriginFolderWithTrailingSlash(): void
-    {
-        $origin = new OriginFolder();
-        $origin->setPath('/Photos/Originals/');
-        $origin->setUserId($this->userId);
-
-        $this->mapper->method('findAll')->willReturn([$origin]);
-
-        // Should match files regardless of trailing slash
-        $this->assertTrue($this->service->isPathInOriginFolder('/Photos/Originals/photo.jpg'));
-        $this->assertTrue($this->service->isPathInOriginFolder('/Photos/Originals/subfolder/photo.jpg'));
-    }
-
-    /**
-     * Test case sensitivity
-     */
-    public function testCaseSensitivity(): void
-    {
-        $origin = new OriginFolder();
-        $origin->setPath('/Photos/Originals');
-        $origin->setUserId($this->userId);
-
-        $this->mapper->method('findAll')->willReturn([$origin]);
-
-        // Path matching should be case-sensitive
-        $this->assertTrue($this->service->isPathInOriginFolder('/Photos/Originals/photo.jpg'));
-        $this->assertFalse($this->service->isPathInOriginFolder('/photos/originals/photo.jpg'));
-        $this->assertFalse($this->service->isPathInOriginFolder('/PHOTOS/ORIGINALS/photo.jpg'));
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('User context required for this operation');
+        $this->service->findAll();
     }
 }

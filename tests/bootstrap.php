@@ -33,6 +33,15 @@ if (!file_exists($nextcloudPath)) {
     if (!class_exists('OCP\\Exceptions\\AbortedEventException')) {
         eval('namespace OCP\\Exceptions { class AbortedEventException extends \\Exception {} }');
     }
+    if (!interface_exists('OC\\Hooks\\Emitter')) {
+        eval('namespace OC\\Hooks { interface Emitter {} }');
+    }
+    if (!class_exists('OC\\User\\NoUserException')) {
+        eval('namespace OC\\User { class NoUserException extends \\Exception {} }');
+    }
+    if (!class_exists('OCA\\Viewer\\Event\\LoadViewer')) {
+        eval('namespace OCA\\Viewer\\Event { class LoadViewer extends \\OCP\\EventDispatcher\\Event {} }');
+    }
 
     return;
 }

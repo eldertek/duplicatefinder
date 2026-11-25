@@ -630,9 +630,18 @@ export default {
 		Folder,
 	},
 	props: {
-		acknowledgedDuplicates: Array,
-		unacknowledgedDuplicates: Array,
-		currentDuplicateId: [String, Number],
+		acknowledgedDuplicates: {
+			type: Array,
+			default: () => [],
+		},
+		unacknowledgedDuplicates: {
+			type: Array,
+			default: () => [],
+		},
+		currentDuplicateId: {
+			type: [String, Number],
+			default: null,
+		},
 		activeView: {
 			type: String,
 			default: 'details',

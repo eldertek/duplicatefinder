@@ -3,283 +3,135 @@
 namespace OCA\DuplicateFinder\Tests\Unit\Service;
 
 use OCA\DuplicateFinder\Service\ShareService;
-use OCP\Files\File;
-use OCP\IUser;
-use OCP\Share\IManager as IShareManager;
+use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
+use OCP\Files\Node;
+use OCP\IUserManager;
+use OCP\Share\IManager;
 use OCP\Share\IShare;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class ShareServiceTest extends TestCase
 {
     /** @var ShareService */
     private $service;
 
-    /** @var IShareManager|MockObject */
+    /** @var IRootFolder|MockObject */
+    private $rootFolder;
+
+    /** @var IManager|MockObject */
     private $shareManager;
+
+    /** @var LoggerInterface|MockObject */
+    private $logger;
+
+    /** @var IUserManager|MockObject */
+    private $userManager;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->shareManager = $this->createMock(IShareManager::class);
+        $this->rootFolder = $this->createMock(IRootFolder::class);
+        $this->shareManager = $this->createMock(IManager::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
+        $this->userManager = $this->createMock(IUserManager::class);
 
         $this->service = new ShareService(
-            $this->shareManager
+            $this->rootFolder,
+            $this->shareManager,
+            $this->logger,
+            $this->userManager
         );
     }
 
-    /**
-     * Test checking if file is shared
-     */
-    public function testIsFileShared(): void
+    public function testGetSharesSkipsRoomSharesAndHonorsLimit(): void
     {
-        $node = $this->createMock(File::class);
-        $share = $this->createMock(IShare::class);
-
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn([$share]);
-
-        $result = $this->service->isFileShared($node);
-
-        $this->assertTrue($result);
-    }
-
-    /**
-     * Test file not shared
-     */
-    public function testFileNotShared(): void
-    {
-        $node = $this->createMock(File::class);
-
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn([]);
-
-        $result = $this->service->isFileShared($node);
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test getting share recipients
-     */
-    public function testGetShareRecipients(): void
-    {
-        $node = $this->createMock(File::class);
-
-        $user1 = $this->createMock(IUser::class);
-        $user1->method('getUID')->willReturn('user1');
-        $user1->method('getDisplayName')->willReturn('User One');
-
-        $user2 = $this->createMock(IUser::class);
-        $user2->method('getUID')->willReturn('user2');
-        $user2->method('getDisplayName')->willReturn('User Two');
-
-        $share1 = $this->createMock(IShare::class);
-        $share1->method('getShareType')->willReturn(IShare::TYPE_USER);
-        $share1->method('getSharedWith')->willReturn('user1');
-
-        $share2 = $this->createMock(IShare::class);
-        $share2->method('getShareType')->willReturn(IShare::TYPE_USER);
-        $share2->method('getSharedWith')->willReturn('user2');
-
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn([$share1, $share2]);
-
-        $recipients = $this->service->getShareRecipients($node);
-
-        $this->assertCount(2, $recipients);
-        $this->assertContains('user1', $recipients);
-        $this->assertContains('user2', $recipients);
-    }
-
-    /**
-     * Test share types
-     */
-    public function testShareTypes(): void
-    {
-        $node = $this->createMock(File::class);
-
         $userShare = $this->createMock(IShare::class);
-        $userShare->method('getShareType')->willReturn(IShare::TYPE_USER);
+        $roomShare = $this->createMock(IShare::class);
 
+        $this->shareManager->method('getSharedWith')
+            ->willReturnCallback(function (string $user, int $type) use ($userShare, $roomShare): array {
+                if ($type === IShare::TYPE_USER) {
+                    return [$userShare];
+                }
+                if ($type === IShare::TYPE_ROOM) {
+                    return [$roomShare];
+                }
+
+                return [];
+            });
+
+        $shares = $this->service->getShares('bob', null, 1);
+
+        $this->assertSame([$userShare], $shares);
+    }
+
+    public function testGetSharesLogsThrowableAndContinues(): void
+    {
         $groupShare = $this->createMock(IShare::class);
-        $groupShare->method('getShareType')->willReturn(IShare::TYPE_GROUP);
 
-        $linkShare = $this->createMock(IShare::class);
-        $linkShare->method('getShareType')->willReturn(IShare::TYPE_LINK);
+        $this->shareManager->method('getSharedWith')
+            ->willReturnCallback(function (string $user, int $type) use ($groupShare): array {
+                if ($type === IShare::TYPE_USER) {
+                    throw new \RuntimeException('Share backend error');
+                }
+                if ($type === IShare::TYPE_GROUP) {
+                    return [$groupShare];
+                }
 
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn([$userShare, $groupShare, $linkShare]);
+                return [];
+            });
 
-        $shareTypes = $this->service->getShareTypes($node);
+        $this->logger->expects($this->once())->method('error');
 
-        $this->assertContains(IShare::TYPE_USER, $shareTypes);
-        $this->assertContains(IShare::TYPE_GROUP, $shareTypes);
-        $this->assertContains(IShare::TYPE_LINK, $shareTypes);
+        $shares = $this->service->getShares('bob');
+        $this->assertSame([$groupShare], $shares);
     }
 
-    /**
-     * Test checking for public link shares
-     */
-    public function testHasPublicLink(): void
+    public function testHasAccessRightConvertsFileSharePathForValidRecipient(): void
     {
-        $node = $this->createMock(File::class);
-
-        $linkShare = $this->createMock(IShare::class);
-        $linkShare->method('getShareType')->willReturn(IShare::TYPE_LINK);
-        $linkShare->method('getPassword')->willReturn(null);
-
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn([$linkShare]);
-
-        $result = $this->service->hasPublicLink($node);
-
-        $this->assertTrue($result);
-    }
-
-    /**
-     * Test counting shares
-     */
-    public function testCountShares(): void
-    {
-        $node = $this->createMock(File::class);
-
-        $shares = [
-            $this->createMock(IShare::class),
-            $this->createMock(IShare::class),
-            $this->createMock(IShare::class),
-        ];
-
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn($shares);
-
-        $count = $this->service->countShares($node);
-
-        $this->assertEquals(3, $count);
-    }
-
-    /**
-     * Test getting share permissions
-     */
-    public function testGetSharePermissions(): void
-    {
-        $node = $this->createMock(File::class);
-
+        $sharedNode = $this->createMock(Node::class);
         $share = $this->createMock(IShare::class);
-        $share->method('getPermissions')->willReturn(
-            \OCP\Constants::PERMISSION_READ |
-            \OCP\Constants::PERMISSION_UPDATE
-        );
-
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn([$share]);
-
-        $permissions = $this->service->getSharePermissions($node);
-
-        $this->assertTrue(($permissions[0] & \OCP\Constants::PERMISSION_READ) !== 0);
-        $this->assertTrue(($permissions[0] & \OCP\Constants::PERMISSION_UPDATE) !== 0);
-        $this->assertFalse(($permissions[0] & \OCP\Constants::PERMISSION_DELETE) !== 0);
-    }
-
-    /**
-     * Test shared with specific user
-     */
-    public function testIsSharedWithUser(): void
-    {
-        $node = $this->createMock(File::class);
-        $userId = 'targetuser';
-
-        $share = $this->createMock(IShare::class);
+        $share->method('getSharedWith')->willReturn('bob');
         $share->method('getShareType')->willReturn(IShare::TYPE_USER);
-        $share->method('getSharedWith')->willReturn($userId);
+        $share->method('getNodeType')->willReturn('file');
+        $share->method('getTarget')->willReturn('/Shared/budget.xlsx');
 
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn([$share]);
+        $this->shareManager->method('getAccessList')
+            ->with($sharedNode, true, true)
+            ->willReturn(['users' => ['bob' => true]]);
+        $this->shareManager->method('getSharedWith')
+            ->willReturnCallback(function (string $user, int $type) use ($share): array {
+                return $type === IShare::TYPE_USER ? [$share] : [];
+            });
 
-        $result = $this->service->isSharedWithUser($node, $userId);
+        $this->userManager->method('userExists')->with('bob')->willReturn(true);
 
-        $this->assertTrue($result);
-
-        // Test with different user
-        $result = $this->service->isSharedWithUser($node, 'otheruser');
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test share expiration
-     */
-    public function testShareExpiration(): void
-    {
-        $node = $this->createMock(File::class);
-
-        $expiredShare = $this->createMock(IShare::class);
-        $expiredShare->method('getExpirationDate')
-            ->willReturn(new \DateTime('-1 day'));
-
-        $validShare = $this->createMock(IShare::class);
-        $validShare->method('getExpirationDate')
-            ->willReturn(new \DateTime('+1 day'));
-
-        $noExpirationShare = $this->createMock(IShare::class);
-        $noExpirationShare->method('getExpirationDate')
-            ->willReturn(null);
-
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($node)
-            ->willReturn([$expiredShare, $validShare, $noExpirationShare]);
-
-        $activeShares = $this->service->getActiveShares($node);
-
-        // Should only return non-expired shares
-        $this->assertCount(2, $activeShares);
-    }
-
-    /**
-     * Test bulk share checking
-     */
-    public function testBulkShareCheck(): void
-    {
-        $file1 = $this->createMock(File::class);
-        $file2 = $this->createMock(File::class);
-        $file3 = $this->createMock(File::class);
-
-        $this->shareManager->expects($this->exactly(3))
-            ->method('getSharesByNode')
+        $ownerFolder = $this->createMock(Folder::class);
+        $bobFolder = $this->createMock(Folder::class);
+        $bobFolder->method('getPath')->willReturn('/bob/files');
+        $this->rootFolder->method('getUserFolder')
             ->willReturnMap([
-                [$file1, [$this->createMock(IShare::class)]],
-                [$file2, []],
-                [$file3, [$this->createMock(IShare::class), $this->createMock(IShare::class)]],
+                ['bob', $ownerFolder],
             ]);
+        // Second call in PathConversionUtils::convertSharedPath gets recipient folder
+        $rootFolder = $this->createMock(IRootFolder::class);
+        $rootFolder->method('getUserFolder')->willReturn($bobFolder);
 
-        $files = [$file1, $file2, $file3];
-        $sharedFiles = [];
+        $service = new ShareService($rootFolder, $this->shareManager, $this->logger, $this->userManager);
+        $resolved = $service->hasAccessRight($sharedNode, 'bob');
 
-        foreach ($files as $file) {
-            if ($this->service->isFileShared($file)) {
-                $sharedFiles[] = $file;
-            }
-        }
+        $this->assertSame('/bob/files/Shared/budget.xlsx', $resolved);
+    }
 
-        $this->assertCount(2, $sharedFiles);
-        $this->assertContains($file1, $sharedFiles);
-        $this->assertContains($file3, $sharedFiles);
+    public function testHasAccessRightReturnsNullWhenUserNotInAccessList(): void
+    {
+        $sharedNode = $this->createMock(Node::class);
+        $this->shareManager->method('getAccessList')->willReturn(['users' => []]);
+
+        $this->assertNull($this->service->hasAccessRight($sharedNode, 'bob'));
     }
 }

@@ -8,6 +8,7 @@ use OCA\DuplicateFinder\Service\FolderService;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
+use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -15,6 +16,7 @@ class FolderServiceTeamFoldersTest extends TestCase
 {
     private $folderService;
     private $rootFolder;
+    private $userManager;
     private $logger;
 
     protected function setUp(): void
@@ -22,10 +24,13 @@ class FolderServiceTeamFoldersTest extends TestCase
         parent::setUp();
 
         $this->rootFolder = $this->createMock(IRootFolder::class);
+        $this->userManager = $this->createMock(IUserManager::class);
+        $this->userManager->method('userExists')->willReturn(true);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->folderService = new FolderService(
             $this->rootFolder,
+            $this->userManager,
             $this->logger
         );
     }

@@ -52,7 +52,7 @@ function resolveFileKey(file) {
 /**
  * Normalize selectedKeys (Array, Set, or iterable of keys/file objects) into a Set.
  *
- * @param {Array|Set|Iterable|null|undefined} selectedKeys - Selected identifiers.
+ * @param {Array|Set|object|null|undefined} selectedKeys - Selected identifiers.
  * @return {Set<string|number>} Normalized Set of keys.
  */
 function normalizeSelectedKeySet(selectedKeys) {

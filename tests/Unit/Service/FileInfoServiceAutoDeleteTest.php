@@ -104,7 +104,6 @@ class FileInfoServiceAutoDeleteTest extends TestCase
         $fileInfo->setPath('/user/files/test.txt');
         $fileInfo->setOwner('user');
         $fileInfo->setFileHash('abc123');
-        $fileInfo->setNodeId(456);
 
         // Simulate node not found - FolderService throws NotFoundException
         $this->folderService->expects($this->once())
@@ -116,10 +115,9 @@ class FileInfoServiceAutoDeleteTest extends TestCase
         $this->mapper->expects($this->never())
             ->method('delete');
 
-        // Logger should log a warning, not deletion
-        $this->logger->expects($this->once())
-            ->method('warning')
-            ->with($this->stringContains('file may be temporarily inaccessible'));
+        // No error log or deletion on temporary NotFoundException (log spam prevention)
+        $this->logger->expects($this->never())
+            ->method('error');
 
         $enrichedFile = $this->service->enrich($fileInfo);
 

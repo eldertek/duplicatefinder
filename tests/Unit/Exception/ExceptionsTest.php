@@ -2,101 +2,74 @@
 
 namespace OCA\DuplicateFinder\Tests\Unit\Exception;
 
+use OCA\DuplicateFinder\Db\FileInfo;
+use OCA\DuplicateFinder\Exception\ForcedToIgnoreFileException;
+use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
 use OCA\DuplicateFinder\Exception\NotAuthenticatedException;
+use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
+use OCA\DuplicateFinder\Exception\UnableToCalculateHash;
 use OCA\DuplicateFinder\Exception\UnableToParseException;
 use OCA\DuplicateFinder\Exception\UnknownOwnerException;
 use PHPUnit\Framework\TestCase;
 
 class ExceptionsTest extends TestCase
 {
-    /**
-     * Test NotAuthenticatedException
-     */
     public function testNotAuthenticatedException(): void
     {
-        $exception = new NotAuthenticatedException('User not authenticated');
+        $custom = new NotAuthenticatedException('Session expired');
+        $this->assertInstanceOf(\Exception::class, $custom);
+        $this->assertSame('Session expired', $custom->getMessage());
 
-        $this->assertInstanceOf(\Exception::class, $exception);
-        $this->assertEquals('User not authenticated', $exception->getMessage());
+        $default = new NotAuthenticatedException();
+        $this->assertSame('User is not authenticated', $default->getMessage());
     }
 
-    /**
-     * Test NotAuthenticatedException with default message
-     */
-    public function testNotAuthenticatedExceptionDefaultMessage(): void
-    {
-        $exception = new NotAuthenticatedException();
-
-        $this->assertNotEmpty($exception->getMessage());
-    }
-
-    /**
-     * Test UnableToParseException
-     */
     public function testUnableToParseException(): void
     {
-        $exception = new UnableToParseException('Invalid JSON format');
+        $previous = new \RuntimeException('Original error');
+        $exception = new UnableToParseException('Invalid JSON format', $previous);
 
         $this->assertInstanceOf(\Exception::class, $exception);
-        $this->assertEquals('Invalid JSON format', $exception->getMessage());
+        $this->assertSame('Unable to parse Invalid JSON format', $exception->getMessage());
+        $this->assertSame(1, $exception->getCode());
+        $this->assertSame($previous, $exception->getPrevious());
     }
 
-    /**
-     * Test UnableToParseException with error details
-     */
-    public function testUnableToParseExceptionWithDetails(): void
-    {
-        $parseError = 'Unexpected token at position 42';
-        $exception = new UnableToParseException($parseError);
-
-        $this->assertStringContainsString('42', $exception->getMessage());
-    }
-
-    /**
-     * Test UnknownOwnerException
-     */
     public function testUnknownOwnerException(): void
     {
-        $exception = new UnknownOwnerException('Owner "admin" does not exist');
+        $exception = new UnknownOwnerException('/admin/files/test.txt');
 
         $this->assertInstanceOf(\Exception::class, $exception);
-        $this->assertEquals('Owner "admin" does not exist', $exception->getMessage());
+        $this->assertSame('The owner of /admin/files/test.txt is not set', $exception->getMessage());
+        $this->assertSame(0, $exception->getCode());
     }
 
-    /**
-     * Test UnknownOwnerException for system users
-     */
-    public function testUnknownOwnerExceptionSystemUser(): void
+    public function testUnableToCalculateHashException(): void
     {
-        $exception = new UnknownOwnerException('System user cannot be resolved');
+        $exception = new UnableToCalculateHash('/user/files/locked.bin');
 
-        $this->assertStringContainsString('System', $exception->getMessage());
+        $this->assertSame('Unable to calculate hash for /user/files/locked.bin', $exception->getMessage());
+        $this->assertSame(0, $exception->getCode());
     }
 
-    /**
-     * Test exception codes
-     */
-    public function testExceptionCodes(): void
+    public function testForcedToIgnoreFileException(): void
     {
-        $notAuth = new NotAuthenticatedException('test', 401);
-        $this->assertEquals(401, $notAuth->getCode());
+        $fileInfo = new FileInfo('/user/files/ext/a.txt', 'user');
+        $exception = new ForcedToIgnoreFileException($fileInfo, 'app:ignore_mounted_files');
 
-        $parse = new UnableToParseException('test', 422);
-        $this->assertEquals(422, $parse->getCode());
-
-        $owner = new UnknownOwnerException('test', 404);
-        $this->assertEquals(404, $owner->getCode());
+        $this->assertSame(
+            'Ignored File Info for /user/files/ext/a.txt because of setting app:ignore_mounted_files',
+            $exception->getMessage()
+        );
+        $this->assertSame(1, $exception->getCode());
     }
 
-    /**
-     * Test exception with previous exception
-     */
-    public function testExceptionChaining(): void
+    public function testProtectionExceptionsPreserveMessage(): void
     {
-        $previous = new \RuntimeException('Original error');
-        $exception = new UnableToParseException('Parse failed', 0, $previous);
+        $origin = new OriginFolderProtectionException('Protected by origin');
+        $lastCopy = new LastCopyProtectionException('Last remaining copy');
 
-        $this->assertSame($previous, $exception->getPrevious());
-        $this->assertEquals('Original error', $exception->getPrevious()->getMessage());
+        $this->assertSame('Protected by origin', $origin->getMessage());
+        $this->assertSame('Last remaining copy', $lastCopy->getMessage());
     }
 }

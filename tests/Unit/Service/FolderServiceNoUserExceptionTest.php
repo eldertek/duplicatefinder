@@ -9,6 +9,7 @@ use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
+use OCP\IUserManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -24,6 +25,9 @@ class FolderServiceNoUserExceptionTest extends TestCase
     /** @var IRootFolder|MockObject */
     private $rootFolder;
 
+    /** @var IUserManager|MockObject */
+    private $userManager;
+
     /** @var LoggerInterface|MockObject */
     private $logger;
 
@@ -32,10 +36,13 @@ class FolderServiceNoUserExceptionTest extends TestCase
         parent::setUp();
 
         $this->rootFolder = $this->createMock(IRootFolder::class);
+        $this->userManager = $this->createMock(IUserManager::class);
+        $this->userManager->method('userExists')->willReturn(true);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->service = new FolderService(
             $this->rootFolder,
+            $this->userManager,
             $this->logger
         );
     }

@@ -2,15 +2,19 @@
 
 namespace OCA\DuplicateFinder\Tests\Unit\Service;
 
-use OCA\DuplicateFinder\Db\FileDuplicate;
-use OCA\DuplicateFinder\Db\FileInfo;
-use OCA\DuplicateFinder\Service\FileDuplicateService;
+use OCA\DuplicateFinder\Exception\AbortedDeletionException;
+use OCA\DuplicateFinder\Exception\LastCopyProtectionException;
+use OCA\DuplicateFinder\Exception\LivePhotoProtectionException;
+use OCA\DuplicateFinder\Exception\OriginFolderProtectionException;
 use OCA\DuplicateFinder\Service\FileInfoService;
 use OCA\DuplicateFinder\Service\FileService;
 use OCA\DuplicateFinder\Service\FolderService;
+use OCA\DuplicateFinder\Service\LivePhotoDeletionService;
+use OCA\DuplicateFinder\Service\OriginFolderService;
+use OCP\Exceptions\AbortedEventException;
 use OCP\Files\File;
-use OCP\Share\IManager as IShareManager;
-use OCP\Share\IShare;
+use OCP\Files\Folder;
+use OCP\Files\NotFoundException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -20,313 +24,145 @@ class FileServiceMergeTest extends TestCase
     /** @var FileService */
     private $service;
 
-    /** @var FileInfoService|MockObject */
-    private $fileInfoService;
-
-    /** @var FileDuplicateService|MockObject */
-    private $fileDuplicateService;
-
     /** @var FolderService|MockObject */
     private $folderService;
 
-    /** @var IShareManager|MockObject */
-    private $shareManager;
+    /** @var OriginFolderService|MockObject */
+    private $originFolderService;
+
+    /** @var FileInfoService|MockObject */
+    private $fileInfoService;
 
     /** @var LoggerInterface|MockObject */
     private $logger;
+
+    /** @var LivePhotoDeletionService|MockObject */
+    private $livePhotoDeletionService;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->fileInfoService = $this->createMock(FileInfoService::class);
-        $this->fileDuplicateService = $this->createMock(FileDuplicateService::class);
         $this->folderService = $this->createMock(FolderService::class);
-        $this->shareManager = $this->createMock(IShareManager::class);
+        $this->originFolderService = $this->createMock(OriginFolderService::class);
+        $this->fileInfoService = $this->createMock(FileInfoService::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->livePhotoDeletionService = $this->createMock(LivePhotoDeletionService::class);
 
         $this->service = new FileService(
-            $this->fileInfoService,
-            $this->fileDuplicateService,
             $this->folderService,
-            $this->shareManager,
-            $this->logger
+            $this->originFolderService,
+            $this->fileInfoService,
+            $this->logger,
+            $this->livePhotoDeletionService
         );
     }
 
-    /**
-     * Test merging duplicates by keeping one file
-     */
-    public function testMergeDuplicatesKeepOne(): void
+    public function testDeleteFileResolvesByNodeIdAndChecksResolvedOriginProtection(): void
     {
-        $hash = 'abc123';
-        $keepFileId = 1;
+        $userFolder = $this->createMock(Folder::class);
+        $node = $this->createMock(File::class);
+        $node->method('getId')->willReturn(55);
+        $node->method('getPath')->willReturn('/alice/files/Origin/kept.txt');
+        $node->method('getMimetype')->willReturn('text/plain');
 
-        // Create file infos
-        $keepFile = new FileInfo();
-        $keepFile->setId($keepFileId);
-        $keepFile->setPath('/user/files/keep.txt');
-        $keepFile->setFileHash($hash);
+        $this->folderService->method('getUserFolder')->with('alice')->willReturn($userFolder);
+        $userFolder->method('getById')->with(55)->willReturn([$node]);
+        $userFolder->method('getRelativePath')->with('/alice/files/Origin/kept.txt')->willReturn('/Origin/kept.txt');
 
-        $deleteFile1 = new FileInfo();
-        $deleteFile1->setId(2);
-        $deleteFile1->setPath('/user/files/delete1.txt');
-        $deleteFile1->setFileHash($hash);
+        $this->originFolderService->expects($this->exactly(2))
+            ->method('assertNotProtected')
+            ->withConsecutive(['/Copies/alias.txt'], ['/Origin/kept.txt'])
+            ->willReturnOnConsecutiveCalls(
+                null,
+                $this->throwException(new OriginFolderProtectionException('Protected by /Origin'))
+            );
 
-        $deleteFile2 = new FileInfo();
-        $deleteFile2->setId(3);
-        $deleteFile2->setPath('/user/files/delete2.txt');
-        $deleteFile2->setFileHash($hash);
-
-        // Create duplicate entry
-        $duplicate = new FileDuplicate();
-        $duplicate->setHash($hash);
-        $duplicate->setFiles([$keepFile, $deleteFile1, $deleteFile2]);
-
-        $this->fileDuplicateService->expects($this->once())
-            ->method('find')
-            ->with($hash)
-            ->willReturn($duplicate);
-
-        // Mock file nodes
-        $keepNode = $this->createMock(File::class);
-        $deleteNode1 = $this->createMock(File::class);
-        $deleteNode2 = $this->createMock(File::class);
-
-        $this->folderService->expects($this->exactly(3))
-            ->method('getNodeByFileInfo')
-            ->willReturnMap([
-                [$keepFile, null, $keepNode],
-                [$deleteFile1, null, $deleteNode1],
-                [$deleteFile2, null, $deleteNode2],
-            ]);
-
-        // Expect files to be deleted
-        $deleteNode1->expects($this->once())->method('delete');
-        $deleteNode2->expects($this->once())->method('delete');
-
-        // Expect file infos to be deleted
-        $this->fileInfoService->expects($this->exactly(2))
-            ->method('delete')
-            ->withConsecutive([$deleteFile1], [$deleteFile2]);
-
-        $result = $this->service->mergeDuplicates($hash, [$keepFileId]);
-
-        $this->assertTrue($result);
+        $this->expectException(OriginFolderProtectionException::class);
+        $this->service->deleteFile('alice', '/Copies/alias.txt', 55);
     }
 
-    /**
-     * Test merging with shared files
-     */
-    public function testMergeDuplicatesWithSharedFiles(): void
+    public function testDeleteFileThrowsNotFoundWhenNodeIdMissing(): void
     {
-        $hash = 'abc123';
-        $keepFileId = 1;
+        $userFolder = $this->createMock(Folder::class);
+        $this->folderService->method('getUserFolder')->with('alice')->willReturn($userFolder);
+        $userFolder->method('getById')->with(999)->willReturn([]);
 
-        $keepFile = new FileInfo();
-        $keepFile->setId($keepFileId);
-        $keepFile->setPath('/user/files/keep.txt');
-
-        $sharedFile = new FileInfo();
-        $sharedFile->setId(2);
-        $sharedFile->setPath('/user/files/shared.txt');
-
-        $duplicate = new FileDuplicate();
-        $duplicate->setHash($hash);
-        $duplicate->setFiles([$keepFile, $sharedFile]);
-
-        $this->fileDuplicateService->method('find')->willReturn($duplicate);
-
-        $keepNode = $this->createMock(File::class);
-        $sharedNode = $this->createMock(File::class);
-        $sharedNode->method('getId')->willReturn(100);
-
-        $this->folderService->method('getNodeByFileInfo')
-            ->willReturnMap([
-                [$keepFile, null, $keepNode],
-                [$sharedFile, null, $sharedNode],
-            ]);
-
-        // Check if file is shared
-        $share = $this->createMock(IShare::class);
-        $this->shareManager->expects($this->once())
-            ->method('getSharesByNode')
-            ->with($sharedNode)
-            ->willReturn([$share]);
-
-        // Should log warning about shared file
-        $this->logger->expects($this->once())
-            ->method('warning')
-            ->with($this->stringContains('File is shared'));
-
-        // Shared file should still be deleted if user confirms
-        $sharedNode->expects($this->once())->method('delete');
-        $this->fileInfoService->expects($this->once())->method('delete')->with($sharedFile);
-
-        $result = $this->service->mergeDuplicates($hash, [$keepFileId]);
-
-        $this->assertTrue($result);
+        $this->expectException(NotFoundException::class);
+        $this->service->deleteFile('alice', '/missing.txt', 999);
     }
 
-    /**
-     * Test merging with inaccessible files
-     */
-    public function testMergeDuplicatesWithInaccessibleFiles(): void
+    public function testDeleteFileBlocksLastCopyUnlessAllowLastCopyIsTrue(): void
     {
-        $hash = 'abc123';
-        $keepFileId = 1;
+        $userFolder = $this->createMock(Folder::class);
+        $node = $this->createMock(File::class);
+        $node->method('getId')->willReturn(42);
+        $node->method('getPath')->willReturn('/alice/files/copy.txt');
+        $node->method('getMimetype')->willReturn('text/plain');
 
-        $keepFile = new FileInfo();
-        $keepFile->setId($keepFileId);
+        $this->folderService->method('getUserFolder')->with('alice')->willReturn($userFolder);
+        $userFolder->method('get')->with('/copy.txt')->willReturn($node);
+        $userFolder->method('getRelativePath')->willReturn('/copy.txt');
+        $this->livePhotoDeletionService->method('deleteIfPaired')->willReturn(null);
+        $this->fileInfoService->method('hasOtherLiveCopy')->with('abc', 42, 'alice')->willReturn(false);
 
-        $inaccessibleFile = new FileInfo();
-        $inaccessibleFile->setId(2);
-        $inaccessibleFile->setPath('/user/files/inaccessible.txt');
-
-        $duplicate = new FileDuplicate();
-        $duplicate->setFiles([$keepFile, $inaccessibleFile]);
-
-        $this->fileDuplicateService->method('find')->willReturn($duplicate);
-
-        $keepNode = $this->createMock(File::class);
-
-        // Inaccessible file returns null
-        $this->folderService->method('getNodeByFileInfo')
-            ->willReturnMap([
-                [$keepFile, null, $keepNode],
-                [$inaccessibleFile, null, null],
-            ]);
-
-        // Should log error about inaccessible file
-        $this->logger->expects($this->once())
-            ->method('error')
-            ->with($this->stringContains('Could not access file'));
-
-        // Should still delete the database entry
-        $this->fileInfoService->expects($this->once())
-            ->method('delete')
-            ->with($inaccessibleFile);
-
-        $result = $this->service->mergeDuplicates($hash, [$keepFileId]);
-
-        $this->assertTrue($result);
+        $this->expectException(LastCopyProtectionException::class);
+        $this->service->deleteFile('alice', '/copy.txt', null, 'abc', false);
     }
 
-    /**
-     * Test merging with no files to keep
-     */
-    public function testMergeDuplicatesWithNoFilesToKeep(): void
+    public function testDeleteFileAllowsLastCopyWhenConfirmed(): void
     {
-        $hash = 'abc123';
+        $userFolder = $this->createMock(Folder::class);
+        $node = $this->createMock(File::class);
+        $node->method('getId')->willReturn(42);
+        $node->method('getPath')->willReturn('/alice/files/copy.txt');
+        $node->method('getMimetype')->willReturn('text/plain');
+        $node->expects($this->once())->method('delete');
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('No files selected to keep');
+        $this->folderService->method('getUserFolder')->with('alice')->willReturn($userFolder);
+        $userFolder->method('get')->with('/copy.txt')->willReturn($node);
+        $userFolder->method('getRelativePath')->willReturn('/copy.txt');
+        $userFolder->method('nodeExists')->with('/copy.txt')->willReturn(false);
+        $this->livePhotoDeletionService->method('deleteIfPaired')->willReturn(null);
 
-        $this->service->mergeDuplicates($hash, []);
+        $deleted = $this->service->deleteFile('alice', '/copy.txt', null, 'abc', true);
+        $this->assertSame([42], $deleted);
     }
 
-    /**
-     * Test merging when duplicate not found
-     */
-    public function testMergeDuplicatesNotFound(): void
+    public function testDeleteFileMapsAbortedEventExceptionToLivePhotoOrAbortedException(): void
     {
-        $hash = 'nonexistent';
+        $userFolder = $this->createMock(Folder::class);
+        $node = $this->createMock(File::class);
+        $node->method('getId')->willReturn(77);
+        $node->method('getPath')->willReturn('/alice/files/clip.mov');
+        $node->method('getMimetype')->willReturn('video/mp4');
+        $node->method('delete')->willThrowException(new AbortedEventException('Live photo protected'));
 
-        $this->fileDuplicateService->expects($this->once())
-            ->method('find')
-            ->with($hash)
-            ->willThrowException(new \Exception('Not found'));
+        $this->folderService->method('getUserFolder')->with('alice')->willReturn($userFolder);
+        $userFolder->method('get')->with('/clip.mov')->willReturn($node);
+        $userFolder->method('getRelativePath')->willReturn('/clip.mov');
+        $this->livePhotoDeletionService->method('deleteIfPaired')->willReturn(null);
 
-        $this->expectException(\Exception::class);
-
-        $this->service->mergeDuplicates($hash, [1]);
+        $this->expectException(LivePhotoProtectionException::class);
+        $this->service->deleteFile('alice', '/clip.mov');
     }
 
-    /**
-     * Test merge with file deletion failure
-     */
-    public function testMergeDuplicatesWithDeletionFailure(): void
+    public function testDeleteFileThrowsAbortedDeletionWhenNodeStillExistsAfterDelete(): void
     {
-        $hash = 'abc123';
-        $keepFileId = 1;
+        $userFolder = $this->createMock(Folder::class);
+        $node = $this->createMock(File::class);
+        $node->method('getId')->willReturn(88);
+        $node->method('getPath')->willReturn('/alice/files/stubborn.txt');
+        $node->method('getMimetype')->willReturn('text/plain');
+        $node->expects($this->once())->method('delete');
 
-        $keepFile = new FileInfo();
-        $keepFile->setId($keepFileId);
+        $this->folderService->method('getUserFolder')->with('alice')->willReturn($userFolder);
+        $userFolder->method('get')->with('/stubborn.txt')->willReturn($node);
+        $userFolder->method('getRelativePath')->willReturn('/stubborn.txt');
+        $userFolder->method('nodeExists')->with('/stubborn.txt')->willReturn(true);
+        $this->livePhotoDeletionService->method('deleteIfPaired')->willReturn(null);
 
-        $deleteFile = new FileInfo();
-        $deleteFile->setId(2);
-
-        $duplicate = new FileDuplicate();
-        $duplicate->setFiles([$keepFile, $deleteFile]);
-
-        $this->fileDuplicateService->method('find')->willReturn($duplicate);
-
-        $keepNode = $this->createMock(File::class);
-        $deleteNode = $this->createMock(File::class);
-
-        $this->folderService->method('getNodeByFileInfo')
-            ->willReturnMap([
-                [$keepFile, null, $keepNode],
-                [$deleteFile, null, $deleteNode],
-            ]);
-
-        // Deletion fails
-        $deleteNode->expects($this->once())
-            ->method('delete')
-            ->willThrowException(new \Exception('Permission denied'));
-
-        // Should log error
-        $this->logger->expects($this->once())
-            ->method('error')
-            ->with($this->stringContains('Failed to delete file'));
-
-        // Database entry should still be deleted
-        $this->fileInfoService->expects($this->once())
-            ->method('delete')
-            ->with($deleteFile);
-
-        $result = $this->service->mergeDuplicates($hash, [$keepFileId]);
-
-        // Should still return true as database was cleaned
-        $this->assertTrue($result);
-    }
-
-    /**
-     * Test merging updates duplicate count
-     */
-    public function testMergeDuplicatesUpdatesDuplicateCount(): void
-    {
-        $hash = 'abc123';
-        $keepFileId = 1;
-
-        $keepFile = new FileInfo();
-        $keepFile->setId($keepFileId);
-
-        $deleteFile = new FileInfo();
-        $deleteFile->setId(2);
-
-        $duplicate = new FileDuplicate();
-        $duplicate->setFiles([$keepFile, $deleteFile]);
-
-        $this->fileDuplicateService->method('find')->willReturn($duplicate);
-
-        $keepNode = $this->createMock(File::class);
-        $deleteNode = $this->createMock(File::class);
-
-        $this->folderService->method('getNodeByFileInfo')
-            ->willReturnMap([
-                [$keepFile, null, $keepNode],
-                [$deleteFile, null, $deleteNode],
-            ]);
-
-        $deleteNode->method('delete');
-        $this->fileInfoService->method('delete');
-
-        // Should refresh duplicate status after merge
-        $this->fileDuplicateService->expects($this->once())
-            ->method('refreshDuplicateStatus')
-            ->with($hash);
-
-        $this->service->mergeDuplicates($hash, [$keepFileId]);
+        $this->expectException(AbortedDeletionException::class);
+        $this->service->deleteFile('alice', '/stubborn.txt');
     }
 }

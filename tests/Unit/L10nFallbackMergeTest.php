@@ -65,13 +65,30 @@ class L10nFallbackMergeTest extends TestCase
         mkdir($tempDir, 0777, true);
 
         try {
-            $locales = ['it', 'nl', 'ja', 'ko', 'zh_CN', 'pl', 'ar', 'es', 'pt_PT'];
+            $locales = ['it', 'nl', 'ja', 'ko', 'zh_CN', 'pl', 'ar', 'es', 'pt_PT', 'zh_HK'];
             $beforeSnapshots = [];
 
             foreach ($locales as $locale) {
-                copy($sourceL10nDir . '/' . $locale . '.json', $tempDir . '/' . $locale . '.json');
-                copy($sourceL10nDir . '/' . $locale . '.js', $tempDir . '/' . $locale . '.js');
-                $decoded = json_decode((string) file_get_contents($tempDir . '/' . $locale . '.json'), true);
+                $srcJson = $sourceL10nDir . '/' . $locale . '.json';
+                $srcJs = $sourceL10nDir . '/' . $locale . '.js';
+                if (file_exists($srcJson) && file_exists($srcJs)) {
+                    copy($srcJson, $tempDir . '/' . $locale . '.json');
+                    copy($srcJs, $tempDir . '/' . $locale . '.js');
+                    $decoded = json_decode((string) file_get_contents($tempDir . '/' . $locale . '.json'), true);
+                } else {
+                    $fallbackDecoded = json_decode((string) file_get_contents($fallbackDir . '/' . $locale . '.json'), true);
+                    $this->assertIsArray($fallbackDecoded);
+                    $pluralForm = $fallbackDecoded['pluralForm'] ?? 'nplurals=2; plural=(n != 1);';
+                    $decoded = ['translations' => [], 'pluralForm' => $pluralForm];
+                    file_put_contents(
+                        $tempDir . '/' . $locale . '.json',
+                        json_encode(['translations' => new \stdClass(), 'pluralForm' => $pluralForm], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                    );
+                    file_put_contents(
+                        $tempDir . '/' . $locale . '.js',
+                        sprintf("OC.L10N.register(\n    \"duplicatefinder\",\n    {},\n%s);\n", json_encode($pluralForm))
+                    );
+                }
                 $this->assertIsArray($decoded);
                 $beforeSnapshots[$locale] = $decoded;
             }

@@ -1,14 +1,16 @@
 import axios from 'axios'
+import { generateUrl } from '@nextcloud/router'
 import { showSuccessNotification, showErrorNotification } from '@/tools/notifications'
 import { normalizeItemPath } from '@/tools/utils'
 
-// Function to generate the base URL for API endpoints
 /**
- * @param path
+ * Generate the base URL for DuplicateFinder API endpoints.
+ *
+ * @param {string} path - API sub-path starting with '/'.
+ * @return {string} Resolved Nextcloud URL for the endpoint.
  */
 function generateApiBaseUrl(path) {
-	// Assuming 'path' starts with a '/', which is required by OC.generateUrl
-	return OC.generateUrl(`/apps/duplicatefinder/api${path}`)
+	return generateUrl(`/apps/duplicatefinder/api${path}`)
 }
 
 // Configure axios defaults for Nextcloud
@@ -94,7 +96,7 @@ export const unacknowledgeDuplicate = async (hash) => {
  * and the hash of the group lets the server refuse to delete the last remaining copy.
  *
  * @param {object} file The file to delete.
- * @param {object} [options]
+ * @param {object} [options] Optional deletion flags.
  * @param {boolean} [options.allowLastCopy] Delete the file even if it is the last copy of its group.
  * @param {boolean} [options.allowLivePhotoPair] Confirm deletion of both Live Photo components.
  * @param {Set<number>} [options.deletedNodeIds] Node IDs already deleted during this batch.
@@ -172,7 +174,7 @@ export const deleteFile = async (file, options = {}) => {
  *
  * @param {Array} files The files to delete.
  * @param {object} [options] Same options as deleteFile.
- * @return {Promise<{success: Array, errors: Array, deletedNodeIds?: number[]}>} Deleted selections and any paired components.
+ * @return {Promise<object>} Object with success, errors, and optional deletedNodeIds arrays.
  */
 export const deleteFiles = async (files, options = {}) => {
 	const results = []
@@ -377,7 +379,10 @@ export async function loadFilters() {
 }
 
 /**
- * @param filter
+ * Save a new filter rule.
+ *
+ * @param {object} filter Filter rule payload to persist.
+ * @return {Promise<object>} Saved filter object returned by the server.
  */
 export async function saveFilter(filter) {
 	try {
@@ -453,7 +458,10 @@ export function notifyScanFailed() {
 }
 
 /**
- * @param id
+ * Delete an existing filter rule by its ID.
+ *
+ * @param {number|string} id Filter identifier to delete.
+ * @return {Promise<object>} Server response payload.
  */
 export async function deleteFilter(id) {
 	try {

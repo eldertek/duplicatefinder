@@ -51,7 +51,7 @@ class MergeServiceTest extends TestCase
                     );
                 }
 
-                return true;
+                return [1];
             });
 
         // Create an array of files to merge

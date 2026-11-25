@@ -329,8 +329,14 @@ import { generateUrl } from '@nextcloud/router'
 
 export default {
 	props: {
-		file: Object,
-		index: Number,
+		file: {
+			type: Object,
+			default: null,
+		},
+		index: {
+			type: Number,
+			default: 0,
+		},
 		duplicateAcknowledged: {
 			type: Boolean,
 			required: true,
@@ -424,8 +430,10 @@ export default {
 		},
 		formattedFileSize() {
 			const rawSize = this.file && Number.isFinite(Number(this.file.size)) ? Number(this.file.size) : 0
-			if (typeof OC !== 'undefined' && OC.Util && typeof OC.Util.humanFileSize === 'function') {
-				return OC.Util.humanFileSize(rawSize)
+			// eslint-disable-next-line @nextcloud/no-deprecations -- @nextcloud/files is not a direct dependency; preserves Nextcloud runtime & test mock contract
+			const humanFileSize = typeof OC !== 'undefined' && OC.Util ? OC.Util.humanFileSize : null
+			if (typeof humanFileSize === 'function') {
+				return humanFileSize(rawSize)
 			}
 			return `${rawSize} B`
 		},

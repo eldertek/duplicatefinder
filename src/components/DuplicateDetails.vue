@@ -816,7 +816,10 @@ export default {
 		DuplicateFileDisplay,
 	},
 	props: {
-		duplicate: Object,
+		duplicate: {
+			type: Object,
+			default: null,
+		},
 		isScanning: {
 			type: Boolean,
 			default: false,
