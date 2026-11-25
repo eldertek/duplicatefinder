@@ -264,6 +264,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/FiberTelecomRfVaultWorkbench.vue': { __esModule: true, default: stub('fiber-telecom-rf-vault-auditor') },
 			'./components/GeotechShmCivilVaultWorkbench.vue': { __esModule: true, default: stub('geotech-shm-civil-vault-auditor') },
 			'./components/HydrographyMarineVaultWorkbench.vue': { __esModule: true, default: stub('hydrography-marine-vault-auditor') },
+			'./components/AstronomyFitsInterferometryVaultWorkbench.vue': { __esModule: true, default: stub('astronomy-fits-interferometry-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4669,5 +4670,31 @@ describe('Cycle 208: Alt+Shift+H shortcut for Marine Hydrography, Multibeam Sona
 		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'H', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 209: Alt+Shift+I shortcut for Astronomy, FITS Astrophotography & Radio Interferometry Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+I cleanly and preserves Shift+I and i while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-astronomy-fits-interferometry-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-astronomy-fits-interferometry-vault-auditor',
+			keys: ['Alt+Shift+I'],
+			action: 'toggle-astronomy-fits-interferometry-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true }), 'toggle-astronomy-fits-interferometry-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'i', altKey: true, shiftKey: true }), 'toggle-astronomy-fits-interferometry-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'I', shiftKey: true }), 'toggle-vm-container-image-auditor')
+		assert.equal(resolveShortcutAction({ key: 'i', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'i' }), 'toggle-file-hygiene')
+		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

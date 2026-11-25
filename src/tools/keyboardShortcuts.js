@@ -514,6 +514,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-hydrography-marine-vault-auditor',
 	},
 	{
+		id: 'toggle-astronomy-fits-interferometry-vault-auditor',
+		keys: ['Alt+Shift+I'],
+		action: 'toggle-astronomy-fits-interferometry-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -722,6 +727,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'H' || key === 'h')) {
 			return 'toggle-hydrography-marine-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'I' || key === 'i')) {
+			return 'toggle-astronomy-fits-interferometry-vault-auditor'
 		}
 		return null
 	}
