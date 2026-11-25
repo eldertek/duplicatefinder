@@ -564,6 +564,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-railway-signaling-telemetry-vault-auditor',
 	},
 	{
+		id: 'toggle-speech-asr-bioacoustics-vault-auditor',
+		keys: ['Alt+Shift+S'],
+		action: 'toggle-speech-asr-bioacoustics-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -802,6 +807,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'R' || key === 'r')) {
 			return 'toggle-railway-signaling-telemetry-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'S' || key === 's')) {
+			return 'toggle-speech-asr-bioacoustics-vault-auditor'
 		}
 		return null
 	}

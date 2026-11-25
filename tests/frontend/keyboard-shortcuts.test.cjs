@@ -274,6 +274,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/ParticlePhysicsHepVaultWorkbench.vue': { __esModule: true, default: stub('particle-physics-hep-vault-auditor') },
 			'./components/QuantumQubitPulseVaultWorkbench.vue': { __esModule: true, default: stub('quantum-qubit-pulse-vault-auditor') },
 			'./components/RailwaySignalingTelemetryVaultWorkbench.vue': { __esModule: true, default: stub('railway-signaling-telemetry-vault-auditor') },
+			'./components/SpeechAsrBioacousticsVaultWorkbench.vue': { __esModule: true, default: stub('speech-asr-bioacoustics-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4939,5 +4940,31 @@ describe('Cycle 218: Alt+Shift+R shortcut for Railway, ETCS/CBTC Signaling, Ways
 		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 219: Alt+Shift+S shortcut for Speech, Bioacoustics & Multilingual ASR Alignment Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+S cleanly and preserves Shift+S and s while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-speech-asr-bioacoustics-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-speech-asr-bioacoustics-vault-auditor',
+			keys: ['Alt+Shift+S'],
+			action: 'toggle-speech-asr-bioacoustics-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'S', altKey: true, shiftKey: true }), 'toggle-speech-asr-bioacoustics-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 's', altKey: true, shiftKey: true }), 'toggle-speech-asr-bioacoustics-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'S', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 's', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 's' }), 'keep-shortest-path')
+		assert.equal(resolveShortcutAction({ key: 'S', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'S', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'S', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'S', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'S', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
