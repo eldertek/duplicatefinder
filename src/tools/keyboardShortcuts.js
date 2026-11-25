@@ -589,6 +589,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-wine-enology-haccp-vault-auditor',
 	},
 	{
+		id: 'toggle-xr-spatial-nerf-splat-vault-auditor',
+		keys: ['Alt+Shift+X'],
+		action: 'toggle-xr-spatial-nerf-splat-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -842,6 +847,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'W' || key === 'w')) {
 			return 'toggle-wine-enology-haccp-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'X' || key === 'x')) {
+			return 'toggle-xr-spatial-nerf-splat-vault-auditor'
 		}
 		return null
 	}

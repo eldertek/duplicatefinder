@@ -279,6 +279,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/UrbanWaterUtilityPipelineVaultWorkbench.vue': { __esModule: true, default: stub('urban-water-utility-pipeline-vault-auditor') },
 			'./components/VeterinaryEquineGenomicsVaultWorkbench.vue': { __esModule: true, default: stub('veterinary-equine-genomics-vault-auditor') },
 			'./components/WineEnologyHaccpVaultWorkbench.vue': { __esModule: true, default: stub('wine-enology-haccp-vault-auditor') },
+			'./components/XrSpatialNerfSplatVaultWorkbench.vue': { __esModule: true, default: stub('xr-spatial-nerf-splat-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -5075,5 +5076,32 @@ describe('Cycle 223: Alt+Shift+W shortcut for Wine Enology, Brewery Fermentation
 		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 224: Alt+Shift+X shortcut for XR Spatial Computing, Photorealistic NeRF/Gaussian Splatting & Volumetric Video Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+X cleanly and preserves Shift+X and x while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-xr-spatial-nerf-splat-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-xr-spatial-nerf-splat-vault-auditor',
+			keys: ['Alt+Shift+X'],
+			action: 'toggle-xr-spatial-nerf-splat-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true }), 'toggle-xr-spatial-nerf-splat-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'x', altKey: true, shiftKey: true }), 'toggle-xr-spatial-nerf-splat-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'X', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'x', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'x', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'x' }), 'export-json-report')
+		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

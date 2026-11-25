@@ -3219,6 +3219,32 @@
 							<span>{{ t('duplicatefinder', 'Wine & HACCP') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-xr-spatial-nerf-splat-vault-button"
+							:class="{ 'is-active': xrSpatialNerfSplatVaultOpen }"
+							:aria-pressed="xrSpatialNerfSplatVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+X"
+							:title="t('duplicatefinder', 'Toggle XR Spatial Computing, Photorealistic NeRF/Gaussian Splatting and Volumetric Video Vault auditor')"
+							@click="toggleXrSpatialNerfSplatVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-4.5l-1.5-2.5a1.2 1.2 0 0 0-2 0L9.5 18H5a2 2 0 0 1-2-2z" />
+								<circle cx="8" cy="11.5" r="1.5" />
+								<circle cx="16" cy="11.5" r="1.5" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'XR & NeRF/3DGS') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -4264,6 +4290,15 @@
 						@compare-duplicate="onWineEnologyHaccpVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="wineEnologyHaccpVaultOpen = false" />
+					<XrSpatialNerfSplatVaultWorkbench
+						v-if="xrSpatialNerfSplatVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onXrSpatialNerfSplatVaultSelectDuplicate"
+						@compare-duplicate="onXrSpatialNerfSplatVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="xrSpatialNerfSplatVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4801,6 +4836,7 @@ import TrafficItsV2xVaultWorkbench from './components/TrafficItsV2xVaultWorkbenc
 import UrbanWaterUtilityPipelineVaultWorkbench from './components/UrbanWaterUtilityPipelineVaultWorkbench.vue'
 import VeterinaryEquineGenomicsVaultWorkbench from './components/VeterinaryEquineGenomicsVaultWorkbench.vue'
 import WineEnologyHaccpVaultWorkbench from './components/WineEnologyHaccpVaultWorkbench.vue'
+import XrSpatialNerfSplatVaultWorkbench from './components/XrSpatialNerfSplatVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4967,6 +5003,7 @@ export default {
 		UrbanWaterUtilityPipelineVaultWorkbench,
 		VeterinaryEquineGenomicsVaultWorkbench,
 		WineEnologyHaccpVaultWorkbench,
+		XrSpatialNerfSplatVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -5100,6 +5137,7 @@ export default {
 			urbanWaterUtilityPipelineVaultOpen: false,
 			veterinaryEquineGenomicsVaultOpen: false,
 			wineEnologyHaccpVaultOpen: false,
+			xrSpatialNerfSplatVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -5376,6 +5414,7 @@ export default {
 				'toggle-urban-water-utility-pipeline-vault-auditor': t('duplicatefinder', 'Toggle Urban Water Utility, Hydraulic Network and Pipeline Telemetry Vault auditor'),
 				'toggle-veterinary-equine-genomics-vault-auditor': t('duplicatefinder', 'Toggle Veterinary Imaging, Equine Biomechanics and Livestock Genomics Vault auditor'),
 				'toggle-wine-enology-haccp-vault-auditor': t('duplicatefinder', 'Toggle Wine Enology, Brewery Fermentation and Food-Safety HACCP Vault auditor'),
+				'toggle-xr-spatial-nerf-splat-vault-auditor': t('duplicatefinder', 'Toggle XR Spatial Computing, Photorealistic NeRF/Gaussian Splatting and Volumetric Video Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -7320,6 +7359,22 @@ export default {
 		onWineEnologyHaccpVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleXrSpatialNerfSplatVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.xrSpatialNerfSplatVaultOpen = !this.xrSpatialNerfSplatVaultOpen
+			return true
+		},
+		onXrSpatialNerfSplatVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onXrSpatialNerfSplatVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -8411,6 +8466,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-xr-spatial-nerf-splat-vault-auditor') {
+				if (this.toggleXrSpatialNerfSplatVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -9414,7 +9476,8 @@ export default {
 .app-content-topbar .topbar-traffic-its-v2x-vault-button,
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
-.app-content-topbar .topbar-wine-enology-haccp-vault-button {
+.app-content-topbar .topbar-wine-enology-haccp-vault-button,
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -9505,7 +9568,8 @@ export default {
 .app-content-topbar .topbar-traffic-its-v2x-vault-button,
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
-.app-content-topbar .topbar-wine-enology-haccp-vault-button {
+.app-content-topbar .topbar-wine-enology-haccp-vault-button,
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -9615,7 +9679,8 @@ export default {
 .app-content-topbar .topbar-traffic-its-v2x-vault-button svg,
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button svg,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button svg,
-.app-content-topbar .topbar-wine-enology-haccp-vault-button svg {
+.app-content-topbar .topbar-wine-enology-haccp-vault-button svg,
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -9831,7 +9896,9 @@ export default {
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-wine-enology-haccp-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-wine-enology-haccp-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-wine-enology-haccp-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -9939,7 +10006,8 @@ export default {
 .app-content-topbar .topbar-traffic-its-v2x-vault-button.is-active,
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button.is-active,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button.is-active,
-.app-content-topbar .topbar-wine-enology-haccp-vault-button.is-active {
+.app-content-topbar .topbar-wine-enology-haccp-vault-button.is-active,
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -10190,6 +10258,7 @@ export default {
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button > *,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button > *,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button > *,
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -10379,6 +10448,7 @@ export default {
 	.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
 	.app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
 	.app-content-topbar .topbar-wine-enology-haccp-vault-button,
+	.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
