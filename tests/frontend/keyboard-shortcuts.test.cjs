@@ -266,6 +266,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/HydrographyMarineVaultWorkbench.vue': { __esModule: true, default: stub('hydrography-marine-vault-auditor') },
 			'./components/AstronomyFitsInterferometryVaultWorkbench.vue': { __esModule: true, default: stub('astronomy-fits-interferometry-vault-auditor') },
 			'./components/MeteorologyClimateVaultWorkbench.vue': { __esModule: true, default: stub('meteorology-climate-vault-auditor') },
+			'./components/MaterialsMicroscopyVaultWorkbench.vue': { __esModule: true, default: stub('materials-microscopy-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4723,5 +4724,31 @@ describe('Cycle 210: Alt+Shift+J shortcut for Meteorology, Weather Radar, NetCDF
 		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 211: Alt+Shift+K shortcut for Materials Science, Electron Microscopy & Diffraction Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+K cleanly and preserves Shift+K and k while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-materials-microscopy-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-materials-microscopy-vault-auditor',
+			keys: ['Alt+Shift+K'],
+			action: 'toggle-materials-microscopy-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'K', altKey: true, shiftKey: true }), 'toggle-materials-microscopy-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'k', altKey: true, shiftKey: true }), 'toggle-materials-microscopy-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'K', shiftKey: true }), 'toggle-release-binary-artifact-auditor')
+		assert.equal(resolveShortcutAction({ key: 'k', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'k' }), 'previous-duplicate')
+		assert.equal(resolveShortcutAction({ key: 'K', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'K', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'K', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'K', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'K', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

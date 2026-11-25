@@ -524,6 +524,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-meteorology-climate-vault-auditor',
 	},
 	{
+		id: 'toggle-materials-microscopy-vault-auditor',
+		keys: ['Alt+Shift+K'],
+		action: 'toggle-materials-microscopy-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -738,6 +743,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'J' || key === 'j')) {
 			return 'toggle-meteorology-climate-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'K' || key === 'k')) {
+			return 'toggle-materials-microscopy-vault-auditor'
 		}
 		return null
 	}
