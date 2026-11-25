@@ -534,6 +534,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-lidar-photogrammetry-vault-auditor',
 	},
 	{
+		id: 'toggle-mocap-biomechanics-vault-auditor',
+		keys: ['Alt+Shift+M'],
+		action: 'toggle-mocap-biomechanics-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -754,6 +759,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'L' || key === 'l')) {
 			return 'toggle-lidar-photogrammetry-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'M' || key === 'm')) {
+			return 'toggle-mocap-biomechanics-vault-auditor'
 		}
 		return null
 	}

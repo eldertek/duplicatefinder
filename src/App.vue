@@ -2885,6 +2885,35 @@
 							<span>{{ t('duplicatefinder', 'LiDAR & Photogrammetry') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-mocap-biomechanics-vault-button"
+							:class="{ 'is-active': mocapBiomechanicsVaultOpen }"
+							:aria-pressed="mocapBiomechanicsVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+M"
+							:title="t('duplicatefinder', 'Toggle Motion Capture, Biomechanics and Optical Tracking Vault auditor')"
+							@click="toggleMocapBiomechanicsVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle cx="12" cy="5" r="2" />
+								<circle cx="6" cy="12" r="2" />
+								<circle cx="18" cy="12" r="2" />
+								<circle cx="8" cy="20" r="2" />
+								<circle cx="16" cy="20" r="2" />
+								<path d="M12 7v4m-4.5.5L12 11l4.5.5M12 11l-3.2 7.2M12 11l3.2 7.2" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Mocap & Biomechanics') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3831,6 +3860,15 @@
 						@compare-duplicate="onLidarPhotogrammetryVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="lidarPhotogrammetryVaultOpen = false" />
+					<MocapBiomechanicsVaultWorkbench
+						v-if="mocapBiomechanicsVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onMocapBiomechanicsVaultSelectDuplicate"
+						@compare-duplicate="onMocapBiomechanicsVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="mocapBiomechanicsVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4357,6 +4395,7 @@ import AstronomyFitsInterferometryVaultWorkbench from './components/AstronomyFit
 import MeteorologyClimateVaultWorkbench from './components/MeteorologyClimateVaultWorkbench.vue'
 import MaterialsMicroscopyVaultWorkbench from './components/MaterialsMicroscopyVaultWorkbench.vue'
 import LidarPhotogrammetryVaultWorkbench from './components/LidarPhotogrammetryVaultWorkbench.vue'
+import MocapBiomechanicsVaultWorkbench from './components/MocapBiomechanicsVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4512,6 +4551,7 @@ export default {
 		MeteorologyClimateVaultWorkbench,
 		MaterialsMicroscopyVaultWorkbench,
 		LidarPhotogrammetryVaultWorkbench,
+		MocapBiomechanicsVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4634,6 +4674,7 @@ export default {
 			meteorologyClimateVaultOpen: false,
 			materialsMicroscopyVaultOpen: false,
 			lidarPhotogrammetryVaultOpen: false,
+			mocapBiomechanicsVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4899,6 +4940,7 @@ export default {
 				'toggle-meteorology-climate-vault-auditor': t('duplicatefinder', 'Toggle Meteorology, Weather Radar, NetCDF and Climate Model Vault auditor'),
 				'toggle-materials-microscopy-vault-auditor': t('duplicatefinder', 'Toggle Materials Science, Electron Microscopy and Diffraction Vault auditor'),
 				'toggle-lidar-photogrammetry-vault-auditor': t('duplicatefinder', 'Toggle LiDAR, UAV Photogrammetry and Terrestrial Laser Scanning Vault auditor'),
+				'toggle-mocap-biomechanics-vault-auditor': t('duplicatefinder', 'Toggle Motion Capture, Biomechanics and Optical Tracking Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -6667,6 +6709,22 @@ export default {
 		onLidarPhotogrammetryVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleMocapBiomechanicsVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.mocapBiomechanicsVaultOpen = !this.mocapBiomechanicsVaultOpen
+			return true
+		},
+		onMocapBiomechanicsVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onMocapBiomechanicsVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -7681,6 +7739,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-mocap-biomechanics-vault-auditor') {
+				if (this.toggleMocapBiomechanicsVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -8673,7 +8738,8 @@ export default {
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button,
 .app-content-topbar .topbar-meteorology-climate-vault-button,
 .app-content-topbar .topbar-materials-microscopy-vault-button,
-.app-content-topbar .topbar-lidar-photogrammetry-vault-button {
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button,
+.app-content-topbar .topbar-mocap-biomechanics-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -8753,7 +8819,8 @@ export default {
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button,
 .app-content-topbar .topbar-meteorology-climate-vault-button,
 .app-content-topbar .topbar-materials-microscopy-vault-button,
-.app-content-topbar .topbar-lidar-photogrammetry-vault-button {
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button,
+.app-content-topbar .topbar-mocap-biomechanics-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -8852,7 +8919,8 @@ export default {
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button svg,
 .app-content-topbar .topbar-meteorology-climate-vault-button svg,
 .app-content-topbar .topbar-materials-microscopy-vault-button svg,
-.app-content-topbar .topbar-lidar-photogrammetry-vault-button svg {
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button svg,
+.app-content-topbar .topbar-mocap-biomechanics-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -9046,7 +9114,9 @@ export default {
 .app-content-topbar .topbar-materials-microscopy-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-materials-microscopy-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-lidar-photogrammetry-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-lidar-photogrammetry-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-mocap-biomechanics-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-mocap-biomechanics-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -9143,7 +9213,8 @@ export default {
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button.is-active,
 .app-content-topbar .topbar-meteorology-climate-vault-button.is-active,
 .app-content-topbar .topbar-materials-microscopy-vault-button.is-active,
-.app-content-topbar .topbar-lidar-photogrammetry-vault-button.is-active {
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button.is-active,
+.app-content-topbar .topbar-mocap-biomechanics-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -9383,6 +9454,7 @@ export default {
 .app-content-topbar .topbar-meteorology-climate-vault-button > *,
 .app-content-topbar .topbar-materials-microscopy-vault-button > *,
 .app-content-topbar .topbar-lidar-photogrammetry-vault-button > *,
+.app-content-topbar .topbar-mocap-biomechanics-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -9561,6 +9633,7 @@ export default {
 	.app-content-topbar .topbar-meteorology-climate-vault-button,
 	.app-content-topbar .topbar-materials-microscopy-vault-button,
 	.app-content-topbar .topbar-lidar-photogrammetry-vault-button,
+	.app-content-topbar .topbar-mocap-biomechanics-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
