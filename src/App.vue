@@ -3112,6 +3112,38 @@
 							<span>{{ t('duplicatefinder', 'Speech & ASR') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-traffic-its-v2x-vault-button"
+							:class="{ 'is-active': trafficItsV2xVaultOpen }"
+							:aria-pressed="trafficItsV2xVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+T"
+							:title="t('duplicatefinder', 'Toggle Traffic ITS, V2X Connected Mobility and Corridor Signal Vault auditor')"
+							@click="toggleTrafficItsV2xVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<rect
+									x="6"
+									y="2"
+									width="12"
+									height="20"
+									rx="4" />
+								<circle cx="12" cy="7" r="2" />
+								<circle cx="12" cy="12" r="2" />
+								<circle cx="12" cy="17" r="2" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Traffic & V2X') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -4121,6 +4153,15 @@
 						@compare-duplicate="onSpeechAsrBioacousticsVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="speechAsrBioacousticsVaultOpen = false" />
+					<TrafficItsV2xVaultWorkbench
+						v-if="trafficItsV2xVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onTrafficItsV2xVaultSelectDuplicate"
+						@compare-duplicate="onTrafficItsV2xVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="trafficItsV2xVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4654,6 +4695,7 @@ import ParticlePhysicsHepVaultWorkbench from './components/ParticlePhysicsHepVau
 import QuantumQubitPulseVaultWorkbench from './components/QuantumQubitPulseVaultWorkbench.vue'
 import RailwaySignalingTelemetryVaultWorkbench from './components/RailwaySignalingTelemetryVaultWorkbench.vue'
 import SpeechAsrBioacousticsVaultWorkbench from './components/SpeechAsrBioacousticsVaultWorkbench.vue'
+import TrafficItsV2xVaultWorkbench from './components/TrafficItsV2xVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4816,6 +4858,7 @@ export default {
 		QuantumQubitPulseVaultWorkbench,
 		RailwaySignalingTelemetryVaultWorkbench,
 		SpeechAsrBioacousticsVaultWorkbench,
+		TrafficItsV2xVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4945,6 +4988,7 @@ export default {
 			quantumQubitPulseVaultOpen: false,
 			railwaySignalingTelemetryVaultOpen: false,
 			speechAsrBioacousticsVaultOpen: false,
+			trafficItsV2xVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -5217,6 +5261,7 @@ export default {
 				'toggle-quantum-qubit-pulse-vault-auditor': t('duplicatefinder', 'Toggle Quantum Computing, Cryogenic Qubit and Pulse-Control Vault auditor'),
 				'toggle-railway-signaling-telemetry-vault-auditor': t('duplicatefinder', 'Toggle Railway, ETCS/CBTC Signaling, Wayside Diagnostics and Rolling Stock Telemetry Vault auditor'),
 				'toggle-speech-asr-bioacoustics-vault-auditor': t('duplicatefinder', 'Toggle Speech, Bioacoustics and Multilingual ASR Alignment Vault auditor'),
+				'toggle-traffic-its-v2x-vault-auditor': t('duplicatefinder', 'Toggle Traffic ITS, V2X Connected Mobility and Corridor Signal Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -7097,6 +7142,22 @@ export default {
 		onSpeechAsrBioacousticsVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleTrafficItsV2xVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.trafficItsV2xVaultOpen = !this.trafficItsV2xVaultOpen
+			return true
+		},
+		onTrafficItsV2xVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onTrafficItsV2xVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -8160,6 +8221,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-traffic-its-v2x-vault-auditor') {
+				if (this.toggleTrafficItsV2xVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -9159,7 +9227,8 @@ export default {
 .app-content-topbar .topbar-particle-physics-hep-vault-button,
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button,
-.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button {
+.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
+.app-content-topbar .topbar-traffic-its-v2x-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -9246,7 +9315,8 @@ export default {
 .app-content-topbar .topbar-particle-physics-hep-vault-button,
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button,
-.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button {
+.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
+.app-content-topbar .topbar-traffic-its-v2x-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -9352,7 +9422,8 @@ export default {
 .app-content-topbar .topbar-particle-physics-hep-vault-button svg,
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button svg,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button svg,
-.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button svg {
+.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button svg,
+.app-content-topbar .topbar-traffic-its-v2x-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -9560,7 +9631,9 @@ export default {
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-traffic-its-v2x-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-traffic-its-v2x-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -9664,7 +9737,8 @@ export default {
 .app-content-topbar .topbar-particle-physics-hep-vault-button.is-active,
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button.is-active,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button.is-active,
-.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button.is-active {
+.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button.is-active,
+.app-content-topbar .topbar-traffic-its-v2x-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -9911,6 +9985,7 @@ export default {
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button > *,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button > *,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button > *,
+.app-content-topbar .topbar-traffic-its-v2x-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -10096,6 +10171,7 @@ export default {
 	.app-content-topbar .topbar-quantum-qubit-pulse-vault-button,
 	.app-content-topbar .topbar-railway-signaling-telemetry-vault-button,
 	.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
+	.app-content-topbar .topbar-traffic-its-v2x-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

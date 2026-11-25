@@ -569,6 +569,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-speech-asr-bioacoustics-vault-auditor',
 	},
 	{
+		id: 'toggle-traffic-its-v2x-vault-auditor',
+		keys: ['Alt+Shift+T'],
+		action: 'toggle-traffic-its-v2x-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -810,6 +815,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'S' || key === 's')) {
 			return 'toggle-speech-asr-bioacoustics-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'T' || key === 't')) {
+			return 'toggle-traffic-its-v2x-vault-auditor'
 		}
 		return null
 	}
