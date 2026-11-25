@@ -82,16 +82,28 @@ class FileInfoMapper extends EQBMapper
         return $result;
     }
 
+    private const ALLOWED_HASH_COLUMNS = ['file_hash', 'path_hash'];
+
+    private function validateHashColumn(string $type): string
+    {
+        if (!in_array($type, self::ALLOWED_HASH_COLUMNS, true)) {
+            throw new \InvalidArgumentException('Unsupported hash column: ' . $type);
+        }
+
+        return $type;
+    }
+
     /**
      * @return array<FileInfo>
      */
     public function findByHash(string $hash, string $type = 'file_hash'): array
     {
+        $column = $this->validateHashColumn($type);
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
         ->from($this->getTableName())
         ->where(
-            $qb->expr()->eq($type, $qb->createNamedParameter($hash)),
+            $qb->expr()->eq($column, $qb->createNamedParameter($hash)),
             $qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
         );
 
@@ -102,11 +114,12 @@ class FileInfoMapper extends EQBMapper
 
     public function countByHash(string $hash, string $type = 'file_hash'): int
     {
+        $column = $this->validateHashColumn($type);
         $qb = $this->db->getQueryBuilder();
         $qb->select($qb->func()->count('id'))
             ->from($this->getTableName())
             ->where(
-                $qb->expr()->eq($type, $qb->createNamedParameter($hash)),
+                $qb->expr()->eq($column, $qb->createNamedParameter($hash)),
                 $qb->expr()->eq('ignored', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL))
             );
         $result = $qb->executeQuery();

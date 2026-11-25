@@ -178,21 +178,26 @@ class FileDuplicateMapper extends EQBMapper
         }
 
         if ($limit !== null) {
-            $qb->setMaxResults($limit);
+            $qb->setMaxResults(max(1, $limit));
         }
         if ($offset !== null) {
-            $qb->setFirstResult($offset);
+            $qb->setFirstResult(max(0, $offset));
         }
 
+        $allowedColumns = ['id', 'hash', 'type', 'acknowledged', 'size'];
         if ($orderBy !== null) {
             foreach ($orderBy as $order) {
-                $column = $order[0];
-                $direction = isset($order[1]) ? $order[1] : null;
+                $column = isset($order[0]) && is_string($order[0]) ? $order[0] : '';
+                if (!in_array($column, $allowedColumns, true)) {
+                    throw new \InvalidArgumentException('Unsupported orderBy column: ' . $column);
+                }
+                $rawDirection = isset($order[1]) && is_string($order[1]) ? strtoupper($order[1]) : null;
+                $direction = $rawDirection === null ? null : ($rawDirection === 'ASC' ? 'ASC' : 'DESC');
                 if ($column === 'size') {
-                    $normalizedDir = $direction !== null && strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
+                    $normalizedDir = $direction === 'ASC' ? 'ASC' : 'DESC';
                     $qb->addOrderBy($qb->func()->sum('f.size'), $normalizedDir);
                 } else {
-                    $qualifiedColumn = $sortsBySize && strpos($column, '.') === false ? 'd.' . $column : $column;
+                    $qualifiedColumn = $sortsBySize ? 'd.' . $column : $column;
                     $qb->addOrderBy($qualifiedColumn, $direction);
                 }
             }
@@ -510,8 +515,8 @@ class FileDuplicateMapper extends EQBMapper
         }
 
         // Add pagination
-        $qb->setFirstResult($offset)
-           ->setMaxResults($limit);
+        $qb->setFirstResult(max(0, $offset))
+           ->setMaxResults(max(1, $limit));
 
         return $this->findEntities($qb);
     }

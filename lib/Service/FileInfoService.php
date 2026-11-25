@@ -626,6 +626,18 @@ class FileInfoService
         $userFolder = $this->folderService->getUserFolder($user);
         $scanPath = $userFolder->getPath();
         if (!is_null($path) && !$isShared) {
+            if (str_contains($path, "\0") || preg_match('#(?:^|[\\\\/])\.\.(?:$|[\\\\/])#', $path) === 1) {
+                $this->logger->warning('Rejected invalid scan path containing traversal or null byte', [
+                    'app' => Application::ID,
+                    'user' => $user,
+                ]);
+                CMDUtils::showIfOutputIsPresent(
+                    '<error>Invalid scan path.</error>',
+                    $output
+                );
+
+                return;
+            }
             $scanPath .= DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
             if (!$userFolder->nodeExists(ltrim($path, DIRECTORY_SEPARATOR))) {
                 CMDUtils::showIfOutputIsPresent(
@@ -665,55 +677,14 @@ class FileInfoService
 
     private function handleLockedFile(string $path, ?OutputInterface $output): void
     {
-        try {
-            // Release the lock using the locking provider
-            $this->lockingProvider->releaseAll($path, ILockingProvider::LOCK_SHARED);
-            CMDUtils::showIfOutputIsPresent(
-                "Released lock for file: $path",
-                $output
-            );
-
-            // Check if the file is still locked
-            if ($this->lockingProvider->isLocked($path, ILockingProvider::LOCK_SHARED)) {
-                CMDUtils::showIfOutputIsPresent(
-                    "<error>File is still locked after release attempt: $path</error>",
-                    $output
-                );
-                // Call the method to disable all locks
-                $this->disableAllLocks($output);
-            } else {
-                CMDUtils::showIfOutputIsPresent(
-                    "<info>Successfully released all locks for file: $path</info>",
-                    $output
-                );
-            }
-        } catch (\Exception $e) {
-            CMDUtils::showIfOutputIsPresent(
-                "<error>Failed to release lock for file: $path - " . $e->getMessage() . '</error>',
-                $output
-            );
-            $this->logger->error("Failed to release lock for file: $path", ['exception' => $e]);
-            // Call the method to disable all locks
-            $this->disableAllLocks($output);
-        }
-    }
-
-    private function disableAllLocks(?OutputInterface $output): void
-    {
-        try {
-            $query = $this->connection->prepare('DELETE FROM oc_file_locks WHERE true');
-            $query->execute();
-            CMDUtils::showIfOutputIsPresent(
-                '<info>All locks have been disabled by emptying the oc_file_locks table.</info>',
-                $output
-            );
-        } catch (\Exception $e) {
-            CMDUtils::showIfOutputIsPresent(
-                '<error>Failed to disable all locks: ' . $e->getMessage() . '</error>',
-                $output
-            );
-            $this->logger->error('Failed to disable all locks', ['exception' => $e]);
-        }
+        $this->logger->warning('File is locked, skipping during duplicate scan: {path}', [
+            'app' => Application::ID,
+            'path' => $path,
+        ]);
+        CMDUtils::showIfOutputIsPresent(
+            "<comment>Skipped locked file: $path</comment>",
+            $output
+        );
     }
 
     public function hasAccessRight(FileInfo $fileInfo, string $user): bool

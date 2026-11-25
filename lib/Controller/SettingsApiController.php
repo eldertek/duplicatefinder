@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OCA\DuplicateFinder\Controller;
 
+use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\ConfigService;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -14,7 +18,7 @@ class SettingsApiController extends AbstractAPIController
     private $configService;
 
     public function __construct(
-        $appName,
+        string $appName,
         IRequest $request,
         ?IUserSession $userSession,
         ConfigService $configService,
@@ -57,19 +61,65 @@ class SettingsApiController extends AbstractAPIController
         ];
 
         if (!array_key_exists($key, $configKeys)) {
-            return new DataResponse(['status' => 'error', 'message' => 'Unknown config key']);
+            return new DataResponse(
+                ['status' => 'error', 'message' => 'Unknown config key'],
+                Http::STATUS_BAD_REQUEST
+            );
         }
 
         $method = $configKeys[$key];
 
         if ($method === 'setMountedFilesIgnored' || $method === 'setFilesytemEventsDisabled') {
-            $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            $parsedBool = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($parsedBool === null) {
+                return new DataResponse(
+                    ['status' => 'error', 'message' => 'Invalid boolean value'],
+                    Http::STATUS_BAD_REQUEST
+                );
+            }
+            $value = $parsedBool;
+        } else {
+            if (is_bool($value)) {
+                return new DataResponse(
+                    ['status' => 'error', 'message' => 'Invalid job interval'],
+                    Http::STATUS_BAD_REQUEST
+                );
+            }
+            $parsedInt = filter_var(
+                $value,
+                FILTER_VALIDATE_INT,
+                ['options' => ['min_range' => ConfigService::MIN_JOB_INTERVAL_SECONDS]]
+            );
+            if ($parsedInt === false) {
+                return new DataResponse(
+                    [
+                        'status' => 'error',
+                        'message' => sprintf(
+                            'Invalid job interval: must be an integer >= %d',
+                            ConfigService::MIN_JOB_INTERVAL_SECONDS
+                        ),
+                    ],
+                    Http::STATUS_BAD_REQUEST
+                );
+            }
+            $value = $parsedInt;
         }
 
         try {
             $this->configService->$method($value);
-        } catch (\Exception $e) {
-            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\InvalidArgumentException $e) {
+            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to save setting {key}', [
+                'app' => Application::ID,
+                'key' => $key,
+                'exception' => $e,
+            ]);
+
+            return new DataResponse(
+                ['status' => 'error', 'message' => 'Failed to save configuration'],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
         }
 
         return new DataResponse(['status' => 'success', 'data' => $this->getConfigArray()]);

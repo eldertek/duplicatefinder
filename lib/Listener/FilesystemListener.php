@@ -53,20 +53,13 @@ class FilesystemListener implements IEventListener
             $this->handleDeleteEvent($node);
         } elseif ($event instanceof NodeRenamedEvent) {
             $source = $event->getSource();
-            if ($event->getTarget() instanceof Folder) {
+            $target = $event->getTarget();
+            if ($target instanceof Folder) {
                 // Only files are tracked: a folder has no file info to move
                 return;
             }
 
-            try {
-                $fileInfo = $this->fileInfoService->find($source->getPath(), $source->getOwner()->getUID());
-            } catch (\Throwable $e) {
-                $fileInfo = $this->fileInfoService->find($source->getPath(), null);
-            }
-            $target = $event->getTarget();
-            $fileInfo->setPath($target->getPath());
-            $fileInfo->setOwner($target->getOwner()->getUID());
-            $this->fileInfoService->update($fileInfo);
+            $this->handleRenameEvent($source, $target);
         } elseif ($event instanceof AbstractNodeEvent) {
             $node = $event->getNode();
             if ($node instanceof Folder) {
@@ -75,37 +68,127 @@ class FilesystemListener implements IEventListener
                 return;
             }
 
-            try {
-                $fileInfo = $this->fileInfoService->save($node->getPath(), $node->getOwner()->getUID());
-            } catch (ForcedToIgnoreFileException $e) {
-                $this->logger->info($e->getMessage(), ['exception' => $e]);
-            } catch (\Throwable $e) {
+            $this->handleNodeSaveEvent($node);
+        }
+    }
+
+    private function resolveOwnerUid(Node $node): ?string
+    {
+        try {
+            $owner = $node->getOwner();
+
+            return $owner !== null ? $owner->getUID() : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function handleRenameEvent(Node $source, Node $target): void
+    {
+        $sourcePath = $source->getPath();
+        $sourceOwner = $this->resolveOwnerUid($source);
+
+        try {
+            $fileInfo = null;
+            if ($sourceOwner !== null) {
                 try {
-                    $fileInfo = $this->fileInfoService->save($node->getPath(), null);
-                } catch (ForcedToIgnoreFileException $e) {
-                    $this->logger->info($e->getMessage(), ['exception' => $e]);
+                    $fileInfo = $this->fileInfoService->find($sourcePath, $sourceOwner);
+                } catch (\Throwable $e) {
+                    $fileInfo = null;
                 }
             }
+            if ($fileInfo === null) {
+                try {
+                    $fileInfo = $this->fileInfoService->find($sourcePath, null);
+                } catch (DoesNotExistException $e) {
+                    return;
+                }
+            }
+
+            $fileInfo->setPath($target->getPath());
+            $targetOwner = $this->resolveOwnerUid($target);
+            if ($targetOwner !== null) {
+                $fileInfo->setOwner($targetOwner);
+            }
+            $this->fileInfoService->update($fileInfo, $targetOwner);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Failed to update file info after rename', [
+                'source' => $sourcePath,
+                'target' => $target->getPath(),
+                'exception' => $e,
+            ]);
+        }
+    }
+
+    private function handleNodeSaveEvent(Node $node): void
+    {
+        $nodePath = $node->getPath();
+        $ownerUid = $this->resolveOwnerUid($node);
+
+        try {
+            if ($ownerUid !== null) {
+                $this->fileInfoService->save($nodePath, $ownerUid);
+
+                return;
+            }
+            $this->fileInfoService->save($nodePath, null);
+        } catch (ForcedToIgnoreFileException $e) {
+            $this->logger->info($e->getMessage(), ['exception' => $e]);
+        } catch (\Throwable $e) {
+            if ($ownerUid !== null) {
+                try {
+                    $this->fileInfoService->save($nodePath, null);
+
+                    return;
+                } catch (ForcedToIgnoreFileException $ignored) {
+                    $this->logger->info($ignored->getMessage(), ['exception' => $ignored]);
+
+                    return;
+                } catch (\Throwable $fallbackError) {
+                    $e = $fallbackError;
+                }
+            }
+            $this->logger->warning('Failed to index file on filesystem event', [
+                'path' => $nodePath,
+                'exception' => $e,
+            ]);
         }
     }
 
     private function handleDeleteEvent(Node $node): void
     {
+        $nodePath = $node->getPath();
+        $ownerUid = $this->resolveOwnerUid($node);
+
         try {
-            $fileInfo = $this->fileInfoService->find($node->getPath(), $node->getOwner()->getUID());
+            $fileInfo = null;
+            if ($ownerUid !== null) {
+                try {
+                    $fileInfo = $this->fileInfoService->find($nodePath, $ownerUid);
+                } catch (\Throwable $e) {
+                    $fileInfo = null;
+                }
+            }
+            if ($fileInfo === null) {
+                try {
+                    $fileInfo = $this->fileInfoService->find($nodePath, null);
+                } catch (DoesNotExistException $e) {
+                    return;
+                }
+            }
+
+            $this->fileInfoService->delete($fileInfo);
+            if (!is_null($fileInfo->getFileHash())) {
+                $count = $this->fileInfoService->countByHash($fileInfo->getFileHash());
+                if ($count < 2) {
+                    $this->fileDuplicateService->delete($fileInfo->getFileHash());
+                }
+            }
         } catch (\Throwable $e) {
-            try {
-                $fileInfo = $this->fileInfoService->find($node->getPath(), null);
-            } catch (DoesNotExistException $e) {
-                return;
-            }
-        }
-        $this->fileInfoService->delete($fileInfo);
-        if (!is_null($fileInfo->getFileHash())) {
-            $count = $this->fileInfoService->countByHash($fileInfo->getFileHash());
-            if ($count < 2) {
-                $this->fileDuplicateService->delete($fileInfo->getFileHash());
-            }
+            $this->logger->warning('Failed to clean up file info after delete event', [
+                'path' => $nodePath,
+                'exception' => $e,
+            ]);
         }
     }
 }
