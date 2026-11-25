@@ -12,6 +12,7 @@ use OCA\DuplicateFinder\Service\FolderDuplicateService;
 use OCA\DuplicateFinder\Service\FolderService;
 use OCA\DuplicateFinder\Service\OriginFolderService;
 use OCA\DuplicateFinder\Service\ScanStatusService;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\ISession;
@@ -208,6 +209,8 @@ class DuplicateApiController extends AbstractAPIController
             ];
 
             return new DataResponse($data);
+        } catch (NotAuthenticatedException $e) {
+            return $this->handleException($e);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occurred', ['app' => Application::ID, 'exception' => $e]);
 
@@ -306,6 +309,16 @@ class DuplicateApiController extends AbstractAPIController
      */
     public function acknowledge(string $hash): DataResponse
     {
+        try {
+            $this->getUserId();
+        } catch (NotAuthenticatedException $e) {
+            return $this->handleException($e);
+        }
+
+        if (trim($hash) === '') {
+            return new DataResponse(['status' => 'error', 'message' => 'Hash is required'], Http::STATUS_BAD_REQUEST);
+        }
+
         $this->fileDuplicateMapper->markAsAcknowledged($hash);
 
         return new DataResponse(['status' => 'success']);
@@ -317,6 +330,16 @@ class DuplicateApiController extends AbstractAPIController
      */
     public function unacknowledge(string $hash): DataResponse
     {
+        try {
+            $this->getUserId();
+        } catch (NotAuthenticatedException $e) {
+            return $this->handleException($e);
+        }
+
+        if (trim($hash) === '') {
+            return new DataResponse(['status' => 'error', 'message' => 'Hash is required'], Http::STATUS_BAD_REQUEST);
+        }
+
         $this->fileDuplicateMapper->unmarkAcknowledged($hash);
 
         return new DataResponse(['status' => 'success']);

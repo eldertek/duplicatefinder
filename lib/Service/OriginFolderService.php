@@ -22,6 +22,9 @@ class OriginFolderService
     private string $userId;
     private LoggerInterface $logger;
 
+    /** @var array<string, OriginFolder[]> */
+    private array $originFoldersCache = [];
+
     public function __construct(
         OriginFolderMapper $mapper,
         IRootFolder $rootFolder,
@@ -60,30 +63,36 @@ class OriginFolderService
     public function create(string $folderPath): OriginFolder
     {
         $this->validateUserContext();
-        $this->logger->debug('Creating origin folder: {path}', ['path' => $folderPath]);
+        $normalizedPath = $this->normalizePath($folderPath, true);
+        if ($normalizedPath === null || $normalizedPath === '/') {
+            throw new \InvalidArgumentException('Invalid origin folder path: ' . $folderPath);
+        }
+
+        $this->logger->debug('Creating origin folder: {path}', ['path' => $normalizedPath]);
 
         // Verify that the folder exists
         $userFolder = $this->rootFolder->getUserFolder($this->userId);
-        if (!$userFolder->nodeExists($folderPath)) {
-            $this->logger->warning('Folder not found: {path}', ['path' => $folderPath]);
+        if (!$userFolder->nodeExists($normalizedPath)) {
+            $this->logger->warning('Folder not found: {path}', ['path' => $normalizedPath]);
 
-            throw new NotFoundException('Folder does not exist: ' . $folderPath);
+            throw new NotFoundException('Folder does not exist: ' . $normalizedPath);
         }
 
         // Check if it's already an origin folder
-        if ($this->mapper->exists($this->userId, $folderPath)) {
-            $this->logger->warning('Folder already exists as origin: {path}', ['path' => $folderPath]);
+        if ($this->mapper->exists($this->userId, $normalizedPath)) {
+            $this->logger->warning('Folder already exists as origin: {path}', ['path' => $normalizedPath]);
 
-            throw new Exception('Folder is already an origin folder: ' . $folderPath);
+            throw new Exception('Folder is already an origin folder: ' . $normalizedPath);
         }
 
         $originFolder = new OriginFolder();
         $originFolder->setUserId($this->userId);
-        $originFolder->setFolderPath($folderPath);
+        $originFolder->setFolderPath($normalizedPath);
         $originFolder->setCreatedAt((new DateTime())->format('Y-m-d H:i:s'));
 
         $result = $this->mapper->insert($originFolder);
-        $this->logger->info('Successfully created origin folder: {path}', ['path' => $folderPath]);
+        unset($this->originFoldersCache[$this->userId]);
+        $this->logger->info('Successfully created origin folder: {path}', ['path' => $normalizedPath]);
 
         return $result;
     }
@@ -104,7 +113,10 @@ class OriginFolderService
                 throw new DoesNotExistException('Not found');
             }
 
-            return $this->mapper->delete($originFolder);
+            $deleted = $this->mapper->delete($originFolder);
+            unset($this->originFoldersCache[$this->userId]);
+
+            return $deleted;
         } catch (Exception $e) {
             throw new DoesNotExistException($e->getMessage());
         }
@@ -119,15 +131,38 @@ class OriginFolderService
     public function isPathProtected(string $path): array
     {
         $this->validateUserContext();
-        $originFolders = $this->findAll();
+        if (trim($path) === '') {
+            return [
+                'isProtected' => false,
+                'protectingFolder' => null,
+            ];
+        }
+
+        $normalizedTarget = $this->normalizePath($path, false);
+        if ($normalizedTarget === null) {
+            // Fail closed on null-byte or root-escaping traversal paths
+            return [
+                'isProtected' => true,
+                'protectingFolder' => '/',
+            ];
+        }
+
+        if (!isset($this->originFoldersCache[$this->userId])) {
+            $this->originFoldersCache[$this->userId] = $this->findAll();
+        }
+        $originFolders = $this->originFoldersCache[$this->userId];
+
         foreach ($originFolders as $folder) {
-            $folderPath = $folder->getFolderPath();
-            // Check if path is exactly the protected folder or is a direct child of it
-            if ($path === $folderPath ||
-                (str_starts_with($path, $folderPath . '/') && strlen($path) > strlen($folderPath) + 1)) {
+            $normalizedOrigin = $this->normalizePath((string)$folder->getFolderPath(), false);
+            if ($normalizedOrigin === null) {
+                continue;
+            }
+            if ($normalizedOrigin === '/'
+                || $normalizedTarget === $normalizedOrigin
+                || str_starts_with($normalizedTarget, $normalizedOrigin . '/')) {
                 return [
                     'isProtected' => true,
-                    'protectingFolder' => $folderPath,
+                    'protectingFolder' => $normalizedOrigin,
                 ];
             }
         }
@@ -136,6 +171,45 @@ class OriginFolderService
             'isProtected' => false,
             'protectingFolder' => null,
         ];
+    }
+
+    public function resetCache(): void
+    {
+        $this->originFoldersCache = [];
+    }
+
+    private function normalizePath(string $path, bool $rejectTraversal): ?string
+    {
+        if (str_contains($path, "\0")) {
+            return null;
+        }
+
+        $normalized = str_replace('\\', '/', trim($path));
+        if ($normalized === '') {
+            return null;
+        }
+
+        if ($this->userId !== '') {
+            $prefixPattern = '#^/' . preg_quote($this->userId, '#') . '/files(?=/|$)#';
+            $normalized = (string)preg_replace($prefixPattern, '', $normalized);
+        }
+
+        $segments = [];
+        foreach (explode('/', $normalized) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                if ($rejectTraversal || $segments === []) {
+                    return null;
+                }
+                array_pop($segments);
+                continue;
+            }
+            $segments[] = $segment;
+        }
+
+        return $segments === [] ? '/' : '/' . implode('/', $segments);
     }
 
     /**

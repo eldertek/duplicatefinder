@@ -111,14 +111,16 @@ class ProjectService
     public function create(string $name, array $folderPaths): Project
     {
         $this->validateUserContext();
+        $normalizedFolders = $this->validateAndNormalizeFolderPaths($folderPaths);
+
         $this->logger->debug('Creating project: {name} with folders: {folders}', [
             'name' => $name,
-            'folders' => implode(', ', $folderPaths),
+            'folders' => implode(', ', $normalizedFolders),
         ]);
 
         // Verify that all folders exist
         $userFolder = $this->rootFolder->getUserFolder($this->userId);
-        foreach ($folderPaths as $folderPath) {
+        foreach ($normalizedFolders as $folderPath) {
             if (!$userFolder->nodeExists($folderPath)) {
                 $this->logger->warning('Folder not found: {path}', ['path' => $folderPath]);
 
@@ -136,8 +138,8 @@ class ProjectService
         $project = $this->mapper->insert($project);
 
         // Add folders
-        $this->mapper->addFolders($project->getId(), $folderPaths);
-        $project->setFolders($folderPaths);
+        $this->mapper->addFolders($project->getId(), $normalizedFolders);
+        $project->setFolders($normalizedFolders);
 
         $this->logger->info('Successfully created project: {name} with ID {id}', [
             'name' => $name,
@@ -164,13 +166,10 @@ class ProjectService
         // Get the project
         $project = $this->mapper->find($id, $this->userId);
 
-        // Update the name
-        $project->setName($name);
-        $project = $this->mapper->update($project);
-
-        // Verify that all folders exist
+        // Validate and verify all folders exist before mutating the project
+        $normalizedFolders = $this->validateAndNormalizeFolderPaths($folderPaths);
         $userFolder = $this->rootFolder->getUserFolder($this->userId);
-        foreach ($folderPaths as $folderPath) {
+        foreach ($normalizedFolders as $folderPath) {
             if (!$userFolder->nodeExists($folderPath)) {
                 $this->logger->warning('Folder not found: {path}', ['path' => $folderPath]);
 
@@ -178,10 +177,14 @@ class ProjectService
             }
         }
 
+        // Update the name
+        $project->setName($name);
+        $project = $this->mapper->update($project);
+
         // Update folders
         $this->mapper->removeFolders($id);
-        $this->mapper->addFolders($id, $folderPaths);
-        $project->setFolders($folderPaths);
+        $this->mapper->addFolders($id, $normalizedFolders);
+        $project->setFolders($normalizedFolders);
 
         return $project;
     }
@@ -307,26 +310,27 @@ class ProjectService
             $filesInProjectCount = 0;
             $matchedFiles = [];
 
+            $normalizedFolderPaths = [];
+            foreach ($folderPaths as $folderPath) {
+                if (!is_string($folderPath)) {
+                    continue;
+                }
+                $norm = $this->normalizeFolderPath($folderPath);
+                if ($norm !== null) {
+                    $normalizedFolderPaths[] = $norm;
+                }
+            }
+
             foreach ($filePaths as $fileData) {
                 // Get the file path from the data array
-                $filePath = $fileData['path'];
+                $filePath = (string)$fileData['path'];
+                $normalizedFilePath = $this->normalizeUserRelativeFilePath($filePath);
 
-                // Check if this file is in one of the project folders
-                foreach ($folderPaths as $folderPath) {
-                    // Construct the full path pattern to match
-                    // The file paths are in the format '/admin/files/Photos/file.jpg'
-                    // The folder paths are in the format '/Photos'
-                    // So we need to check if the file path contains '/files' + folderPath
-                    $fullFolderPath = '/files' . $folderPath;
-
-                    $this->logger->debug('Checking if file is in folder', [
-                        'app' => 'duplicatefinder',
-                        'filePath' => $filePath,
-                        'folderPath' => $folderPath,
-                        'fullFolderPath' => $fullFolderPath,
-                    ]);
-
-                    if (strpos($filePath, $fullFolderPath) !== false) {
+                // Check if this file is in one of the project folders with strict segment boundaries
+                foreach ($normalizedFolderPaths as $normalizedFolderPath) {
+                    if ($normalizedFolderPath === '/'
+                        || $normalizedFilePath === $normalizedFolderPath
+                        || str_starts_with($normalizedFilePath, $normalizedFolderPath . '/')) {
                         $filesInProject = true;
                         $filesInProjectCount++;
                         $matchedFiles[] = $filePath;
@@ -334,8 +338,7 @@ class ProjectService
                         $this->logger->debug('File matched folder', [
                             'app' => 'duplicatefinder',
                             'filePath' => $filePath,
-                            'folderPath' => $folderPath,
-                            'fullFolderPath' => $fullFolderPath,
+                            'folderPath' => $normalizedFolderPath,
                         ]);
 
                         break;
@@ -394,12 +397,18 @@ class ProjectService
     {
         $this->validateUserContext();
 
+        // Enforce project ownership before exposing project duplicates or pagination metadata
+        $this->mapper->find($projectId, $this->userId);
+
+        $safePage = max(1, $page);
+        $safeLimit = max(1, $limit);
+
         $this->logger->debug('Getting duplicates for project', [
             'app' => 'duplicatefinder',
             'projectId' => $projectId,
             'type' => $type,
-            'page' => $page,
-            'limit' => $limit,
+            'page' => $safePage,
+            'limit' => $safeLimit,
             'userId' => $this->userId,
         ]);
 
@@ -417,7 +426,7 @@ class ProjectService
             return [
                 'entities' => [],
                 'pagination' => [
-                    'currentPage' => $page,
+                    'currentPage' => $safePage,
                     'totalPages' => 0,
                     'totalItems' => 0,
                 ],
@@ -432,18 +441,18 @@ class ProjectService
         ]);
 
         $totalItems = $this->duplicateMapper->countByIds($duplicateIds, $type);
-        $totalPages = ceil($totalItems / $limit);
+        $totalPages = ceil($totalItems / $safeLimit);
 
         $this->logger->debug('Pagination info', [
             'app' => 'duplicatefinder',
             'totalItems' => $totalItems,
             'totalPages' => $totalPages,
-            'currentPage' => $page,
-            'limit' => $limit,
+            'currentPage' => $safePage,
+            'limit' => $safeLimit,
         ]);
 
         // Get the duplicates for the current page
-        $duplicates = $this->duplicateMapper->findByIds($duplicateIds, $type, $limit, ($page - 1) * $limit);
+        $duplicates = $this->duplicateMapper->findByIds($duplicateIds, $type, $safeLimit, ($safePage - 1) * $safeLimit);
 
         // Load files for each duplicate
         foreach ($duplicates as $duplicate) {
@@ -467,37 +476,32 @@ class ProjectService
                 $fileInfo->setOwner($this->userId);
 
                 // Set additional properties from the database
-                if (method_exists($fileInfo, 'setSize')) {
-                    // Get file size from Nextcloud storage if available
-                    $size = (int)$data['size'];
-                    if ($size <= 0) {
-                        // Try to get the real file size from the filesystem
-                        try {
-                            $userFolder = $this->rootFolder->getUserFolder($this->userId);
-                            $relativePath = str_replace('/admin/files', '', $data['path']);
-                            if ($userFolder->nodeExists($relativePath)) {
-                                $node = $userFolder->get($relativePath);
-                                $size = $node->getSize();
-                                $this->logger->debug('Got file size from filesystem', [
-                                    'app' => 'duplicatefinder',
-                                    'path' => $data['path'],
-                                    'relativePath' => $relativePath,
-                                    'size' => $size,
-                                ]);
-                            }
-                        } catch (\Exception $e) {
-                            $this->logger->debug('Error getting file size from filesystem', [
+                $size = (int)$data['size'];
+                if ($size <= 0) {
+                    // Try to get the real file size from the filesystem
+                    try {
+                        $userFolder = $this->rootFolder->getUserFolder($this->userId);
+                        $relativePath = $this->normalizeUserRelativeFilePath((string)$data['path']);
+                        if ($userFolder->nodeExists($relativePath)) {
+                            $node = $userFolder->get($relativePath);
+                            $size = $node->getSize();
+                            $this->logger->debug('Got file size from filesystem', [
                                 'app' => 'duplicatefinder',
                                 'path' => $data['path'],
-                                'error' => $e->getMessage(),
+                                'relativePath' => $relativePath,
+                                'size' => $size,
                             ]);
                         }
+                    } catch (\Exception $e) {
+                        $this->logger->debug('Error getting file size from filesystem', [
+                            'app' => 'duplicatefinder',
+                            'path' => $data['path'],
+                            'error' => $e->getMessage(),
+                        ]);
                     }
-                    $fileInfo->setSize($size);
                 }
-                if (method_exists($fileInfo, 'setUpdatedAt')) {
-                    $fileInfo->setUpdatedAt((int)$data['updated_at']); // Use actual timestamp from database
-                }
+                $fileInfo->setSize($size);
+                $fileInfo->setUpdatedAt((int)$data['updated_at']);
                 $files[] = $fileInfo;
             }
 
@@ -514,8 +518,8 @@ class ProjectService
         $this->logger->debug('Found duplicates for page', [
             'app' => 'duplicatefinder',
             'count' => count($duplicates),
-            'page' => $page,
-            'limit' => $limit,
+            'page' => $safePage,
+            'limit' => $safeLimit,
         ]);
 
         // Log details about each duplicate
@@ -533,10 +537,67 @@ class ProjectService
         return [
             'entities' => $duplicates,
             'pagination' => [
-                'currentPage' => $page,
+                'currentPage' => $safePage,
                 'totalPages' => $totalPages,
                 'totalItems' => $totalItems,
             ],
         ];
+    }
+
+    /**
+     * @param array<mixed> $folderPaths
+     * @return string[]
+     */
+    private function validateAndNormalizeFolderPaths(array $folderPaths): array
+    {
+        $normalized = [];
+        foreach ($folderPaths as $folderPath) {
+            if (!is_string($folderPath)) {
+                throw new \InvalidArgumentException('Invalid project folder path');
+            }
+            $clean = $this->normalizeFolderPath($folderPath);
+            if ($clean === null) {
+                throw new \InvalidArgumentException('Invalid project folder path: ' . $folderPath);
+            }
+            $normalized[] = $clean;
+        }
+
+        return array_values(array_unique($normalized));
+    }
+
+    private function normalizeFolderPath(string $folderPath): ?string
+    {
+        if (str_contains($folderPath, "\0")) {
+            return null;
+        }
+        $trimmed = str_replace('\\', '/', trim($folderPath));
+        if ($trimmed === '') {
+            return null;
+        }
+        if ($this->userId !== '') {
+            $prefixPattern = '#^/' . preg_quote($this->userId, '#') . '/files(?=/|$)#';
+            $trimmed = (string)preg_replace($prefixPattern, '', $trimmed);
+        }
+
+        $segments = [];
+        foreach (explode('/', $trimmed) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                return null;
+            }
+            $segments[] = $segment;
+        }
+
+        return $segments === [] ? '/' : '/' . implode('/', $segments);
+    }
+
+    private function normalizeUserRelativeFilePath(string $filePath): string
+    {
+        $clean = str_replace('\\', '/', trim($filePath));
+        $relative = preg_replace('#^/[^/]+/files(?=/|$)#', '', $clean);
+
+        return '/' . trim((string)$relative, '/');
     }
 }

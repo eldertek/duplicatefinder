@@ -100,14 +100,17 @@ class ExcludedFolderMapper extends QBMapper
      */
     public function isPathInExcludedFolder(string $userId, string $path): bool
     {
-        $normalizedPath = '/' . trim($path, '/');
+        if (str_contains($path, "\0")) {
+            return false;
+        }
+        $normalizedPath = '/' . trim(str_replace('\\', '/', $path), '/');
 
         $excludedFolders = $this->findAllForUser($userId);
 
         foreach ($excludedFolders as $folder) {
-            $excludedPath = '/' . trim($folder->getFolderPath(), '/');
+            $excludedPath = '/' . trim(str_replace('\\', '/', $folder->getFolderPath()), '/');
 
-            if (str_starts_with($normalizedPath, $excludedPath)) {
+            if ($excludedPath === '/' || $normalizedPath === $excludedPath || str_starts_with($normalizedPath, $excludedPath . '/')) {
                 return true;
             }
         }

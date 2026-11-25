@@ -6,6 +6,7 @@ use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Service\FileDuplicateService;
 use OCA\DuplicateFinder\Service\ProjectService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 use OCP\ISession;
@@ -48,12 +49,26 @@ class ProjectApiController extends Controller
         return $user ? $user->getUID() : null;
     }
 
+    private function requireAuthenticatedUser(): ?DataResponse
+    {
+        $userId = $this->getUserId();
+        if ($userId === null || $userId === '') {
+            return new DataResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+        $this->projectService->setUserId($userId);
+
+        return null;
+    }
+
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
      */
     public function index(): DataResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
         try {
             $projects = $this->projectService->findAll();
 
@@ -74,6 +89,9 @@ class ProjectApiController extends Controller
      */
     public function show(int $id): DataResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
         try {
             $project = $this->projectService->find($id);
 
@@ -94,6 +112,9 @@ class ProjectApiController extends Controller
      */
     public function create(string $name, array $folders): DataResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
         try {
             $project = $this->projectService->create($name, $folders);
 
@@ -114,6 +135,9 @@ class ProjectApiController extends Controller
      */
     public function update(int $id, string $name, array $folders): DataResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
         try {
             $project = $this->projectService->update($id, $name, $folders);
 
@@ -134,6 +158,9 @@ class ProjectApiController extends Controller
      */
     public function destroy(int $id): DataResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
         try {
             $this->projectService->delete($id);
 
@@ -154,6 +181,9 @@ class ProjectApiController extends Controller
      */
     public function scan(int $id): DataResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
         try {
             $this->logger->debug('Starting scan for project ID: ' . $id, [
                 'app' => Application::ID,
@@ -191,16 +221,21 @@ class ProjectApiController extends Controller
      */
     public function duplicates(int $id, string $type = 'all', int $page = 1, int $limit = 50): DataResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
         try {
+            $safePage = max(1, $page);
+            $safeLimit = max(1, $limit);
             $this->logger->debug('Fetching duplicates for project ID: ' . $id, [
                 'app' => Application::ID,
                 'userId' => $this->getUserId(),
                 'type' => $type,
-                'page' => $page,
-                'limit' => $limit,
+                'page' => $safePage,
+                'limit' => $safeLimit,
             ]);
 
-            $result = $this->projectService->getDuplicates($id, $type, $page, $limit);
+            $result = $this->projectService->getDuplicates($id, $type, $safePage, $safeLimit);
 
             $this->logger->debug('Got duplicates result from service', [
                 'app' => Application::ID,

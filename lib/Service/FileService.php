@@ -72,8 +72,20 @@ class FileService
             'userId' => $userId,
         ]);
 
+        if ($userId === '') {
+            throw new NotPermittedException('Authentication required');
+        }
+        if ($filePath !== '' && (str_contains($filePath, "\0") || preg_match('#(?:^|[\\\\/])\.\.(?:$|[\\\\/])#', $filePath) === 1)) {
+            throw new \InvalidArgumentException('Invalid file path');
+        }
+        if ($filePath === '' && $nodeId === null) {
+            throw new \InvalidArgumentException('File path or node ID is required');
+        }
+
         // Check if file is in an origin folder
-        $this->originFolderService->assertNotProtected($filePath);
+        if ($filePath !== '') {
+            $this->originFolderService->assertNotProtected($filePath);
+        }
 
         $userFolder = $this->folderService->getUserFolder($userId);
         $node = $this->resolveNode($userFolder, $filePath, $nodeId);

@@ -32,12 +32,12 @@ class FileApiController extends Controller
         string $AppName,
         IRequest $request,
         FileService $service,
-        string $userId,
+        ?string $userId,
         LoggerInterface $logger
     ) {
         parent::__construct($AppName, $request);
         $this->service = $service;
-        $this->userId = $userId;
+        $this->userId = $userId ?? '';
         $this->logger = $logger;
     }
 
@@ -50,6 +50,10 @@ class FileApiController extends Controller
      */
     public function delete(): JSONResponse
     {
+        if ($this->userId === '') {
+            return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $path = $this->request->getParam('path');
         $paths = $this->request->getParam('paths');
         // Optional, sent by the web interface: which node it is and which duplicate group it belongs to
@@ -71,6 +75,14 @@ class FileApiController extends Controller
         try {
             if (!empty($paths) && is_array($paths)) {
                 foreach ($paths as $singlePath) {
+                    if (!is_string($singlePath) || trim($singlePath) === '') {
+                        $results['errors'][] = [
+                            'path' => is_string($singlePath) ? $singlePath : '',
+                            'error' => 'INVALID_PATH',
+                            'message' => 'Invalid file path',
+                        ];
+                        continue;
+                    }
                     try {
                         $this->logger->debug('Attempting to delete file: {path}', ['path' => $singlePath]);
                         if ($allowLivePhotoPair) {
@@ -93,6 +105,12 @@ class FileApiController extends Controller
 
                 return new JSONResponse($results);
             } else {
+                if ($path !== null && !is_string($path)) {
+                    return new JSONResponse(
+                        ['error' => 'INVALID_PATH', 'message' => 'Invalid file path'],
+                        Http::STATUS_BAD_REQUEST
+                    );
+                }
                 $this->logger->debug('Attempting to delete single file: {path}', ['path' => $path]);
                 if ($allowLivePhotoPair) {
                     $deletedNodeIds = $this->service->deleteFile(
@@ -136,10 +154,12 @@ class FileApiController extends Controller
     private function getDeletionErrorStatus(Exception $e): int
     {
         return match (true) {
+            $e instanceof \InvalidArgumentException => Http::STATUS_BAD_REQUEST,
             $e instanceof OriginFolderProtectionException => Http::STATUS_FORBIDDEN,
             $e instanceof LastCopyProtectionException => Http::STATUS_CONFLICT,
             $e instanceof LivePhotoProtectionException => Http::STATUS_CONFLICT,
             $e instanceof AbortedDeletionException => Http::STATUS_CONFLICT,
+            $e instanceof LivePhotoConfirmationRequiredException => Http::STATUS_CONFLICT,
             $e instanceof LivePhotoPairProtectionException => Http::STATUS_CONFLICT,
             $e instanceof \OCP\Files\NotFoundException => Http::STATUS_NOT_FOUND,
             $e instanceof \OCP\Files\NotPermittedException => Http::STATUS_FORBIDDEN,
@@ -151,6 +171,10 @@ class FileApiController extends Controller
     private function getDeletionError(Exception $e, string $path): array
     {
         return match (true) {
+            $e instanceof \InvalidArgumentException => [
+                'error' => 'INVALID_PATH',
+                'message' => $e->getMessage(),
+            ],
             $e instanceof OriginFolderProtectionException => [
                 'error' => 'ORIGIN_FOLDER_PROTECTED',
                 'message' => $e->getMessage(),

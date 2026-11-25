@@ -60,8 +60,26 @@ class ExcludedFolderService
     {
         $this->validateUserContext();
 
+        if (str_contains($folderPath, "\0")) {
+            throw new \RuntimeException('Invalid folder path');
+        }
+
+        $segments = [];
+        foreach (explode('/', str_replace('\\', '/', trim($folderPath))) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                throw new \RuntimeException('Invalid folder path');
+            }
+            $segments[] = $segment;
+        }
+        if ($segments === []) {
+            throw new \RuntimeException('Root folder cannot be excluded');
+        }
+
         // Normalize path
-        $folderPath = '/' . trim($folderPath, '/');
+        $folderPath = '/' . implode('/', $segments);
         $this->logger->debug('Creating excluded folder', [
             'path' => $folderPath,
             'userId' => $this->userId,
@@ -145,9 +163,28 @@ class ExcludedFolderService
     {
         $this->validateUserContext();
 
-        // Normalize path for comparison - remove /admin/files/ prefix
-        $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $path);
-        $normalizedPath = '/' . trim($normalizedPath, '/');
+        if (str_contains($path, "\0")) {
+            return false;
+        }
+
+        // Normalize path for comparison - remove /<user>/files prefix
+        $normalized = str_replace('\\', '/', trim($path));
+        $normalized = (string)preg_replace('#^/[^/]+/files(?=/|$)#', '/', $normalized);
+        $segments = [];
+        foreach (explode('/', $normalized) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                if ($segments === []) {
+                    return false;
+                }
+                array_pop($segments);
+                continue;
+            }
+            $segments[] = $segment;
+        }
+        $normalizedPath = $segments === [] ? '/' : '/' . implode('/', $segments);
 
         // Get all excluded folders
         if (!isset($this->excludedFoldersCache[$this->userId])) {
@@ -156,10 +193,10 @@ class ExcludedFolderService
         $excludedFolders = $this->excludedFoldersCache[$this->userId];
 
         foreach ($excludedFolders as $folder) {
-            $excludedPath = '/' . trim($folder->getFolderPath(), '/');
+            $excludedPath = '/' . trim(str_replace('\\', '/', $folder->getFolderPath()), '/');
 
             // Check if the path is either exactly the excluded path or starts with it followed by a slash
-            if ($normalizedPath === $excludedPath || str_starts_with($normalizedPath, $excludedPath . '/')) {
+            if ($excludedPath === '/' || $normalizedPath === $excludedPath || str_starts_with($normalizedPath, $excludedPath . '/')) {
                 return true;
             }
         }
