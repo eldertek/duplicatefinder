@@ -265,6 +265,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/GeotechShmCivilVaultWorkbench.vue': { __esModule: true, default: stub('geotech-shm-civil-vault-auditor') },
 			'./components/HydrographyMarineVaultWorkbench.vue': { __esModule: true, default: stub('hydrography-marine-vault-auditor') },
 			'./components/AstronomyFitsInterferometryVaultWorkbench.vue': { __esModule: true, default: stub('astronomy-fits-interferometry-vault-auditor') },
+			'./components/MeteorologyClimateVaultWorkbench.vue': { __esModule: true, default: stub('meteorology-climate-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4696,5 +4697,31 @@ describe('Cycle 209: Alt+Shift+I shortcut for Astronomy, FITS Astrophotography &
 		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'I', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 210: Alt+Shift+J shortcut for Meteorology, Weather Radar, NetCDF & Climate Model Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+J cleanly and preserves Shift+J and j while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-meteorology-climate-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-meteorology-climate-vault-auditor',
+			keys: ['Alt+Shift+J'],
+			action: 'toggle-meteorology-climate-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true }), 'toggle-meteorology-climate-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'j', altKey: true, shiftKey: true }), 'toggle-meteorology-climate-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'J', shiftKey: true }), 'toggle-audio-daw-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'j', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'j' }), 'next-duplicate')
+		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'J', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

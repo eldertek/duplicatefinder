@@ -2808,6 +2808,32 @@
 							<span>{{ t('duplicatefinder', 'Astro & FITS Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-meteorology-climate-vault-button"
+							:class="{ 'is-active': meteorologyClimateVaultOpen }"
+							:aria-pressed="meteorologyClimateVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+J"
+							:title="t('duplicatefinder', 'Toggle Meteorology, Weather Radar, NetCDF and Climate Model Vault auditor')"
+							@click="toggleMeteorologyClimateVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+								<path d="M12 12v6" />
+								<path d="M9 15l3 3 3-3" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Meteo & Climate Vault') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3727,6 +3753,15 @@
 						@compare-duplicate="onAstronomyFitsInterferometryVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="astronomyFitsInterferometryVaultOpen = false" />
+					<MeteorologyClimateVaultWorkbench
+						v-if="meteorologyClimateVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onMeteorologyClimateVaultSelectDuplicate"
+						@compare-duplicate="onMeteorologyClimateVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="meteorologyClimateVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4250,6 +4285,7 @@ import FiberTelecomRfVaultWorkbench from './components/FiberTelecomRfVaultWorkbe
 import GeotechShmCivilVaultWorkbench from './components/GeotechShmCivilVaultWorkbench.vue'
 import HydrographyMarineVaultWorkbench from './components/HydrographyMarineVaultWorkbench.vue'
 import AstronomyFitsInterferometryVaultWorkbench from './components/AstronomyFitsInterferometryVaultWorkbench.vue'
+import MeteorologyClimateVaultWorkbench from './components/MeteorologyClimateVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4402,6 +4438,7 @@ export default {
 		GeotechShmCivilVaultWorkbench,
 		HydrographyMarineVaultWorkbench,
 		AstronomyFitsInterferometryVaultWorkbench,
+		MeteorologyClimateVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4521,6 +4558,7 @@ export default {
 			geotechShmCivilVaultOpen: false,
 			hydrographyMarineVaultOpen: false,
 			astronomyFitsInterferometryVaultOpen: false,
+			meteorologyClimateVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4783,6 +4821,7 @@ export default {
 				'toggle-geotech-shm-civil-vault-auditor': t('duplicatefinder', 'Toggle Geotechnical, SHM, Tunneling TBM and Civil Sensor Vault auditor'),
 				'toggle-hydrography-marine-vault-auditor': t('duplicatefinder', 'Toggle Marine Hydrography, Multibeam Sonar and Subsea ROV Vault auditor'),
 				'toggle-astronomy-fits-interferometry-vault-auditor': t('duplicatefinder', 'Toggle Astronomy, FITS Astrophotography and Radio Interferometry Vault auditor'),
+				'toggle-meteorology-climate-vault-auditor': t('duplicatefinder', 'Toggle Meteorology, Weather Radar, NetCDF and Climate Model Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -6503,6 +6542,22 @@ export default {
 		onAstronomyFitsInterferometryVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleMeteorologyClimateVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.meteorologyClimateVaultOpen = !this.meteorologyClimateVaultOpen
+			return true
+		},
+		onMeteorologyClimateVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onMeteorologyClimateVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -7491,6 +7546,13 @@ export default {
 
 			if (action === 'toggle-astronomy-fits-interferometry-vault-auditor') {
 				if (this.toggleAstronomyFitsInterferometryVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
+			if (action === 'toggle-meteorology-climate-vault-auditor') {
+				if (this.toggleMeteorologyClimateVault() && typeof event.preventDefault === 'function') {
 					event.preventDefault()
 				}
 				return
@@ -8485,7 +8547,8 @@ export default {
 .app-content-topbar .topbar-fiber-telecom-rf-vault-button,
 .app-content-topbar .topbar-geotech-shm-civil-vault-button,
 .app-content-topbar .topbar-hydrography-marine-vault-button,
-.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button {
+.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button,
+.app-content-topbar .topbar-meteorology-climate-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -8562,7 +8625,8 @@ export default {
 .app-content-topbar .topbar-fiber-telecom-rf-vault-button,
 .app-content-topbar .topbar-geotech-shm-civil-vault-button,
 .app-content-topbar .topbar-hydrography-marine-vault-button,
-.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button {
+.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button,
+.app-content-topbar .topbar-meteorology-climate-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -8658,7 +8722,8 @@ export default {
 .app-content-topbar .topbar-fiber-telecom-rf-vault-button svg,
 .app-content-topbar .topbar-geotech-shm-civil-vault-button svg,
 .app-content-topbar .topbar-hydrography-marine-vault-button svg,
-.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button svg {
+.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button svg,
+.app-content-topbar .topbar-meteorology-climate-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -8846,7 +8911,9 @@ export default {
 .app-content-topbar .topbar-hydrography-marine-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-hydrography-marine-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-meteorology-climate-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-meteorology-climate-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -8940,7 +9007,8 @@ export default {
 .app-content-topbar .topbar-fiber-telecom-rf-vault-button.is-active,
 .app-content-topbar .topbar-geotech-shm-civil-vault-button.is-active,
 .app-content-topbar .topbar-hydrography-marine-vault-button.is-active,
-.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button.is-active {
+.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button.is-active,
+.app-content-topbar .topbar-meteorology-climate-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -9177,6 +9245,7 @@ export default {
 .app-content-topbar .topbar-geotech-shm-civil-vault-button > *,
 .app-content-topbar .topbar-hydrography-marine-vault-button > *,
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button > *,
+.app-content-topbar .topbar-meteorology-climate-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -9352,6 +9421,7 @@ export default {
 	.app-content-topbar .topbar-geotech-shm-civil-vault-button,
 	.app-content-topbar .topbar-hydrography-marine-vault-button,
 	.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button,
+	.app-content-topbar .topbar-meteorology-climate-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
