@@ -11,6 +11,8 @@ use Throwable;
 
 class FolderDuplicateService
 {
+    private const MAX_SCAN_DEPTH = 32;
+
     /**
      * Compute duplicate folder groups from enriched FileDuplicate entities.
      *
@@ -160,12 +162,16 @@ class FolderDuplicateService
         $counts = [];
 
         foreach ($folderTrees as $folderPath => $entries) {
-            if (!is_array($entries)) {
+            if (!is_array($entries) || !is_string($folderPath) || $this->hasUnsafePath($folderPath)) {
+                continue;
+            }
+            $normalizedFolder = $this->normalizeFolderPath($folderPath);
+            if ($normalizedFolder === '' || $normalizedFolder === '/') {
                 continue;
             }
             $limit = count($entries) + 1;
             try {
-                $node = $userFolder->get($folderPath);
+                $node = $userFolder->get($normalizedFolder);
                 if (!($node instanceof Folder)) {
                     $counts[$folderPath] = -1;
                     continue;
@@ -199,16 +205,16 @@ class FolderDuplicateService
         return $folderTrees;
     }
 
-    private function countFilesUpToLimit(Folder $folder, int $limit): int
+    private function countFilesUpToLimit(Folder $folder, int $limit, int $depth = 0): int
     {
-        if ($limit <= 0) {
+        if ($limit <= 0 || $depth > self::MAX_SCAN_DEPTH) {
             return 0;
         }
 
         $count = 0;
         foreach ($folder->getDirectoryListing() as $child) {
             if ($child instanceof Folder) {
-                $count += $this->countFilesUpToLimit($child, $limit - $count);
+                $count += $this->countFilesUpToLimit($child, $limit - $count, $depth + 1);
             } elseif ($child instanceof File) {
                 $count++;
             }
@@ -438,12 +444,28 @@ class FolderDuplicateService
      */
     public function normalizeUserFilesPath(string $path): string
     {
-        $normalized = preg_replace('#^/[^/]+/files/#', '/', $path);
+        if ($this->hasUnsafePath($path)) {
+            return '';
+        }
+
+        $sanitized = str_replace('\\', '/', $path);
+        $normalized = preg_replace('#^/[^/]+/files/#', '/', $sanitized);
         if (!is_string($normalized) || $normalized === '') {
             return '';
         }
 
         return '/' . ltrim($normalized, '/');
+    }
+
+    private function hasUnsafePath(string $path): bool
+    {
+        if (str_contains($path, "\0")) {
+            return true;
+        }
+
+        $normalized = str_replace('\\', '/', $path);
+
+        return preg_match('#(?:^|/)\.\.(?:$|/)#', $normalized) === 1;
     }
 
     private function normalizeFolderPath(string $folderPath): string

@@ -158,7 +158,14 @@ class FindDuplicates extends Command
 
         // If project ID is specified, scan only that project
         if ($projectId !== null) {
-            return $this->findDuplicatesForProject((int)$projectId, $users[0]);
+            $rawProjectId = trim((string)$projectId);
+            if (!ctype_digit($rawProjectId) || (int)$rawProjectId <= 0) {
+                $output->writeln('<error>Invalid --project ID "' . (string)$projectId . '", must be a positive integer.</error>');
+
+                return 1;
+            }
+
+            return $this->findDuplicatesForProject((int)$rawProjectId, $users[0]);
         }
 
         return (!empty($users)) ? $this->findDuplicatesForUsers($users, $paths) : $this->findAllDuplicates($paths);

@@ -101,41 +101,47 @@ class CleanUpDB extends TimedJob
         // Clean up any unhandled delete or rename events
         $this->logger->debug('CleanUpDB: Starting cleanup job');
         $checked = 0;
+        $checkedOrphanHashes = [];
+        $this->excludedFolderService->resetCache();
 
-        foreach ($this->readFileInfos() as $fileInfo) {
-            $checked++;
-            // Set the user context for the excluded folder service if we have an owner
-            if ($fileInfo->getOwner()) {
-                $this->logger->debug('CleanUpDB: Setting user context for file: {path}', [
-                    'path' => $fileInfo->getPath(),
-                    'owner' => $fileInfo->getOwner(),
-                ]);
-                $this->excludedFolderService->setUserId($fileInfo->getOwner());
-            } else {
-                $this->logger->debug('CleanUpDB: No owner for file: {path}', [
-                    'path' => $fileInfo->getPath(),
-                ]);
-                // Clear the user context to avoid using a previous user's context
-                $this->excludedFolderService->setUserId(null);
-            }
-
-            try {
-                // getNodeByFileInfo() does not throw for a deleted file, it returns null (issue 183):
-                // null alone is not proof, group folders of a missing user give null as well
-                $node = $this->folderService->getNodeByFileInfo($fileInfo);
-                if ($node === null && $this->folderService->isNodeGone($fileInfo)) {
-                    $this->removeStaleFileInfo($fileInfo, 'file is gone');
+        try {
+            foreach ($this->readFileInfos() as $fileInfo) {
+                $checked++;
+                // Set the user context for the excluded folder service if we have an owner
+                if ($fileInfo->getOwner()) {
+                    $this->logger->debug('CleanUpDB: Setting user context for file: {path}', [
+                        'path' => $fileInfo->getPath(),
+                        'owner' => $fileInfo->getOwner(),
+                    ]);
+                    $this->excludedFolderService->setUserId($fileInfo->getOwner());
+                } else {
+                    $this->logger->debug('CleanUpDB: No owner for file: {path}', [
+                        'path' => $fileInfo->getPath(),
+                    ]);
+                    // Clear the user context to avoid using a previous user's context
+                    $this->excludedFolderService->setUserId(null);
                 }
-            } catch (NotFoundException $e) {
-                $this->removeStaleFileInfo($fileInfo, $e->getMessage());
-            } catch (\Exception $e) {
-                $this->logger->error('CleanUpDB: Error checking file: {path}', [
-                    'path' => $fileInfo->getPath(),
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-                // Continue with the next file
+
+                try {
+                    // getNodeByFileInfo() does not throw for a deleted file, it returns null (issue 183):
+                    // null alone is not proof, group folders of a missing user give null as well
+                    $node = $this->folderService->getNodeByFileInfo($fileInfo);
+                    if ($node === null && $this->folderService->isNodeGone($fileInfo)) {
+                        $this->removeStaleFileInfo($fileInfo, 'file is gone', $checkedOrphanHashes);
+                    }
+                } catch (NotFoundException $e) {
+                    $this->removeStaleFileInfo($fileInfo, $e->getMessage(), $checkedOrphanHashes);
+                } catch (\Throwable $e) {
+                    $this->logger->error('CleanUpDB: Error checking file: {path}', [
+                        'path' => $fileInfo->getPath(),
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    // Continue with the next file
+                }
             }
+        } finally {
+            $this->excludedFolderService->resetCache();
         }
 
         $this->logger->debug('CleanUpDB: Cleanup job completed, {count} file infos checked', ['count' => $checked]);
@@ -191,8 +197,10 @@ class CleanUpDB extends TimedJob
 
     /**
      * Forget a file that does not exist any more, and its duplicate group if nothing is left to compare with.
+     *
+     * @param array<string, true> $checkedOrphanHashes
      */
-    private function removeStaleFileInfo(FileInfo $fileInfo, string $reason): void
+    private function removeStaleFileInfo(FileInfo $fileInfo, string $reason, array &$checkedOrphanHashes = []): void
     {
         $this->logger->info('CleanUpDB: FileInfo {path} will be deleted (not found)', [
             'path' => $fileInfo->getPath(),
@@ -200,9 +208,17 @@ class CleanUpDB extends TimedJob
         ]);
         $this->fileInfoService->delete($fileInfo);
 
+        $hash = $fileInfo->getFileHash();
+        if ($hash !== null && $hash !== '' && isset($checkedOrphanHashes[$hash])) {
+            return;
+        }
+        if ($hash !== null && $hash !== '') {
+            $checkedOrphanHashes[$hash] = true;
+        }
+
         try {
-            $this->fileDuplicateService->removeIfOrphaned($fileInfo->getFileHash());
-        } catch (\Exception $e) {
+            $this->fileDuplicateService->removeIfOrphaned($hash);
+        } catch (\Throwable $e) {
             $this->logger->warning('CleanUpDB: Could not refresh the duplicate group of {path}', [
                 'path' => $fileInfo->getPath(),
                 'error' => $e->getMessage(),

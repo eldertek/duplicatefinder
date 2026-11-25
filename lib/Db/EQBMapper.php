@@ -2,8 +2,6 @@
 
 namespace OCA\DuplicateFinder\Db;
 
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Doctrine\DBAL\Platforms\SqlitePlatform;
 use OCP\AppFramework\Db\Entity;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -145,6 +143,15 @@ abstract class EQBMapper extends QBMapper
         unset($v);
     }
 
+    private function validateIdentifier(string $identifier, string $kind): string
+    {
+        if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $identifier) !== 1) {
+            throw new \InvalidArgumentException('Invalid SQL ' . $kind . ' identifier: ' . $identifier);
+        }
+
+        return $identifier;
+    }
+
     /**
      * @param string $field
      * @param mixed $value
@@ -153,22 +160,17 @@ abstract class EQBMapper extends QBMapper
      */
     protected function countBy(string $field, $value, int $type = IQueryBuilder::PARAM_STR): int
     {
+        $safeField = $this->validateIdentifier($field, 'column');
         $qb = $this->db->getQueryBuilder();
-        $qb->select('id')
-        ->from($this->getTableName())
-        ->where(
-            $qb->expr()->eq($field, $qb->createNamedParameter($value, $type))
-        );
-        $qb = $qb->executeQuery();
-        if (!is_int($qb)) {
-            if (!$this->db->getDatabasePlatform() instanceof SqlitePlatform
-              && !$this->db->getDatabasePlatform() instanceof PostgreSQLPlatform
-            ) {
-                $count = $qb->rowCount();
-            } else {
-                $count = count($qb->fetchAll());
-            }
-            $qb->closeCursor();
+        $qb->select($qb->func()->count('id'))
+            ->from($this->getTableName())
+            ->where(
+                $qb->expr()->eq($safeField, $qb->createNamedParameter($value, $type))
+            );
+        $result = $qb->executeQuery();
+        if (!is_int($result)) {
+            $count = (int)$result->fetchOne();
+            $result->closeCursor();
 
             return $count;
         }
@@ -178,14 +180,13 @@ abstract class EQBMapper extends QBMapper
 
     public function clear(?string $table = null): void
     {
+        $targetTable = $table === null
+            ? $this->getTableName()
+            : $this->validateIdentifier($table, 'table');
         $qb = $this->db->getQueryBuilder();
-        if (is_null($table)) {
-            $qb = $qb->delete($this->getTableName())->executeStatement();
-        } else {
-            $qb = $qb->delete($table)->executeStatement();
-        }
-        if (!is_int($qb)) {
-            $qb->closeCursor();
+        $result = $qb->delete($targetTable)->executeStatement();
+        if (!is_int($result)) {
+            $result->closeCursor();
         }
     }
 }

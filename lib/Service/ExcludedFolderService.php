@@ -9,12 +9,15 @@ use Exception;
 use OCA\DuplicateFinder\Db\ExcludedFolder;
 use OCA\DuplicateFinder\Db\ExcludedFolderMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use Psr\Log\LoggerInterface;
 
 class ExcludedFolderService
 {
+    private const MAX_CACHE_USERS = 256;
+
     private ExcludedFolderMapper $mapper;
     private IRootFolder $rootFolder;
     private string $userId;
@@ -86,10 +89,13 @@ class ExcludedFolderService
             'originalPath' => $folderPath,
         ]);
 
-        // Verify folder exists
+        // Verify folder exists and is actually a folder
         try {
             $userFolder = $this->rootFolder->getUserFolder($this->userId);
             $node = $userFolder->get($folderPath);
+            if (!($node instanceof Folder)) {
+                throw new \RuntimeException('Target path is not a folder');
+            }
             $this->logger->debug('Folder verification', [
                 'path' => $folderPath,
                 'exists' => true,
@@ -103,6 +109,10 @@ class ExcludedFolderService
             ]);
 
             throw new \RuntimeException('Folder does not exist: ' . $folderPath);
+        }
+
+        if ($this->mapper->isFolderExcluded($this->userId, $folderPath)) {
+            throw new \RuntimeException('Folder is already excluded');
         }
 
         // Create new excluded folder
@@ -188,6 +198,9 @@ class ExcludedFolderService
 
         // Get all excluded folders
         if (!isset($this->excludedFoldersCache[$this->userId])) {
+            if (count($this->excludedFoldersCache) >= self::MAX_CACHE_USERS) {
+                array_shift($this->excludedFoldersCache);
+            }
             $this->excludedFoldersCache[$this->userId] = $this->findAll();
         }
         $excludedFolders = $this->excludedFoldersCache[$this->userId];

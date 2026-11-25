@@ -47,6 +47,14 @@ class ScanStatusService
      */
     public function countUserFiles(string $user, string $relativePath = ''): int
     {
+        if ($user === '' || str_contains($relativePath, "\0")) {
+            return 0;
+        }
+        $normalizedRelative = str_replace('\\', '/', $relativePath);
+        if (preg_match('#(?:^|/)\.\.(?:$|/)#', $normalizedRelative) === 1) {
+            return 0;
+        }
+
         try {
             $storageQb = $this->connection->getQueryBuilder();
             $storageQb->select('numeric_id')
@@ -76,7 +84,7 @@ class ScanStatusService
             $mimeResult->closeCursor();
             $dirMimeId = (is_array($mimeRow) && isset($mimeRow['id'])) ? (int)$mimeRow['id'] : 2;
 
-            $trimmed = trim($relativePath, '/');
+            $trimmed = trim($normalizedRelative, '/');
             $basePath = $trimmed === '' ? 'files' : 'files/' . $trimmed;
             $escapedBase = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $basePath);
 
