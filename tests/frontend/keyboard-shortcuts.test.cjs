@@ -273,6 +273,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/OrbitalSpacecraftVaultWorkbench.vue': { __esModule: true, default: stub('orbital-spacecraft-vault-auditor') },
 			'./components/ParticlePhysicsHepVaultWorkbench.vue': { __esModule: true, default: stub('particle-physics-hep-vault-auditor') },
 			'./components/QuantumQubitPulseVaultWorkbench.vue': { __esModule: true, default: stub('quantum-qubit-pulse-vault-auditor') },
+			'./components/RailwaySignalingTelemetryVaultWorkbench.vue': { __esModule: true, default: stub('railway-signaling-telemetry-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4912,5 +4913,31 @@ describe('Cycle 217: Alt+Shift+Q shortcut for Quantum Computing, Cryogenic Qubit
 		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 218: Alt+Shift+R shortcut for Railway, ETCS/CBTC Signaling, Wayside Diagnostics & Rolling Stock Telemetry Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+R cleanly and preserves Shift+R and r while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-railway-signaling-telemetry-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-railway-signaling-telemetry-vault-auditor',
+			keys: ['Alt+Shift+R'],
+			action: 'toggle-railway-signaling-telemetry-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true }), 'toggle-railway-signaling-telemetry-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'r', altKey: true, shiftKey: true }), 'toggle-railway-signaling-telemetry-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'R', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'r', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'r' }), 'reset-filters')
+		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'R', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

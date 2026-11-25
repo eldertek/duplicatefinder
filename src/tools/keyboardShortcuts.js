@@ -559,6 +559,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-quantum-qubit-pulse-vault-auditor',
 	},
 	{
+		id: 'toggle-railway-signaling-telemetry-vault-auditor',
+		keys: ['Alt+Shift+R'],
+		action: 'toggle-railway-signaling-telemetry-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -794,6 +799,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'Q' || key === 'q')) {
 			return 'toggle-quantum-qubit-pulse-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'R' || key === 'r')) {
+			return 'toggle-railway-signaling-telemetry-vault-auditor'
 		}
 		return null
 	}
