@@ -2859,6 +2859,32 @@
 							<span>{{ t('duplicatefinder', 'Materials & EM Vault') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-lidar-photogrammetry-vault-button"
+							:class="{ 'is-active': lidarPhotogrammetryVaultOpen }"
+							:aria-pressed="lidarPhotogrammetryVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+L"
+							:title="t('duplicatefinder', 'Toggle LiDAR, UAV Photogrammetry and Terrestrial Laser Scanning Vault auditor')"
+							@click="toggleLidarPhotogrammetryVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M12 2L2 7l10 5 10-5-10-5z" />
+								<path d="M2 17l10 5 10-5" />
+								<path d="M2 12l10 5 10-5" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'LiDAR & Photogrammetry') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3796,6 +3822,15 @@
 						@compare-duplicate="onMaterialsMicroscopyVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="materialsMicroscopyVaultOpen = false" />
+					<LidarPhotogrammetryVaultWorkbench
+						v-if="lidarPhotogrammetryVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onLidarPhotogrammetryVaultSelectDuplicate"
+						@compare-duplicate="onLidarPhotogrammetryVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="lidarPhotogrammetryVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4321,6 +4356,7 @@ import HydrographyMarineVaultWorkbench from './components/HydrographyMarineVault
 import AstronomyFitsInterferometryVaultWorkbench from './components/AstronomyFitsInterferometryVaultWorkbench.vue'
 import MeteorologyClimateVaultWorkbench from './components/MeteorologyClimateVaultWorkbench.vue'
 import MaterialsMicroscopyVaultWorkbench from './components/MaterialsMicroscopyVaultWorkbench.vue'
+import LidarPhotogrammetryVaultWorkbench from './components/LidarPhotogrammetryVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4475,6 +4511,7 @@ export default {
 		AstronomyFitsInterferometryVaultWorkbench,
 		MeteorologyClimateVaultWorkbench,
 		MaterialsMicroscopyVaultWorkbench,
+		LidarPhotogrammetryVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4596,6 +4633,7 @@ export default {
 			astronomyFitsInterferometryVaultOpen: false,
 			meteorologyClimateVaultOpen: false,
 			materialsMicroscopyVaultOpen: false,
+			lidarPhotogrammetryVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -4860,6 +4898,7 @@ export default {
 				'toggle-astronomy-fits-interferometry-vault-auditor': t('duplicatefinder', 'Toggle Astronomy, FITS Astrophotography and Radio Interferometry Vault auditor'),
 				'toggle-meteorology-climate-vault-auditor': t('duplicatefinder', 'Toggle Meteorology, Weather Radar, NetCDF and Climate Model Vault auditor'),
 				'toggle-materials-microscopy-vault-auditor': t('duplicatefinder', 'Toggle Materials Science, Electron Microscopy and Diffraction Vault auditor'),
+				'toggle-lidar-photogrammetry-vault-auditor': t('duplicatefinder', 'Toggle LiDAR, UAV Photogrammetry and Terrestrial Laser Scanning Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -6612,6 +6651,22 @@ export default {
 		onMaterialsMicroscopyVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleLidarPhotogrammetryVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.lidarPhotogrammetryVaultOpen = !this.lidarPhotogrammetryVaultOpen
+			return true
+		},
+		onLidarPhotogrammetryVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onLidarPhotogrammetryVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -7619,6 +7674,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-lidar-photogrammetry-vault-auditor') {
+				if (this.toggleLidarPhotogrammetryVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -8610,7 +8672,8 @@ export default {
 .app-content-topbar .topbar-hydrography-marine-vault-button,
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button,
 .app-content-topbar .topbar-meteorology-climate-vault-button,
-.app-content-topbar .topbar-materials-microscopy-vault-button {
+.app-content-topbar .topbar-materials-microscopy-vault-button,
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -8689,7 +8752,8 @@ export default {
 .app-content-topbar .topbar-hydrography-marine-vault-button,
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button,
 .app-content-topbar .topbar-meteorology-climate-vault-button,
-.app-content-topbar .topbar-materials-microscopy-vault-button {
+.app-content-topbar .topbar-materials-microscopy-vault-button,
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -8787,7 +8851,8 @@ export default {
 .app-content-topbar .topbar-hydrography-marine-vault-button svg,
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button svg,
 .app-content-topbar .topbar-meteorology-climate-vault-button svg,
-.app-content-topbar .topbar-materials-microscopy-vault-button svg {
+.app-content-topbar .topbar-materials-microscopy-vault-button svg,
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -8979,7 +9044,9 @@ export default {
 .app-content-topbar .topbar-meteorology-climate-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-meteorology-climate-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-materials-microscopy-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-materials-microscopy-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-materials-microscopy-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -9075,7 +9142,8 @@ export default {
 .app-content-topbar .topbar-hydrography-marine-vault-button.is-active,
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button.is-active,
 .app-content-topbar .topbar-meteorology-climate-vault-button.is-active,
-.app-content-topbar .topbar-materials-microscopy-vault-button.is-active {
+.app-content-topbar .topbar-materials-microscopy-vault-button.is-active,
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -9314,6 +9382,7 @@ export default {
 .app-content-topbar .topbar-astronomy-fits-interferometry-vault-button > *,
 .app-content-topbar .topbar-meteorology-climate-vault-button > *,
 .app-content-topbar .topbar-materials-microscopy-vault-button > *,
+.app-content-topbar .topbar-lidar-photogrammetry-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -9491,6 +9560,7 @@ export default {
 	.app-content-topbar .topbar-astronomy-fits-interferometry-vault-button,
 	.app-content-topbar .topbar-meteorology-climate-vault-button,
 	.app-content-topbar .topbar-materials-microscopy-vault-button,
+	.app-content-topbar .topbar-lidar-photogrammetry-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

@@ -529,6 +529,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-materials-microscopy-vault-auditor',
 	},
 	{
+		id: 'toggle-lidar-photogrammetry-vault-auditor',
+		keys: ['Alt+Shift+L'],
+		action: 'toggle-lidar-photogrammetry-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -746,6 +751,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'K' || key === 'k')) {
 			return 'toggle-materials-microscopy-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'L' || key === 'l')) {
+			return 'toggle-lidar-photogrammetry-vault-auditor'
 		}
 		return null
 	}
