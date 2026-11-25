@@ -594,6 +594,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-xr-spatial-nerf-splat-vault-auditor',
 	},
 	{
+		id: 'toggle-yacht-racing-foiling-nmea-vault-auditor',
+		keys: ['Alt+Shift+Y'],
+		action: 'toggle-yacht-racing-foiling-nmea-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -850,6 +855,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'X' || key === 'x')) {
 			return 'toggle-xr-spatial-nerf-splat-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'Y' || key === 'y')) {
+			return 'toggle-yacht-racing-foiling-nmea-vault-auditor'
 		}
 		return null
 	}

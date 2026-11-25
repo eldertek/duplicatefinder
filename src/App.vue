@@ -3245,6 +3245,33 @@
 							<span>{{ t('duplicatefinder', 'XR & NeRF/3DGS') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-yacht-racing-foiling-nmea-vault-button"
+							:class="{ 'is-active': yachtRacingFoilingNmeaVaultOpen }"
+							:aria-pressed="yachtRacingFoilingNmeaVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+Y"
+							:title="t('duplicatefinder', 'Toggle Yacht Racing, Foil Hydrodynamics and Maritime NMEA/VDR Telemetry Vault auditor')"
+							@click="toggleYachtRacingFoilingNmeaVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M2 20c2.2 0 3.3-1 4.5-1s2.3 1 4.5 1 3.3-1 4.5-1 2.3 1 4.5 1" />
+								<path d="M12 3v12" />
+								<path d="M12 4l7 10H12z" />
+								<path d="M5 16l2 3h10l2-3H5z" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Yacht & NMEA/VDR') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -4299,6 +4326,15 @@
 						@compare-duplicate="onXrSpatialNerfSplatVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="xrSpatialNerfSplatVaultOpen = false" />
+					<YachtRacingFoilingNmeaVaultWorkbench
+						v-if="yachtRacingFoilingNmeaVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onYachtRacingFoilingNmeaVaultSelectDuplicate"
+						@compare-duplicate="onYachtRacingFoilingNmeaVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="yachtRacingFoilingNmeaVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4837,6 +4873,7 @@ import UrbanWaterUtilityPipelineVaultWorkbench from './components/UrbanWaterUtil
 import VeterinaryEquineGenomicsVaultWorkbench from './components/VeterinaryEquineGenomicsVaultWorkbench.vue'
 import WineEnologyHaccpVaultWorkbench from './components/WineEnologyHaccpVaultWorkbench.vue'
 import XrSpatialNerfSplatVaultWorkbench from './components/XrSpatialNerfSplatVaultWorkbench.vue'
+import YachtRacingFoilingNmeaVaultWorkbench from './components/YachtRacingFoilingNmeaVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -5004,6 +5041,7 @@ export default {
 		VeterinaryEquineGenomicsVaultWorkbench,
 		WineEnologyHaccpVaultWorkbench,
 		XrSpatialNerfSplatVaultWorkbench,
+		YachtRacingFoilingNmeaVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -5138,6 +5176,7 @@ export default {
 			veterinaryEquineGenomicsVaultOpen: false,
 			wineEnologyHaccpVaultOpen: false,
 			xrSpatialNerfSplatVaultOpen: false,
+			yachtRacingFoilingNmeaVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -5415,6 +5454,7 @@ export default {
 				'toggle-veterinary-equine-genomics-vault-auditor': t('duplicatefinder', 'Toggle Veterinary Imaging, Equine Biomechanics and Livestock Genomics Vault auditor'),
 				'toggle-wine-enology-haccp-vault-auditor': t('duplicatefinder', 'Toggle Wine Enology, Brewery Fermentation and Food-Safety HACCP Vault auditor'),
 				'toggle-xr-spatial-nerf-splat-vault-auditor': t('duplicatefinder', 'Toggle XR Spatial Computing, Photorealistic NeRF/Gaussian Splatting and Volumetric Video Vault auditor'),
+				'toggle-yacht-racing-foiling-nmea-vault-auditor': t('duplicatefinder', 'Toggle Yacht Racing, Foil Hydrodynamics and Maritime NMEA/VDR Telemetry Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -7375,6 +7415,22 @@ export default {
 		onXrSpatialNerfSplatVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleYachtRacingFoilingNmeaVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.yachtRacingFoilingNmeaVaultOpen = !this.yachtRacingFoilingNmeaVaultOpen
+			return true
+		},
+		onYachtRacingFoilingNmeaVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onYachtRacingFoilingNmeaVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -8473,6 +8529,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-yacht-racing-foiling-nmea-vault-auditor') {
+				if (this.toggleYachtRacingFoilingNmeaVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -9477,7 +9540,8 @@ export default {
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button,
-.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button {
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button,
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -9569,7 +9633,8 @@ export default {
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button,
-.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button {
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button,
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -9680,7 +9745,8 @@ export default {
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button svg,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button svg,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button svg,
-.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button svg {
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button svg,
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -9898,7 +9964,9 @@ export default {
 .app-content-topbar .topbar-wine-enology-haccp-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-wine-enology-haccp-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -10007,7 +10075,8 @@ export default {
 .app-content-topbar .topbar-urban-water-utility-pipeline-vault-button.is-active,
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button.is-active,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button.is-active,
-.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button.is-active {
+.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button.is-active,
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -10259,6 +10328,7 @@ export default {
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button > *,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button > *,
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button > *,
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -10449,6 +10519,7 @@ export default {
 	.app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
 	.app-content-topbar .topbar-wine-enology-haccp-vault-button,
 	.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button,
+	.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

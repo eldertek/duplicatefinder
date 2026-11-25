@@ -280,6 +280,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/VeterinaryEquineGenomicsVaultWorkbench.vue': { __esModule: true, default: stub('veterinary-equine-genomics-vault-auditor') },
 			'./components/WineEnologyHaccpVaultWorkbench.vue': { __esModule: true, default: stub('wine-enology-haccp-vault-auditor') },
 			'./components/XrSpatialNerfSplatVaultWorkbench.vue': { __esModule: true, default: stub('xr-spatial-nerf-splat-vault-auditor') },
+			'./components/YachtRacingFoilingNmeaVaultWorkbench.vue': { __esModule: true, default: stub('yacht-racing-foiling-nmea-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -5103,5 +5104,32 @@ describe('Cycle 224: Alt+Shift+X shortcut for XR Spatial Computing, Photorealist
 		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'X', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 225: Alt+Shift+Y shortcut for Yacht Racing, Foil Hydrodynamics & Maritime NMEA/VDR Telemetry Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+Y cleanly and preserves Shift+Y and y while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-yacht-racing-foiling-nmea-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-yacht-racing-foiling-nmea-vault-auditor',
+			keys: ['Alt+Shift+Y'],
+			action: 'toggle-yacht-racing-foiling-nmea-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true }), 'toggle-yacht-racing-foiling-nmea-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'y', altKey: true, shiftKey: true }), 'toggle-yacht-racing-foiling-nmea-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'Y', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'y', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'y', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'y' }), 'copy-group-hash')
+		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
