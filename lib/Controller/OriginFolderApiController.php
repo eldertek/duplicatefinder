@@ -22,13 +22,23 @@ class OriginFolderApiController extends Controller
         string $AppName,
         IRequest $request,
         OriginFolderService $service,
-        string $userId,
+        ?string $userId,
         LoggerInterface $logger
     ) {
         parent::__construct($AppName, $request);
         $this->service = $service;
-        $this->userId = $userId;
+        $this->userId = $userId ?? '';
         $this->logger = $logger;
+    }
+
+    private function requireAuthenticatedUser(): ?JSONResponse
+    {
+        if ($this->userId === '') {
+            return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
+        $this->service->setUserId($this->userId);
+
+        return null;
     }
 
     /**
@@ -37,6 +47,10 @@ class OriginFolderApiController extends Controller
      */
     public function index(): JSONResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
+
         try {
             $folders = $this->service->findAll();
 
@@ -59,12 +73,28 @@ class OriginFolderApiController extends Controller
      */
     public function create(array $folders): JSONResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
+
+        if ($folders === []) {
+            return new JSONResponse(['error' => 'A non-empty folders array is required'], Http::STATUS_BAD_REQUEST);
+        }
+
         try {
             $this->logger->debug('Creating origin folders: {folders}', ['folders' => json_encode($folders)]);
             $createdFolders = [];
             $errors = [];
 
             foreach ($folders as $folderPath) {
+                if (!is_string($folderPath) || trim($folderPath) === '' || str_contains($folderPath, "\0")) {
+                    $errors[] = [
+                        'path' => is_string($folderPath) ? $folderPath : '',
+                        'error' => 'Invalid folder path',
+                    ];
+                    continue;
+                }
+
                 try {
                     $this->logger->debug('Attempting to create origin folder: {path}', ['path' => $folderPath]);
                     $this->service->create($folderPath);
@@ -102,6 +132,14 @@ class OriginFolderApiController extends Controller
      */
     public function destroy(int $id): JSONResponse
     {
+        if (($authError = $this->requireAuthenticatedUser()) !== null) {
+            return $authError;
+        }
+
+        if ($id <= 0) {
+            return new JSONResponse(['error' => 'Invalid origin folder ID'], Http::STATUS_BAD_REQUEST);
+        }
+
         try {
             $folder = $this->service->delete($id);
 

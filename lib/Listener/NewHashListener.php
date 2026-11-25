@@ -48,7 +48,7 @@ class NewHashListener implements IEventListener
 
     private function updateDuplicates(?string $hash, string $type = 'file_hash'): void
     {
-        if (is_null($hash)) {
+        if ($hash === null || $hash === '') {
             return;
         }
         $count = $this->fileInfoService->countByHash($hash, $type);
@@ -59,7 +59,7 @@ class NewHashListener implements IEventListener
                 $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
             }
         } else {
-            $this->fileDuplicateService->delete($hash);
+            $this->fileDuplicateService->delete($hash, $type);
         }
     }
 }

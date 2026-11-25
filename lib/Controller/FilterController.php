@@ -4,6 +4,7 @@ namespace OCA\DuplicateFinder\Controller;
 
 use OCA\DuplicateFinder\Service\FilterService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -67,7 +68,11 @@ class FilterController extends Controller
             return new JSONResponse(['error' => 'Filter type and value are required'], Http::STATUS_BAD_REQUEST);
         }
 
-        return new JSONResponse($this->service->createFilter($type, $value, $userId));
+        try {
+            return new JSONResponse($this->service->createFilter($type, $value, $userId));
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        }
     }
 
     /**
@@ -80,8 +85,18 @@ class FilterController extends Controller
         if ($userId === null) {
             return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
-        $this->service->deleteFilter($id, $userId);
+        if ($id <= 0) {
+            return new JSONResponse(['error' => 'Invalid filter ID'], Http::STATUS_BAD_REQUEST);
+        }
 
-        return new JSONResponse(['status' => 'success']);
+        try {
+            $this->service->deleteFilter($id, $userId);
+
+            return new JSONResponse(['status' => 'success']);
+        } catch (DoesNotExistException $e) {
+            return new JSONResponse(['error' => 'Filter not found'], Http::STATUS_NOT_FOUND);
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        }
     }
 }

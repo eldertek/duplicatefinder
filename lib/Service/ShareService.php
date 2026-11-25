@@ -12,6 +12,8 @@ use Psr\Log\LoggerInterface;
 
 class ShareService
 {
+    private const MAX_PARENT_DEPTH = 256;
+
     /** @var IRootFolder */
     private $rootFolder;
     /** @var LoggerInterface */
@@ -77,32 +79,42 @@ class ShareService
 
     public function hasAccessRight(Node $sharedNode, string $user): ?string
     {
+        if ($user === '') {
+            return null;
+        }
+
         try {
             $accessList = $this->shareManager->getAccessList($sharedNode, true, true);
 
             if (isset($accessList['users']) && isset($accessList['users'][$user])) {
                 $node = $sharedNode;
                 $stripedFolders = 0;
-                while ($node) {
+                while ($node && $stripedFolders < self::MAX_PARENT_DEPTH) {
                     $shares = $this->getShares($user, $node, 1);
                     if (!empty($shares)) {
-                        $sharedWith = $shares[0]->getSharedWith();
+                        $share = $shares[0];
+                        $sharedWith = $share->getSharedWith();
 
                         // Skip Talk room shares (TYPE_ROOM) or if the user doesn't exist
-                        if ($shares[0]->getShareType() === IShare::TYPE_ROOM || !$this->userManager->userExists($sharedWith)) {
-                            // Move to parent node and continue
-                            $node = $node->getParent();
+                        if ($share->getShareType() === IShare::TYPE_ROOM || !$this->userManager->userExists($sharedWith)) {
+                            $parent = $this->safeParent($node);
+                            if ($parent === null) {
+                                break;
+                            }
+                            $node = $parent;
                             $stripedFolders++;
 
                             continue;
                         }
 
                         try {
+                            $srcUserId = $this->resolveSourceOwnerUid($sharedNode, $share, $user);
+
                             return PathConversionUtils::convertSharedPath(
-                                $this->rootFolder->getUserFolder($user),
+                                $this->rootFolder->getUserFolder($srcUserId),
                                 $this->rootFolder->getUserFolder($sharedWith),
                                 $sharedNode,
-                                $shares[0],
+                                $share,
                                 $stripedFolders
                             );
                         } catch (\Throwable $e) {
@@ -110,20 +122,23 @@ class ShareService
                                 'exception' => $e->getMessage(),
                                 'shared_with' => $sharedWith,
                             ]);
-                            // Move to parent node and continue
-                            $node = $node->getParent();
+                            $parent = $this->safeParent($node);
+                            if ($parent === null) {
+                                break;
+                            }
+                            $node = $parent;
                             $stripedFolders++;
 
                             continue;
                         }
                     }
 
-                    try {
-                        $node = $node->getParent();
-                        $stripedFolders++;
-                    } catch (\Throwable $e) {
+                    $parent = $this->safeParent($node);
+                    if ($parent === null) {
                         break;
                     }
+                    $node = $parent;
+                    $stripedFolders++;
                 }
             }
         } catch (\Throwable $e) {
@@ -131,5 +146,46 @@ class ShareService
         }
 
         return null;
+    }
+
+    private function safeParent(Node $node): ?Node
+    {
+        try {
+            $parent = $node->getParent();
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        if ($parent === null || $parent === $node) {
+            return null;
+        }
+
+        return $parent;
+    }
+
+    private function resolveSourceOwnerUid(Node $sharedNode, IShare $share, string $fallbackUser): string
+    {
+        try {
+            $owner = $sharedNode->getOwner();
+            if ($owner !== null) {
+                $uid = $owner->getUID();
+                if ($uid !== '' && $this->userManager->userExists($uid)) {
+                    return $uid;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fall through to share owner / fallback user
+        }
+
+        try {
+            $shareOwner = (string)$share->getShareOwner();
+            if ($shareOwner !== '' && $this->userManager->userExists($shareOwner)) {
+                return $shareOwner;
+            }
+        } catch (\Throwable $e) {
+            // Fall through to fallback user
+        }
+
+        return $fallbackUser;
     }
 }

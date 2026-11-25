@@ -12,6 +12,9 @@ use Psr\Log\LoggerInterface;
 
 class FilterService
 {
+    private const ALLOWED_TYPES = ['hash', 'name'];
+    private const MAX_FILTER_VALUE_LENGTH = 512;
+
     /** @var LoggerInterface */
     private $logger;
     /** @var ConfigService */
@@ -169,14 +172,10 @@ class FilterService
 
             // Check name pattern filters
             $nameFilters = $this->getFiltersByType('name', $fileInfo->getOwner());
+            $filename = basename($fileInfo->getPath());
             foreach ($nameFilters as $filter) {
-                // Échapper les caractères spéciaux de regex sauf *
-                $pattern = preg_quote($filter->getValue(), '/');
-                // Remplacer \* par .* pour le wildcard
-                $pattern = str_replace('\*', '.*', $pattern);
-                $filename = basename($fileInfo->getPath());
-
-                if (preg_match('/^' . $pattern . '$/', $filename)) {
+                $pattern = (string)$filter->getValue();
+                if ($pattern !== '' && $this->matchesWildcardPattern($pattern, $filename)) {
                     return true;
                 }
             }
@@ -191,11 +190,62 @@ class FilterService
         return false;
     }
 
+    /**
+     * Match a filename against a glob pattern supporting '*' wildcards in O(n*m) worst-case time,
+     * avoiding PCRE catastrophic backtracking (ReDoS) on repeated wildcards.
+     */
+    private function matchesWildcardPattern(string $pattern, string $filename): bool
+    {
+        $pLen = strlen($pattern);
+        $fLen = strlen($filename);
+        $pIdx = 0;
+        $fIdx = 0;
+        $starIdx = -1;
+        $matchIdx = 0;
+
+        while ($fIdx < $fLen) {
+            if ($pIdx < $pLen && $pattern[$pIdx] !== '*' && $pattern[$pIdx] === $filename[$fIdx]) {
+                $pIdx++;
+                $fIdx++;
+            } elseif ($pIdx < $pLen && $pattern[$pIdx] === '*') {
+                $starIdx = $pIdx;
+                $matchIdx = $fIdx;
+                $pIdx++;
+            } elseif ($starIdx !== -1) {
+                $pIdx = $starIdx + 1;
+                $matchIdx++;
+                $fIdx = $matchIdx;
+            } else {
+                return false;
+            }
+        }
+
+        while ($pIdx < $pLen && $pattern[$pIdx] === '*') {
+            $pIdx++;
+        }
+
+        return $pIdx === $pLen;
+    }
+
     public function createFilter(string $type, string $value, string $userId): Filter
     {
+        $normalizedType = trim($type);
+        if (!in_array($normalizedType, self::ALLOWED_TYPES, true)) {
+            throw new \InvalidArgumentException('Unsupported filter type: ' . $type);
+        }
+
+        $trimmedValue = trim($value);
+        if ($trimmedValue === '' || str_contains($value, "\0") || strlen($trimmedValue) > self::MAX_FILTER_VALUE_LENGTH) {
+            throw new \InvalidArgumentException('Invalid filter value');
+        }
+
+        if (trim($userId) === '') {
+            throw new \InvalidArgumentException('User ID is required');
+        }
+
         $filter = new Filter();
-        $filter->setType($type);
-        $filter->setValue($value);
+        $filter->setType($normalizedType);
+        $filter->setValue($trimmedValue);
         $filter->setUserId($userId);
         $filter->setCreatedAt(time());
         unset($this->filterCache[$userId]);
@@ -205,6 +255,13 @@ class FilterService
 
     public function deleteFilter(int $id, string $userId): void
     {
+        if ($id <= 0) {
+            throw new \InvalidArgumentException('Invalid filter ID');
+        }
+        if (trim($userId) === '') {
+            throw new \InvalidArgumentException('User ID is required');
+        }
+
         $filter = $this->filterMapper->find($id, $userId);
         $this->filterMapper->delete($filter);
         unset($this->filterCache[$userId]);

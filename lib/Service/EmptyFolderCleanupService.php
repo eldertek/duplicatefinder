@@ -665,6 +665,10 @@ class EmptyFolderCleanupService
 
     private function normalizeUserRelativePath(string $userId, string $rawPath): ?string
     {
+        if (str_contains($rawPath, "\0")) {
+            return null;
+        }
+
         $trimmed = trim(str_replace('\\', '/', $rawPath));
         if ($trimmed === '') {
             return null;
