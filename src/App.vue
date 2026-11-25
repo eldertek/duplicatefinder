@@ -9,11 +9,11 @@
 					ref="duplicateNavigation"
 					:acknowledged-duplicates="acknowledgedDuplicates"
 					:unacknowledged-duplicates="unacknowledgedDuplicates"
-					:currentDuplicateId="currentDuplicate?.id"
-					:acknowledgedPagination="acknowledgedPagination"
-					:unacknowledgedPagination="unacknowledgedPagination"
-					:activeView="activeView"
-					:activeProject="activeProject"
+					:current-duplicate-id="currentDuplicate?.id"
+					:acknowledged-pagination="acknowledgedPagination"
+					:unacknowledged-pagination="unacknowledgedPagination"
+					:active-view="activeView"
+					:active-project="activeProject"
 					:projects="projects"
 					:initial-sort-option="sortOption"
 					:initial-min-size-bytes="minSizeBytes"
@@ -67,9 +67,15 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<circle cx="12" cy="12" r="10"></circle>
-								<line x1="12" y1="16" x2="12" y2="12"></line>
-								<line x1="12" y1="8" x2="12.01" y2="8"></line>
+								<circle cx="12" cy="12" r="10" />
+								<line x1="12"
+									y1="16"
+									x2="12"
+									y2="12" />
+								<line x1="12"
+									y1="8"
+									x2="12.01"
+									y2="8" />
 							</svg>
 						</span>
 						<div
@@ -108,8 +114,8 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
-								<polyline points="21 3 21 9 15 9"></polyline>
+								<path d="M21 12a9 9 0 1 1-2.64-6.36" />
+								<polyline points="21 3 21 9 15 9" />
 							</svg>
 							<span>{{ isScanRunning ? t('duplicatefinder', 'Scanning...') : t('duplicatefinder', 'Scan') }}</span>
 						</button>
@@ -130,8 +136,11 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-								<line x1="9" y1="14" x2="15" y2="14"></line>
+								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+								<line x1="9"
+									y1="14"
+									x2="15"
+									y2="14" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Empty Folders') }}</span>
 						</button>
@@ -156,10 +165,26 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="3" y="3" width="11" height="11" rx="1"></rect>
-								<rect x="16" y="3" width="5" height="7" rx="1"></rect>
-								<rect x="16" y="12" width="5" height="9" rx="1"></rect>
-								<rect x="3" y="16" width="11" height="5" rx="1"></rect>
+								<rect x="3"
+									y="3"
+									width="11"
+									height="11"
+									rx="1" />
+								<rect x="16"
+									y="3"
+									width="5"
+									height="7"
+									rx="1" />
+								<rect x="16"
+									y="12"
+									width="5"
+									height="9"
+									rx="1" />
+								<rect x="3"
+									y="16"
+									width="11"
+									height="5"
+									rx="1" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Treemap') }}</span>
 						</button>
@@ -212,15 +237,42 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<line x1="4" y1="21" x2="4" y2="14" />
-								<line x1="4" y1="10" x2="4" y2="3" />
-								<line x1="12" y1="21" x2="12" y2="12" />
-								<line x1="12" y1="8" x2="12" y2="3" />
-								<line x1="20" y1="21" x2="20" y2="16" />
-								<line x1="20" y1="12" x2="20" y2="3" />
-								<line x1="1" y1="14" x2="7" y2="14" />
-								<line x1="9" y1="8" x2="15" y2="8" />
-								<line x1="17" y1="16" x2="23" y2="16" />
+								<line x1="4"
+									y1="21"
+									x2="4"
+									y2="14" />
+								<line x1="4"
+									y1="10"
+									x2="4"
+									y2="3" />
+								<line x1="12"
+									y1="21"
+									x2="12"
+									y2="12" />
+								<line x1="12"
+									y1="8"
+									x2="12"
+									y2="3" />
+								<line x1="20"
+									y1="21"
+									x2="20"
+									y2="16" />
+								<line x1="20"
+									y1="12"
+									x2="20"
+									y2="3" />
+								<line x1="1"
+									y1="14"
+									x2="7"
+									y2="14" />
+								<line x1="9"
+									y1="8"
+									x2="15"
+									y2="8" />
+								<line x1="17"
+									y1="16"
+									x2="23"
+									y2="16" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Similarity') }}</span>
 						</button>
@@ -324,8 +376,16 @@
 								stroke-linejoin="round"
 								aria-hidden="true">
 								<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v3" />
-								<rect x="3" y="10" width="8" height="10" rx="1" />
-								<rect x="13" y="10" width="8" height="10" rx="1" />
+								<rect x="3"
+									y="10"
+									width="8"
+									height="10"
+									rx="1" />
+								<rect x="13"
+									y="10"
+									width="8"
+									height="10"
+									rx="1" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Folder Matrix') }}</span>
 						</button>
@@ -2150,10 +2210,16 @@
 								stroke-linejoin="round"
 								aria-hidden="true">
 								<polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
-								<line x1="12" y1="22" x2="12" y2="15.5" />
+								<line x1="12"
+									y1="22"
+									x2="12"
+									y2="15.5" />
 								<polyline points="22 8.5 12 15.5 2 8.5" />
 								<polyline points="2 15.5 12 8.5 22 15.5" />
-								<line x1="12" y1="2" x2="12" y2="8.5" />
+								<line x1="12"
+									y1="2"
+									x2="12"
+									y2="8.5" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Game Dev Pipeline') }}</span>
 						</button>
@@ -2202,8 +2268,15 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="4" y="4" width="16" height="16" rx="2" />
-								<rect x="9" y="9" width="6" height="6" />
+								<rect x="4"
+									y="4"
+									width="16"
+									height="16"
+									rx="2" />
+								<rect x="9"
+									y="9"
+									width="6"
+									height="6" />
 								<path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'ML & LLM Vault') }}</span>
@@ -2228,10 +2301,24 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="2" y="3" width="20" height="7" rx="2" />
-								<rect x="2" y="14" width="20" height="7" rx="2" />
-								<line x1="6" y1="6.5" x2="6.01" y2="6.5" />
-								<line x1="6" y1="17.5" x2="6.01" y2="17.5" />
+								<rect x="2"
+									y="3"
+									width="20"
+									height="7"
+									rx="2" />
+								<rect x="2"
+									y="14"
+									width="20"
+									height="7"
+									rx="2" />
+								<line x1="6"
+									y1="6.5"
+									x2="6.01"
+									y2="6.5" />
+								<line x1="6"
+									y1="17.5"
+									x2="6.01"
+									y2="17.5" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'VM & Backup Vault') }}</span>
 						</button>
@@ -2255,7 +2342,10 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<ellipse cx="12" cy="5" rx="9" ry="3" />
+								<ellipse cx="12"
+									cy="5"
+									rx="9"
+									ry="3" />
 								<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
 								<path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
 							</svg>
@@ -2281,14 +2371,40 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
-								<line x1="7" y1="2" x2="7" y2="22" />
-								<line x1="17" y1="2" x2="17" y2="22" />
-								<line x1="2" y1="12" x2="22" y2="12" />
-								<line x1="2" y1="7" x2="7" y2="7" />
-								<line x1="2" y1="17" x2="7" y2="17" />
-								<line x1="17" y1="17" x2="22" y2="17" />
-								<line x1="17" y1="7" x2="22" y2="7" />
+								<rect x="2"
+									y="2"
+									width="20"
+									height="20"
+									rx="2.18"
+									ry="2.18" />
+								<line x1="7"
+									y1="2"
+									x2="7"
+									y2="22" />
+								<line x1="17"
+									y1="2"
+									x2="17"
+									y2="22" />
+								<line x1="2"
+									y1="12"
+									x2="22"
+									y2="12" />
+								<line x1="2"
+									y1="7"
+									x2="7"
+									y2="7" />
+								<line x1="2"
+									y1="17"
+									x2="7"
+									y2="17" />
+								<line x1="17"
+									y1="17"
+									x2="22"
+									y2="17" />
+								<line x1="17"
+									y1="7"
+									x2="22"
+									y2="7" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Broadcast & NLE Vault') }}</span>
 						</button>
@@ -2313,7 +2429,10 @@
 								stroke-linejoin="round"
 								aria-hidden="true">
 								<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-								<line x1="3" y1="6" x2="21" y2="6" />
+								<line x1="3"
+									y1="6"
+									x2="21"
+									y2="6" />
 								<path d="M16 10a4 4 0 0 1-8 0" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'E-Commerce & PIM Vault') }}</span>
@@ -2338,9 +2457,19 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="2" y="3" width="20" height="18" rx="2" />
-								<line x1="2" y1="9" x2="22" y2="9" />
-								<line x1="9" y1="21" x2="9" y2="9" />
+								<rect x="2"
+									y="3"
+									width="20"
+									height="18"
+									rx="2" />
+								<line x1="2"
+									y1="9"
+									x2="22"
+									y2="9" />
+								<line x1="9"
+									y1="21"
+									x2="9"
+									y2="9" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Finance & Tax Vault') }}</span>
 						</button>
@@ -2364,15 +2493,43 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="6" y="6" width="12" height="12" rx="2" />
-								<line x1="9" y1="2" x2="9" y2="6" />
-								<line x1="15" y1="2" x2="15" y2="6" />
-								<line x1="9" y1="18" x2="9" y2="22" />
-								<line x1="15" y1="18" x2="15" y2="22" />
-								<line x1="2" y1="9" x2="6" y2="9" />
-								<line x1="2" y1="15" x2="6" y2="15" />
-								<line x1="18" y1="9" x2="22" y2="9" />
-								<line x1="18" y1="15" x2="22" y2="15" />
+								<rect x="6"
+									y="6"
+									width="12"
+									height="12"
+									rx="2" />
+								<line x1="9"
+									y1="2"
+									x2="9"
+									y2="6" />
+								<line x1="15"
+									y1="2"
+									x2="15"
+									y2="6" />
+								<line x1="9"
+									y1="18"
+									x2="9"
+									y2="22" />
+								<line x1="15"
+									y1="18"
+									x2="15"
+									y2="22" />
+								<line x1="2"
+									y1="9"
+									x2="6"
+									y2="9" />
+								<line x1="2"
+									y1="15"
+									x2="6"
+									y2="15" />
+								<line x1="18"
+									y1="9"
+									x2="22"
+									y2="9" />
+								<line x1="18"
+									y1="15"
+									x2="22"
+									y2="15" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'IoT & Firmware Vault') }}</span>
 						</button>
@@ -2396,8 +2553,15 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="6" y="2" width="12" height="20" rx="2" />
-								<line x1="12" y1="18" x2="12.01" y2="18" />
+								<rect x="6"
+									y="2"
+									width="12"
+									height="20"
+									rx="2" />
+								<line x1="12"
+									y1="18"
+									x2="12.01"
+									y2="18" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Mobile & Crash Vault') }}</span>
 						</button>
@@ -2422,9 +2586,18 @@
 								stroke-linejoin="round"
 								aria-hidden="true">
 								<polygon points="12 2 21 7 21 17 12 22 3 17 3 7 12 2" />
-								<line x1="12" y1="22" x2="12" y2="12" />
-								<line x1="21" y1="7" x2="12" y2="12" />
-								<line x1="3" y1="7" x2="12" y2="12" />
+								<line x1="12"
+									y1="22"
+									x2="12"
+									y2="12" />
+								<line x1="21"
+									y1="7"
+									x2="12"
+									y2="12" />
+								<line x1="3"
+									y1="7"
+									x2="12"
+									y2="12" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'K8s & Terraform Vault') }}</span>
 						</button>
@@ -2450,8 +2623,14 @@
 								aria-hidden="true">
 								<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
 								<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-								<line x1="8" y1="7" x2="16" y2="7" />
-								<line x1="8" y1="11" x2="14" y2="11" />
+								<line x1="8"
+									y1="7"
+									x2="16"
+									y2="7" />
+								<line x1="8"
+									y1="11"
+									x2="14"
+									y2="11" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Publishing & Prepress Vault') }}</span>
 						</button>
@@ -2534,7 +2713,11 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="4" y="7" width="16" height="12" rx="2" />
+								<rect x="4"
+									y="7"
+									width="16"
+									height="12"
+									rx="2" />
 								<path d="M12 3v4" />
 								<circle cx="9" cy="13" r="1.5" />
 								<circle cx="15" cy="13" r="1.5" />
@@ -2561,7 +2744,11 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<rect x="6" y="6" width="12" height="12" rx="1" />
+								<rect x="6"
+									y="6"
+									width="12"
+									height="12"
+									rx="1" />
 								<path d="M9 1v5M15 1v5M9 18v5M15 18v5M1 9h5M1 15h5M18 9h5M18 15h5" />
 							</svg>
 							<span>{{ t('duplicatefinder', 'Semiconductor & EDA Vault') }}</span>
@@ -3368,7 +3555,7 @@
 				</template>
 				<template v-else-if="activeView === 'project'">
 					<ProjectDuplicates
-						:projectId="activeProject"
+						:project-id="activeProject"
 						@back-to-projects="backToProjects"
 						@view-duplicate="viewProjectDuplicate" />
 				</template>
@@ -4522,8 +4709,8 @@
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									aria-hidden="true">
-									<polyline points="1 4 1 10 7 10"></polyline>
-									<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+									<polyline points="1 4 1 10 7 10" />
+									<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
 								</svg>
 							</button>
 						</div>
@@ -4590,7 +4777,7 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
 							</svg>
 							<span
 								class="empty-folders-modal__path"
@@ -4624,8 +4811,8 @@
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									aria-hidden="true">
-									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-									<circle cx="12" cy="12" r="3"></circle>
+									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+									<circle cx="12" cy="12" r="3" />
 								</svg>
 								<svg
 									v-else
@@ -4640,8 +4827,11 @@
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									aria-hidden="true">
-									<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-									<line x1="1" y1="1" x2="23" y2="23"></line>
+									<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+									<line x1="1"
+										y1="1"
+										x2="23"
+										y2="23" />
 								</svg>
 							</button>
 						</div>
@@ -4661,10 +4851,24 @@
 							aria-describedby="app-nc-confirm-desc">
 							<div class="nc-confirm-dialog__header">
 								<span class="nc-confirm-dialog__icon" aria-hidden="true">
-									<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-										<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-										<line x1="12" y1="9" x2="12" y2="13"></line>
-										<line x1="12" y1="17" x2="12.01" y2="17"></line>
+									<svg xmlns="http://www.w3.org/2000/svg"
+										width="20"
+										height="20"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round">
+										<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+										<line x1="12"
+											y1="9"
+											x2="12"
+											y2="13" />
+										<line x1="12"
+											y1="17"
+											x2="12.01"
+											y2="17" />
 									</svg>
 								</span>
 								<h4 id="app-nc-confirm-title" class="nc-confirm-dialog__title">
@@ -4707,10 +4911,24 @@
 					aria-describedby="app-nc-confirm-desc">
 					<div class="nc-confirm-dialog__header">
 						<span class="nc-confirm-dialog__icon" aria-hidden="true">
-							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-								<line x1="12" y1="9" x2="12" y2="13"></line>
-								<line x1="12" y1="17" x2="12.01" y2="17"></line>
+							<svg xmlns="http://www.w3.org/2000/svg"
+								width="20"
+								height="20"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round">
+								<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+								<line x1="12"
+									y1="9"
+									x2="12"
+									y2="13" />
+								<line x1="12"
+									y1="17"
+									x2="12.01"
+									y2="17" />
 							</svg>
 						</span>
 						<h4 id="app-nc-confirm-title" class="nc-confirm-dialog__title">
@@ -4766,8 +4984,14 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								aria-hidden="true">
-								<line x1="18" y1="6" x2="6" y2="18" />
-								<line x1="6" y1="6" x2="18" y2="18" />
+								<line x1="18"
+									y1="6"
+									x2="6"
+									y2="18" />
+								<line x1="6"
+									y1="6"
+									x2="18"
+									y2="18" />
 							</svg>
 						</button>
 					</header>
@@ -4797,17 +5021,16 @@
 	</NcContent>
 </template>
 
-
 <script>
-import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSettingsSection, NcButton, NcModal } from '@nextcloud/vue';
-import DuplicateNavigation from './components/DuplicateNavigation.vue';
-import DuplicateDetails from './components/DuplicateDetails.vue';
-import DuplicateTreemap from './components/DuplicateTreemap.vue';
-import SpaceReclamationTimeline from './components/SpaceReclamationTimeline.vue';
-import SimilarityInspector from './components/SimilarityInspector.vue';
-import BatchAutoSelectWorkbench from './components/BatchAutoSelectWorkbench.vue';
-import FileHygieneInspector from './components/FileHygieneInspector.vue';
-import LinkDeduplicationSimulator from './components/LinkDeduplicationSimulator.vue';
+import { NcAppContent, NcContent, NcLoadingIcon, NcAppSettingsDialog, NcAppSettingsSection, NcButton, NcModal } from '@nextcloud/vue'
+import DuplicateNavigation from './components/DuplicateNavigation.vue'
+import DuplicateDetails from './components/DuplicateDetails.vue'
+import DuplicateTreemap from './components/DuplicateTreemap.vue'
+import SpaceReclamationTimeline from './components/SpaceReclamationTimeline.vue'
+import SimilarityInspector from './components/SimilarityInspector.vue'
+import BatchAutoSelectWorkbench from './components/BatchAutoSelectWorkbench.vue'
+import FileHygieneInspector from './components/FileHygieneInspector.vue'
+import LinkDeduplicationSimulator from './components/LinkDeduplicationSimulator.vue'
 import FolderPairMatrix from './components/FolderPairMatrix.vue'
 import StorageFootprintAnalyzer from './components/StorageFootprintAnalyzer.vue'
 import PhotoBurstTimeline from './components/PhotoBurstTimeline.vue'
@@ -4909,27 +5132,27 @@ import WineEnologyHaccpVaultWorkbench from './components/WineEnologyHaccpVaultWo
 import XrSpatialNerfSplatVaultWorkbench from './components/XrSpatialNerfSplatVaultWorkbench.vue'
 import YachtRacingFoilingNmeaVaultWorkbench from './components/YachtRacingFoilingNmeaVaultWorkbench.vue'
 import ZoologyWildlifeCamtrapEdnaVaultWorkbench from './components/ZoologyWildlifeCamtrapEdnaVaultWorkbench.vue'
-import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
-import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
-import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
-import ProjectsSettings from './components/ProjectsSettings.vue';
-import ProjectDuplicates from './components/ProjectDuplicates.vue';
-import OnboardingGuide from './components/help/OnboardingGuide.vue';
-import UsageExamples from './components/help/UsageExamples.vue';
-import FAQ from './components/help/FAQ.vue';
-import * as api from '@/tools/api';
+import OriginFoldersSettings from './components/OriginFoldersSettings.vue'
+import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue'
+import BulkDeletionSettings from './components/BulkDeletionSettings.vue'
+import ProjectsSettings from './components/ProjectsSettings.vue'
+import ProjectDuplicates from './components/ProjectDuplicates.vue'
+import OnboardingGuide from './components/help/OnboardingGuide.vue'
+import UsageExamples from './components/help/UsageExamples.vue'
+import FAQ from './components/help/FAQ.vue'
+import * as api from '@/tools/api'
 import {
 	removeDuplicateFromList,
 	loadUiPreferences,
 	saveUiPreferences,
 	formatScanEta,
-} from '@/tools/utils';
+} from '@/tools/utils'
 import {
 	SHORTCUT_DEFINITIONS,
 	buildNavigableDuplicates,
 	resolveShortcutAction,
 	stepDuplicateSelection,
-} from '@/tools/keyboardShortcuts';
+} from '@/tools/keyboardShortcuts'
 import {
 	clearReclamationHistory,
 	computeDuplicateBacklogSnapshot,
@@ -4937,13 +5160,13 @@ import {
 	recordCleanupBatch,
 	recordScanSnapshot,
 	saveReclamationHistory,
-} from '@/tools/reclamationHistory';
-import Folder from 'vue-material-design-icons/Folder';
-import FolderRemove from 'vue-material-design-icons/FolderRemove';
-import FolderMultiple from 'vue-material-design-icons/FolderMultiple';
-import Delete from 'vue-material-design-icons/Delete';
-import FilterOutline from 'vue-material-design-icons/FilterOutline';
-import FilterSettings from './components/FilterSettings.vue';
+} from '@/tools/reclamationHistory'
+import Folder from 'vue-material-design-icons/Folder'
+import FolderRemove from 'vue-material-design-icons/FolderRemove'
+import FolderMultiple from 'vue-material-design-icons/FolderMultiple'
+import Delete from 'vue-material-design-icons/Delete'
+import FilterOutline from 'vue-material-design-icons/FilterOutline'
+import FilterSettings from './components/FilterSettings.vue'
 
 const {
 	fetchDuplicates,
@@ -4953,15 +5176,16 @@ const {
 	notifyScanStarted,
 	notifyScanCompleted,
 	notifyScanFailed,
-} = api;
+} = api
 
 const KEEP_SHORTCUT_RULES = Object.freeze({
 	'keep-oldest': 'oldest',
 	'keep-newest': 'newest',
 	'keep-shortest-path': 'shortest_path',
-});
+})
 
 export default {
+	// eslint-disable-next-line vue/match-component-file-name
 	name: 'DuplicateFinder',
 	components: {
 		NcAppContent,
@@ -5093,10 +5317,10 @@ export default {
 		OnboardingGuide,
 		UsageExamples,
 		FAQ,
-		FilterSettings
+		FilterSettings,
 	},
 	data() {
-		const savedPreferences = loadUiPreferences();
+		const savedPreferences = loadUiPreferences()
 		return {
 			acknowledgedDuplicates: [],
 			unacknowledgedDuplicates: [],
@@ -5221,11 +5445,11 @@ export default {
 			activeView: 'details',
 			acknowledgedPagination: {
 				currentPage: 1,
-				totalPages: 1
+				totalPages: 1,
 			},
 			unacknowledgedPagination: {
 				currentPage: 1,
-				totalPages: 1
+				totalPages: 1,
 			},
 			paginationResetToken: 0,
 			pendingOffsetDelta: {
@@ -5274,7 +5498,7 @@ export default {
 			keydownHandler: null,
 			shortcutsDialogOpen: false,
 			lastFocusedBeforeShortcuts: null,
-		};
+		}
 	},
 	computed: {
 		hasDuplicates() {
@@ -5360,7 +5584,7 @@ export default {
 			const titles = {
 				guide: t('duplicatefinder', 'Getting Started'),
 				examples: t('duplicatefinder', 'Usage Examples'),
-				faq: t('duplicatefinder', 'FAQ')
+				faq: t('duplicatefinder', 'FAQ'),
 			}
 			return titles[this.currentHelpSection] || t('duplicatefinder', 'Help')
 		},
@@ -5368,7 +5592,7 @@ export default {
 			const components = {
 				guide: OnboardingGuide,
 				examples: UsageExamples,
-				faq: FAQ
+				faq: FAQ,
 			}
 			return components[this.currentHelpSection]
 		},
@@ -5606,7 +5830,8 @@ export default {
 		},
 		/**
 		 * Cycles the minimum file size filter in details view.
-		 * @returns {boolean} True when the minimum file size filter was cycled.
+		 *
+		 * @return {boolean} True when the minimum file size filter was cycled.
 		 */
 		cycleMinSizeFilter() {
 			if (this.activeView !== 'details') {
@@ -5620,7 +5845,8 @@ export default {
 		},
 		/**
 		 * Jump to the duplicate group with the largest reclaimable space in details view.
-		 * @returns {boolean} True when a group was selected.
+		 *
+		 * @return {boolean} True when a group was selected.
 		 */
 		jumpToLargestDuplicateGroup() {
 			if (this.activeView !== 'details') {
@@ -5638,8 +5864,9 @@ export default {
 		},
 		/**
 		 * Export the currently filtered duplicate report using the given navigation method in details view.
+		 *
 		 * @param {string} methodName Method name on DuplicateNavigation ('exportFilteredCsv' | 'exportFilteredJson').
-		 * @returns {boolean} True when a non-empty export was triggered.
+		 * @return {boolean} True when a non-empty export was triggered.
 		 */
 		exportFilteredReport(methodName) {
 			if (this.activeView !== 'details') {
@@ -5660,14 +5887,16 @@ export default {
 		},
 		/**
 		 * Export the currently filtered duplicate report as CSV in details view.
-		 * @returns {boolean} True when a non-empty CSV export was triggered.
+		 *
+		 * @return {boolean} True when a non-empty CSV export was triggered.
 		 */
 		exportFilteredCsvReport() {
 			return this.exportFilteredReport('exportFilteredCsv')
 		},
 		/**
 		 * Export the currently filtered duplicate report as JSON in details view.
-		 * @returns {boolean} True when a non-empty JSON export was triggered.
+		 *
+		 * @return {boolean} True when a non-empty JSON export was triggered.
 		 */
 		exportFilteredJsonReport() {
 			return this.exportFilteredReport('exportFilteredJson')
@@ -5675,7 +5904,8 @@ export default {
 		/**
 		 * Toggles between the details triage view and the bulk-delete view.
 		 * Never triggers any deletion automatically.
-		 * @returns {boolean} True when the active view switched.
+		 *
+		 * @return {boolean} True when the active view switched.
 		 */
 		toggleBulkDeleteView() {
 			if (this.activeView === 'bulk-delete') {
@@ -8724,130 +8954,100 @@ export default {
 			this[paginationKey] = updated
 		},
 		handleDuplicateResolved({ duplicate, type }) {
-			console.log('ISSUE146: App.handleDuplicateResolved called');
-			console.log('ISSUE146: duplicate.id =', duplicate.id);
-			console.log('ISSUE146: duplicate.hash =', duplicate.hash);
-			console.log('ISSUE146: type =', type);
-
 			// Remove from the appropriate list
 			if (type === 'acknowledged') {
-				console.log('ISSUE146: Removing from acknowledged list');
-				const beforeLen = this.acknowledgedDuplicates.length;
-				console.log('ISSUE146: acknowledged list length before =', beforeLen);
-				this.acknowledgedDuplicates = this.acknowledgedDuplicates.filter(d => d.hash !== duplicate.hash);
-				const removed = beforeLen - this.acknowledgedDuplicates.length;
+				const beforeLen = this.acknowledgedDuplicates.length
+				this.acknowledgedDuplicates = this.acknowledgedDuplicates.filter(d => d.hash !== duplicate.hash)
+				const removed = beforeLen - this.acknowledgedDuplicates.length
 				if (removed > 0) {
-					this.adjustSectionPagination('acknowledged', -removed);
+					this.adjustSectionPagination('acknowledged', -removed)
 				}
-				console.log('ISSUE146: acknowledged list length after =', this.acknowledgedDuplicates.length);
 			} else {
-				console.log('ISSUE146: Removing from unacknowledged list');
-				const beforeLen = this.unacknowledgedDuplicates.length;
-				console.log('ISSUE146: unacknowledged list length before =', beforeLen);
-				this.unacknowledgedDuplicates = this.unacknowledgedDuplicates.filter(d => d.hash !== duplicate.hash);
-				const removed = beforeLen - this.unacknowledgedDuplicates.length;
+				const beforeLen = this.unacknowledgedDuplicates.length
+				this.unacknowledgedDuplicates = this.unacknowledgedDuplicates.filter(d => d.hash !== duplicate.hash)
+				const removed = beforeLen - this.unacknowledgedDuplicates.length
 				if (removed > 0) {
-					this.adjustSectionPagination('unacknowledged', -removed);
+					this.adjustSectionPagination('unacknowledged', -removed)
 				}
-				console.log('ISSUE146: unacknowledged list length after =', this.unacknowledgedDuplicates.length);
 			}
 
 			// Trigger DuplicateNavigation to find and select the next duplicate
 			// This will respect the current sort order
 			if (this.$refs.duplicateNavigation) {
-				console.log('ISSUE146: Calling selectNextDuplicateAfterResolution on DuplicateNavigation');
-				this.$refs.duplicateNavigation.selectNextDuplicateAfterResolution(duplicate, type);
-			} else {
-				console.log('ISSUE146: ERROR - duplicateNavigation ref not found!');
+				this.$refs.duplicateNavigation.selectNextDuplicateAfterResolution(duplicate, type)
 			}
-
-			console.log('ISSUE146: currentDuplicate after resolution =', this.currentDuplicate ? this.currentDuplicate.id : 'null');
 		},
 		async removeDuplicate(duplicate) {
-			console.log('App: removeDuplicate called with:', duplicate);
 			// Get the updated lists after removing the duplicate
-			const { acknowledgedDuplicates: newAcknowledged, unacknowledgedDuplicates: newUnacknowledged } =
-				removeDuplicateFromList(duplicate, this.acknowledgedDuplicates, this.unacknowledgedDuplicates);
-
-			console.log('App: Got updated lists:', {
-				acknowledgedCount: newAcknowledged.length,
-				unacknowledgedCount: newUnacknowledged.length
-			});
+			const { acknowledgedDuplicates: newAcknowledged, unacknowledgedDuplicates: newUnacknowledged } = removeDuplicateFromList(duplicate, this.acknowledgedDuplicates, this.unacknowledgedDuplicates)
 
 			// Update both lists
-			this.acknowledgedDuplicates = newAcknowledged;
-			this.unacknowledgedDuplicates = newUnacknowledged;
+			this.acknowledgedDuplicates = newAcknowledged
+			this.unacknowledgedDuplicates = newUnacknowledged
 
 			// If no duplicates left in either list, clear current duplicate
 			if (newAcknowledged.length === 0 && newUnacknowledged.length === 0) {
-				console.log('App: No duplicates left, clearing current duplicate');
-				this.currentDuplicate = null;
-				return;
+				this.currentDuplicate = null
+				return
 			}
 
 			// Find next duplicate to display based on the acknowledged status
 			if (duplicate.acknowledged) {
-				console.log('App: Setting next duplicate from acknowledged list');
-				this.currentDuplicate = newAcknowledged[0] || newUnacknowledged[0] || null;
+				this.currentDuplicate = newAcknowledged[0] || newUnacknowledged[0] || null
 			} else {
-				console.log('App: Setting next duplicate from unacknowledged list');
-				this.currentDuplicate = newUnacknowledged[0] || newAcknowledged[0] || null;
+				this.currentDuplicate = newUnacknowledged[0] || newAcknowledged[0] || null
 			}
 
-			console.log('App: New current duplicate:', this.currentDuplicate);
-
 			// Refresh duplicates to ensure UI is up to date
-			console.log('App: Refreshing duplicates');
-			await this.refreshDuplicates();
-			console.log('App: Refresh complete');
+			await this.refreshDuplicates()
 		},
 		async updateDuplicate(updatedDuplicate) {
 			// Check if the duplicate still has more than one file
 			if (updatedDuplicate.files.length <= 1) {
-				const prevAckLen = this.acknowledgedDuplicates.length;
-				const prevUnackLen = this.unacknowledgedDuplicates.length;
+				const prevAckLen = this.acknowledgedDuplicates.length
+				const prevUnackLen = this.unacknowledgedDuplicates.length
 				// Remove from both lists
-				this.acknowledgedDuplicates = this.acknowledgedDuplicates.filter(d => d.id !== updatedDuplicate.id);
-				this.unacknowledgedDuplicates = this.unacknowledgedDuplicates.filter(d => d.id !== updatedDuplicate.id);
+				this.acknowledgedDuplicates = this.acknowledgedDuplicates.filter(d => d.id !== updatedDuplicate.id)
+				this.unacknowledgedDuplicates = this.unacknowledgedDuplicates.filter(d => d.id !== updatedDuplicate.id)
 				if (prevAckLen !== this.acknowledgedDuplicates.length) {
-					this.adjustSectionPagination('acknowledged', this.acknowledgedDuplicates.length - prevAckLen);
+					this.adjustSectionPagination('acknowledged', this.acknowledgedDuplicates.length - prevAckLen)
 				}
 				if (prevUnackLen !== this.unacknowledgedDuplicates.length) {
-					this.adjustSectionPagination('unacknowledged', this.unacknowledgedDuplicates.length - prevUnackLen);
+					this.adjustSectionPagination('unacknowledged', this.unacknowledgedDuplicates.length - prevUnackLen)
 				}
-				this.currentDuplicate = null;
+				this.currentDuplicate = null
 			} else {
 				// Existing logic to update the duplicate
-				const sourceSection = !updatedDuplicate.acknowledged ? 'acknowledged' : 'unacknowledged';
-				const targetSection = !updatedDuplicate.acknowledged ? 'unacknowledged' : 'acknowledged';
-				const sourceList = !updatedDuplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates;
-				const targetList = !updatedDuplicate.acknowledged ? this.unacknowledgedDuplicates : this.acknowledgedDuplicates;
-				const index = sourceList.findIndex(d => d.id === updatedDuplicate.id);
+				const sourceSection = !updatedDuplicate.acknowledged ? 'acknowledged' : 'unacknowledged'
+				const targetSection = !updatedDuplicate.acknowledged ? 'unacknowledged' : 'acknowledged'
+				const sourceList = !updatedDuplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates
+				const targetList = !updatedDuplicate.acknowledged ? this.unacknowledgedDuplicates : this.acknowledgedDuplicates
+				const index = sourceList.findIndex(d => d.id === updatedDuplicate.id)
 
 				if (index !== -1) {
-					sourceList.splice(index, 1);
-					targetList.push(updatedDuplicate);
-					this.adjustSectionPagination(sourceSection, -1);
-					this.adjustSectionPagination(targetSection, 1);
+					sourceList.splice(index, 1)
+					targetList.push(updatedDuplicate)
+					this.adjustSectionPagination(sourceSection, -1)
+					this.adjustSectionPagination(targetSection, 1)
 				}
 
 				if (this.$refs.duplicateNavigation && typeof this.$refs.duplicateNavigation.selectNextDuplicateAfterResolution === 'function') {
-					this.$refs.duplicateNavigation.selectNextDuplicateAfterResolution(updatedDuplicate, sourceSection);
+					this.$refs.duplicateNavigation.selectNextDuplicateAfterResolution(updatedDuplicate, sourceSection)
 				} else if (sourceList.length > 0) {
-					const nextIndex = index < sourceList.length ? index : 0;
-					this.currentDuplicate = sourceList[nextIndex];
+					const nextIndex = index < sourceList.length ? index : 0
+					this.currentDuplicate = sourceList[nextIndex]
 				} else {
-					this.currentDuplicate = targetList[0] || null;
+					this.currentDuplicate = targetList[0] || null
 				}
 			}
 		},
 		moveToNext(duplicate) {
-			const currentList = duplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates;
-			const currentIndex = currentList.findIndex(d => d.id === duplicate.id);
+			const currentList = duplicate.acknowledged ? this.acknowledgedDuplicates : this.unacknowledgedDuplicates
+			const currentIndex = currentList.findIndex(d => d.id === duplicate.id)
 			if (currentIndex !== -1 && currentIndex < currentList.length - 1) {
-				this.currentDuplicate = currentList[currentIndex + 1];
+				this.currentDuplicate = currentList[currentIndex + 1]
 			} else {
-				this.currentDuplicate = currentList[0];
+				this.currentDuplicate = currentList[0]
 			}
 		},
 		async openDuplicate(duplicate) {
@@ -8855,53 +9055,53 @@ export default {
 			this.currentDuplicate = duplicate
 		},
 		async handleQueryOptionsChanged({ sortBy, minSize }) {
-			this.sortOption = sortBy || 'none';
-			this.minSizeBytes = Number(minSize) > 0 ? Number(minSize) : 0;
+			this.sortOption = sortBy || 'none'
+			this.minSizeBytes = Number(minSize) > 0 ? Number(minSize) : 0
 			saveUiPreferences({
 				sortOption: this.sortOption,
 				minSizeBytes: this.minSizeBytes,
-			});
-			await this.refreshDuplicates({ silent: true });
+			})
+			await this.refreshDuplicates({ silent: true })
 		},
 		async refreshDuplicates(options = {}) {
-			const showSpinner = Boolean(options && options.fullScreen === true);
+			const showSpinner = Boolean(options && options.fullScreen === true)
 			if (showSpinner) {
-				this.isLoading = true;
+				this.isLoading = true
 			}
 			try {
 				const queryOptions = {
 					sortBy: this.sortOption,
-					minSize: this.minSizeBytes
-				};
+					minSize: this.minSizeBytes,
+				}
 				const [acknowledgedResponse, unacknowledgedResponse] = await Promise.all([
 					fetchDuplicates('acknowledged', 50, 1, queryOptions),
-					fetchDuplicates('unacknowledged', 50, 1, queryOptions)
-				]);
+					fetchDuplicates('unacknowledged', 50, 1, queryOptions),
+				])
 
-				this.acknowledgedDuplicates = acknowledgedResponse.entities;
-				this.unacknowledgedDuplicates = unacknowledgedResponse.entities;
-				this.acknowledgedPagination = acknowledgedResponse.pagination;
-				this.unacknowledgedPagination = unacknowledgedResponse.pagination;
-				this.pendingOffsetDelta.acknowledged = 0;
-				this.pendingOffsetDelta.unacknowledged = 0;
-				this.paginationResetToken++;
+				this.acknowledgedDuplicates = acknowledgedResponse.entities
+				this.unacknowledgedDuplicates = unacknowledgedResponse.entities
+				this.acknowledgedPagination = acknowledgedResponse.pagination
+				this.unacknowledgedPagination = unacknowledgedResponse.pagination
+				this.pendingOffsetDelta.acknowledged = 0
+				this.pendingOffsetDelta.unacknowledged = 0
+				this.paginationResetToken++
 
 				if (this.currentDuplicate) {
-					const existsAcknowledged = this.acknowledgedDuplicates.find(d => d.id === this.currentDuplicate.id);
-					const existsUnacknowledged = this.unacknowledgedDuplicates.find(d => d.id === this.currentDuplicate.id);
+					const existsAcknowledged = this.acknowledgedDuplicates.find(d => d.id === this.currentDuplicate.id)
+					const existsUnacknowledged = this.unacknowledgedDuplicates.find(d => d.id === this.currentDuplicate.id)
 					if (existsAcknowledged) {
-						this.currentDuplicate = existsAcknowledged;
+						this.currentDuplicate = existsAcknowledged
 					} else if (existsUnacknowledged) {
-						this.currentDuplicate = existsUnacknowledged;
+						this.currentDuplicate = existsUnacknowledged
 					} else {
-						this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null;
+						this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null
 					}
 				} else if (this.activeView === 'details') {
-					this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null;
+					this.currentDuplicate = this.unacknowledgedDuplicates[0] || this.acknowledgedDuplicates[0] || null
 				}
 			} finally {
 				if (showSpinner) {
-					this.isLoading = false;
+					this.isLoading = false
 				}
 			}
 		},
@@ -8910,7 +9110,7 @@ export default {
 			try {
 				const queryOptions = {
 					sortBy: this.sortOption,
-					minSize: this.minSizeBytes
+					minSize: this.minSizeBytes,
 				}
 				const statusPromise = typeof fetchScanStatus === 'function'
 					? fetchScanStatus().catch(() => null)
@@ -8919,7 +9119,7 @@ export default {
 					fetchDuplicates('acknowledged', 50, 1, queryOptions),
 					fetchDuplicates('unacknowledged', 50, 1, queryOptions),
 					fetchProjects(),
-					statusPromise
+					statusPromise,
 				])
 
 				this.acknowledgedDuplicates = acknowledgedResponse.entities
@@ -9363,8 +9563,8 @@ export default {
 		},
 		escapeRegex(string) {
 			return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-		}
-	}
+		},
+	},
 }
 </script>
 

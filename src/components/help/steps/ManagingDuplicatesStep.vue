@@ -1,45 +1,47 @@
 <template>
-  <div class="step-container">
-    <h2 class="step-title">{{ t('duplicatefinder', 'Managing Duplicates') }}</h2>
-    <div class="info-section">
-      <div class="info-block">
-        <h3>1. {{ t('duplicatefinder', 'Individual Management') }}</h3>
-        <ul>
-          <li>{{ t('duplicatefinder', 'View all duplicates in the "Unacknowledged" and "Acknowledged" sections') }}</li>
-          <li>{{ t('duplicatefinder', 'Select which copies to delete while keeping the originals') }}</li>
-          <li>{{ t('duplicatefinder', 'Mark duplicates as acknowledged to organize them better') }}</li>
-        </ul>
-      </div>
+	<div class="step-container">
+		<h2 class="step-title">
+			{{ t('duplicatefinder', 'Managing Duplicates') }}
+		</h2>
+		<div class="info-section">
+			<div class="info-block">
+				<h3>1. {{ t('duplicatefinder', 'Individual Management') }}</h3>
+				<ul>
+					<li>{{ t('duplicatefinder', 'View all duplicates in the "Unacknowledged" and "Acknowledged" sections') }}</li>
+					<li>{{ t('duplicatefinder', 'Select which copies to delete while keeping the originals') }}</li>
+					<li>{{ t('duplicatefinder', 'Mark duplicates as acknowledged to organize them better') }}</li>
+				</ul>
+			</div>
 
-      <div class="info-block">
-        <h3>2. {{ t('duplicatefinder', 'Bulk Operations') }}</h3>
-        <ul>
-          <li>{{ t('duplicatefinder', 'Use "Bulk Delete" feature to handle multiple duplicates at once') }}</li>
-          <li>{{ t('duplicatefinder', 'Select multiple files for deletion in a single operation') }}</li>
-          <li>{{ t('duplicatefinder', 'Review your selection before confirming deletion') }}</li>
-        </ul>
-      </div>
+			<div class="info-block">
+				<h3>2. {{ t('duplicatefinder', 'Bulk Operations') }}</h3>
+				<ul>
+					<li>{{ t('duplicatefinder', 'Use "Bulk Delete" feature to handle multiple duplicates at once') }}</li>
+					<li>{{ t('duplicatefinder', 'Select multiple files for deletion in a single operation') }}</li>
+					<li>{{ t('duplicatefinder', 'Review your selection before confirming deletion') }}</li>
+				</ul>
+			</div>
 
-      <div class="info-block">
-        <h3>3. {{ t('duplicatefinder', 'Filter Management') }}</h3>
-        <ul>
-          <li>{{ t('duplicatefinder', 'Use file hash filters to ignore specific files') }}</li>
-          <li>{{ t('duplicatefinder', 'Create name patterns to exclude files (e.g., *.tmp, backup_*)') }}</li>
-          <li>{{ t('duplicatefinder', 'Manage filters through Settings → Filters') }}</li>
-        </ul>
-      </div>
+			<div class="info-block">
+				<h3>3. {{ t('duplicatefinder', 'Filter Management') }}</h3>
+				<ul>
+					<li>{{ t('duplicatefinder', 'Use file hash filters to ignore specific files') }}</li>
+					<li>{{ t('duplicatefinder', 'Create name patterns to exclude files (e.g., *.tmp, backup_*)') }}</li>
+					<li>{{ t('duplicatefinder', 'Manage filters through Settings → Filters') }}</li>
+				</ul>
+			</div>
 
-      <div class="note">
-        <strong>{{ t('duplicatefinder', 'Note:') }}</strong>
-        {{ t('duplicatefinder', 'All deleted files can be recovered from the Nextcloud trash bin during the retention period.') }}
-      </div>
-    </div>
-  </div>
+			<div class="note">
+				<strong>{{ t('duplicatefinder', 'Note:') }}</strong>
+				{{ t('duplicatefinder', 'All deleted files can be recovered from the Nextcloud trash bin during the retention period.') }}
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
 export default {
-  name: 'ManagingDuplicatesStep'
+	name: 'ManagingDuplicatesStep',
 }
 </script>
 
@@ -124,4 +126,4 @@ export default {
   color: var(--color-primary-element);
   margin-inline-end: 8px;
 }
-</style> 
+</style>

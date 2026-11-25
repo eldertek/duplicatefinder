@@ -388,25 +388,59 @@ test('detail view visual refresh renders table header, per-file size and status 
 	assert.deepEqual(selectedPaths(vm), [])
 })
 
-test('German localization files include Size, Actions, Name & Path, and table UI translations (issue 206)', () => {
+test('localization files in l10n/ and l10n-fallback/de*.json are valid, synced, and fall back gracefully (issue 206)', () => {
 	const fs = require('node:fs')
 	const pathMod = require('node:path')
+	const vm = require('node:vm')
 	const root = pathMod.resolve(__dirname, '../..')
 
-	for (const locale of ['de', 'de_DE']) {
-		const jsonData = JSON.parse(fs.readFileSync(pathMod.join(root, 'l10n', `${locale}.json`), 'utf8'))
-		const tr = jsonData.translations
-		assert.equal(tr['Size'], 'Größe')
-		assert.equal(tr['Actions'], 'Aktionen')
-		assert.equal(tr['Name & Path'], 'Name & Pfad')
-		assert.equal(tr['Preview'], 'Vorschau')
-		assert.equal(tr['Status'], 'Status')
-		assert.equal(tr['Original'], 'Original')
-		assert.equal(tr['Duplicate'], 'Duplikat')
+	// Transifex syncs (e.g. 511e658) only keep locales with active Transifex translations in l10n/.
+	// Verify every tracked l10n/<locale>.json + .js pair is valid and synchronized.
+	const l10nDir = pathMod.join(root, 'l10n')
+	const trackedJsonFiles = fs.readdirSync(l10nDir).filter(name => name.endsWith('.json')).sort()
+	assert.ok(trackedJsonFiles.length > 0, 'l10n/ must contain at least one tracked locale dictionary')
 
-		const jsText = fs.readFileSync(pathMod.join(root, 'l10n', `${locale}.js`), 'utf8')
-		assert.ok(jsText.includes('"Size" : "Größe"'))
-		assert.ok(jsText.includes('"Actions" : "Aktionen"'))
-		assert.ok(jsText.includes('"Name & Path" : "Name & Pfad"'))
+	for (const fileName of trackedJsonFiles) {
+		const locale = fileName.slice(0, -'.json'.length)
+		const jsonRaw = fs.readFileSync(pathMod.join(l10nDir, `${locale}.json`), 'utf8')
+		const jsonData = JSON.parse(jsonRaw)
+		assert.equal(typeof jsonData.translations, 'object', `l10n/${locale}.json must define translations`)
+		assert.equal(/[\u2013\u2014]/.test(jsonRaw), false, `l10n/${locale}.json must not contain U+2013/U+2014`)
+
+		const jsText = fs.readFileSync(pathMod.join(l10nDir, `${locale}.js`), 'utf8')
+		assert.equal(/[\u2013\u2014]/.test(jsText), false, `l10n/${locale}.js must not contain U+2013/U+2014`)
+		let jsTranslations = null
+		vm.runInNewContext(jsText, {
+			OC: {
+				L10N: {
+					register(appId, translations) {
+						assert.equal(appId, 'duplicatefinder')
+						jsTranslations = translations
+					},
+				},
+			},
+		})
+		assert.deepEqual({ ...jsTranslations }, { ...jsonData.translations }, `l10n/${locale}.js must match l10n/${locale}.json`)
+
+		if ((locale === 'de' || locale === 'de_DE') && 'Size' in jsonData.translations) {
+			assert.equal(jsonData.translations['Size'], 'Größe')
+			assert.equal(jsonData.translations['Actions'], 'Aktionen')
+			assert.equal(jsonData.translations['Name & Path'], 'Name & Pfad')
+		}
 	}
+
+	// German fallback dictionaries remain available in l10n-fallback/ even when Transifex removes l10n/de*.json
+	for (const locale of ['de', 'de_DE']) {
+		const fallbackRaw = fs.readFileSync(pathMod.join(root, 'l10n-fallback', `${locale}.json`), 'utf8')
+		assert.equal(/[\u2013\u2014]/.test(fallbackRaw), false, `l10n-fallback/${locale}.json must not contain U+2013/U+2014`)
+		const tr = JSON.parse(fallbackRaw).translations
+		assert.equal(tr['Protected'], 'Geschützt')
+		assert.equal(tr['Keep this folder'], 'Diesen Ordner behalten')
+		assert.equal(tr['Delete duplicate copies'], 'Doppelte Kopien löschen')
+	}
+
+	// Verify DuplicateDetails falls back gracefully to English UI labels when no locale bundle is active
+	assert.equal(global.t('duplicatefinder', 'Name & Path'), 'Name & Path')
+	assert.equal(global.t('duplicatefinder', 'Size'), 'Size')
+	assert.equal(global.t('duplicatefinder', 'Actions'), 'Actions')
 })

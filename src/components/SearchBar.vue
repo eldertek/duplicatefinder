@@ -1,148 +1,148 @@
 <template>
-  <div class="search-container">
-    <div class="search-combined">
-      <div class="search-wrapper">
-        <input
-          ref="searchInput"
-          v-model="searchQuery"
-          type="text"
-          class="search-input"
-          :placeholder="searchPlaceholder"
-          :aria-label="searchPlaceholder"
-          @input="onSearch"
-          @keydown.esc="onInputEscape" />
-        <button
-          type="button"
-          class="search-type-toggle"
-          :title="t('duplicatefinder', 'Search type')"
-          :aria-label="t('duplicatefinder', 'Search type')"
-          :aria-expanded="showTypeSelector ? 'true' : 'false'"
-          aria-haspopup="listbox"
-          @click="showTypeSelector = !showTypeSelector"
-          @keydown.esc="showTypeSelector = false">
-          <ChevronDown :size="16" />
-        </button>
-        <div
-          v-if="showTypeSelector"
-          class="search-type-dropdown"
-          role="listbox"
-          :aria-label="t('duplicatefinder', 'Search type')"
-          @keydown.esc="showTypeSelector = false">
-          <button
-            type="button"
-            role="option"
-            class="search-type-option"
-            :class="{ active: searchType === 'simple' }"
-            :aria-selected="searchType === 'simple' ? 'true' : 'false'"
-            @click="selectSearchType('simple')">
-            {{ t('duplicatefinder', 'Simple search') }}
-          </button>
-          <button
-            type="button"
-            role="option"
-            class="search-type-option"
-            :class="{ active: searchType === 'wildcard' }"
-            :aria-selected="searchType === 'wildcard' ? 'true' : 'false'"
-            @click="selectSearchType('wildcard')">
-            {{ t('duplicatefinder', 'Wildcard search (*, ?)') }}
-          </button>
-          <button
-            type="button"
-            role="option"
-            class="search-type-option"
-            :class="{ active: searchType === 'regex' }"
-            :aria-selected="searchType === 'regex' ? 'true' : 'false'"
-            @click="selectSearchType('regex')">
-            {{ t('duplicatefinder', 'Regular expression') }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+	<div class="search-container">
+		<div class="search-combined">
+			<div class="search-wrapper">
+				<input
+					ref="searchInput"
+					v-model="searchQuery"
+					type="text"
+					class="search-input"
+					:placeholder="searchPlaceholder"
+					:aria-label="searchPlaceholder"
+					@input="onSearch"
+					@keydown.esc="onInputEscape">
+				<button
+					type="button"
+					class="search-type-toggle"
+					:title="t('duplicatefinder', 'Search type')"
+					:aria-label="t('duplicatefinder', 'Search type')"
+					:aria-expanded="showTypeSelector ? 'true' : 'false'"
+					aria-haspopup="listbox"
+					@click="showTypeSelector = !showTypeSelector"
+					@keydown.esc="showTypeSelector = false">
+					<ChevronDown :size="16" />
+				</button>
+				<div
+					v-if="showTypeSelector"
+					class="search-type-dropdown"
+					role="listbox"
+					:aria-label="t('duplicatefinder', 'Search type')"
+					@keydown.esc="showTypeSelector = false">
+					<button
+						type="button"
+						role="option"
+						class="search-type-option"
+						:class="{ active: searchType === 'simple' }"
+						:aria-selected="searchType === 'simple' ? 'true' : 'false'"
+						@click="selectSearchType('simple')">
+						{{ t('duplicatefinder', 'Simple search') }}
+					</button>
+					<button
+						type="button"
+						role="option"
+						class="search-type-option"
+						:class="{ active: searchType === 'wildcard' }"
+						:aria-selected="searchType === 'wildcard' ? 'true' : 'false'"
+						@click="selectSearchType('wildcard')">
+						{{ t('duplicatefinder', 'Wildcard search (*, ?)') }}
+					</button>
+					<button
+						type="button"
+						role="option"
+						class="search-type-option"
+						:class="{ active: searchType === 'regex' }"
+						:aria-selected="searchType === 'regex' ? 'true' : 'false'"
+						@click="selectSearchType('regex')">
+						{{ t('duplicatefinder', 'Regular expression') }}
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
 import ChevronDown from 'vue-material-design-icons/ChevronDown'
 
 export default {
-  name: 'SearchBar',
-  components: {
-    ChevronDown
-  },
-  data() {
-    return {
-      searchQuery: '',
-      searchType: 'simple',
-      showTypeSelector: false
-    }
-  },
-  computed: {
-    searchPlaceholder() {
-      switch (this.searchType) {
-        case 'wildcard':
-          return t('duplicatefinder', 'Search with wildcards (e.g., IMG*.jpg)')
-        case 'regex':
-          return t('duplicatefinder', 'Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)')
-        default:
-          return t('duplicatefinder', 'Search duplicates…')
-      }
-    }
-  },
-  methods: {
-    focus() {
-      if (this.$refs.searchInput && typeof this.$refs.searchInput.focus === 'function') {
-        this.$refs.searchInput.focus()
-        if (typeof this.$refs.searchInput.select === 'function') {
-          this.$refs.searchInput.select()
-        }
-      }
-    },
-    onInputEscape() {
-      if (this.showTypeSelector) {
-        this.showTypeSelector = false
-        return
-      }
-      if (this.$refs.searchInput && typeof this.$refs.searchInput.blur === 'function') {
-        this.$refs.searchInput.blur()
-      }
-    },
-    selectSearchType(type) {
-      this.searchType = type
-      this.showTypeSelector = false
-      this.onSearch()
-    },
-    onSearch() {
-      let processedQuery = this.searchQuery
+	name: 'SearchBar',
+	components: {
+		ChevronDown,
+	},
+	data() {
+		return {
+			searchQuery: '',
+			searchType: 'simple',
+			showTypeSelector: false,
+		}
+	},
+	computed: {
+		searchPlaceholder() {
+			switch (this.searchType) {
+			case 'wildcard':
+				return t('duplicatefinder', 'Search with wildcards (e.g., IMG*.jpg)')
+			case 'regex':
+				return t('duplicatefinder', 'Search with regex (e.g., ^IMG_\\d{4}\\.jpg$)')
+			default:
+				return t('duplicatefinder', 'Search duplicates…')
+			}
+		},
+	},
+	methods: {
+		focus() {
+			if (this.$refs.searchInput && typeof this.$refs.searchInput.focus === 'function') {
+				this.$refs.searchInput.focus()
+				if (typeof this.$refs.searchInput.select === 'function') {
+					this.$refs.searchInput.select()
+				}
+			}
+		},
+		onInputEscape() {
+			if (this.showTypeSelector) {
+				this.showTypeSelector = false
+				return
+			}
+			if (this.$refs.searchInput && typeof this.$refs.searchInput.blur === 'function') {
+				this.$refs.searchInput.blur()
+			}
+		},
+		selectSearchType(type) {
+			this.searchType = type
+			this.showTypeSelector = false
+			this.onSearch()
+		},
+		onSearch() {
+			let processedQuery = this.searchQuery
 
-      if (this.searchType === 'wildcard') {
-        processedQuery = this.wildcardToRegex(processedQuery)
-      }
+			if (this.searchType === 'wildcard') {
+				processedQuery = this.wildcardToRegex(processedQuery)
+			}
 
-      if (this.searchType !== 'simple') {
-        try {
-          RegExp(processedQuery)
-        } catch (e) {
-          processedQuery = this.escapeRegex(this.searchQuery)
-        }
-      } else {
-        processedQuery = this.escapeRegex(processedQuery)
-      }
+			if (this.searchType !== 'simple') {
+				try {
+					RegExp(processedQuery)
+				} catch (e) {
+					processedQuery = this.escapeRegex(this.searchQuery)
+				}
+			} else {
+				processedQuery = this.escapeRegex(processedQuery)
+			}
 
-      this.$emit('search', {
-        query: processedQuery,
-        type: this.searchType
-      })
-    },
-    wildcardToRegex(pattern) {
-      return pattern
-        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-        .replace(/\*/g, '.*')
-        .replace(/\?/g, '.')
-    },
-    escapeRegex(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    }
-  }
+			this.$emit('search', {
+				query: processedQuery,
+				type: this.searchType,
+			})
+		},
+		wildcardToRegex(pattern) {
+			return pattern
+				.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+				.replace(/\*/g, '.*')
+				.replace(/\?/g, '.')
+		},
+		escapeRegex(string) {
+			return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+		},
+	},
 }
 </script>
 
@@ -254,4 +254,4 @@ export default {
   background-color: var(--color-primary-element-light);
   color: var(--color-primary-text);
 }
-</style> 
+</style>

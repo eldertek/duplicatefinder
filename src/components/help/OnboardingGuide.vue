@@ -1,46 +1,46 @@
 <template>
-  <div class="onboarding-guide">
-    <div class="onboarding-content">
-      <component :is="currentStepComponent" @next="nextStep" @previous="previousStep" />
-    </div>
+	<div class="onboarding-guide">
+		<div class="onboarding-content">
+			<component :is="currentStepComponent" @next="nextStep" @previous="previousStep" />
+		</div>
 
-    <!-- Navigation -->
-    <div class="navigation-container">
-      <!-- Progress -->
-      <div class="progress-section">
-        <NcProgressBar
-          :value="((currentStep + 1) / totalSteps) * 100"
-          size="medium"
-          class="progress-bar" />
-        <span class="step-counter">
-          {{ t('duplicatefinder', 'Step {step} of {total}', { step: currentStep + 1, total: totalSteps }) }}
-        </span>
-      </div>
+		<!-- Navigation -->
+		<div class="navigation-container">
+			<!-- Progress -->
+			<div class="progress-section">
+				<NcProgressBar
+					:value="((currentStep + 1) / totalSteps) * 100"
+					size="medium"
+					class="progress-bar" />
+				<span class="step-counter">
+					{{ t('duplicatefinder', 'Step {step} of {total}', { step: currentStep + 1, total: totalSteps }) }}
+				</span>
+			</div>
 
-      <!-- Buttons -->
-      <div class="button-section">
-        <NcButton v-if="currentStep > 0"
-          type="tertiary"
-          @click="previousStep"
-          class="nav-button">
-          <template #icon>
-            <ChevronLeft :size="20" />
-          </template>
-          {{ t('duplicatefinder', 'Previous') }}
-        </NcButton>
+			<!-- Buttons -->
+			<div class="button-section">
+				<NcButton v-if="currentStep > 0"
+					type="tertiary"
+					class="nav-button"
+					@click="previousStep">
+					<template #icon>
+						<ChevronLeft :size="20" />
+					</template>
+					{{ t('duplicatefinder', 'Previous') }}
+				</NcButton>
 
-        <NcButton
-          type="primary"
-          @click="currentStep === totalSteps - 1 ? closeGuide() : nextStep()"
-          class="nav-button">
-          {{ currentStep === totalSteps - 1 ? t('duplicatefinder', 'Get Started') : t('duplicatefinder', 'Next') }}
-          <template #icon>
-            <component :is="currentStep === totalSteps - 1 ? 'Check' : 'ChevronRight'" :size="20" />
-          </template>
-        </NcButton>
-      </div>
-    </div>
-  </div>
+				<NcButton
+					type="primary"
+					class="nav-button"
+					@click="currentStep === totalSteps - 1 ? closeGuide() : nextStep()">
+					{{ currentStep === totalSteps - 1 ? t('duplicatefinder', 'Get Started') : t('duplicatefinder', 'Next') }}
+					<template #icon>
+						<component :is="currentStep === totalSteps - 1 ? 'Check' : 'ChevronRight'" :size="20" />
+					</template>
+				</NcButton>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
@@ -60,66 +60,66 @@ import ExcludedFoldersStep from './steps/ExcludedFoldersStep.vue'
 import FinalStep from './steps/FinalStep.vue'
 
 export default {
-  name: 'OnboardingGuide',
-  components: {
-    NcButton,
-    NcProgressBar,
-    ChevronLeft,
-    ChevronRight,
-    Check,
-    WelcomeStep,
-    FindingDuplicatesStep,
-    ScanningStep,
-    ProjectsStep,
-    ManagingDuplicatesStep,
-    OriginFoldersStep,
-    ExcludedFoldersStep,
-    FinalStep
-  },
-  props: {
-    show: {
-      type: Boolean,
-      default: false
-    }
-  },
-  data() {
-    return {
-      currentStep: 0,
-      steps: [
-        'WelcomeStep',
-        'FindingDuplicatesStep',
-        'ScanningStep',
-        'ProjectsStep',
-        'ManagingDuplicatesStep',
-        'OriginFoldersStep',
-        'ExcludedFoldersStep',
-        'FinalStep'
-      ]
-    }
-  },
-  computed: {
-    totalSteps() {
-      return this.steps.length
-    },
-    currentStepComponent() {
-      return this.steps[this.currentStep]
-    }
-  },
-  methods: {
-    nextStep() {
-      if (this.currentStep < this.totalSteps - 1) {
-        this.currentStep++
-      }
-    },
-    previousStep() {
-      if (this.currentStep > 0) {
-        this.currentStep--
-      }
-    },
-    closeGuide() {
-      this.$emit('close')
-    }
-  }
+	name: 'OnboardingGuide',
+	components: {
+		NcButton,
+		NcProgressBar,
+		ChevronLeft,
+		ChevronRight,
+		Check,
+		WelcomeStep,
+		FindingDuplicatesStep,
+		ScanningStep,
+		ProjectsStep,
+		ManagingDuplicatesStep,
+		OriginFoldersStep,
+		ExcludedFoldersStep,
+		FinalStep,
+	},
+	props: {
+		show: {
+			type: Boolean,
+			default: false,
+		},
+	},
+	data() {
+		return {
+			currentStep: 0,
+			steps: [
+				'WelcomeStep',
+				'FindingDuplicatesStep',
+				'ScanningStep',
+				'ProjectsStep',
+				'ManagingDuplicatesStep',
+				'OriginFoldersStep',
+				'ExcludedFoldersStep',
+				'FinalStep',
+			],
+		}
+	},
+	computed: {
+		totalSteps() {
+			return this.steps.length
+		},
+		currentStepComponent() {
+			return this.steps[this.currentStep]
+		},
+	},
+	methods: {
+		nextStep() {
+			if (this.currentStep < this.totalSteps - 1) {
+				this.currentStep++
+			}
+		},
+		previousStep() {
+			if (this.currentStep > 0) {
+				this.currentStep--
+			}
+		},
+		closeGuide() {
+			this.$emit('close')
+		},
+	},
 }
 </script>
 

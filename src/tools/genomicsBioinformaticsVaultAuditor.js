@@ -600,7 +600,7 @@ export function classifyGenomicsBioinformaticsFile(file, referenceNowMs = Date.n
 	let isUncompressedSam = false
 	let isUncompressedVcfFile = false
 	let isMatrixOrNotebook = false
-	let isMutableFile = MUTABLE_BIOINFO_EXT_RE.test(lowerBase)
+	const isMutableFile = MUTABLE_BIOINFO_EXT_RE.test(lowerBase)
 
 	if (isCompressedFastq || isUncompressedFastq || isFastaRef) {
 		family = 'raw-sequencing-reads'

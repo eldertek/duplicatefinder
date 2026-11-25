@@ -614,7 +614,7 @@ export function classifyPublishingPrepressFile(file, referenceNowMs = Date.now()
 	let isFontPackageOrScratchClone = false
 	let isCmykMasterLink = false
 	let isCmykPackageClone = false
-	let isMutableFile = MUTABLE_LAYOUT_OR_LAYER_EXT_RE.test(lowerBase)
+	const isMutableFile = MUTABLE_LAYOUT_OR_LAYER_EXT_RE.test(lowerBase)
 
 	const isCanonicalLayoutPath = CANONICAL_LAYOUT_VAULT_RE.test(lower)
 	const isCanonicalFontVaultPath = CANONICAL_FONT_VAULT_RE.test(lower)

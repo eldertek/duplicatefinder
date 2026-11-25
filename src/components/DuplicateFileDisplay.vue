@@ -1,438 +1,506 @@
 <template>
-  <div class="file-info-container">
-    <div
-      class="thumbnail"
-      role="button"
-      tabindex="0"
-      :style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"
-      :title="t('duplicatefinder', 'Open File')"
-      :aria-label="t('duplicatefinder', 'Open File')"
-      @click="openInNewWindow"
-      @keydown.enter.prevent="openInNewWindow"
-      @keydown.space.prevent="openInNewWindow">
-    </div>
+	<div class="file-info-container">
+		<div
+			class="thumbnail"
+			role="button"
+			tabindex="0"
+			:style="{ backgroundImage: 'url(' + getPreviewImage(file) + ')' }"
+			:title="t('duplicatefinder', 'Open File')"
+			:aria-label="t('duplicatefinder', 'Open File')"
+			@click="openInNewWindow"
+			@keydown.enter.prevent="openInNewWindow"
+			@keydown.space.prevent="openInNewWindow" />
 
-    <div class="file-details" :title="normalizedPath">
-      <div class="file-title-row">
-        <p class="file-label">
-          <strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong>
-        </p>
-        <span v-if="fileName" class="file-name-badge" :title="fileName">{{ fileName }}</span>
-      </div>
-      <div class="file-path-row">
-        <p class="file-path" :title="normalizedPath">
-          <strong>{{ t('duplicatefinder', 'Path:') }}</strong>
-          <template v-if="hasPathSegments">
-            <span
-              v-for="(segment, segIdx) in pathSegments"
-              :key="segIdx"
-              class="file-path-segment"
-              :class="'file-path-segment--' + segment.kind">{{ segment.text }}</span>
-          </template>
-          <template v-else>{{ normalizedPath }}</template>
-        </p>
-        <div class="copy-path-control">
-          <button
-            type="button"
-            class="copy-path-button"
-            :class="{ 'is-copied': copyStatus === 'copied', 'is-error': copyStatus === 'error' }"
-            :title="t('duplicatefinder', 'Copy path')"
-            :aria-label="t('duplicatefinder', 'Copy path')"
-            :disabled="!pathToCopy"
-            @click="copyFilePath">
-            <svg
-              v-if="copyStatus === 'copied'"
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            <svg
-              v-else
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            <span class="copy-path-button__label">{{ t('duplicatefinder', 'Copy path') }}</span>
-          </button>
-          <span
-            class="copy-path-status"
-            :class="{
-              'is-visible': Boolean(copyStatusMessage),
-              'is-copied': copyStatus === 'copied',
-              'is-error': copyStatus === 'error'
-            }"
-            role="status"
-            aria-live="polite">
-            {{ copyStatusMessage }}
-          </span>
-        </div>
-      </div>
-      <div v-if="hasMetadataBadges" class="file-metadata-badges">
-        <span
-          v-if="resolvedBadges.isProtectedOrigin"
-          class="metadata-badge metadata-badge--protected">
-          {{ t('duplicatefinder', 'Protected origin') }}
-        </span>
-        <span
-          v-if="resolvedBadges.isOldest"
-          class="metadata-badge metadata-badge--oldest">
-          {{ t('duplicatefinder', 'Oldest') }}
-        </span>
-        <span
-          v-if="resolvedBadges.isNewest"
-          class="metadata-badge metadata-badge--newest">
-          {{ t('duplicatefinder', 'Newest') }}
-        </span>
-        <span
-          v-if="resolvedBadges.isShortestPath"
-          class="metadata-badge metadata-badge--shortest">
-          {{ t('duplicatefinder', 'Shortest path') }}
-        </span>
-        <span
-          v-if="formattedModifiedAt"
-          class="metadata-badge metadata-badge--mtime"
-          :title="t('duplicatefinder', 'Modified: {date}', { date: formattedModifiedAt })">
-          {{ t('duplicatefinder', 'Modified: {date}', { date: formattedModifiedAt }) }}
-        </span>
-        <span
-          v-if="resolvedBadges.folderLabel"
-          class="metadata-badge metadata-badge--folder"
-          :title="t('duplicatefinder', 'Folder: {folder}', { folder: resolvedBadges.folderLabel })"
-          :aria-label="t('duplicatefinder', 'Folder: {folder}', { folder: resolvedBadges.folderLabel })">
-          <svg
-            class="metadata-badge__icon"
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <span class="metadata-badge__text">{{ resolvedBadges.folderLabel }}</span>
-        </span>
-        <span
-          v-if="visualBadge && visualBadge.isResolutionWinner"
-          class="metadata-badge metadata-badge--winner">
-          {{ t('duplicatefinder', 'Resolution winner') }}
-        </span>
-        <span
-          v-else-if="visualBadge && visualBadge.isLowerResolution"
-          class="metadata-badge metadata-badge--lower-res">
-          {{ t('duplicatefinder', 'Lower resolution ({delta}%)', { delta: visualBadge.deltaVsBestPercent }) }}
-        </span>
-        <span
-          v-if="visualBadge && visualBadge.dimensions"
-          class="metadata-badge metadata-badge--dimensions">
-          {{ visualBadge.dimensions.formattedDimensions }} ({{ visualBadge.dimensions.aspectRatio }})
-        </span>
-        <span
-          v-if="visualBadge && visualBadge.exifCamera"
-          class="metadata-badge metadata-badge--camera">
-          {{ visualBadge.exifCamera }}
-        </span>
-      </div>
-      <span v-if="file.isLivePhotoVideoMissing" class="file-status-badge is-duplicate">
-        {{ t('duplicatefinder', 'Live Photo video is missing') }}
-      </span>
-    </div>
+		<div class="file-details" :title="normalizedPath">
+			<div class="file-title-row">
+				<p class="file-label">
+					<strong>{{ t('duplicatefinder', 'File') }} {{ index + 1 }}</strong>
+				</p>
+				<span v-if="fileName" class="file-name-badge" :title="fileName">{{ fileName }}</span>
+			</div>
+			<div class="file-path-row">
+				<p class="file-path" :title="normalizedPath">
+					<strong>{{ t('duplicatefinder', 'Path:') }}</strong>
+					<template v-if="hasPathSegments">
+						<span
+							v-for="(segment, segIdx) in pathSegments"
+							:key="segIdx"
+							class="file-path-segment"
+							:class="'file-path-segment--' + segment.kind">{{ segment.text }}</span>
+					</template>
+					<template v-else>
+						{{ normalizedPath }}
+					</template>
+				</p>
+				<div class="copy-path-control">
+					<button
+						type="button"
+						class="copy-path-button"
+						:class="{ 'is-copied': copyStatus === 'copied', 'is-error': copyStatus === 'error' }"
+						:title="t('duplicatefinder', 'Copy path')"
+						:aria-label="t('duplicatefinder', 'Copy path')"
+						:disabled="!pathToCopy"
+						@click="copyFilePath">
+						<svg
+							v-if="copyStatus === 'copied'"
+							xmlns="http://www.w3.org/2000/svg"
+							width="14"
+							height="14"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						<svg
+							v-else
+							xmlns="http://www.w3.org/2000/svg"
+							width="14"
+							height="14"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true">
+							<rect x="9"
+								y="9"
+								width="13"
+								height="13"
+								rx="2"
+								ry="2" />
+							<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+						</svg>
+						<span class="copy-path-button__label">{{ t('duplicatefinder', 'Copy path') }}</span>
+					</button>
+					<span
+						class="copy-path-status"
+						:class="{
+							'is-visible': Boolean(copyStatusMessage),
+							'is-copied': copyStatus === 'copied',
+							'is-error': copyStatus === 'error'
+						}"
+						role="status"
+						aria-live="polite">
+						{{ copyStatusMessage }}
+					</span>
+				</div>
+			</div>
+			<div v-if="hasMetadataBadges" class="file-metadata-badges">
+				<span
+					v-if="resolvedBadges.isProtectedOrigin"
+					class="metadata-badge metadata-badge--protected">
+					{{ t('duplicatefinder', 'Protected origin') }}
+				</span>
+				<span
+					v-if="resolvedBadges.isOldest"
+					class="metadata-badge metadata-badge--oldest">
+					{{ t('duplicatefinder', 'Oldest') }}
+				</span>
+				<span
+					v-if="resolvedBadges.isNewest"
+					class="metadata-badge metadata-badge--newest">
+					{{ t('duplicatefinder', 'Newest') }}
+				</span>
+				<span
+					v-if="resolvedBadges.isShortestPath"
+					class="metadata-badge metadata-badge--shortest">
+					{{ t('duplicatefinder', 'Shortest path') }}
+				</span>
+				<span
+					v-if="formattedModifiedAt"
+					class="metadata-badge metadata-badge--mtime"
+					:title="t('duplicatefinder', 'Modified: {date}', { date: formattedModifiedAt })">
+					{{ t('duplicatefinder', 'Modified: {date}', { date: formattedModifiedAt }) }}
+				</span>
+				<span
+					v-if="resolvedBadges.folderLabel"
+					class="metadata-badge metadata-badge--folder"
+					:title="t('duplicatefinder', 'Folder: {folder}', { folder: resolvedBadges.folderLabel })"
+					:aria-label="t('duplicatefinder', 'Folder: {folder}', { folder: resolvedBadges.folderLabel })">
+					<svg
+						class="metadata-badge__icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="12"
+						height="12"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true">
+						<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+					</svg>
+					<span class="metadata-badge__text">{{ resolvedBadges.folderLabel }}</span>
+				</span>
+				<span
+					v-if="visualBadge && visualBadge.isResolutionWinner"
+					class="metadata-badge metadata-badge--winner">
+					{{ t('duplicatefinder', 'Resolution winner') }}
+				</span>
+				<span
+					v-else-if="visualBadge && visualBadge.isLowerResolution"
+					class="metadata-badge metadata-badge--lower-res">
+					{{ t('duplicatefinder', 'Lower resolution ({delta}%)', { delta: visualBadge.deltaVsBestPercent }) }}
+				</span>
+				<span
+					v-if="visualBadge && visualBadge.dimensions"
+					class="metadata-badge metadata-badge--dimensions">
+					{{ visualBadge.dimensions.formattedDimensions }} ({{ visualBadge.dimensions.aspectRatio }})
+				</span>
+				<span
+					v-if="visualBadge && visualBadge.exifCamera"
+					class="metadata-badge metadata-badge--camera">
+					{{ visualBadge.exifCamera }}
+				</span>
+			</div>
+			<span v-if="file.isLivePhotoVideoMissing" class="file-status-badge is-duplicate">
+				{{ t('duplicatefinder', 'Live Photo video is missing') }}
+			</span>
+		</div>
 
-    <div class="file-size-column">
-      <span class="file-size-value">{{ formattedFileSize }}</span>
-    </div>
+		<div class="file-size-column">
+			<span class="file-size-value">{{ formattedFileSize }}</span>
+		</div>
 
-    <div class="file-status-column">
-      <span v-if="file.isInOriginFolder" class="file-status-badge is-protected">
-        {{ t('duplicatefinder', 'Protected') }}
-      </span>
-      <template v-else-if="hasActiveSelection">
-        <span v-if="isSelected" class="file-status-badge is-will-delete">
-          {{ t('duplicatefinder', 'Will delete') }}
-        </span>
-        <span v-else class="file-status-badge is-keeping">
-          {{ t('duplicatefinder', 'Keeping') }}
-        </span>
-      </template>
-      <span v-else-if="index === 0" class="file-status-badge is-original">
-        {{ t('duplicatefinder', 'Original') }}
-      </span>
-      <span v-else class="file-status-badge is-duplicate">
-        {{ t('duplicatefinder', 'Duplicate') }}
-      </span>
-    </div>
+		<div class="file-status-column">
+			<span v-if="file.isInOriginFolder" class="file-status-badge is-protected">
+				{{ t('duplicatefinder', 'Protected') }}
+			</span>
+			<template v-else-if="hasActiveSelection">
+				<span v-if="isSelected" class="file-status-badge is-will-delete">
+					{{ t('duplicatefinder', 'Will delete') }}
+				</span>
+				<span v-else class="file-status-badge is-keeping">
+					{{ t('duplicatefinder', 'Keeping') }}
+				</span>
+			</template>
+			<span v-else-if="index === 0" class="file-status-badge is-original">
+				{{ t('duplicatefinder', 'Original') }}
+			</span>
+			<span v-else class="file-status-badge is-duplicate">
+				{{ t('duplicatefinder', 'Duplicate') }}
+			</span>
+		</div>
 
-    <div class="action-buttons" :class="{ 'is-compact': !hasOtherFolders }">
-      <button
-        type="button"
-        class="action-button open-folder-button"
-        :title="t('duplicatefinder', 'Open Folder')"
-        :aria-label="t('duplicatefinder', 'Open Folder')"
-        :data-tooltip="t('duplicatefinder', 'Open Folder')"
-        @click="openFolderInNewWindow">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </button>
+		<div class="action-buttons" :class="{ 'is-compact': !hasOtherFolders }">
+			<button
+				type="button"
+				class="action-button open-folder-button"
+				:title="t('duplicatefinder', 'Open Folder')"
+				:aria-label="t('duplicatefinder', 'Open Folder')"
+				:data-tooltip="t('duplicatefinder', 'Open Folder')"
+				@click="openFolderInNewWindow">
+				<svg xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true">
+					<path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2z" />
+				</svg>
+			</button>
 
-      <button
-        type="button"
-        class="action-button open-file-button"
-        :title="t('duplicatefinder', 'Open File')"
-        :aria-label="t('duplicatefinder', 'Open File')"
-        :data-tooltip="t('duplicatefinder', 'Open File')"
-        @click="openInNewWindow">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <line x1="10" y1="14" x2="21" y2="3"></line>
-        </svg>
-      </button>
+			<button
+				type="button"
+				class="action-button open-file-button"
+				:title="t('duplicatefinder', 'Open File')"
+				:aria-label="t('duplicatefinder', 'Open File')"
+				:data-tooltip="t('duplicatefinder', 'Open File')"
+				@click="openInNewWindow">
+				<svg xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true">
+					<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+					<polyline points="15 3 21 3 21 9" />
+					<line x1="10"
+						y1="14"
+						x2="21"
+						y2="3" />
+				</svg>
+			</button>
 
-      <button
-        v-if="hasOtherFolders"
-        type="button"
-        class="action-button keep-folder-button"
-        :title="t('duplicatefinder', 'Select duplicates in other folders for deletion')"
-        :aria-label="t('duplicatefinder', 'Keep Folder')"
-        :data-tooltip="t('duplicatefinder', 'Keep Folder')"
-        @click="$emit('keepFolder', file)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2z"></path>
-          <polyline points="9 14 11 16 15 12"></polyline>
-        </svg>
-      </button>
+			<button
+				v-if="hasOtherFolders"
+				type="button"
+				class="action-button keep-folder-button"
+				:title="t('duplicatefinder', 'Select duplicates in other folders for deletion')"
+				:aria-label="t('duplicatefinder', 'Keep Folder')"
+				:data-tooltip="t('duplicatefinder', 'Keep Folder')"
+				@click="emitKeepFolder">
+				<svg xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true">
+					<path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2z" />
+					<polyline points="9 14 11 16 15 12" />
+				</svg>
+			</button>
 
-      <button
-        v-if="!file.isInOriginFolder"
-        type="button"
-        class="delete-button"
-        :title="t('duplicatefinder', 'Delete')"
-        :aria-label="t('duplicatefinder', 'Delete')"
-        :data-tooltip="t('duplicatefinder', 'Delete')"
-        @click="deleteFile">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"></path>
-          <line x1="10" y1="11" x2="10" y2="17"></line>
-          <line x1="14" y1="11" x2="14" y2="17"></line>
-        </svg>
-      </button>
+			<button
+				v-if="!file.isInOriginFolder"
+				type="button"
+				class="delete-button"
+				:title="t('duplicatefinder', 'Delete')"
+				:aria-label="t('duplicatefinder', 'Delete')"
+				:data-tooltip="t('duplicatefinder', 'Delete')"
+				@click="deleteFile">
+				<svg xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true">
+					<polyline points="3 6 5 6 21 6" />
+					<path d="M19 6v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6" />
+					<line x1="10"
+						y1="11"
+						x2="10"
+						y2="17" />
+					<line x1="14"
+						y1="11"
+						x2="14"
+						y2="17" />
+				</svg>
+			</button>
 
-      <button
-        v-else
-        type="button"
-        class="protected-button"
-        disabled
-        :title="t('duplicatefinder', 'Protected')"
-        :aria-label="t('duplicatefinder', 'Protected')"
-        :data-tooltip="t('duplicatefinder', 'Protected')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
-          <path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11"></path>
-        </svg>
-      </button>
-    </div>
-  </div>
+			<button
+				v-else
+				type="button"
+				class="protected-button"
+				disabled
+				:title="t('duplicatefinder', 'Protected')"
+				:aria-label="t('duplicatefinder', 'Protected')"
+				:data-tooltip="t('duplicatefinder', 'Protected')">
+				<svg xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true">
+					<rect x="3"
+						y="11"
+						width="18"
+						height="10"
+						rx="2"
+						ry="2" />
+					<path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11" />
+				</svg>
+			</button>
+		</div>
+	</div>
 </template>
 <script>
-import { deleteFile } from '@/tools/api';
-import { copyTextSafely } from '@/tools/clipboardHelper';
-import { formatFileModifiedTime } from '@/tools/duplicatePathDiff';
-import { getPreviewImage, normalizeItemPath, getParentFolderPath } from '@/tools/utils';
-import { generateUrl } from '@nextcloud/router';
+import { deleteFile } from '@/tools/api'
+import { copyTextSafely } from '@/tools/clipboardHelper'
+import { formatFileModifiedTime } from '@/tools/duplicatePathDiff'
+import { getPreviewImage, normalizeItemPath, getParentFolderPath } from '@/tools/utils'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
-  props: {
-    file: Object,
-    index: Number,
-    duplicateAcknowledged: {
-      type: Boolean,
-      required: true
-    },
-    hasOtherFolders: {
-      type: Boolean,
-      default: false
-    },
-    metadataBadges: {
-      type: Object,
-      default: null
-    },
-    pathSegments: {
-      type: Array,
-      default: () => []
-    },
-    isSelected: {
-      type: Boolean,
-      default: false
-    },
-    hasActiveSelection: {
-      type: Boolean,
-      default: false
-    },
-    visualBadge: {
-      type: Object,
-      default: null
-    }
-  },
-  data() {
-    return {
-      copyStatus: 'idle',
-      copyStatusMessage: '',
-      copyResetTimer: null
-    };
-  },
-  computed: {
-    resolvedBadges() {
-      if (this.metadataBadges && typeof this.metadataBadges === 'object') {
-        return this.metadataBadges;
-      }
-      return {
-        isOldest: false,
-        isNewest: false,
-        isShortestPath: false,
-        isProtectedOrigin: Boolean(this.file && this.file.isInOriginFolder),
-        folderLabel: this.file && this.file.path ? getParentFolderPath(this.file.path) : ''
-      };
-    },
-    hasMetadataBadges() {
-      const badges = this.resolvedBadges;
-      return Boolean(
-        badges.isProtectedOrigin ||
-        badges.isOldest ||
-        badges.isNewest ||
-        badges.isShortestPath ||
-        badges.folderLabel ||
-        this.formattedModifiedAt ||
-        (this.visualBadge && (
-          this.visualBadge.isResolutionWinner ||
-          this.visualBadge.isLowerResolution ||
-          this.visualBadge.dimensions ||
-          this.visualBadge.exifCamera
-        ))
-      );
-    },
-    formattedModifiedAt() {
-      return formatFileModifiedTime(this.file);
-    },
-    hasPathSegments() {
-      return Array.isArray(this.pathSegments) && this.pathSegments.length > 0;
-    },
-    normalizedPath() {
-      if (!this.file || typeof this.file.path !== 'string') {
-        return '';
-      }
-      return this.normalizeItemPath(this.file.path);
-    },
-    pathToCopy() {
-      if (this.normalizedPath) {
-        return this.normalizedPath;
-      }
-      return this.file && typeof this.file.path === 'string' ? this.file.path : '';
-    },
-    fileName() {
-      if (!this.file || !this.file.path) {
-        return '';
-      }
-      const parts = this.file.path.split('/');
-      return parts[parts.length - 1] || '';
-    },
-    formattedFileSize() {
-      const rawSize = this.file && Number.isFinite(Number(this.file.size)) ? Number(this.file.size) : 0;
-      if (typeof OC !== 'undefined' && OC.Util && typeof OC.Util.humanFileSize === 'function') {
-        return OC.Util.humanFileSize(rawSize);
-      }
-      return `${rawSize} B`;
-    }
-  },
-  beforeDestroy() {
-    if (this.copyResetTimer) {
-      clearTimeout(this.copyResetTimer);
-      this.copyResetTimer = null;
-    }
-  },
-  methods: {
-    getPreviewImage,
-    normalizeItemPath,
-    async copyFilePath() {
-      const targetPath = this.pathToCopy;
-      if (!targetPath) {
-        return false;
-      }
-      if (this.copyResetTimer) {
-        clearTimeout(this.copyResetTimer);
-        this.copyResetTimer = null;
-      }
-      this.copyStatus = 'idle';
-      this.copyStatusMessage = '';
-      const copied = await copyTextSafely(targetPath);
-      if (copied) {
-        this.copyStatus = 'copied';
-        this.copyStatusMessage = this.t('duplicatefinder', 'Copied');
-      } else {
-        this.copyStatus = 'error';
-        this.copyStatusMessage = this.t('duplicatefinder', 'Copy failed');
-      }
-      this.copyResetTimer = setTimeout(() => {
-        this.copyStatus = 'idle';
-        this.copyStatusMessage = '';
-        this.copyResetTimer = null;
-      }, 2000);
-      return copied;
-    },
-    openInNewWindow() {
-      const url = generateUrl('/apps/files/files/' + this.file.nodeId + '?dir={dir}&openfile=true', {
-        dir: this.getParentPath()
-      });
-      window.open(url, '_blank');
-    },
-    openFolderInNewWindow() {
-      const url = generateUrl('/apps/files/files?dir={dir}', {
-        dir: this.getParentPath()
-      });
-      window.open(url, '_blank');
-    },
-    getParentPath() {
-      return getParentFolderPath(this.file.path);
-    },
-    async deleteFile() {
-      try {
-        console.log('DuplicateFileDisplay: Deleting file:', this.file);
-        const deletedNodeIds = new Set();
-        const deleted = await deleteFile(this.file, { deletedNodeIds });
-        if (!deleted) return;
-        const eventData = {
-          file: this.file,
-          acknowledged: this.duplicateAcknowledged,
-          deletedNodeIds: Array.from(deletedNodeIds)
-        };
-        console.log('DuplicateFileDisplay: Emitting fileDeleted event with data:', eventData);
-        this.$emit('fileDeleted', eventData);
-      } catch (error) {
-         console.error('DuplicateFileDisplay: Error deleting file:', error);
-      }
-    },
-  }
+	props: {
+		file: Object,
+		index: Number,
+		duplicateAcknowledged: {
+			type: Boolean,
+			required: true,
+		},
+		hasOtherFolders: {
+			type: Boolean,
+			default: false,
+		},
+		metadataBadges: {
+			type: Object,
+			default: null,
+		},
+		pathSegments: {
+			type: Array,
+			default: () => [],
+		},
+		isSelected: {
+			type: Boolean,
+			default: false,
+		},
+		hasActiveSelection: {
+			type: Boolean,
+			default: false,
+		},
+		visualBadge: {
+			type: Object,
+			default: null,
+		},
+	},
+	data() {
+		return {
+			copyStatus: 'idle',
+			copyStatusMessage: '',
+			copyResetTimer: null,
+		}
+	},
+	computed: {
+		resolvedBadges() {
+			if (this.metadataBadges && typeof this.metadataBadges === 'object') {
+				return this.metadataBadges
+			}
+			return {
+				isOldest: false,
+				isNewest: false,
+				isShortestPath: false,
+				isProtectedOrigin: Boolean(this.file && this.file.isInOriginFolder),
+				folderLabel: this.file && this.file.path ? getParentFolderPath(this.file.path) : '',
+			}
+		},
+		hasMetadataBadges() {
+			const badges = this.resolvedBadges
+			return Boolean(
+				badges.isProtectedOrigin
+				|| badges.isOldest
+				|| badges.isNewest
+				|| badges.isShortestPath
+				|| badges.folderLabel
+				|| this.formattedModifiedAt
+				|| (this.visualBadge && (
+					this.visualBadge.isResolutionWinner
+					|| this.visualBadge.isLowerResolution
+					|| this.visualBadge.dimensions
+					|| this.visualBadge.exifCamera
+				))
+			)
+		},
+		formattedModifiedAt() {
+			return formatFileModifiedTime(this.file)
+		},
+		hasPathSegments() {
+			return Array.isArray(this.pathSegments) && this.pathSegments.length > 0
+		},
+		normalizedPath() {
+			if (!this.file || typeof this.file.path !== 'string') {
+				return ''
+			}
+			return this.normalizeItemPath(this.file.path)
+		},
+		pathToCopy() {
+			if (this.normalizedPath) {
+				return this.normalizedPath
+			}
+			return this.file && typeof this.file.path === 'string' ? this.file.path : ''
+		},
+		fileName() {
+			if (!this.file || !this.file.path) {
+				return ''
+			}
+			const parts = this.file.path.split('/')
+			return parts[parts.length - 1] || ''
+		},
+		formattedFileSize() {
+			const rawSize = this.file && Number.isFinite(Number(this.file.size)) ? Number(this.file.size) : 0
+			if (typeof OC !== 'undefined' && OC.Util && typeof OC.Util.humanFileSize === 'function') {
+				return OC.Util.humanFileSize(rawSize)
+			}
+			return `${rawSize} B`
+		},
+	},
+	beforeDestroy() {
+		if (this.copyResetTimer) {
+			clearTimeout(this.copyResetTimer)
+			this.copyResetTimer = null
+		}
+	},
+	methods: {
+		getPreviewImage,
+		normalizeItemPath,
+		async copyFilePath() {
+			const targetPath = this.pathToCopy
+			if (!targetPath) {
+				return false
+			}
+			if (this.copyResetTimer) {
+				clearTimeout(this.copyResetTimer)
+				this.copyResetTimer = null
+			}
+			this.copyStatus = 'idle'
+			this.copyStatusMessage = ''
+			const copied = await copyTextSafely(targetPath)
+			if (copied) {
+				this.copyStatus = 'copied'
+				this.copyStatusMessage = this.t('duplicatefinder', 'Copied')
+			} else {
+				this.copyStatus = 'error'
+				this.copyStatusMessage = this.t('duplicatefinder', 'Copy failed')
+			}
+			this.copyResetTimer = setTimeout(() => {
+				this.copyStatus = 'idle'
+				this.copyStatusMessage = ''
+				this.copyResetTimer = null
+			}, 2000)
+			return copied
+		},
+		openInNewWindow() {
+			const url = generateUrl('/apps/files/files/' + this.file.nodeId + '?dir={dir}&openfile=true', {
+				dir: this.getParentPath(),
+			})
+			window.open(url, '_blank')
+		},
+		openFolderInNewWindow() {
+			const url = generateUrl('/apps/files/files?dir={dir}', {
+				dir: this.getParentPath(),
+			})
+			window.open(url, '_blank')
+		},
+		getParentPath() {
+			return getParentFolderPath(this.file.path)
+		},
+		emitKeepFolder() {
+			// eslint-disable-next-line vue/custom-event-name-casing
+			this.$emit('keepFolder', this.file)
+		},
+		async deleteFile() {
+			try {
+				const deletedNodeIds = new Set()
+				const deleted = await deleteFile(this.file, { deletedNodeIds })
+				if (!deleted) return
+				const eventData = {
+					file: this.file,
+					acknowledged: this.duplicateAcknowledged,
+					deletedNodeIds: Array.from(deletedNodeIds),
+				}
+				// eslint-disable-next-line vue/custom-event-name-casing
+				this.$emit('fileDeleted', eventData)
+			} catch (error) {
+				console.error('DuplicateFileDisplay: Error deleting file:', error)
+			}
+		},
+	},
 }
 </script>
 

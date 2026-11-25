@@ -1,40 +1,42 @@
 <template>
-  <div class="step-container">
-    <h2 class="step-title">{{ t('duplicatefinder', 'Finding Duplicates') }}</h2>
-    <div class="info-section">
-      <div class="info-block">
-        <h3>{{ t('duplicatefinder', 'Search Modes') }}</h3>
-        <ul>
-          <li>
-            <strong>{{ t('duplicatefinder', 'Simple Search:') }}</strong>
-            {{ t('duplicatefinder', 'Basic text search in file names') }}
-          </li>
-          <li>
-            <strong>{{ t('duplicatefinder', 'Wildcard Search:') }}</strong>
-            {{ t('duplicatefinder', 'Use * and ? to match patterns (e.g., IMG*.jpg)') }}
-          </li>
-          <li>
-            <strong>{{ t('duplicatefinder', 'Regular Expression:') }}</strong>
-            {{ t('duplicatefinder', 'Advanced pattern matching for precise searches') }}
-          </li>
-        </ul>
-      </div>
+	<div class="step-container">
+		<h2 class="step-title">
+			{{ t('duplicatefinder', 'Finding Duplicates') }}
+		</h2>
+		<div class="info-section">
+			<div class="info-block">
+				<h3>{{ t('duplicatefinder', 'Search Modes') }}</h3>
+				<ul>
+					<li>
+						<strong>{{ t('duplicatefinder', 'Simple Search:') }}</strong>
+						{{ t('duplicatefinder', 'Basic text search in file names') }}
+					</li>
+					<li>
+						<strong>{{ t('duplicatefinder', 'Wildcard Search:') }}</strong>
+						{{ t('duplicatefinder', 'Use * and ? to match patterns (e.g., IMG*.jpg)') }}
+					</li>
+					<li>
+						<strong>{{ t('duplicatefinder', 'Regular Expression:') }}</strong>
+						{{ t('duplicatefinder', 'Advanced pattern matching for precise searches') }}
+					</li>
+				</ul>
+			</div>
 
-      <div class="info-block">
-        <h3>{{ t('duplicatefinder', 'Automatic Detection') }}</h3>
-        <ul>
-          <li>{{ t('duplicatefinder', 'Files are automatically scanned when uploaded or modified') }}</li>
-          <li>{{ t('duplicatefinder', 'Background jobs regularly scan for new duplicates') }}</li>
-          <li>{{ t('duplicatefinder', 'Manual scans can be triggered from settings') }}</li>
-        </ul>
-      </div>
-    </div>
-  </div>
+			<div class="info-block">
+				<h3>{{ t('duplicatefinder', 'Automatic Detection') }}</h3>
+				<ul>
+					<li>{{ t('duplicatefinder', 'Files are automatically scanned when uploaded or modified') }}</li>
+					<li>{{ t('duplicatefinder', 'Background jobs regularly scan for new duplicates') }}</li>
+					<li>{{ t('duplicatefinder', 'Manual scans can be triggered from settings') }}</li>
+				</ul>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
 export default {
-  name: 'FindingDuplicatesStep'
+	name: 'FindingDuplicatesStep',
 }
 </script>
 
@@ -125,4 +127,4 @@ export default {
   color: var(--color-primary-element);
   margin-inline-end: 8px;
 }
-</style> 
+</style>

@@ -1,1600 +1,1749 @@
 <template>
-  <div class="duplicate-details-container" @keydown.esc="onDetailsEscape">
-    <transition name="fade">
-      <div v-show="!isLoadingNextDuplicate">
-        <div v-if="duplicate && duplicate.files.length > 1" class="duplicate-details-content">
-          <div class="details-header-row">
-            <h3 class="details-group-title">
-              {{ t('duplicatefinder', 'Duplicate Details') }} - {{ getGroupDisplayName(duplicate) }}
-            </h3>
-            <div class="details-header-pills">
-              <span
-                v-if="isGroupExcluded"
-                class="group-status-pill is-excluded">
-                {{ t('duplicatefinder', 'False positive (Excluded)') }}
-              </span>
-              <span
-                class="group-status-pill"
-                :class="duplicate.acknowledged ? 'is-acknowledged' : 'is-unacknowledged'">
-                {{ duplicate.acknowledged ? t('duplicatefinder', 'Acknowledged') : t('duplicatefinder', 'Unacknowledged') }}
-              </span>
-            </div>
-          </div>
+	<div class="duplicate-details-container" @keydown.esc="onDetailsEscape">
+		<transition name="fade">
+			<div v-show="!isLoadingNextDuplicate">
+				<div v-if="duplicate && duplicate.files.length > 1" class="duplicate-details-content">
+					<div class="details-header-row">
+						<h3 class="details-group-title">
+							{{ t('duplicatefinder', 'Duplicate Details') }} - {{ getGroupDisplayName(duplicate) }}
+						</h3>
+						<div class="details-header-pills">
+							<span
+								v-if="isGroupExcluded"
+								class="group-status-pill is-excluded">
+								{{ t('duplicatefinder', 'False positive (Excluded)') }}
+							</span>
+							<span
+								class="group-status-pill"
+								:class="duplicate.acknowledged ? 'is-acknowledged' : 'is-unacknowledged'">
+								{{ duplicate.acknowledged ? t('duplicatefinder', 'Acknowledged') : t('duplicatefinder', 'Unacknowledged') }}
+							</span>
+						</div>
+					</div>
 
-          <div
-            class="group-header-summary"
-            role="region"
-            :aria-label="t('duplicatefinder', 'Group summary')">
-            <span class="group-header-summary__item group-header-summary__item--copies">
-              {{ t('duplicatefinder', '{totalCopies} copies ({redundantCopies} redundant)', {
-                totalCopies: groupHeaderSummary.totalCopies,
-                redundantCopies: groupHeaderSummary.redundantCopies
-              }) }}
-            </span>
-            <span class="group-header-summary__item group-header-summary__item--reclaimable">
-              {{ t('duplicatefinder', '{reclaimableFormatted} reclaimable', {
-                reclaimableFormatted: groupHeaderSummary.reclaimableFormatted
-              }) }}
-            </span>
-            <span
-              v-if="groupHeaderSummary.protectedCount > 0"
-              class="group-header-summary__item group-header-summary__item--protected">
-              {{ t('duplicatefinder', '{protectedCount} protected', {
-                protectedCount: groupHeaderSummary.protectedCount
-              }) }}
-            </span>
-            <span
-              v-if="visualGroupSummaryLabel"
-              class="group-header-summary__item group-header-summary__item--visual">
-              {{ visualGroupSummaryLabel }}
-            </span>
-            <button
-              v-if="visualGroupEvaluation.hasVisualMedia && duplicate.files.length >= 2"
-              type="button"
-              class="group-header-summary__inspect-button"
-              @click="openVisualDiffCompare">
-              {{ t('duplicatefinder', 'Inspect visual diff') }}
-            </button>
-            <button
-              v-else-if="hasInspectableContent && duplicate.files.length >= 2"
-              type="button"
-              class="group-header-summary__inspect-button group-header-summary__inspect-content-button"
-              @click="openCompareMode">
-              {{ t('duplicatefinder', 'Inspect media & content') }}
-            </button>
-            <div class="group-header-summary__hash-control">
-              <button
-                type="button"
-                class="group-header-summary__copy-hash-button"
-                :class="{
-                  'is-copied': hashCopyStatus === 'copied',
-                  'is-error': hashCopyStatus === 'error'
-                }"
-                :disabled="!fullGroupHash"
-                aria-keyshortcuts="y"
-                :title="shortGroupHash
-                  ? t('duplicatefinder', 'Copy hash ({hash})', { hash: shortGroupHash })
-                  : t('duplicatefinder', 'Copy hash')"
-                :aria-label="shortGroupHash
-                  ? t('duplicatefinder', 'Copy hash ({hash})', { hash: shortGroupHash })
-                  : t('duplicatefinder', 'Copy hash')"
-                @click="copyGroupHash">
-                <svg
-                  v-if="hashCopyStatus === 'copied'"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <svg
-                  v-else
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <span class="group-header-summary__copy-hash-label">{{ t('duplicatefinder', 'Copy hash') }}</span>
-                <code v-if="shortGroupHash" class="group-header-summary__hash-code">{{ shortGroupHash }}</code>
-              </button>
-              <span
-                class="group-header-summary__copy-status"
-                :class="{
-                  'is-visible': Boolean(hashCopyStatusMessage),
-                  'is-copied': hashCopyStatus === 'copied',
-                  'is-error': hashCopyStatus === 'error'
-                }"
-                role="status"
-                aria-live="polite">
-                {{ hashCopyStatusMessage }}
-              </span>
-            </div>
-          </div>
+					<div
+						class="group-header-summary"
+						role="region"
+						:aria-label="t('duplicatefinder', 'Group summary')">
+						<span class="group-header-summary__item group-header-summary__item--copies">
+							{{ t('duplicatefinder', '{totalCopies} copies ({redundantCopies} redundant)', {
+								totalCopies: groupHeaderSummary.totalCopies,
+								redundantCopies: groupHeaderSummary.redundantCopies
+							}) }}
+						</span>
+						<span class="group-header-summary__item group-header-summary__item--reclaimable">
+							{{ t('duplicatefinder', '{reclaimableFormatted} reclaimable', {
+								reclaimableFormatted: groupHeaderSummary.reclaimableFormatted
+							}) }}
+						</span>
+						<span
+							v-if="groupHeaderSummary.protectedCount > 0"
+							class="group-header-summary__item group-header-summary__item--protected">
+							{{ t('duplicatefinder', '{protectedCount} protected', {
+								protectedCount: groupHeaderSummary.protectedCount
+							}) }}
+						</span>
+						<span
+							v-if="visualGroupSummaryLabel"
+							class="group-header-summary__item group-header-summary__item--visual">
+							{{ visualGroupSummaryLabel }}
+						</span>
+						<button
+							v-if="visualGroupEvaluation.hasVisualMedia && duplicate.files.length >= 2"
+							type="button"
+							class="group-header-summary__inspect-button"
+							@click="openVisualDiffCompare">
+							{{ t('duplicatefinder', 'Inspect visual diff') }}
+						</button>
+						<button
+							v-else-if="hasInspectableContent && duplicate.files.length >= 2"
+							type="button"
+							class="group-header-summary__inspect-button group-header-summary__inspect-content-button"
+							@click="openCompareMode">
+							{{ t('duplicatefinder', 'Inspect media & content') }}
+						</button>
+						<div class="group-header-summary__hash-control">
+							<button
+								type="button"
+								class="group-header-summary__copy-hash-button"
+								:class="{
+									'is-copied': hashCopyStatus === 'copied',
+									'is-error': hashCopyStatus === 'error'
+								}"
+								:disabled="!fullGroupHash"
+								aria-keyshortcuts="y"
+								:title="shortGroupHash
+									? t('duplicatefinder', 'Copy hash ({hash})', { hash: shortGroupHash })
+									: t('duplicatefinder', 'Copy hash')"
+								:aria-label="shortGroupHash
+									? t('duplicatefinder', 'Copy hash ({hash})', { hash: shortGroupHash })
+									: t('duplicatefinder', 'Copy hash')"
+								@click="copyGroupHash">
+								<svg
+									v-if="hashCopyStatus === 'copied'"
+									xmlns="http://www.w3.org/2000/svg"
+									width="14"
+									height="14"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<polyline points="20 6 9 17 4 12" />
+								</svg>
+								<svg
+									v-else
+									xmlns="http://www.w3.org/2000/svg"
+									width="14"
+									height="14"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<rect x="9"
+										y="9"
+										width="13"
+										height="13"
+										rx="2"
+										ry="2" />
+									<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+								</svg>
+								<span class="group-header-summary__copy-hash-label">{{ t('duplicatefinder', 'Copy hash') }}</span>
+								<code v-if="shortGroupHash" class="group-header-summary__hash-code">{{ shortGroupHash }}</code>
+							</button>
+							<span
+								class="group-header-summary__copy-status"
+								:class="{
+									'is-visible': Boolean(hashCopyStatusMessage),
+									'is-copied': hashCopyStatus === 'copied',
+									'is-error': hashCopyStatus === 'error'
+								}"
+								role="status"
+								aria-live="polite">
+								{{ hashCopyStatusMessage }}
+							</span>
+						</div>
+					</div>
 
-          <div class="summary-section">
-            <div class="summary-info">
-              <p class="summary-text">{{ t('duplicatefinder',
-                'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
-                { numberOfFiles: duplicate.files.length, formattedSize: getDuplicateSize(duplicate) }) }}</p>
-            </div>
-            <div class="summary-actions">
-              <button
-                type="button"
-                class="toolbar-button select-all-button"
-                :disabled="defaultSelectAllTargetFiles.length === 0"
-                aria-keyshortcuts="a"
-                @click="selectAllFiles">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="9 11 12 14 22 4"></polyline>
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                </svg>
-                <span>{{ t('duplicatefinder', 'Select All') }}</span>
-              </button>
+					<div class="summary-section">
+						<div class="summary-info">
+							<p class="summary-text">
+								{{ t('duplicatefinder',
+									'Welcome, the current duplicate has {numberOfFiles} files, total size: {formattedSize}',
+									{ numberOfFiles: duplicate.files.length, formattedSize: getDuplicateSize(duplicate) }) }}
+							</p>
+						</div>
+						<div class="summary-actions">
+							<button
+								type="button"
+								class="toolbar-button select-all-button"
+								:disabled="defaultSelectAllTargetFiles.length === 0"
+								aria-keyshortcuts="a"
+								@click="selectAllFiles">
+								<svg xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<polyline points="9 11 12 14 22 4" />
+									<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+								</svg>
+								<span>{{ t('duplicatefinder', 'Select All') }}</span>
+							</button>
 
-              <button
-                type="button"
-                class="toolbar-button delete-selected-button"
-                :disabled="selectedFiles.length === 0"
-                @click="deleteSelectedDuplicates">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-                <span>{{ t('duplicatefinder', 'Delete Selected') }}</span>
-              </button>
+							<button
+								type="button"
+								class="toolbar-button delete-selected-button"
+								:disabled="selectedFiles.length === 0"
+								@click="deleteSelectedDuplicates">
+								<svg xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<polyline points="3 6 5 6 21 6" />
+									<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+									<line x1="10"
+										y1="11"
+										x2="10"
+										y2="17" />
+									<line x1="14"
+										y1="11"
+										x2="14"
+										y2="17" />
+								</svg>
+								<span>{{ t('duplicatefinder', 'Delete Selected') }}</span>
+							</button>
 
-              <button
-                v-if="duplicate.acknowledged"
-                type="button"
-                class="toolbar-button acknowledge-link is-acknowledged"
-                :disabled="isAcknowledging"
-                aria-keyshortcuts="u"
-                @click="unOrAcknowledgeDuplicate(duplicate)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <!-- TRANSLATORS Button that moves this group of duplicates back from the Acknowledged list to the Unacknowledged list -->
-                <span>{{ t('duplicatefinder', 'Unacknowledge it') }}</span>
-              </button>
-              <button
-                v-else
-                type="button"
-                class="toolbar-button acknowledge-link"
-                :disabled="isAcknowledging"
-                aria-keyshortcuts="u"
-                @click="unOrAcknowledgeDuplicate(duplicate)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <!-- TRANSLATORS Button that marks this group of duplicates as reviewed and kept as it is. It moves to the Acknowledged list; no files are deleted -->
-                <span>{{ t('duplicatefinder', 'Acknowledge it') }}</span>
-              </button>
+							<button
+								v-if="duplicate.acknowledged"
+								type="button"
+								class="toolbar-button acknowledge-link is-acknowledged"
+								:disabled="isAcknowledging"
+								aria-keyshortcuts="u"
+								@click="unOrAcknowledgeDuplicate(duplicate)">
+								<svg xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+									<polyline points="22 4 12 14.01 9 11.01" />
+								</svg>
+								<!-- TRANSLATORS Button that moves this group of duplicates back from the Acknowledged list to the Unacknowledged list -->
+								<span>{{ t('duplicatefinder', 'Unacknowledge it') }}</span>
+							</button>
+							<button
+								v-else
+								type="button"
+								class="toolbar-button acknowledge-link"
+								:disabled="isAcknowledging"
+								aria-keyshortcuts="u"
+								@click="unOrAcknowledgeDuplicate(duplicate)">
+								<svg xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+									<polyline points="22 4 12 14.01 9 11.01" />
+								</svg>
+								<!-- TRANSLATORS Button that marks this group of duplicates as reviewed and kept as it is. It moves to the Acknowledged list; no files are deleted -->
+								<span>{{ t('duplicatefinder', 'Acknowledge it') }}</span>
+							</button>
 
-              <button
-                type="button"
-                class="toolbar-button preview-button"
-                :title="t('duplicatefinder', 'Show Preview')"
-                @click="previewMerge">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                <span>{{ t('duplicatefinder', 'Preview') }}</span>
-              </button>
+							<button
+								type="button"
+								class="toolbar-button preview-button"
+								:title="t('duplicatefinder', 'Show Preview')"
+								@click="previewMerge">
+								<svg xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+									<circle cx="12" cy="12" r="3" />
+								</svg>
+								<span>{{ t('duplicatefinder', 'Preview') }}</span>
+							</button>
 
-              <button
-                type="button"
-                class="toolbar-button compare-toggle-button"
-                :class="{ 'is-active': compareMode }"
-                :aria-pressed="compareMode ? 'true' : 'false'"
-                aria-keyshortcuts="v"
-                :title="t('duplicatefinder', 'Compare copies side-by-side')"
-                @click="toggleCompareMode">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="3" y="4" width="8" height="16" rx="1"></rect>
-                  <rect x="13" y="4" width="8" height="16" rx="1"></rect>
-                </svg>
-                <span>{{ compareMode ? t('duplicatefinder', 'List view') : t('duplicatefinder', 'Compare') }}</span>
-              </button>
+							<button
+								type="button"
+								class="toolbar-button compare-toggle-button"
+								:class="{ 'is-active': compareMode }"
+								:aria-pressed="compareMode ? 'true' : 'false'"
+								aria-keyshortcuts="v"
+								:title="t('duplicatefinder', 'Compare copies side-by-side')"
+								@click="toggleCompareMode">
+								<svg xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<rect x="3"
+										y="4"
+										width="8"
+										height="16"
+										rx="1" />
+									<rect x="13"
+										y="4"
+										width="8"
+										height="16"
+										rx="1" />
+								</svg>
+								<span>{{ compareMode ? t('duplicatefinder', 'List view') : t('duplicatefinder', 'Compare') }}</span>
+							</button>
 
-              <button
-                type="button"
-                class="toolbar-button false-positive-button"
-                :class="{ 'is-excluded': isGroupExcluded }"
-                :disabled="!fullGroupHash || isIgnoringRule || isGroupExcluded"
-                :title="isGroupExcluded
-                  ? t('duplicatefinder', 'Group hash is excluded from future scans')
-                  : t('duplicatefinder', 'Mark as false positive and exclude hash from future scans')"
-                @click="excludeGroupAsFalsePositive">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-                </svg>
-                <span>{{ isGroupExcluded ? t('duplicatefinder', 'Excluded') : t('duplicatefinder', 'False positive') }}</span>
-              </button>
+							<button
+								type="button"
+								class="toolbar-button false-positive-button"
+								:class="{ 'is-excluded': isGroupExcluded }"
+								:disabled="!fullGroupHash || isIgnoringRule || isGroupExcluded"
+								:title="isGroupExcluded
+									? t('duplicatefinder', 'Group hash is excluded from future scans')
+									: t('duplicatefinder', 'Mark as false positive and exclude hash from future scans')"
+								@click="excludeGroupAsFalsePositive">
+								<svg xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true">
+									<circle cx="12" cy="12" r="10" />
+									<line x1="4.93"
+										y1="4.93"
+										x2="19.07"
+										y2="19.07" />
+								</svg>
+								<span>{{ isGroupExcluded ? t('duplicatefinder', 'Excluded') : t('duplicatefinder', 'False positive') }}</span>
+							</button>
 
-              <div ref="actionsDropdown" class="dropdown" @keydown.esc.stop="showDropdown = false">
-                <button
-                  type="button"
-                  class="dropdown-toggle has-tooltip"
-                  :title="t('duplicatefinder', 'More actions')"
-                  :aria-label="t('duplicatefinder', 'More actions')"
-                  :aria-expanded="showDropdown ? 'true' : 'false'"
-                  aria-haspopup="menu"
-                  :data-tooltip="t('duplicatefinder', 'More actions')"
-                  @click="toggleDropdown">
-                  <span class="arrow-down"></span>
-                </button>
-                <div v-if="showDropdown" class="dropdown-menu" role="menu">
-                  <button type="button" role="menuitem" @click="copyFileHash">
-                    {{ t('duplicatefinder', 'Copy File Hash') }}
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    :disabled="!fullGroupHash || isIgnoringRule || isGroupExcluded"
-                    @click="excludeGroupAsFalsePositive">
-                    {{ isGroupExcluded
-                      ? t('duplicatefinder', 'Excluded from future scans')
-                      : t('duplicatefinder', 'Exclude group (False positive)') }}
-                  </button>
-                  <button
-                    v-for="pattern in groupIgnoreOptions.extensionPatterns"
-                    :key="'ext-' + pattern"
-                    type="button"
-                    role="menuitem"
-                    :disabled="isIgnoringRule || isPatternIgnored(pattern)"
-                    @click="ignorePatternRule(pattern)">
-                    {{ isPatternIgnored(pattern)
-                      ? t('duplicatefinder', 'Ignored: {pattern}', { pattern })
-                      : t('duplicatefinder', 'Ignore pattern: {pattern}', { pattern }) }}
-                  </button>
-                  <button
-                    v-for="fileName in groupIgnoreOptions.exactFileNames"
-                    :key="'name-' + fileName"
-                    type="button"
-                    role="menuitem"
-                    :disabled="isIgnoringRule || isPatternIgnored(fileName)"
-                    @click="ignorePatternRule(fileName)">
-                    {{ isPatternIgnored(fileName)
-                      ? t('duplicatefinder', 'Ignored: {pattern}', { pattern: fileName })
-                      : t('duplicatefinder', 'Ignore file name: {name}', { name: fileName }) }}
-                  </button>
-                  <button
-                    v-for="folderPath in groupIgnoreOptions.folderPaths"
-                    :key="'folder-' + folderPath"
-                    type="button"
-                    role="menuitem"
-                    :disabled="isIgnoringRule || isFolderExcluded(folderPath)"
-                    @click="excludeFolderRule(folderPath)">
-                    {{ isFolderExcluded(folderPath)
-                      ? t('duplicatefinder', 'Excluded folder: {folder}', { folder: folderPath })
-                      : t('duplicatefinder', 'Exclude folder: {folder}', { folder: folderPath }) }}
-                  </button>
-                  <div class="dropdown-menu-divider" role="separator"></div>
-                  <button type="button" role="menuitem" @click="openIgnoreRulesSettings">
-                    {{ t('duplicatefinder', 'Manage ignore rules...') }}
-                  </button>
-                </div>
-              </div>
-            </div>
+							<div ref="actionsDropdown" class="dropdown" @keydown.esc.stop="showDropdown = false">
+								<button
+									type="button"
+									class="dropdown-toggle has-tooltip"
+									:title="t('duplicatefinder', 'More actions')"
+									:aria-label="t('duplicatefinder', 'More actions')"
+									:aria-expanded="showDropdown ? 'true' : 'false'"
+									aria-haspopup="menu"
+									:data-tooltip="t('duplicatefinder', 'More actions')"
+									@click="toggleDropdown">
+									<span class="arrow-down" />
+								</button>
+								<div v-if="showDropdown" class="dropdown-menu" role="menu">
+									<button type="button" role="menuitem" @click="copyFileHash">
+										{{ t('duplicatefinder', 'Copy File Hash') }}
+									</button>
+									<button
+										type="button"
+										role="menuitem"
+										:disabled="!fullGroupHash || isIgnoringRule || isGroupExcluded"
+										@click="excludeGroupAsFalsePositive">
+										{{ isGroupExcluded
+											? t('duplicatefinder', 'Excluded from future scans')
+											: t('duplicatefinder', 'Exclude group (False positive)') }}
+									</button>
+									<button
+										v-for="pattern in groupIgnoreOptions.extensionPatterns"
+										:key="'ext-' + pattern"
+										type="button"
+										role="menuitem"
+										:disabled="isIgnoringRule || isPatternIgnored(pattern)"
+										@click="ignorePatternRule(pattern)">
+										{{ isPatternIgnored(pattern)
+											? t('duplicatefinder', 'Ignored: {pattern}', { pattern })
+											: t('duplicatefinder', 'Ignore pattern: {pattern}', { pattern }) }}
+									</button>
+									<button
+										v-for="fileName in groupIgnoreOptions.exactFileNames"
+										:key="'name-' + fileName"
+										type="button"
+										role="menuitem"
+										:disabled="isIgnoringRule || isPatternIgnored(fileName)"
+										@click="ignorePatternRule(fileName)">
+										{{ isPatternIgnored(fileName)
+											? t('duplicatefinder', 'Ignored: {pattern}', { pattern: fileName })
+											: t('duplicatefinder', 'Ignore file name: {name}', { name: fileName }) }}
+									</button>
+									<button
+										v-for="folderPath in groupIgnoreOptions.folderPaths"
+										:key="'folder-' + folderPath"
+										type="button"
+										role="menuitem"
+										:disabled="isIgnoringRule || isFolderExcluded(folderPath)"
+										@click="excludeFolderRule(folderPath)">
+										{{ isFolderExcluded(folderPath)
+											? t('duplicatefinder', 'Excluded folder: {folder}', { folder: folderPath })
+											: t('duplicatefinder', 'Exclude folder: {folder}', { folder: folderPath }) }}
+									</button>
+									<div class="dropdown-menu-divider" role="separator" />
+									<button type="button" role="menuitem" @click="openIgnoreRulesSettings">
+										{{ t('duplicatefinder', 'Manage ignore rules...') }}
+									</button>
+								</div>
+							</div>
+						</div>
 
-            <div
-              v-if="ignoreActionMessage || isGroupExcluded"
-              class="ignore-rule-banner"
-              :class="{ 'is-error': ignoreActionStatus === 'error' }"
-              role="status"
-              aria-live="polite">
-              <span class="ignore-rule-banner__text">
-                {{ ignoreActionMessage || t('duplicatefinder', 'This group hash is excluded from future scans.') }}
-              </span>
-              <button
-                type="button"
-                class="ignore-rule-banner__link"
-                @click="openSettings">
-                {{ t('duplicatefinder', 'Manage ignore rules') }}
-              </button>
-            </div>
+						<div
+							v-if="ignoreActionMessage || isGroupExcluded"
+							class="ignore-rule-banner"
+							:class="{ 'is-error': ignoreActionStatus === 'error' }"
+							role="status"
+							aria-live="polite">
+							<span class="ignore-rule-banner__text">
+								{{ ignoreActionMessage || t('duplicatefinder', 'This group hash is excluded from future scans.') }}
+							</span>
+							<button
+								type="button"
+								class="ignore-rule-banner__link"
+								@click="openSettings">
+								{{ t('duplicatefinder', 'Manage ignore rules') }}
+							</button>
+						</div>
 
-            <div
-              class="keep-rules-toolbar"
-              role="group"
-              :aria-label="t('duplicatefinder', 'Smart selection rules')">
-              <span class="keep-rules-label">{{ t('duplicatefinder', 'Smart keep:') }}</span>
-              <button
-                v-for="ruleOption in keepRuleOptions"
-                :key="ruleOption.id"
-                type="button"
-                class="toolbar-button keep-rule-button"
-                :class="{ 'is-active': activeKeepRule === ruleOption.id }"
-                :aria-pressed="activeKeepRule === ruleOption.id ? 'true' : 'false'"
-                :disabled="selectableFiles.length === 0"
-                @click="applyKeepRule(ruleOption.id)">
-                <span>{{ ruleOption.label }}</span>
-              </button>
-              <button
-                v-if="visualGroupEvaluation.hasDimensionSpread"
-                type="button"
-                class="toolbar-button resolution-winner-keep-button"
-                :class="{ 'is-active': activeKeepRule === 'highest_resolution' }"
-                :aria-pressed="activeKeepRule === 'highest_resolution' ? 'true' : 'false'"
-                :disabled="selectableFiles.length === 0"
-                @click="applyBestResolutionKeep">
-                <span>{{ t('duplicatefinder', 'Keep best resolution') }}</span>
-              </button>
-            </div>
+						<div
+							class="keep-rules-toolbar"
+							role="group"
+							:aria-label="t('duplicatefinder', 'Smart selection rules')">
+							<span class="keep-rules-label">{{ t('duplicatefinder', 'Smart keep:') }}</span>
+							<button
+								v-for="ruleOption in keepRuleOptions"
+								:key="ruleOption.id"
+								type="button"
+								class="toolbar-button keep-rule-button"
+								:class="{ 'is-active': activeKeepRule === ruleOption.id }"
+								:aria-pressed="activeKeepRule === ruleOption.id ? 'true' : 'false'"
+								:disabled="selectableFiles.length === 0"
+								@click="applyKeepRule(ruleOption.id)">
+								<span>{{ ruleOption.label }}</span>
+							</button>
+							<button
+								v-if="visualGroupEvaluation.hasDimensionSpread"
+								type="button"
+								class="toolbar-button resolution-winner-keep-button"
+								:class="{ 'is-active': activeKeepRule === 'highest_resolution' }"
+								:aria-pressed="activeKeepRule === 'highest_resolution' ? 'true' : 'false'"
+								:disabled="selectableFiles.length === 0"
+								@click="applyBestResolutionKeep">
+								<span>{{ t('duplicatefinder', 'Keep best resolution') }}</span>
+							</button>
+						</div>
 
-            <div
-              v-if="deletionSafetyPlan.selectedCount > 0 || selectedFiles.length > 0"
-              class="deletion-safety-bar">
-              <div
-                v-if="deletionSafetyPlan.selectedCount > 0"
-                class="deletion-safety-summary"
-                :class="{
-                  'is-danger': deletionSafetyPlan.wouldDeleteAllCopies || deletionSafetyPlan.includesProtectedOrigin,
-                  'is-safe': deletionSafetyPlan.canProceedSafely
-                }"
-                role="status"
-                aria-live="polite">
-                <p class="deletion-safety-summary__text">
-                  {{ t('duplicatefinder',
-                    'Deletion plan: {selectedCount} file(s) selected, {survivingCount} copy/copies kept, {reclaimableFormatted} freed.',
-                    {
-                      selectedCount: deletionSafetyPlan.selectedCount,
-                      survivingCount: deletionSafetyPlan.survivingCount,
-                      reclaimableFormatted: deletionSafetyPlan.reclaimableFormatted
-                    }) }}
-                </p>
-                <p
-                  v-if="deletionSafetyPlan.wouldDeleteAllCopies"
-                  class="deletion-safety-summary__warning">
-                  {{ t('duplicatefinder', 'Warning: all copies in this group are selected. At least one copy should be kept to avoid data loss.') }}
-                </p>
-                <p
-                  v-else-if="deletionSafetyPlan.includesProtectedOrigin"
-                  class="deletion-safety-summary__warning">
-                  {{ t('duplicatefinder', 'Protected files in origin folders cannot be deleted.') }}
-                </p>
-              </div>
+						<div
+							v-if="deletionSafetyPlan.selectedCount > 0 || selectedFiles.length > 0"
+							class="deletion-safety-bar">
+							<div
+								v-if="deletionSafetyPlan.selectedCount > 0"
+								class="deletion-safety-summary"
+								:class="{
+									'is-danger': deletionSafetyPlan.wouldDeleteAllCopies || deletionSafetyPlan.includesProtectedOrigin,
+									'is-safe': deletionSafetyPlan.canProceedSafely
+								}"
+								role="status"
+								aria-live="polite">
+								<p class="deletion-safety-summary__text">
+									{{ t('duplicatefinder',
+										'Deletion plan: {selectedCount} file(s) selected, {survivingCount} copy/copies kept, {reclaimableFormatted} freed.',
+										{
+											selectedCount: deletionSafetyPlan.selectedCount,
+											survivingCount: deletionSafetyPlan.survivingCount,
+											reclaimableFormatted: deletionSafetyPlan.reclaimableFormatted
+										}) }}
+								</p>
+								<p
+									v-if="deletionSafetyPlan.wouldDeleteAllCopies"
+									class="deletion-safety-summary__warning">
+									{{ t('duplicatefinder', 'Warning: all copies in this group are selected. At least one copy should be kept to avoid data loss.') }}
+								</p>
+								<p
+									v-else-if="deletionSafetyPlan.includesProtectedOrigin"
+									class="deletion-safety-summary__warning">
+									{{ t('duplicatefinder', 'Protected files in origin folders cannot be deleted.') }}
+								</p>
+							</div>
 
-              <div
-                v-if="selectedFiles.length > 0"
-                class="deletion-safety-bar__actions">
-                <button
-                  v-if="deletionAuditPlan.selectedCount > 0"
-                  type="button"
-                  class="toolbar-button review-deletion-plan-button"
-                  :aria-label="t('duplicatefinder', 'Review deletion plan')"
-                  @click="openDryRunAuditDialog">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="9" y1="13" x2="15" y2="13"></line>
-                    <line x1="9" y1="17" x2="13" y2="17"></line>
-                  </svg>
-                  <span>{{ t('duplicatefinder', 'Review plan') }}</span>
-                </button>
+							<div
+								v-if="selectedFiles.length > 0"
+								class="deletion-safety-bar__actions">
+								<button
+									v-if="deletionAuditPlan.selectedCount > 0"
+									type="button"
+									class="toolbar-button review-deletion-plan-button"
+									:aria-label="t('duplicatefinder', 'Review deletion plan')"
+									@click="openDryRunAuditDialog">
+									<svg xmlns="http://www.w3.org/2000/svg"
+										width="16"
+										height="16"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										aria-hidden="true">
+										<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+										<polyline points="14 2 14 8 20 8" />
+										<line x1="9"
+											y1="13"
+											x2="15"
+											y2="13" />
+										<line x1="9"
+											y1="17"
+											x2="13"
+											y2="17" />
+									</svg>
+									<span>{{ t('duplicatefinder', 'Review plan') }}</span>
+								</button>
 
-                <button
-                  ref="clearSelectionButton"
-                  type="button"
-                  class="toolbar-button clear-selection-button"
-                  :aria-label="t('duplicatefinder', 'Clear selection')"
-                  @click="clearSelection({ restoreFocus: true })">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                  <span>{{ t('duplicatefinder', 'Clear selection') }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
+								<button
+									ref="clearSelectionButton"
+									type="button"
+									class="toolbar-button clear-selection-button"
+									:aria-label="t('duplicatefinder', 'Clear selection')"
+									@click="clearSelection({ restoreFocus: true })">
+									<svg xmlns="http://www.w3.org/2000/svg"
+										width="16"
+										height="16"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										aria-hidden="true">
+										<line x1="18"
+											y1="6"
+											x2="6"
+											y2="18" />
+										<line x1="6"
+											y1="6"
+											x2="18"
+											y2="18" />
+									</svg>
+									<span>{{ t('duplicatefinder', 'Clear selection') }}</span>
+								</button>
+							</div>
+						</div>
+					</div>
 
-          <div v-if="!compareMode" class="files-card" :class="{ 'is-compact-actions': !hasMultiFolderActions }">
-            <div class="files-table-header">
-              <div class="col-checkbox" @click.self="toggleSelectAllFromHeader">
-                <input
-                  type="checkbox"
-                  class="file-row-checkbox file-header-checkbox"
-                  :checked="isAllFilesSelected"
-                  :indeterminate.prop="isSomeFilesSelected"
-                  :disabled="defaultSelectAllTargetFiles.length === 0"
-                  :title="t('duplicatefinder', 'Select All')"
-                  :aria-label="t('duplicatefinder', 'Select All')"
-                  @change="toggleSelectAllFromHeader"
-                />
-              </div>
-              <div class="col-preview">{{ t('duplicatefinder', 'Preview') }}</div>
-              <div class="col-name">{{ t('duplicatefinder', 'Name & Path') }}</div>
-              <div class="col-size">{{ t('duplicatefinder', 'Size') }}</div>
-              <div class="col-status">{{ t('duplicatefinder', 'Status') }}</div>
-              <div class="col-actions">{{ t('duplicatefinder', 'Actions') }}</div>
-            </div>
+					<div v-if="!compareMode" class="files-card" :class="{ 'is-compact-actions': !hasMultiFolderActions }">
+						<div class="files-table-header">
+							<div class="col-checkbox" @click.self="toggleSelectAllFromHeader">
+								<input
+									type="checkbox"
+									class="file-row-checkbox file-header-checkbox"
+									:checked="isAllFilesSelected"
+									:indeterminate.prop="isSomeFilesSelected"
+									:disabled="defaultSelectAllTargetFiles.length === 0"
+									:title="t('duplicatefinder', 'Select All')"
+									:aria-label="t('duplicatefinder', 'Select All')"
+									@change="toggleSelectAllFromHeader">
+							</div>
+							<div class="col-preview">
+								{{ t('duplicatefinder', 'Preview') }}
+							</div>
+							<div class="col-name">
+								{{ t('duplicatefinder', 'Name & Path') }}
+							</div>
+							<div class="col-size">
+								{{ t('duplicatefinder', 'Size') }}
+							</div>
+							<div class="col-status">
+								{{ t('duplicatefinder', 'Status') }}
+							</div>
+							<div class="col-actions">
+								{{ t('duplicatefinder', 'Actions') }}
+							</div>
+						</div>
 
-            <div
-              v-for="(file, index) in duplicate.files"
-              :key="fileKey(file)"
-              class="file-display"
-              :class="{
-                'is-selected': isFileSelected(file),
-                'is-keeping': selectedFiles.length > 0 && !isFileSelected(file),
-                'is-protected': file.isInOriginFolder
-              }">
-              <input
-                v-model="selectedFiles"
-                type="checkbox"
-                class="file-row-checkbox"
-                :value="file"
-                :disabled="file.isInOriginFolder"
-                :aria-label="t('duplicatefinder', 'Select {file}', { file: file.path })"
-                @change="activeKeepRule = null"
-              />
-              <DuplicateFileDisplay
-                :file="file"
-                :index="index"
-                :duplicate-acknowledged="duplicate.acknowledged"
-                :has-other-folders="hasFilesInOtherFolders(file)"
-                :metadata-badges="fileMetadataBadges[index] || null"
-                :visual-badge="fileVisualBadges[index] || null"
-                :path-segments="filePathSegments[index] || []"
-                :is-selected="isFileSelected(file)"
-                :has-active-selection="selectedFiles.length > 0"
-                @keepFolder="selectDuplicatesOutsideFolder(file)"
-                @fileDeleted="removeFileFromListAndUpdate(file, $event)">
-              </DuplicateFileDisplay>
-            </div>
-          </div>
+						<div
+							v-for="(file, index) in duplicate.files"
+							:key="fileKey(file)"
+							class="file-display"
+							:class="{
+								'is-selected': isFileSelected(file),
+								'is-keeping': selectedFiles.length > 0 && !isFileSelected(file),
+								'is-protected': file.isInOriginFolder
+							}">
+							<input
+								v-model="selectedFiles"
+								type="checkbox"
+								class="file-row-checkbox"
+								:value="file"
+								:disabled="file.isInOriginFolder"
+								:aria-label="t('duplicatefinder', 'Select {file}', { file: file.path })"
+								@change="activeKeepRule = null">
+							<DuplicateFileDisplay
+								:file="file"
+								:index="index"
+								:duplicate-acknowledged="duplicate.acknowledged"
+								:has-other-folders="hasFilesInOtherFolders(file)"
+								:metadata-badges="fileMetadataBadges[index] || null"
+								:visual-badge="fileVisualBadges[index] || null"
+								:path-segments="filePathSegments[index] || []"
+								:is-selected="isFileSelected(file)"
+								:has-active-selection="selectedFiles.length > 0"
+								@keepFolder="selectDuplicatesOutsideFolder(file)"
+								@fileDeleted="removeFileFromListAndUpdate(file, $event)" />
+						</div>
+					</div>
 
-          <DuplicateCompareView
-            v-else
-            :files="duplicate.files"
-            :selected-files="selectedFiles"
-            :path-segments-by-index="filePathSegments"
-            :metadata-badges-by-index="fileMetadataBadges"
-            :initial-inspection-mode="compareInitialMode"
-            :live-dimensions-by-key="inspectedDimensionsByKey"
-            @visual-inspection-updated="onVisualInspectionUpdated"
-            @select-lower-res="applyLowerResSelection"
-            @toggle-copy-selection="toggleFileSelection"
-            @close-compare="closeCompareMode"
-          />
-        </div>
-        <div v-else class="emptycontent" role="status" aria-live="polite">
-          <div class="icon-file" />
-          <div>
-            <h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
-            <p>{{ t('duplicatefinder', 'You can adjust settings or run a new scan to find duplicates.') }}</p>
-            <div class="action-buttons">
-              <button type="button" @click="openSettings" class="primary">{{ t('duplicatefinder', 'Open Settings') }}</button>
-              <button type="button" @click="findDuplicates" :disabled="isScanning">
-                {{ isScanning ? t('duplicatefinder', 'Scanning...') : t('duplicatefinder', 'Find Duplicates') }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </transition>
-    <transition name="fade">
-      <div v-show="isLoadingNextDuplicate" class="loading-overlay">
-        <NcLoadingSpinner />
-      </div>
-    </transition>
-    <dialog
-      v-if="showDeleteConfirmDialog"
-      ref="deleteConfirmDialog"
-      class="nc-confirm-dialog"
-      :class="{ 'is-delete-all': confirmDialogPlan.wouldDeleteAllCopies }"
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="nc-confirm-delete-title"
-      aria-describedby="nc-confirm-delete-desc"
-      @cancel.prevent="resolveDeleteConfirm(false)"
-      @keydown.esc.prevent.stop="resolveDeleteConfirm(false)"
-      @click.self="resolveDeleteConfirm(false)">
-      <div class="nc-confirm-dialog__surface">
-        <div class="nc-confirm-dialog__header">
-          <span class="nc-confirm-dialog__icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-          </span>
-          <h4 id="nc-confirm-delete-title" class="nc-confirm-dialog__title">
-            {{ confirmDialogPlan.wouldDeleteAllCopies
-              ? t('duplicatefinder', 'Delete all copies?')
-              : (isDryRunDialog
-                ? t('duplicatefinder', 'Dry-run deletion plan')
-                : t('duplicatefinder', 'Confirm deletion')) }}
-          </h4>
-        </div>
-        <p id="nc-confirm-delete-desc" class="nc-confirm-dialog__message">
-          {{ confirmDialogPlan.wouldDeleteAllCopies
-            ? t('duplicatefinder', 'This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?')
-            : (isDryRunDialog
-              ? t('duplicatefinder', 'Dry-run audit: inspect which files will be removed and which copies will remain safe. No files are deleted yet.')
-              : t('duplicatefinder', 'Review the deletion impact below before permanently removing the selected files.')) }}
-        </p>
-        <dl class="nc-confirm-dialog__stats">
-          <div class="nc-confirm-dialog__stat">
-            <dt>{{ t('duplicatefinder', 'Files to delete') }}</dt>
-            <dd>{{ confirmDialogPlan.selectedCount }}</dd>
-          </div>
-          <div class="nc-confirm-dialog__stat">
-            <dt>{{ t('duplicatefinder', 'Copies kept') }}</dt>
-            <dd>{{ confirmDialogPlan.survivingCount }}</dd>
-          </div>
-          <div class="nc-confirm-dialog__stat">
-            <dt>{{ t('duplicatefinder', 'Space freed') }}</dt>
-            <dd>{{ confirmDialogPlan.reclaimableFormatted }}</dd>
-          </div>
-        </dl>
-        <div class="nc-confirm-dialog__audit">
-          <section class="nc-confirm-dialog__audit-section nc-confirm-dialog__audit-section--delete">
-            <h5 class="nc-confirm-dialog__audit-heading">
-              {{ t('duplicatefinder', 'Files to delete ({count})', { count: confirmDialogAuditPlan.targetEntries.length }) }}
-            </h5>
-            <ul class="nc-confirm-dialog__path-list nc-confirm-dialog__path-list--delete">
-              <li
-                v-for="(entry, idx) in confirmDialogAuditPlan.targetEntries"
-                :key="'del-' + (entry.key || entry.path || idx)"
-                class="nc-confirm-dialog__path-item">
-                <span class="nc-confirm-dialog__path-text" :title="entry.normalizedPath || entry.path">
-                  {{ entry.normalizedPath || entry.path }}
-                </span>
-                <span class="nc-confirm-dialog__path-meta">
-                  <span
-                    v-if="entry.isProtected"
-                    class="nc-confirm-dialog__path-badge is-protected">
-                    {{ t('duplicatefinder', 'Protected origin') }}
-                  </span>
-                  <span class="nc-confirm-dialog__path-size">{{ entry.formattedSize }}</span>
-                </span>
-              </li>
-            </ul>
-          </section>
-          <section class="nc-confirm-dialog__audit-section nc-confirm-dialog__audit-section--keep">
-            <h5 class="nc-confirm-dialog__audit-heading">
-              {{ t('duplicatefinder', 'Surviving copies kept ({count})', { count: confirmDialogAuditPlan.survivingEntries.length }) }}
-            </h5>
-            <ul
-              v-if="confirmDialogAuditPlan.survivingEntries.length > 0"
-              class="nc-confirm-dialog__path-list nc-confirm-dialog__path-list--keep">
-              <li
-                v-for="(entry, idx) in confirmDialogAuditPlan.survivingEntries"
-                :key="'keep-' + (entry.key || entry.path || idx)"
-                class="nc-confirm-dialog__path-item">
-                <span class="nc-confirm-dialog__path-text" :title="entry.normalizedPath || entry.path">
-                  {{ entry.normalizedPath || entry.path }}
-                </span>
-                <span class="nc-confirm-dialog__path-meta">
-                  <span
-                    class="nc-confirm-dialog__path-badge"
-                    :class="entry.isProtected ? 'is-protected' : 'is-kept'">
-                    {{ entry.isProtected
-                      ? t('duplicatefinder', 'Protected origin')
-                      : t('duplicatefinder', 'Kept') }}
-                  </span>
-                  <span class="nc-confirm-dialog__path-size">{{ entry.formattedSize }}</span>
-                </span>
-              </li>
-            </ul>
-            <p
-              v-else
-              class="nc-confirm-dialog__empty-keep-warning"
-              role="status">
-              {{ t('duplicatefinder', 'No copies will remain after this deletion.') }}
-            </p>
-          </section>
-        </div>
-        <div class="nc-confirm-dialog__actions">
-          <div class="nc-confirm-dialog__export-group">
-            <button
-              type="button"
-              class="nc-confirm-dialog__button nc-confirm-dialog__button--export"
-              :disabled="confirmDialogAuditPlan.selectedCount === 0"
-              @click="exportCurrentDeletionPlan">
-              {{ t('duplicatefinder', 'Export plan (JSON)') }}
-            </button>
-            <span
-              v-if="planExportMessage"
-              class="nc-confirm-dialog__export-status"
-              :class="{ 'is-error': planExportStatus === 'error' }"
-              role="status"
-              aria-live="polite">
-              {{ planExportMessage }}
-            </span>
-          </div>
-          <div class="nc-confirm-dialog__decision-group">
-            <button
-              type="button"
-              class="nc-confirm-dialog__button nc-confirm-dialog__button--cancel"
-              @click="resolveDeleteConfirm(false)">
-              {{ isDryRunDialog ? t('duplicatefinder', 'Close') : t('duplicatefinder', 'Cancel') }}
-            </button>
-            <button
-              type="button"
-              class="nc-confirm-dialog__button nc-confirm-dialog__button--danger"
-              :disabled="confirmDialogPlan.includesProtectedOrigin"
-              @click="resolveDeleteConfirm(true)">
-              {{ confirmDialogPlan.wouldDeleteAllCopies
-                ? t('duplicatefinder', 'Delete all copies')
-                : (isDryRunDialog
-                  ? t('duplicatefinder', 'Execute deletion')
-                  : t('duplicatefinder', 'Confirm delete')) }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </dialog>
-  </div>
+					<DuplicateCompareView
+						v-else
+						:files="duplicate.files"
+						:selected-files="selectedFiles"
+						:path-segments-by-index="filePathSegments"
+						:metadata-badges-by-index="fileMetadataBadges"
+						:initial-inspection-mode="compareInitialMode"
+						:live-dimensions-by-key="inspectedDimensionsByKey"
+						@visual-inspection-updated="onVisualInspectionUpdated"
+						@select-lower-res="applyLowerResSelection"
+						@toggle-copy-selection="toggleFileSelection"
+						@close-compare="closeCompareMode" />
+				</div>
+				<div v-else
+					class="emptycontent"
+					role="status"
+					aria-live="polite">
+					<div class="icon-file" />
+					<div>
+						<h2>{{ t('duplicatefinder', 'No duplicates found or no duplicate selected.') }}</h2>
+						<p>{{ t('duplicatefinder', 'You can adjust settings or run a new scan to find duplicates.') }}</p>
+						<div class="action-buttons">
+							<button type="button" class="primary" @click="openSettings">
+								{{ t('duplicatefinder', 'Open Settings') }}
+							</button>
+							<button type="button" :disabled="isScanning" @click="findDuplicates">
+								{{ isScanning ? t('duplicatefinder', 'Scanning...') : t('duplicatefinder', 'Find Duplicates') }}
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</transition>
+		<transition name="fade">
+			<div v-show="isLoadingNextDuplicate" class="loading-overlay">
+				<NcLoadingSpinner />
+			</div>
+		</transition>
+		<dialog
+			v-if="showDeleteConfirmDialog"
+			ref="deleteConfirmDialog"
+			class="nc-confirm-dialog"
+			:class="{ 'is-delete-all': confirmDialogPlan.wouldDeleteAllCopies }"
+			role="alertdialog"
+			aria-modal="true"
+			aria-labelledby="nc-confirm-delete-title"
+			aria-describedby="nc-confirm-delete-desc"
+			@cancel.prevent="resolveDeleteConfirm(false)"
+			@keydown.esc.prevent.stop="resolveDeleteConfirm(false)"
+			@click.self="resolveDeleteConfirm(false)">
+			<div class="nc-confirm-dialog__surface">
+				<div class="nc-confirm-dialog__header">
+					<span class="nc-confirm-dialog__icon" aria-hidden="true">
+						<svg xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round">
+							<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+							<line x1="12"
+								y1="9"
+								x2="12"
+								y2="13" />
+							<line x1="12"
+								y1="17"
+								x2="12.01"
+								y2="17" />
+						</svg>
+					</span>
+					<h4 id="nc-confirm-delete-title" class="nc-confirm-dialog__title">
+						{{ confirmDialogPlan.wouldDeleteAllCopies
+							? t('duplicatefinder', 'Delete all copies?')
+							: (isDryRunDialog
+								? t('duplicatefinder', 'Dry-run deletion plan')
+								: t('duplicatefinder', 'Confirm deletion')) }}
+					</h4>
+				</div>
+				<p id="nc-confirm-delete-desc" class="nc-confirm-dialog__message">
+					{{ confirmDialogPlan.wouldDeleteAllCopies
+						? t('duplicatefinder', 'This action will delete all instances of the duplicate. At least one copy should be kept. Are you sure you want to proceed?')
+						: (isDryRunDialog
+							? t('duplicatefinder', 'Dry-run audit: inspect which files will be removed and which copies will remain safe. No files are deleted yet.')
+							: t('duplicatefinder', 'Review the deletion impact below before permanently removing the selected files.')) }}
+				</p>
+				<dl class="nc-confirm-dialog__stats">
+					<div class="nc-confirm-dialog__stat">
+						<dt>{{ t('duplicatefinder', 'Files to delete') }}</dt>
+						<dd>{{ confirmDialogPlan.selectedCount }}</dd>
+					</div>
+					<div class="nc-confirm-dialog__stat">
+						<dt>{{ t('duplicatefinder', 'Copies kept') }}</dt>
+						<dd>{{ confirmDialogPlan.survivingCount }}</dd>
+					</div>
+					<div class="nc-confirm-dialog__stat">
+						<dt>{{ t('duplicatefinder', 'Space freed') }}</dt>
+						<dd>{{ confirmDialogPlan.reclaimableFormatted }}</dd>
+					</div>
+				</dl>
+				<div class="nc-confirm-dialog__audit">
+					<section class="nc-confirm-dialog__audit-section nc-confirm-dialog__audit-section--delete">
+						<h5 class="nc-confirm-dialog__audit-heading">
+							{{ t('duplicatefinder', 'Files to delete ({count})', { count: confirmDialogAuditPlan.targetEntries.length }) }}
+						</h5>
+						<ul class="nc-confirm-dialog__path-list nc-confirm-dialog__path-list--delete">
+							<li
+								v-for="(entry, idx) in confirmDialogAuditPlan.targetEntries"
+								:key="'del-' + (entry.key || entry.path || idx)"
+								class="nc-confirm-dialog__path-item">
+								<span class="nc-confirm-dialog__path-text" :title="entry.normalizedPath || entry.path">
+									{{ entry.normalizedPath || entry.path }}
+								</span>
+								<span class="nc-confirm-dialog__path-meta">
+									<span
+										v-if="entry.isProtected"
+										class="nc-confirm-dialog__path-badge is-protected">
+										{{ t('duplicatefinder', 'Protected origin') }}
+									</span>
+									<span class="nc-confirm-dialog__path-size">{{ entry.formattedSize }}</span>
+								</span>
+							</li>
+						</ul>
+					</section>
+					<section class="nc-confirm-dialog__audit-section nc-confirm-dialog__audit-section--keep">
+						<h5 class="nc-confirm-dialog__audit-heading">
+							{{ t('duplicatefinder', 'Surviving copies kept ({count})', { count: confirmDialogAuditPlan.survivingEntries.length }) }}
+						</h5>
+						<ul
+							v-if="confirmDialogAuditPlan.survivingEntries.length > 0"
+							class="nc-confirm-dialog__path-list nc-confirm-dialog__path-list--keep">
+							<li
+								v-for="(entry, idx) in confirmDialogAuditPlan.survivingEntries"
+								:key="'keep-' + (entry.key || entry.path || idx)"
+								class="nc-confirm-dialog__path-item">
+								<span class="nc-confirm-dialog__path-text" :title="entry.normalizedPath || entry.path">
+									{{ entry.normalizedPath || entry.path }}
+								</span>
+								<span class="nc-confirm-dialog__path-meta">
+									<span
+										class="nc-confirm-dialog__path-badge"
+										:class="entry.isProtected ? 'is-protected' : 'is-kept'">
+										{{ entry.isProtected
+											? t('duplicatefinder', 'Protected origin')
+											: t('duplicatefinder', 'Kept') }}
+									</span>
+									<span class="nc-confirm-dialog__path-size">{{ entry.formattedSize }}</span>
+								</span>
+							</li>
+						</ul>
+						<p
+							v-else
+							class="nc-confirm-dialog__empty-keep-warning"
+							role="status">
+							{{ t('duplicatefinder', 'No copies will remain after this deletion.') }}
+						</p>
+					</section>
+				</div>
+				<div class="nc-confirm-dialog__actions">
+					<div class="nc-confirm-dialog__export-group">
+						<button
+							type="button"
+							class="nc-confirm-dialog__button nc-confirm-dialog__button--export"
+							:disabled="confirmDialogAuditPlan.selectedCount === 0"
+							@click="exportCurrentDeletionPlan">
+							{{ t('duplicatefinder', 'Export plan (JSON)') }}
+						</button>
+						<span
+							v-if="planExportMessage"
+							class="nc-confirm-dialog__export-status"
+							:class="{ 'is-error': planExportStatus === 'error' }"
+							role="status"
+							aria-live="polite">
+							{{ planExportMessage }}
+						</span>
+					</div>
+					<div class="nc-confirm-dialog__decision-group">
+						<button
+							type="button"
+							class="nc-confirm-dialog__button nc-confirm-dialog__button--cancel"
+							@click="resolveDeleteConfirm(false)">
+							{{ isDryRunDialog ? t('duplicatefinder', 'Close') : t('duplicatefinder', 'Cancel') }}
+						</button>
+						<button
+							type="button"
+							class="nc-confirm-dialog__button nc-confirm-dialog__button--danger"
+							:disabled="confirmDialogPlan.includesProtectedOrigin"
+							@click="resolveDeleteConfirm(true)">
+							{{ confirmDialogPlan.wouldDeleteAllCopies
+								? t('duplicatefinder', 'Delete all copies')
+								: (isDryRunDialog
+									? t('duplicatefinder', 'Execute deletion')
+									: t('duplicatefinder', 'Confirm delete')) }}
+						</button>
+					</div>
+				</div>
+			</div>
+		</dialog>
+	</div>
 </template>
 
 <script>
-import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates, saveFilter, saveExcludedFolder } from '@/tools/api';
-import { copyTextSafely } from '@/tools/clipboardHelper';
-import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils';
-import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport';
-import { annotateDuplicateMetadataBadges } from '@/tools/duplicateMetadataBadges';
-import { computePathDiffSegments } from '@/tools/duplicatePathDiff';
-import { buildDeletionAuditPlan, downloadDeletionPlanJson, evaluateDeletionPlan } from '@/tools/deleteSafetyGuard';
-import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary';
-import { formatShortHash, deriveGroupIgnoreOptions } from '@/tools/duplicateHashHelper';
+import { acknowledgeDuplicate, unacknowledgeDuplicate, deleteFiles, findDuplicates as apiFindDuplicates, saveFilter, saveExcludedFolder } from '@/tools/api'
+import { copyTextSafely } from '@/tools/clipboardHelper'
+import { getFormattedSizeOfCurrentDuplicate, openFileInViewer, removeFileFromList, removeFilesFromList, getParentFolderPath, fileKey, isSameFile } from '@/tools/utils'
+import { getFileSelectionKey, selectDuplicatesByKeepRule } from '@/tools/duplicateSelectionAndExport'
+import { annotateDuplicateMetadataBadges } from '@/tools/duplicateMetadataBadges'
+import { computePathDiffSegments } from '@/tools/duplicatePathDiff'
+import { buildDeletionAuditPlan, downloadDeletionPlanJson, evaluateDeletionPlan } from '@/tools/deleteSafetyGuard'
+import { computeGroupHeaderSummary } from '@/tools/duplicateGroupSummary'
+import { formatShortHash, deriveGroupIgnoreOptions } from '@/tools/duplicateHashHelper'
 import {
-  evaluateResolutionWinners,
-  normalizeExifMetadata,
-  selectLowerResolutionKeys,
-} from '@/tools/visualMediaInspector';
-import { showSuccess, showError } from '@nextcloud/dialogs';
-import DuplicateCompareView from './DuplicateCompareView.vue';
-import DuplicateFileDisplay from './DuplicateFileDisplay.vue';
+	evaluateResolutionWinners,
+	normalizeExifMetadata,
+	selectLowerResolutionKeys,
+} from '@/tools/visualMediaInspector'
+import { showSuccess, showError } from '@nextcloud/dialogs'
+import DuplicateCompareView from './DuplicateCompareView.vue'
+import DuplicateFileDisplay from './DuplicateFileDisplay.vue'
 
 export default {
-  components: {
-    DuplicateCompareView,
-    DuplicateFileDisplay
-  },
-  props: {
-    duplicate: Object,
-    isScanning: {
-      type: Boolean,
-      default: false
-    }
-  },
-  data() {
-    return {
-      selectedFiles: [],
-      activeKeepRule: null,
-      compareMode: false,
-      compareInitialMode: 'side-by-side',
-      inspectedDimensionsByKey: {},
-      isAcknowledging: false,
-      acknowledgeRequestToken: 0,
-      isLoadingNextDuplicate: false,
-      showDropdown: false,
-      showDeleteConfirmDialog: false,
-      confirmDialogMode: 'confirm',
-      pendingDeletePlan: null,
-      pendingDeleteAuditPlan: null,
-      pendingDeleteResolver: null,
-      planExportStatus: 'idle',
-      planExportMessage: '',
-      planExportTimer: null,
-      hashCopyStatus: 'idle',
-      hashCopyStatusMessage: '',
-      hashCopyResetTimer: null,
-      isIgnoringRule: false,
-      excludedHashesInSession: [],
-      ignoredPatternsInSession: [],
-      excludedFoldersInSession: [],
-      ignoreActionStatus: 'idle',
-      ignoreActionMessage: '',
-      ignoreActionTimer: null,
-      outsideClickHandler: null
-    };
-  },
-  watch: {
-    // A selection belongs to the duplicate it was made on: never carry it over to another one
-    duplicate() {
-      this.selectedFiles = [];
-      this.activeKeepRule = null;
-      this.compareInitialMode = 'side-by-side';
-      this.inspectedDimensionsByKey = {};
-      this.isAcknowledging = false;
-      this.acknowledgeRequestToken += 1;
-      this.showDropdown = false;
-      this.resetHashCopyFeedback();
-      this.resetPlanExportFeedback();
-      this.resetIgnoreActionFeedback();
-      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
-        this.resolveDeleteConfirm(false);
-      }
-    }
-  },
-  mounted() {
-    this.outsideClickHandler = event => {
-      if (!this.showDropdown) {
-        return;
-      }
-      const dropdown = this.$refs.actionsDropdown;
-      if (dropdown && typeof dropdown.contains === 'function' && !dropdown.contains(event.target)) {
-        this.showDropdown = false;
-      }
-    };
-    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
-      document.addEventListener('click', this.outsideClickHandler);
-    }
-  },
-  beforeDestroy() {
-    this.resetHashCopyFeedback();
-    this.resetPlanExportFeedback();
-    this.resetIgnoreActionFeedback();
-    if (this.outsideClickHandler && typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
-      document.removeEventListener('click', this.outsideClickHandler);
-      this.outsideClickHandler = null;
-    }
-    if (this.pendingDeleteResolver) {
-      this.resolveDeleteConfirm(false);
-    }
-  },
-  computed: {
-    keepRuleOptions() {
-      return [
-        { id: 'oldest', label: t('duplicatefinder', 'Keep oldest') },
-        { id: 'newest', label: t('duplicatefinder', 'Keep newest') },
-        { id: 'shortest_path', label: t('duplicatefinder', 'Keep shortest path') },
-      ];
-    },
-    selectableFiles() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return [];
-      }
-      return this.duplicate.files.filter(file => !file.isInOriginFolder);
-    },
-    defaultSelectAllTargetFiles() {
-      const filesToSelect = this.selectableFiles;
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return [];
-      }
-      if (filesToSelect.length === this.duplicate.files.length && filesToSelect.length > 0) {
-        return filesToSelect.slice(1);
-      }
-      return filesToSelect;
-    },
-    isAllFilesSelected() {
-      const targets = this.defaultSelectAllTargetFiles;
-      return targets.length > 0 && targets.every(file => this.isFileSelected(file));
-    },
-    isSomeFilesSelected() {
-      return this.selectedFiles.length > 0 && !this.isAllFilesSelected;
-    },
-    hasMultiFolderActions() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return false;
-      }
-      return this.duplicate.files.some(file => this.hasFilesInOtherFolders(file));
-    },
-    fileMetadataBadges() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return [];
-      }
-      return annotateDuplicateMetadataBadges(this.duplicate.files);
-    },
-    visualGroupEvaluation() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return evaluateResolutionWinners([]);
-      }
-      return evaluateResolutionWinners(this.duplicate.files, this.inspectedDimensionsByKey);
-    },
-    hasInspectableContent() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return false;
-      }
-      const contentExts = /\.(mp3|wav|flac|ogg|opus|m4a|aac|mp4|mov|webm|mkv|avi|pdf|txt|md|markdown|json|csv|tsv|yml|yaml|xml|log|ini|conf|js|ts|vue|php|py|sh|css|scss|html|sql)$/i;
-      return this.duplicate.files.some(file => {
-        if (!file || typeof file !== 'object') {
-          return false;
-        }
-        const mime = typeof file.mimetype === 'string' ? file.mimetype.trim().toLowerCase() : '';
-        if (
-          mime.startsWith('audio/')
+	components: {
+		DuplicateCompareView,
+		DuplicateFileDisplay,
+	},
+	props: {
+		duplicate: Object,
+		isScanning: {
+			type: Boolean,
+			default: false,
+		},
+	},
+	data() {
+		return {
+			selectedFiles: [],
+			activeKeepRule: null,
+			compareMode: false,
+			compareInitialMode: 'side-by-side',
+			inspectedDimensionsByKey: {},
+			isAcknowledging: false,
+			acknowledgeRequestToken: 0,
+			isLoadingNextDuplicate: false,
+			showDropdown: false,
+			showDeleteConfirmDialog: false,
+			confirmDialogMode: 'confirm',
+			pendingDeletePlan: null,
+			pendingDeleteAuditPlan: null,
+			pendingDeleteResolver: null,
+			planExportStatus: 'idle',
+			planExportMessage: '',
+			planExportTimer: null,
+			hashCopyStatus: 'idle',
+			hashCopyStatusMessage: '',
+			hashCopyResetTimer: null,
+			isIgnoringRule: false,
+			excludedHashesInSession: [],
+			ignoredPatternsInSession: [],
+			excludedFoldersInSession: [],
+			ignoreActionStatus: 'idle',
+			ignoreActionMessage: '',
+			ignoreActionTimer: null,
+			outsideClickHandler: null,
+		}
+	},
+	computed: {
+		keepRuleOptions() {
+			return [
+				{ id: 'oldest', label: t('duplicatefinder', 'Keep oldest') },
+				{ id: 'newest', label: t('duplicatefinder', 'Keep newest') },
+				{ id: 'shortest_path', label: t('duplicatefinder', 'Keep shortest path') },
+			]
+		},
+		selectableFiles() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return []
+			}
+			return this.duplicate.files.filter(file => !file.isInOriginFolder)
+		},
+		defaultSelectAllTargetFiles() {
+			const filesToSelect = this.selectableFiles
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return []
+			}
+			if (filesToSelect.length === this.duplicate.files.length && filesToSelect.length > 0) {
+				return filesToSelect.slice(1)
+			}
+			return filesToSelect
+		},
+		isAllFilesSelected() {
+			const targets = this.defaultSelectAllTargetFiles
+			return targets.length > 0 && targets.every(file => this.isFileSelected(file))
+		},
+		isSomeFilesSelected() {
+			return this.selectedFiles.length > 0 && !this.isAllFilesSelected
+		},
+		hasMultiFolderActions() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return false
+			}
+			return this.duplicate.files.some(file => this.hasFilesInOtherFolders(file))
+		},
+		fileMetadataBadges() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return []
+			}
+			return annotateDuplicateMetadataBadges(this.duplicate.files)
+		},
+		visualGroupEvaluation() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return evaluateResolutionWinners([])
+			}
+			return evaluateResolutionWinners(this.duplicate.files, this.inspectedDimensionsByKey)
+		},
+		hasInspectableContent() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return false
+			}
+			const contentExts = /\.(mp3|wav|flac|ogg|opus|m4a|aac|mp4|mov|webm|mkv|avi|pdf|txt|md|markdown|json|csv|tsv|yml|yaml|xml|log|ini|conf|js|ts|vue|php|py|sh|css|scss|html|sql)$/i
+			return this.duplicate.files.some(file => {
+				if (!file || typeof file !== 'object') {
+					return false
+				}
+				const mime = typeof file.mimetype === 'string' ? file.mimetype.trim().toLowerCase() : ''
+				if (
+					mime.startsWith('audio/')
           || mime.startsWith('video/')
           || mime.startsWith('text/')
           || mime === 'application/pdf'
           || mime === 'application/json'
           || mime === 'application/xml'
-        ) {
-          return true;
-        }
-        return typeof file.path === 'string' && contentExts.test(file.path.trim());
-      });
-    },
-    fileVisualBadges() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return [];
-      }
-      return this.duplicate.files.map((file, index) => {
-        const evalEntry = this.visualGroupEvaluation.perFile[index] || {};
-        const exif = normalizeExifMetadata(file);
-        return {
-          ...evalEntry,
-          exifCamera: exif.camera || '',
-        };
-      });
-    },
-    visualGroupSummaryLabel() {
-      const evaluation = this.visualGroupEvaluation;
-      if (!evaluation.hasDimensionData) {
-        return '';
-      }
-      const winnerEntry = evaluation.winnerIndex >= 0
-        ? evaluation.perFile[evaluation.winnerIndex]
-        : evaluation.perFile.find(entry => entry && entry.dimensions);
-      if (!winnerEntry || !winnerEntry.dimensions) {
-        return '';
-      }
-      if (evaluation.hasDimensionSpread) {
-        return this.t('duplicatefinder', 'Best: {dims} ({ratio})', {
-          dims: winnerEntry.dimensions.formattedDimensions,
-          ratio: winnerEntry.dimensions.aspectRatio,
-        });
-      }
-      return this.t('duplicatefinder', '{dims} ({ratio})', {
-        dims: winnerEntry.dimensions.formattedDimensions,
-        ratio: winnerEntry.dimensions.aspectRatio,
-      });
-    },
-    filePathSegments() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return [];
-      }
-      return computePathDiffSegments(this.duplicate.files);
-    },
-    groupHeaderSummary() {
-      const files = this.duplicate && Array.isArray(this.duplicate.files)
-        ? this.duplicate.files
-        : [];
-      return computeGroupHeaderSummary(files);
-    },
-    fullGroupHash() {
-      if (!this.duplicate || typeof this.duplicate.hash !== 'string') {
-        return '';
-      }
-      return this.duplicate.hash.trim();
-    },
-    shortGroupHash() {
-      return formatShortHash(this.fullGroupHash);
-    },
-    isGroupExcluded() {
-      const normalized = this.fullGroupHash.toLowerCase();
-      if (!normalized) {
-        return false;
-      }
-      return Boolean(
-        (this.duplicate && this.duplicate.ignoredByRule)
+				) {
+					return true
+				}
+				return typeof file.path === 'string' && contentExts.test(file.path.trim())
+			})
+		},
+		fileVisualBadges() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return []
+			}
+			return this.duplicate.files.map((file, index) => {
+				const evalEntry = this.visualGroupEvaluation.perFile[index] || {}
+				const exif = normalizeExifMetadata(file)
+				return {
+					...evalEntry,
+					exifCamera: exif.camera || '',
+				}
+			})
+		},
+		visualGroupSummaryLabel() {
+			const evaluation = this.visualGroupEvaluation
+			if (!evaluation.hasDimensionData) {
+				return ''
+			}
+			const winnerEntry = evaluation.winnerIndex >= 0
+				? evaluation.perFile[evaluation.winnerIndex]
+				: evaluation.perFile.find(entry => entry && entry.dimensions)
+			if (!winnerEntry || !winnerEntry.dimensions) {
+				return ''
+			}
+			if (evaluation.hasDimensionSpread) {
+				return this.t('duplicatefinder', 'Best: {dims} ({ratio})', {
+					dims: winnerEntry.dimensions.formattedDimensions,
+					ratio: winnerEntry.dimensions.aspectRatio,
+				})
+			}
+			return this.t('duplicatefinder', '{dims} ({ratio})', {
+				dims: winnerEntry.dimensions.formattedDimensions,
+				ratio: winnerEntry.dimensions.aspectRatio,
+			})
+		},
+		filePathSegments() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return []
+			}
+			return computePathDiffSegments(this.duplicate.files)
+		},
+		groupHeaderSummary() {
+			const files = this.duplicate && Array.isArray(this.duplicate.files)
+				? this.duplicate.files
+				: []
+			return computeGroupHeaderSummary(files)
+		},
+		fullGroupHash() {
+			if (!this.duplicate || typeof this.duplicate.hash !== 'string') {
+				return ''
+			}
+			return this.duplicate.hash.trim()
+		},
+		shortGroupHash() {
+			return formatShortHash(this.fullGroupHash)
+		},
+		isGroupExcluded() {
+			const normalized = this.fullGroupHash.toLowerCase()
+			if (!normalized) {
+				return false
+			}
+			return Boolean(
+				(this.duplicate && this.duplicate.ignoredByRule)
         || this.excludedHashesInSession.includes(normalized)
-      );
-    },
-    groupIgnoreOptions() {
-      return deriveGroupIgnoreOptions(this.duplicate);
-    },
-    deletionSafetyPlan() {
-      const files = this.duplicate && Array.isArray(this.duplicate.files)
-        ? this.duplicate.files
-        : [];
-      const selectedKeys = this.selectedFiles
-        .map(file => getFileSelectionKey(file))
-        .filter(key => key !== null);
-      return evaluateDeletionPlan(files, selectedKeys);
-    },
-    deletionAuditPlan() {
-      const files = this.duplicate && Array.isArray(this.duplicate.files)
-        ? this.duplicate.files
-        : [];
-      const selectedKeys = this.selectedFiles
-        .map(file => getFileSelectionKey(file))
-        .filter(key => key !== null);
-      return buildDeletionAuditPlan(files, selectedKeys);
-    },
-    confirmDialogPlan() {
-      return this.pendingDeletePlan || this.deletionSafetyPlan;
-    },
-    confirmDialogAuditPlan() {
-      return this.pendingDeleteAuditPlan || this.deletionAuditPlan;
-    },
-    isDryRunDialog() {
-      return this.confirmDialogMode === 'dry-run';
-    }
-  },
-  methods: {
-    fileKey,
-    isFileSelected(file) {
-      return this.selectedFiles.some(selected => isSameFile(selected, file));
-    },
-    getGroupDisplayName(duplicate) {
-      if (!duplicate || !Array.isArray(duplicate.files) || duplicate.files.length === 0) {
-        return '';
-      }
-      const names = duplicate.files
-        .map(file => (file && file.path ? file.path.split('/').pop() : ''))
-        .filter(Boolean);
-      if (names.length > 0 && names.every(name => name === names[0])) {
-        return names[0];
-      }
-      if (duplicate.hash && typeof duplicate.hash === 'string') {
-        return duplicate.hash.substring(0, 8);
-      }
-      return names[0] || '';
-    },
-    toggleAcknowledge() {
-      if (
-        !this.duplicate
+			)
+		},
+		groupIgnoreOptions() {
+			return deriveGroupIgnoreOptions(this.duplicate)
+		},
+		deletionSafetyPlan() {
+			const files = this.duplicate && Array.isArray(this.duplicate.files)
+				? this.duplicate.files
+				: []
+			const selectedKeys = this.selectedFiles
+				.map(file => getFileSelectionKey(file))
+				.filter(key => key !== null)
+			return evaluateDeletionPlan(files, selectedKeys)
+		},
+		deletionAuditPlan() {
+			const files = this.duplicate && Array.isArray(this.duplicate.files)
+				? this.duplicate.files
+				: []
+			const selectedKeys = this.selectedFiles
+				.map(file => getFileSelectionKey(file))
+				.filter(key => key !== null)
+			return buildDeletionAuditPlan(files, selectedKeys)
+		},
+		confirmDialogPlan() {
+			return this.pendingDeletePlan || this.deletionSafetyPlan
+		},
+		confirmDialogAuditPlan() {
+			return this.pendingDeleteAuditPlan || this.deletionAuditPlan
+		},
+		isDryRunDialog() {
+			return this.confirmDialogMode === 'dry-run'
+		},
+	},
+	watch: {
+		// A selection belongs to the duplicate it was made on: never carry it over to another one
+		duplicate() {
+			this.selectedFiles = []
+			this.activeKeepRule = null
+			this.compareInitialMode = 'side-by-side'
+			this.inspectedDimensionsByKey = {}
+			this.isAcknowledging = false
+			this.acknowledgeRequestToken += 1
+			this.showDropdown = false
+			this.resetHashCopyFeedback()
+			this.resetPlanExportFeedback()
+			this.resetIgnoreActionFeedback()
+			if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+				this.resolveDeleteConfirm(false)
+			}
+		},
+	},
+	mounted() {
+		this.outsideClickHandler = event => {
+			if (!this.showDropdown) {
+				return
+			}
+			const dropdown = this.$refs.actionsDropdown
+			if (dropdown && typeof dropdown.contains === 'function' && !dropdown.contains(event.target)) {
+				this.showDropdown = false
+			}
+		}
+		if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+			document.addEventListener('click', this.outsideClickHandler)
+		}
+	},
+	beforeDestroy() {
+		this.resetHashCopyFeedback()
+		this.resetPlanExportFeedback()
+		this.resetIgnoreActionFeedback()
+		if (this.outsideClickHandler && typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
+			document.removeEventListener('click', this.outsideClickHandler)
+			this.outsideClickHandler = null
+		}
+		if (this.pendingDeleteResolver) {
+			this.resolveDeleteConfirm(false)
+		}
+	},
+	methods: {
+		fileKey,
+		isFileSelected(file) {
+			return this.selectedFiles.some(selected => isSameFile(selected, file))
+		},
+		getGroupDisplayName(duplicate) {
+			if (!duplicate || !Array.isArray(duplicate.files) || duplicate.files.length === 0) {
+				return ''
+			}
+			const names = duplicate.files
+				.map(file => (file && file.path ? file.path.split('/').pop() : ''))
+				.filter(Boolean)
+			if (names.length > 0 && names.every(name => name === names[0])) {
+				return names[0]
+			}
+			if (duplicate.hash && typeof duplicate.hash === 'string') {
+				return duplicate.hash.substring(0, 8)
+			}
+			return names[0] || ''
+		},
+		toggleAcknowledge() {
+			if (
+				!this.duplicate
         || !Array.isArray(this.duplicate.files)
         || this.duplicate.files.length <= 1
         || this.showDeleteConfirmDialog
         || this.pendingDeleteResolver
         || this.isAcknowledging
-      ) {
-        return false;
-      }
-      this.unOrAcknowledgeDuplicate(this.duplicate);
-      return true;
-    },
-    async unOrAcknowledgeDuplicate(duplicate) {
-      if (!duplicate || this.isAcknowledging) {
-        return false;
-      }
-      const token = ++this.acknowledgeRequestToken;
-      this.isAcknowledging = true;
-      try {
-        const updatedDuplicate = { ...duplicate };
+			) {
+				return false
+			}
+			this.unOrAcknowledgeDuplicate(this.duplicate)
+			return true
+		},
+		async unOrAcknowledgeDuplicate(duplicate) {
+			if (!duplicate || this.isAcknowledging) {
+				return false
+			}
+			const token = ++this.acknowledgeRequestToken
+			this.isAcknowledging = true
+			try {
+				const updatedDuplicate = { ...duplicate }
 
-        if (updatedDuplicate.acknowledged) {
-          await unacknowledgeDuplicate(updatedDuplicate.hash);
-          updatedDuplicate.acknowledged = false;
-        } else {
-          await acknowledgeDuplicate(updatedDuplicate.hash);
-          updatedDuplicate.acknowledged = true;
-        }
+				if (updatedDuplicate.acknowledged) {
+					await unacknowledgeDuplicate(updatedDuplicate.hash)
+					updatedDuplicate.acknowledged = false
+				} else {
+					await acknowledgeDuplicate(updatedDuplicate.hash)
+					updatedDuplicate.acknowledged = true
+				}
 
-        if (token === this.acknowledgeRequestToken) {
-          this.$emit('duplicateUpdated', updatedDuplicate);
-        }
-        return true;
-      } catch (error) {
-        console.error('Error updating duplicate acknowledgement status:', error);
-        if (typeof showError === 'function') {
-          showError(this.t('duplicatefinder', 'Could not update acknowledgement status'));
-        }
-        return false;
-      } finally {
-        if (token === this.acknowledgeRequestToken) {
-          this.isAcknowledging = false;
-        }
-      }
-    },
-    openFileInViewer,
-    getDuplicateSize(duplicate) {
-      return getFormattedSizeOfCurrentDuplicate(duplicate);
-    },
-    removeFileFromListAndUpdate(file, result = {}) {
-      console.log('DuplicateDetails: Removing file from list:', file);
-      if (file && file.path) {
-        this.$emit('folders-touched', [file.path]);
-      }
-      const bytesReclaimed = Number(file && file.size) > 0 ? Math.floor(Number(file.size)) : 0;
-      const sampleLabel = file && typeof file.path === 'string' ? file.path.split('/').pop() : '';
-      if (result.deletedNodeIds && result.deletedNodeIds.length > 1) {
-        this.$emit('reclamation-recorded', {
-          bytesReclaimed,
-          filesDeleted: result.deletedNodeIds.length,
-          groupsResolved: 1,
-          source: 'single',
-          sampleLabel
-        });
-        this.$emit('duplicatesSearchCompleted');
-        return;
-      }
-      removeFileFromList(file, this.duplicate.files);
-      // A file that is gone cannot stay selected for the next "Delete Selected"
-      this.selectedFiles = this.selectedFiles.filter(selected => !isSameFile(selected, file));
-      console.log('DuplicateDetails: Files remaining:', this.duplicate.files.length);
+				if (token === this.acknowledgeRequestToken) {
+					// eslint-disable-next-line vue/custom-event-name-casing
+					this.$emit('duplicateUpdated', updatedDuplicate)
+				}
+				return true
+			} catch (error) {
+				console.error('Error updating duplicate acknowledgement status:', error)
+				if (typeof showError === 'function') {
+					showError(this.t('duplicatefinder', 'Could not update acknowledgement status'))
+				}
+				return false
+			} finally {
+				if (token === this.acknowledgeRequestToken) {
+					this.isAcknowledging = false
+				}
+			}
+		},
+		openFileInViewer,
+		getDuplicateSize(duplicate) {
+			return getFormattedSizeOfCurrentDuplicate(duplicate)
+		},
+		removeFileFromListAndUpdate(file, result = {}) {
+			if (file && file.path) {
+				this.$emit('folders-touched', [file.path])
+			}
+			const bytesReclaimed = Number(file && file.size) > 0 ? Math.floor(Number(file.size)) : 0
+			const sampleLabel = file && typeof file.path === 'string' ? file.path.split('/').pop() : ''
+			if (result.deletedNodeIds && result.deletedNodeIds.length > 1) {
+				this.$emit('reclamation-recorded', {
+					bytesReclaimed,
+					filesDeleted: result.deletedNodeIds.length,
+					groupsResolved: 1,
+					source: 'single',
+					sampleLabel,
+				})
+				// eslint-disable-next-line vue/custom-event-name-casing
+				this.$emit('duplicatesSearchCompleted')
+				return
+			}
+			removeFileFromList(file, this.duplicate.files)
+			// A file that is gone cannot stay selected for the next "Delete Selected"
+			this.selectedFiles = this.selectedFiles.filter(selected => !isSameFile(selected, file))
 
-      const isResolved = this.duplicate.files.length <= 1;
-      this.$emit('reclamation-recorded', {
-        bytesReclaimed,
-        filesDeleted: 1,
-        groupsResolved: isResolved ? 1 : 0,
-        source: 'single',
-        sampleLabel
-      });
+			const isResolved = this.duplicate.files.length <= 1
+			this.$emit('reclamation-recorded', {
+				bytesReclaimed,
+				filesDeleted: 1,
+				groupsResolved: isResolved ? 1 : 0,
+				source: 'single',
+				sampleLabel,
+			})
 
-      if (isResolved) {
-        console.log('DuplicateDetails: Emitting duplicate-resolved event');
-        this.$emit('duplicate-resolved', {
-          duplicate: {
-            ...this.duplicate,
-            files: [...this.duplicate.files]
-          },
-          type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged'
-        });
-      }
-    },
-    previewMerge() {
-      // Open the first file in the viewer
-      if (this.duplicate && this.duplicate.files.length > 0) {
-        openFileInViewer(this.duplicate.files[0]);
-      }
-    },
-    toggleCompareMode() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
-        return false;
-      }
-      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
-        return false;
-      }
-      if (this.compareMode) {
-        this.compareInitialMode = 'side-by-side';
-      }
-      this.compareMode = !this.compareMode;
-      return true;
-    },
-    openCompareMode() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
-        return false;
-      }
-      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
-        return false;
-      }
-      this.compareInitialMode = 'side-by-side';
-      this.compareMode = true;
-      return true;
-    },
-    openVisualDiffCompare() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
-        return false;
-      }
-      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
-        return false;
-      }
-      this.compareInitialMode = 'diff';
-      this.compareMode = true;
-      return true;
-    },
-    closeCompareMode() {
-      this.compareMode = false;
-      this.compareInitialMode = 'side-by-side';
-    },
-    onVisualInspectionUpdated(payload) {
-      if (payload && payload.dimensionsByKey && typeof payload.dimensionsByKey === 'object') {
-        this.inspectedDimensionsByKey = { ...payload.dimensionsByKey };
-      }
-    },
-    applyLowerResSelection(keys) {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files) || !Array.isArray(keys)) {
-        return;
-      }
-      const keySet = new Set(keys);
-      this.activeKeepRule = 'highest_resolution';
-      this.selectedFiles = this.duplicate.files.filter(file => {
-        const key = getFileSelectionKey(file);
-        return key !== null && keySet.has(key) && !file.isInOriginFolder;
-      });
-    },
-    applyBestResolutionKeep() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
-        return;
-      }
-      const keys = selectLowerResolutionKeys(this.duplicate.files, this.inspectedDimensionsByKey);
-      this.applyLowerResSelection(keys);
-    },
-    toggleFileSelection(file) {
-      if (!file || file.isInOriginFolder) {
-        return false;
-      }
-      this.activeKeepRule = null;
-      if (this.isFileSelected(file)) {
-        this.selectedFiles = this.selectedFiles.filter(selected => !isSameFile(selected, file));
-      } else {
-        this.selectedFiles = [...this.selectedFiles, file];
-      }
-      return true;
-    },
+			if (isResolved) {
+				this.$emit('duplicate-resolved', {
+					duplicate: {
+						...this.duplicate,
+						files: [...this.duplicate.files],
+					},
+					type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged',
+				})
+			}
+		},
+		previewMerge() {
+			// Open the first file in the viewer
+			if (this.duplicate && this.duplicate.files.length > 0) {
+				openFileInViewer(this.duplicate.files[0])
+			}
+		},
+		toggleCompareMode() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+				return false
+			}
+			if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+				return false
+			}
+			if (this.compareMode) {
+				this.compareInitialMode = 'side-by-side'
+			}
+			this.compareMode = !this.compareMode
+			return true
+		},
+		openCompareMode() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+				return false
+			}
+			if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+				return false
+			}
+			this.compareInitialMode = 'side-by-side'
+			this.compareMode = true
+			return true
+		},
+		openVisualDiffCompare() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+				return false
+			}
+			if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+				return false
+			}
+			this.compareInitialMode = 'diff'
+			this.compareMode = true
+			return true
+		},
+		closeCompareMode() {
+			this.compareMode = false
+			this.compareInitialMode = 'side-by-side'
+		},
+		onVisualInspectionUpdated(payload) {
+			if (payload && payload.dimensionsByKey && typeof payload.dimensionsByKey === 'object') {
+				this.inspectedDimensionsByKey = { ...payload.dimensionsByKey }
+			}
+		},
+		applyLowerResSelection(keys) {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files) || !Array.isArray(keys)) {
+				return
+			}
+			const keySet = new Set(keys)
+			this.activeKeepRule = 'highest_resolution'
+			this.selectedFiles = this.duplicate.files.filter(file => {
+				const key = getFileSelectionKey(file)
+				return key !== null && keySet.has(key) && !file.isInOriginFolder
+			})
+		},
+		applyBestResolutionKeep() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files)) {
+				return
+			}
+			const keys = selectLowerResolutionKeys(this.duplicate.files, this.inspectedDimensionsByKey)
+			this.applyLowerResSelection(keys)
+		},
+		toggleFileSelection(file) {
+			if (!file || file.isInOriginFolder) {
+				return false
+			}
+			this.activeKeepRule = null
+			if (this.isFileSelected(file)) {
+				this.selectedFiles = this.selectedFiles.filter(selected => !isSameFile(selected, file))
+			} else {
+				this.selectedFiles = [...this.selectedFiles, file]
+			}
+			return true
+		},
 
-    async executeSelectedDeletion(plan) {
-      // Only an explicit confirmation on a full-group plan lets the server delete the last copy
-      const allowLastCopy = Boolean(plan && plan.wouldDeleteAllCopies);
-      const { success, deletedNodeIds = [] } = await deleteFiles(this.selectedFiles, { allowLastCopy });
-      if (success.length > 0) {
-        this.$emit('folders-touched', success.map(file => file && file.path).filter(Boolean));
-        const bytesReclaimed = success.reduce(
-          (sum, item) => sum + (Number(item && item.size) > 0 ? Math.floor(Number(item.size)) : 0),
-          0
-        );
-        const sampleLabel = this.getGroupDisplayName(this.duplicate);
-        if (deletedNodeIds.length > 1) {
-          this.$emit('reclamation-recorded', {
-            bytesReclaimed,
-            filesDeleted: success.length,
-            groupsResolved: 1,
-            source: 'group',
-            sampleLabel
-          });
-          this.$emit('duplicatesSearchCompleted');
-          return;
-        }
-        removeFilesFromList(success, this.duplicate.files);
-        this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file));
+		async executeSelectedDeletion(plan) {
+			// Only an explicit confirmation on a full-group plan lets the server delete the last copy
+			const allowLastCopy = Boolean(plan && plan.wouldDeleteAllCopies)
+			const { success, deletedNodeIds = [] } = await deleteFiles(this.selectedFiles, { allowLastCopy })
+			if (success.length > 0) {
+				this.$emit('folders-touched', success.map(file => file && file.path).filter(Boolean))
+				const bytesReclaimed = success.reduce(
+					(sum, item) => sum + (Number(item && item.size) > 0 ? Math.floor(Number(item.size)) : 0),
+					0
+				)
+				const sampleLabel = this.getGroupDisplayName(this.duplicate)
+				if (deletedNodeIds.length > 1) {
+					this.$emit('reclamation-recorded', {
+						bytesReclaimed,
+						filesDeleted: success.length,
+						groupsResolved: 1,
+						source: 'group',
+						sampleLabel,
+					})
+					// eslint-disable-next-line vue/custom-event-name-casing
+					this.$emit('duplicatesSearchCompleted')
+					return
+				}
+				removeFilesFromList(success, this.duplicate.files)
+				this.selectedFiles = this.selectedFiles.filter(file => !success.includes(file))
 
-        const isResolved = this.duplicate.files.length <= 1;
-        this.$emit('reclamation-recorded', {
-          bytesReclaimed,
-          filesDeleted: success.length,
-          groupsResolved: isResolved ? 1 : 0,
-          source: 'group',
-          sampleLabel
-        });
+				const isResolved = this.duplicate.files.length <= 1
+				this.$emit('reclamation-recorded', {
+					bytesReclaimed,
+					filesDeleted: success.length,
+					groupsResolved: isResolved ? 1 : 0,
+					source: 'group',
+					sampleLabel,
+				})
 
-        if (isResolved) {
-          this.$emit('duplicate-resolved', {
-            duplicate: this.duplicate,
-            type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged'
-          });
-        }
-      }
-    },
-    async openDryRunAuditDialog() {
-      try {
-        if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.selectedFiles.length === 0) {
-          return false;
-        }
-        const plan = this.deletionSafetyPlan;
-        const auditPlan = this.deletionAuditPlan;
-        const confirmDelete = await this.requestDeleteConfirmation(plan, {
-          mode: 'dry-run',
-          auditPlan,
-        });
-        if (!confirmDelete) {
-          return false;
-        }
-        if (plan.includesProtectedOrigin || this.selectedFiles.some(file => file && file.isInOriginFolder)) {
-          this.$emit('showError', this.t('duplicatefinder', 'Cannot delete protected files'));
-          return false;
-        }
-        await this.executeSelectedDeletion(plan);
-        return true;
-      } catch (error) {
-        console.error('Error executing deletion from dry-run plan:', error);
-        return false;
-      }
-    },
-    async deleteSelectedDuplicates() {
-      try {
-        if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.selectedFiles.length === 0) {
-          return;
-        }
-        const plan = this.deletionSafetyPlan;
-        const auditPlan = this.deletionAuditPlan;
-        // Verify whether protected files are selected
-        if (plan.includesProtectedOrigin || this.selectedFiles.some(file => file && file.isInOriginFolder)) {
-          this.$emit('showError', this.t('duplicatefinder', 'Cannot delete protected files'));
-          return;
-        }
+				if (isResolved) {
+					this.$emit('duplicate-resolved', {
+						duplicate: this.duplicate,
+						type: this.duplicate.acknowledged ? 'acknowledged' : 'unacknowledged',
+					})
+				}
+			}
+		},
+		async openDryRunAuditDialog() {
+			try {
+				if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.selectedFiles.length === 0) {
+					return false
+				}
+				const plan = this.deletionSafetyPlan
+				const auditPlan = this.deletionAuditPlan
+				const confirmDelete = await this.requestDeleteConfirmation(plan, {
+					mode: 'dry-run',
+					auditPlan,
+				})
+				if (!confirmDelete) {
+					return false
+				}
+				if (plan.includesProtectedOrigin || this.selectedFiles.some(file => file && file.isInOriginFolder)) {
+					// eslint-disable-next-line vue/custom-event-name-casing
+					this.$emit('showError', this.t('duplicatefinder', 'Cannot delete protected files'))
+					return false
+				}
+				await this.executeSelectedDeletion(plan)
+				return true
+			} catch (error) {
+				console.error('Error executing deletion from dry-run plan:', error)
+				return false
+			}
+		},
+		async deleteSelectedDuplicates() {
+			try {
+				if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.selectedFiles.length === 0) {
+					return
+				}
+				const plan = this.deletionSafetyPlan
+				const auditPlan = this.deletionAuditPlan
+				// Verify whether protected files are selected
+				if (plan.includesProtectedOrigin || this.selectedFiles.some(file => file && file.isInOriginFolder)) {
+					// eslint-disable-next-line vue/custom-event-name-casing
+					this.$emit('showError', this.t('duplicatefinder', 'Cannot delete protected files'))
+					return
+				}
 
-        const confirmDelete = await this.requestDeleteConfirmation(plan, {
-          mode: 'confirm',
-          auditPlan,
-        });
-        if (!confirmDelete) {
-          return;
-        }
-        await this.executeSelectedDeletion(plan);
-      } catch (error) {
-        console.error('Error deleting selected files:', error);
-      }
-    },
-    requestDeleteConfirmation(plan, options = {}) {
-      if (this.pendingDeleteResolver) {
-        this.pendingDeleteResolver(false);
-      }
-      this.resetPlanExportFeedback();
-      this.confirmDialogMode = options.mode === 'dry-run' ? 'dry-run' : 'confirm';
-      this.pendingDeletePlan = plan || this.deletionSafetyPlan;
-      this.pendingDeleteAuditPlan = options.auditPlan || this.deletionAuditPlan;
-      this.showDeleteConfirmDialog = true;
-      this.$nextTick(() => {
-        const dialog = this.$refs.deleteConfirmDialog;
-        if (!dialog) {
-          return;
-        }
-        if (typeof dialog.showModal === 'function') {
-          if (!dialog.open) {
-            dialog.showModal();
-          }
-        } else {
-          dialog.setAttribute('open', '');
-        }
-        const cancelButton = dialog.querySelector('.nc-confirm-dialog__button--cancel');
-        if (cancelButton && typeof cancelButton.focus === 'function') {
-          cancelButton.focus();
-        }
-      });
-      return new Promise(resolve => {
-        this.pendingDeleteResolver = resolve;
-      });
-    },
-    resolveDeleteConfirm(confirmed) {
-      const dialog = this.$refs.deleteConfirmDialog;
-      if (dialog && typeof dialog.close === 'function' && dialog.open) {
-        dialog.close();
-      }
-      this.showDeleteConfirmDialog = false;
-      this.confirmDialogMode = 'confirm';
-      this.pendingDeletePlan = null;
-      this.pendingDeleteAuditPlan = null;
-      this.resetPlanExportFeedback();
-      const resolver = this.pendingDeleteResolver;
-      this.pendingDeleteResolver = null;
-      if (typeof resolver === 'function') {
-        resolver(Boolean(confirmed));
-      }
-    },
-    resetPlanExportFeedback() {
-      if (this.planExportTimer) {
-        clearTimeout(this.planExportTimer);
-        this.planExportTimer = null;
-      }
-      this.planExportStatus = 'idle';
-      this.planExportMessage = '';
-    },
-    exportCurrentDeletionPlan() {
-      const auditPlan = this.confirmDialogAuditPlan;
-      if (!auditPlan || auditPlan.selectedCount === 0) {
-        return false;
-      }
-      this.resetPlanExportFeedback();
-      const shortHash = this.shortGroupHash || 'group';
-      const filename = `deletion-plan-${shortHash}.json`;
-      const ok = downloadDeletionPlanJson(this.duplicate, auditPlan, filename);
-      if (ok) {
-        this.planExportStatus = 'exported';
-        this.planExportMessage = this.t('duplicatefinder', 'Plan exported');
-      } else {
-        this.planExportStatus = 'error';
-        this.planExportMessage = this.t('duplicatefinder', 'Export failed');
-      }
-      this.planExportTimer = setTimeout(() => {
-        this.planExportStatus = 'idle';
-        this.planExportMessage = '';
-        this.planExportTimer = null;
-      }, 2500);
-      return ok;
-    },
-    applyKeepRule(rule) {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
-        return false;
-      }
-      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
-        return false;
-      }
-      if (this.selectableFiles.length === 0) {
-        return false;
-      }
-      const targetKeys = new Set(selectDuplicatesByKeepRule(this.duplicate.files, rule));
-      this.selectedFiles = this.duplicate.files.filter(file => {
-        if (!file || file.isInOriginFolder) {
-          return false;
-        }
-        const key = getFileSelectionKey(file);
-        return key !== null && targetKeys.has(key);
-      });
-      this.activeKeepRule = rule;
-      return true;
-    },
-    selectAllFiles() {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
-        return false;
-      }
-      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
-        return false;
-      }
-      if (this.defaultSelectAllTargetFiles.length === 0) {
-        this.selectedFiles = [];
-        this.activeKeepRule = null;
-        return false;
-      }
-      this.activeKeepRule = null;
-      if (this.isAllFilesSelected) {
-        this.selectedFiles = [];
-      } else {
-        this.selectedFiles = [...this.defaultSelectAllTargetFiles];
-      }
-      return true;
-    },
-    clearSelection(options = {}) {
-      if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
-        return false;
-      }
-      const shouldRestoreFocus = Boolean(
-        options && options.restoreFocus
+				const confirmDelete = await this.requestDeleteConfirmation(plan, {
+					mode: 'confirm',
+					auditPlan,
+				})
+				if (!confirmDelete) {
+					return
+				}
+				await this.executeSelectedDeletion(plan)
+			} catch (error) {
+				console.error('Error deleting selected files:', error)
+			}
+		},
+		requestDeleteConfirmation(plan, options = {}) {
+			if (this.pendingDeleteResolver) {
+				this.pendingDeleteResolver(false)
+			}
+			this.resetPlanExportFeedback()
+			this.confirmDialogMode = options.mode === 'dry-run' ? 'dry-run' : 'confirm'
+			this.pendingDeletePlan = plan || this.deletionSafetyPlan
+			this.pendingDeleteAuditPlan = options.auditPlan || this.deletionAuditPlan
+			this.showDeleteConfirmDialog = true
+			this.$nextTick(() => {
+				const dialog = this.$refs.deleteConfirmDialog
+				if (!dialog) {
+					return
+				}
+				if (typeof dialog.showModal === 'function') {
+					if (!dialog.open) {
+						dialog.showModal()
+					}
+				} else {
+					dialog.setAttribute('open', '')
+				}
+				const cancelButton = dialog.querySelector('.nc-confirm-dialog__button--cancel')
+				if (cancelButton && typeof cancelButton.focus === 'function') {
+					cancelButton.focus()
+				}
+			})
+			return new Promise(resolve => {
+				this.pendingDeleteResolver = resolve
+			})
+		},
+		resolveDeleteConfirm(confirmed) {
+			const dialog = this.$refs.deleteConfirmDialog
+			if (dialog && typeof dialog.close === 'function' && dialog.open) {
+				dialog.close()
+			}
+			this.showDeleteConfirmDialog = false
+			this.confirmDialogMode = 'confirm'
+			this.pendingDeletePlan = null
+			this.pendingDeleteAuditPlan = null
+			this.resetPlanExportFeedback()
+			const resolver = this.pendingDeleteResolver
+			this.pendingDeleteResolver = null
+			if (typeof resolver === 'function') {
+				resolver(Boolean(confirmed))
+			}
+		},
+		resetPlanExportFeedback() {
+			if (this.planExportTimer) {
+				clearTimeout(this.planExportTimer)
+				this.planExportTimer = null
+			}
+			this.planExportStatus = 'idle'
+			this.planExportMessage = ''
+		},
+		exportCurrentDeletionPlan() {
+			const auditPlan = this.confirmDialogAuditPlan
+			if (!auditPlan || auditPlan.selectedCount === 0) {
+				return false
+			}
+			this.resetPlanExportFeedback()
+			const shortHash = this.shortGroupHash || 'group'
+			const filename = `deletion-plan-${shortHash}.json`
+			const ok = downloadDeletionPlanJson(this.duplicate, auditPlan, filename)
+			if (ok) {
+				this.planExportStatus = 'exported'
+				this.planExportMessage = this.t('duplicatefinder', 'Plan exported')
+			} else {
+				this.planExportStatus = 'error'
+				this.planExportMessage = this.t('duplicatefinder', 'Export failed')
+			}
+			this.planExportTimer = setTimeout(() => {
+				this.planExportStatus = 'idle'
+				this.planExportMessage = ''
+				this.planExportTimer = null
+			}, 2500)
+			return ok
+		},
+		applyKeepRule(rule) {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+				return false
+			}
+			if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+				return false
+			}
+			if (this.selectableFiles.length === 0) {
+				return false
+			}
+			const targetKeys = new Set(selectDuplicatesByKeepRule(this.duplicate.files, rule))
+			this.selectedFiles = this.duplicate.files.filter(file => {
+				if (!file || file.isInOriginFolder) {
+					return false
+				}
+				const key = getFileSelectionKey(file)
+				return key !== null && targetKeys.has(key)
+			})
+			this.activeKeepRule = rule
+			return true
+		},
+		selectAllFiles() {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files) || this.duplicate.files.length <= 1) {
+				return false
+			}
+			if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+				return false
+			}
+			if (this.defaultSelectAllTargetFiles.length === 0) {
+				this.selectedFiles = []
+				this.activeKeepRule = null
+				return false
+			}
+			this.activeKeepRule = null
+			if (this.isAllFilesSelected) {
+				this.selectedFiles = []
+			} else {
+				this.selectedFiles = [...this.defaultSelectAllTargetFiles]
+			}
+			return true
+		},
+		clearSelection(options = {}) {
+			if (this.showDeleteConfirmDialog || this.pendingDeleteResolver) {
+				return false
+			}
+			const shouldRestoreFocus = Boolean(
+				options && options.restoreFocus
         && typeof document !== 'undefined'
         && this.$refs.clearSelectionButton
         && document.activeElement === this.$refs.clearSelectionButton
-      );
-      this.selectedFiles = [];
-      this.activeKeepRule = null;
-      if (shouldRestoreFocus) {
-        this.$nextTick(() => {
-          const selectAllBtn = this.$el && typeof this.$el.querySelector === 'function'
-            ? this.$el.querySelector('.select-all-button')
-            : null;
-          if (selectAllBtn && typeof selectAllBtn.focus === 'function') {
-            selectAllBtn.focus();
-          }
-        });
-      }
-      return true;
-    },
-    onDetailsEscape(event) {
-      if (
-        !this.duplicate
+			)
+			this.selectedFiles = []
+			this.activeKeepRule = null
+			if (shouldRestoreFocus) {
+				this.$nextTick(() => {
+					const selectAllBtn = this.$el && typeof this.$el.querySelector === 'function'
+						? this.$el.querySelector('.select-all-button')
+						: null
+					if (selectAllBtn && typeof selectAllBtn.focus === 'function') {
+						selectAllBtn.focus()
+					}
+				})
+			}
+			return true
+		},
+		onDetailsEscape(event) {
+			if (
+				!this.duplicate
         || !Array.isArray(this.duplicate.files)
         || this.duplicate.files.length <= 1
         || this.showDeleteConfirmDialog
         || this.pendingDeleteResolver
         || this.showDropdown
-      ) {
-        return;
-      }
-      if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
-        const hasOpenDialogOrMenu = document.querySelector(
-          'dialog[open], [role="dialog"]:not([aria-hidden="true"]), [role="alertdialog"]:not([aria-hidden="true"]), [aria-modal="true"]:not([aria-hidden="true"]), [role="menu"]:not([aria-hidden="true"]), [role="listbox"]:not([aria-hidden="true"])'
-        );
-        if (hasOpenDialogOrMenu) {
-          return;
-        }
-      }
-      if (event && event.defaultPrevented) {
-        return;
-      }
-      if (this.selectedFiles.length > 0) {
-        if (event && typeof event.preventDefault === 'function') {
-          event.preventDefault();
-        }
-        this.clearSelection();
-      }
-    },
-    toggleSelectAllFromHeader() {
-      if (this.defaultSelectAllTargetFiles.length === 0) {
-        return;
-      }
-      this.selectAllFiles();
-    },
-    hasFilesInOtherFolders(targetFile) {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files) || !targetFile) {
-        return false;
-      }
-      const keptFolder = getParentFolderPath(targetFile.path);
-      return this.duplicate.files.some(
-        file => !file.isInOriginFolder && getParentFolderPath(file.path) !== keptFolder
-      );
-    },
-    selectDuplicatesOutsideFolder(targetFile) {
-      if (!this.duplicate || !Array.isArray(this.duplicate.files) || !targetFile) {
-        return;
-      }
-      this.activeKeepRule = null;
-      const keptFolder = getParentFolderPath(targetFile.path);
-      this.selectedFiles = this.duplicate.files.filter(
-        file => !file.isInOriginFolder && getParentFolderPath(file.path) !== keptFolder
-      );
-    },
-    removeDuplicateFromList(duplicate) {
-      this.$emit('removeDuplicate', duplicate);
-    },
-    toggleDropdown() {
-      this.showDropdown = !this.showDropdown;
-    },
-    resetHashCopyFeedback() {
-      if (this.hashCopyResetTimer) {
-        clearTimeout(this.hashCopyResetTimer);
-        this.hashCopyResetTimer = null;
-      }
-      this.hashCopyStatus = 'idle';
-      this.hashCopyStatusMessage = '';
-    },
-    async copyGroupHash() {
-      const targetHash = this.fullGroupHash;
-      if (!targetHash) {
-        return false;
-      }
-      this.resetHashCopyFeedback();
-      const copied = await copyTextSafely(targetHash);
-      if (copied) {
-        this.hashCopyStatus = 'copied';
-        this.hashCopyStatusMessage = this.t('duplicatefinder', 'Copied');
-      } else {
-        this.hashCopyStatus = 'error';
-        this.hashCopyStatusMessage = this.t('duplicatefinder', 'Copy failed');
-      }
-      this.hashCopyResetTimer = setTimeout(() => {
-        this.hashCopyStatus = 'idle';
-        this.hashCopyStatusMessage = '';
-        this.hashCopyResetTimer = null;
-      }, 2000);
-      return copied;
-    },
-    copyFileHash() {
-      if (this.duplicate && this.duplicate.files.length > 0) {
-        const hash = this.duplicate.hash;
-        navigator.clipboard.writeText(hash).then(() => {
-          showSuccess(t('duplicatefinder', 'File hash copied to clipboard'));
-          this.showDropdown = false;
-        });
-      }
-    },
-    resetIgnoreActionFeedback() {
-      if (this.ignoreActionTimer) {
-        clearTimeout(this.ignoreActionTimer);
-        this.ignoreActionTimer = null;
-      }
-      this.ignoreActionStatus = 'idle';
-      this.ignoreActionMessage = '';
-    },
-    setIgnoreActionFeedback(status, message) {
-      this.resetIgnoreActionFeedback();
-      this.ignoreActionStatus = status;
-      this.ignoreActionMessage = message;
-      this.ignoreActionTimer = setTimeout(() => {
-        this.ignoreActionStatus = 'idle';
-        this.ignoreActionMessage = '';
-        this.ignoreActionTimer = null;
-      }, 4500);
-    },
-    isPatternIgnored(pattern) {
-      return typeof pattern === 'string' && this.ignoredPatternsInSession.includes(pattern.trim());
-    },
-    isFolderExcluded(folderPath) {
-      return typeof folderPath === 'string' && this.excludedFoldersInSession.includes(folderPath.trim());
-    },
-    openIgnoreRulesSettings() {
-      this.showDropdown = false;
-      this.openSettings();
-    },
-    async excludeGroupAsFalsePositive() {
-      const targetHash = this.fullGroupHash;
-      if (!targetHash || this.isIgnoringRule || this.isGroupExcluded) {
-        return false;
-      }
-      this.isIgnoringRule = true;
-      this.showDropdown = false;
-      try {
-        if (typeof saveFilter === 'function') {
-          await saveFilter({ type: 'hash', value: targetHash.toLowerCase() });
-        }
-        const normalizedHash = targetHash.toLowerCase();
-        if (!this.excludedHashesInSession.includes(normalizedHash)) {
-          this.excludedHashesInSession = [...this.excludedHashesInSession, normalizedHash];
-        }
-        const displayHash = this.shortGroupHash || targetHash;
-        if (this.duplicate && !this.duplicate.acknowledged && typeof acknowledgeDuplicate === 'function') {
-          await acknowledgeDuplicate(this.duplicate.hash);
-          this.$emit('duplicateUpdated', {
-            ...this.duplicate,
-            acknowledged: true,
-            ignoredByRule: true
-          });
-        }
-        this.setIgnoreActionFeedback(
-          'success',
-          this.t('duplicatefinder', 'Marked as false positive. Hash {hash} excluded from future scans.', { hash: displayHash })
-        );
-        return true;
-      } catch (error) {
-        console.error('Error excluding duplicate hash:', error);
-        this.setIgnoreActionFeedback(
-          'error',
-          this.t('duplicatefinder', 'Could not exclude group hash.')
-        );
-        return false;
-      } finally {
-        this.isIgnoringRule = false;
-      }
-    },
-    async ignorePatternRule(pattern) {
-      const trimmed = typeof pattern === 'string' ? pattern.trim() : '';
-      if (!trimmed || this.isIgnoringRule || this.isPatternIgnored(trimmed)) {
-        return false;
-      }
-      this.isIgnoringRule = true;
-      this.showDropdown = false;
-      try {
-        if (typeof saveFilter === 'function') {
-          await saveFilter({ type: 'name', value: trimmed });
-        }
-        this.ignoredPatternsInSession = [...this.ignoredPatternsInSession, trimmed];
-        this.setIgnoreActionFeedback(
-          'success',
-          this.t('duplicatefinder', 'Rule "{pattern}" added to Ignore Rules.', { pattern: trimmed })
-        );
-        return true;
-      } catch (error) {
-        console.error('Error saving filename ignore rule:', error);
-        this.setIgnoreActionFeedback(
-          'error',
-          this.t('duplicatefinder', 'Could not save filename ignore rule.')
-        );
-        return false;
-      } finally {
-        this.isIgnoringRule = false;
-      }
-    },
-    async excludeFolderRule(folderPath) {
-      const trimmed = typeof folderPath === 'string' ? folderPath.trim() : '';
-      if (!trimmed || trimmed === '/' || this.isIgnoringRule || this.isFolderExcluded(trimmed)) {
-        return false;
-      }
-      this.isIgnoringRule = true;
-      this.showDropdown = false;
-      try {
-        if (typeof saveExcludedFolder === 'function') {
-          await saveExcludedFolder(trimmed);
-        }
-        this.excludedFoldersInSession = [...this.excludedFoldersInSession, trimmed];
-        this.setIgnoreActionFeedback(
-          'success',
-          this.t('duplicatefinder', 'Folder "{folder}" added to Excluded Folders.', { folder: trimmed })
-        );
-        return true;
-      } catch (error) {
-        console.error('Error excluding folder:', error);
-        this.setIgnoreActionFeedback(
-          'error',
-          this.t('duplicatefinder', 'Could not exclude folder.')
-        );
-        return false;
-      } finally {
-        this.isIgnoringRule = false;
-      }
-    },
-    openSettings() {
-      this.$emit('openSettings');
-    },
-    async findDuplicates() {
-      if (this.$listeners && this.$listeners.startScan) {
-        this.$emit('startScan');
-        return;
-      }
-      try {
-        showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while)'));
-        await apiFindDuplicates();
-        showSuccess(t('duplicatefinder', 'All duplicates found'));
-        this.$emit('duplicatesSearchCompleted');
-      } catch (error) {
-        console.error('Error finding duplicates:', error);
-        showError(t('duplicatefinder', 'Could not initiate duplicate search'));
-      }
-    }
-  }
+			) {
+				return
+			}
+			if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
+				const hasOpenDialogOrMenu = document.querySelector(
+					'dialog[open], [role="dialog"]:not([aria-hidden="true"]), [role="alertdialog"]:not([aria-hidden="true"]), [aria-modal="true"]:not([aria-hidden="true"]), [role="menu"]:not([aria-hidden="true"]), [role="listbox"]:not([aria-hidden="true"])'
+				)
+				if (hasOpenDialogOrMenu) {
+					return
+				}
+			}
+			if (event && event.defaultPrevented) {
+				return
+			}
+			if (this.selectedFiles.length > 0) {
+				if (event && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				this.clearSelection()
+			}
+		},
+		toggleSelectAllFromHeader() {
+			if (this.defaultSelectAllTargetFiles.length === 0) {
+				return
+			}
+			this.selectAllFiles()
+		},
+		hasFilesInOtherFolders(targetFile) {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files) || !targetFile) {
+				return false
+			}
+			const keptFolder = getParentFolderPath(targetFile.path)
+			return this.duplicate.files.some(
+				file => !file.isInOriginFolder && getParentFolderPath(file.path) !== keptFolder
+			)
+		},
+		selectDuplicatesOutsideFolder(targetFile) {
+			if (!this.duplicate || !Array.isArray(this.duplicate.files) || !targetFile) {
+				return
+			}
+			this.activeKeepRule = null
+			const keptFolder = getParentFolderPath(targetFile.path)
+			this.selectedFiles = this.duplicate.files.filter(
+				file => !file.isInOriginFolder && getParentFolderPath(file.path) !== keptFolder
+			)
+		},
+		removeDuplicateFromList(duplicate) {
+			// eslint-disable-next-line vue/custom-event-name-casing
+			this.$emit('removeDuplicate', duplicate)
+		},
+		toggleDropdown() {
+			this.showDropdown = !this.showDropdown
+		},
+		resetHashCopyFeedback() {
+			if (this.hashCopyResetTimer) {
+				clearTimeout(this.hashCopyResetTimer)
+				this.hashCopyResetTimer = null
+			}
+			this.hashCopyStatus = 'idle'
+			this.hashCopyStatusMessage = ''
+		},
+		async copyGroupHash() {
+			const targetHash = this.fullGroupHash
+			if (!targetHash) {
+				return false
+			}
+			this.resetHashCopyFeedback()
+			const copied = await copyTextSafely(targetHash)
+			if (copied) {
+				this.hashCopyStatus = 'copied'
+				this.hashCopyStatusMessage = this.t('duplicatefinder', 'Copied')
+			} else {
+				this.hashCopyStatus = 'error'
+				this.hashCopyStatusMessage = this.t('duplicatefinder', 'Copy failed')
+			}
+			this.hashCopyResetTimer = setTimeout(() => {
+				this.hashCopyStatus = 'idle'
+				this.hashCopyStatusMessage = ''
+				this.hashCopyResetTimer = null
+			}, 2000)
+			return copied
+		},
+		copyFileHash() {
+			if (this.duplicate && this.duplicate.files.length > 0) {
+				const hash = this.duplicate.hash
+				navigator.clipboard.writeText(hash).then(() => {
+					showSuccess(t('duplicatefinder', 'File hash copied to clipboard'))
+					this.showDropdown = false
+				})
+			}
+		},
+		resetIgnoreActionFeedback() {
+			if (this.ignoreActionTimer) {
+				clearTimeout(this.ignoreActionTimer)
+				this.ignoreActionTimer = null
+			}
+			this.ignoreActionStatus = 'idle'
+			this.ignoreActionMessage = ''
+		},
+		setIgnoreActionFeedback(status, message) {
+			this.resetIgnoreActionFeedback()
+			this.ignoreActionStatus = status
+			this.ignoreActionMessage = message
+			this.ignoreActionTimer = setTimeout(() => {
+				this.ignoreActionStatus = 'idle'
+				this.ignoreActionMessage = ''
+				this.ignoreActionTimer = null
+			}, 4500)
+		},
+		isPatternIgnored(pattern) {
+			return typeof pattern === 'string' && this.ignoredPatternsInSession.includes(pattern.trim())
+		},
+		isFolderExcluded(folderPath) {
+			return typeof folderPath === 'string' && this.excludedFoldersInSession.includes(folderPath.trim())
+		},
+		openIgnoreRulesSettings() {
+			this.showDropdown = false
+			this.openSettings()
+		},
+		async excludeGroupAsFalsePositive() {
+			const targetHash = this.fullGroupHash
+			if (!targetHash || this.isIgnoringRule || this.isGroupExcluded) {
+				return false
+			}
+			this.isIgnoringRule = true
+			this.showDropdown = false
+			try {
+				if (typeof saveFilter === 'function') {
+					await saveFilter({ type: 'hash', value: targetHash.toLowerCase() })
+				}
+				const normalizedHash = targetHash.toLowerCase()
+				if (!this.excludedHashesInSession.includes(normalizedHash)) {
+					this.excludedHashesInSession = [...this.excludedHashesInSession, normalizedHash]
+				}
+				const displayHash = this.shortGroupHash || targetHash
+				if (this.duplicate && !this.duplicate.acknowledged && typeof acknowledgeDuplicate === 'function') {
+					await acknowledgeDuplicate(this.duplicate.hash)
+					// eslint-disable-next-line vue/custom-event-name-casing
+					this.$emit('duplicateUpdated', {
+						...this.duplicate,
+						acknowledged: true,
+						ignoredByRule: true,
+					})
+				}
+				this.setIgnoreActionFeedback(
+					'success',
+					this.t('duplicatefinder', 'Marked as false positive. Hash {hash} excluded from future scans.', { hash: displayHash })
+				)
+				return true
+			} catch (error) {
+				console.error('Error excluding duplicate hash:', error)
+				this.setIgnoreActionFeedback(
+					'error',
+					this.t('duplicatefinder', 'Could not exclude group hash.')
+				)
+				return false
+			} finally {
+				this.isIgnoringRule = false
+			}
+		},
+		async ignorePatternRule(pattern) {
+			const trimmed = typeof pattern === 'string' ? pattern.trim() : ''
+			if (!trimmed || this.isIgnoringRule || this.isPatternIgnored(trimmed)) {
+				return false
+			}
+			this.isIgnoringRule = true
+			this.showDropdown = false
+			try {
+				if (typeof saveFilter === 'function') {
+					await saveFilter({ type: 'name', value: trimmed })
+				}
+				this.ignoredPatternsInSession = [...this.ignoredPatternsInSession, trimmed]
+				this.setIgnoreActionFeedback(
+					'success',
+					this.t('duplicatefinder', 'Rule "{pattern}" added to Ignore Rules.', { pattern: trimmed })
+				)
+				return true
+			} catch (error) {
+				console.error('Error saving filename ignore rule:', error)
+				this.setIgnoreActionFeedback(
+					'error',
+					this.t('duplicatefinder', 'Could not save filename ignore rule.')
+				)
+				return false
+			} finally {
+				this.isIgnoringRule = false
+			}
+		},
+		async excludeFolderRule(folderPath) {
+			const trimmed = typeof folderPath === 'string' ? folderPath.trim() : ''
+			if (!trimmed || trimmed === '/' || this.isIgnoringRule || this.isFolderExcluded(trimmed)) {
+				return false
+			}
+			this.isIgnoringRule = true
+			this.showDropdown = false
+			try {
+				if (typeof saveExcludedFolder === 'function') {
+					await saveExcludedFolder(trimmed)
+				}
+				this.excludedFoldersInSession = [...this.excludedFoldersInSession, trimmed]
+				this.setIgnoreActionFeedback(
+					'success',
+					this.t('duplicatefinder', 'Folder "{folder}" added to Excluded Folders.', { folder: trimmed })
+				)
+				return true
+			} catch (error) {
+				console.error('Error excluding folder:', error)
+				this.setIgnoreActionFeedback(
+					'error',
+					this.t('duplicatefinder', 'Could not exclude folder.')
+				)
+				return false
+			} finally {
+				this.isIgnoringRule = false
+			}
+		},
+		openSettings() {
+			// eslint-disable-next-line vue/custom-event-name-casing
+			this.$emit('openSettings')
+		},
+		async findDuplicates() {
+			if (this.$listeners && this.$listeners.startScan) {
+				// eslint-disable-next-line vue/custom-event-name-casing
+				this.$emit('startScan')
+				return
+			}
+			try {
+				showSuccess(t('duplicatefinder', 'Duplicates search initiated (this may take a while)'))
+				await apiFindDuplicates()
+				showSuccess(t('duplicatefinder', 'All duplicates found'))
+				// eslint-disable-next-line vue/custom-event-name-casing
+				this.$emit('duplicatesSearchCompleted')
+			} catch (error) {
+				console.error('Error finding duplicates:', error)
+				showError(t('duplicatefinder', 'Could not initiate duplicate search'))
+			}
+		},
+	},
 }
 </script>
 

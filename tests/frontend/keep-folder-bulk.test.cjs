@@ -1,4 +1,4 @@
-const { readFileSync, readdirSync, existsSync } = require('node:fs')
+const { readFileSync, readdirSync } = require('node:fs')
 const { resolve, basename } = require('node:path')
 const vm = require('node:vm')
 const { describe, test } = require('node:test')
@@ -336,7 +336,12 @@ describe('Issue 193 (Level 2): Duplicate folders view and one-click Keep this fo
 		vm.$destroy()
 	})
 
-	test('Issue 193 runtime l10n/*.json and l10n/*.js contain all duplicate folder strings across matching locales with zero U+2013/U+2014', () => {
+	test('Issue 193 l10n-fallback/*.json and merged runtime l10n/*.json / l10n/*.js contain all duplicate folder strings with zero U+2013/U+2014', () => {
+		const { copyFileSync, mkdtempSync, rmSync } = require('node:fs')
+		const { tmpdir } = require('node:os')
+		const { join } = require('node:path')
+		const { execFileSync } = require('node:child_process')
+
 		const root = resolve(__dirname, '../..')
 		const issue193Keys = [
 			'Failed to scan duplicate folders.',
@@ -353,43 +358,19 @@ describe('Issue 193 (Level 2): Duplicate folders view and one-click Keep this fo
 			'Delete duplicate copies',
 		]
 
-		const frJson = JSON.parse(readFileSync(resolve(root, 'l10n/fr.json'), 'utf8')).translations
-		let frJsTranslations = null
-		const frJsRaw = readFileSync(resolve(root, 'l10n/fr.js'), 'utf8')
-		vm.runInNewContext(frJsRaw, {
-			OC: {
-				L10N: {
-					register(appId, translations) {
-						assert.equal(appId, 'duplicatefinder')
-						frJsTranslations = translations
-					},
-				},
-			},
-		})
-		assert.ok(frJsTranslations, 'l10n/fr.js must call OC.L10N.register')
-		assert.equal(frJson['Scan duplicate folders'], 'Analyser les dossiers en doublon')
-		assert.equal(frJson['Keep this folder'], 'Conserver ce dossier')
-		assert.equal(frJson['Duplicate folders ({count})'], 'Dossiers en doublon ({count})')
-		assert.equal(frJson['Identical folder group'], 'Groupe de dossiers identiques')
-		assert.equal(frJson.Protected, 'Protégé')
+		const frFallback = JSON.parse(readFileSync(resolve(root, 'l10n-fallback/fr.json'), 'utf8')).translations
+		assert.equal(frFallback['Scan duplicate folders'], 'Analyser les dossiers en doublon')
+		assert.equal(frFallback['Keep this folder'], 'Conserver ce dossier')
+		assert.equal(frFallback['Duplicate folders ({count})'], 'Dossiers en doublon ({count})')
+		assert.equal(frFallback['Identical folder group'], 'Groupe de dossiers identiques')
+		assert.equal(frFallback.Protected, 'Protégé')
 
-		for (const key of issue193Keys) {
-			assert.ok(typeof frJson[key] === 'string' && frJson[key].trim().length > 0, `l10n/fr.json missing "${key}"`)
-			assert.equal(frJsTranslations[key], frJson[key], `l10n/fr.js out of sync with l10n/fr.json for "${key}"`)
-		}
-
-		const fallbackFiles = readdirSync(resolve(root, 'l10n-fallback')).filter(name => name.endsWith('.json'))
-		for (const fileName of fallbackFiles) {
+		const trackedL10nDir = resolve(root, 'l10n')
+		const trackedFiles = readdirSync(trackedL10nDir).filter(name => name.endsWith('.json'))
+		for (const fileName of trackedFiles) {
 			const locale = basename(fileName, '.json')
-			const l10nJsonPath = resolve(root, `l10n/${locale}.json`)
-			const l10nJsPath = resolve(root, `l10n/${locale}.js`)
-			if (!existsSync(l10nJsonPath) || !existsSync(l10nJsPath)) {
-				continue
-			}
-
-			const rawJson = readFileSync(l10nJsonPath, 'utf8')
-			const rawJs = readFileSync(l10nJsPath, 'utf8')
-
+			const rawJson = readFileSync(resolve(trackedL10nDir, `${locale}.json`), 'utf8')
+			const rawJs = readFileSync(resolve(trackedL10nDir, `${locale}.js`), 'utf8')
 			const parsedJson = JSON.parse(rawJson).translations
 			let parsedJs = null
 			vm.runInNewContext(rawJs, {
@@ -402,24 +383,76 @@ describe('Issue 193 (Level 2): Duplicate folders view and one-click Keep this fo
 					},
 				},
 			})
-			assert.ok(parsedJs, `l10n/${locale}.js must register translations`)
+			assert.deepEqual({ ...parsedJs }, { ...parsedJson }, `l10n/${locale}.js must match l10n/${locale}.json`)
+		}
 
-			for (const key of issue193Keys) {
-				assert.ok(
-					typeof parsedJson[key] === 'string' && parsedJson[key].trim().length > 0,
-					`l10n/${locale}.json missing Issue 193 key "${key}"`
-				)
-				assert.equal(
-					/[\u2013\u2014]/.test(parsedJson[key]),
-					false,
-					`l10n/${locale}.json Issue 193 key "${key}" must not contain U+2013/U+2014`
-				)
-				assert.equal(
-					parsedJs[key],
-					parsedJson[key],
-					`l10n/${locale}.js missing/mismatched Issue 193 key "${key}"`
-				)
+		let pythonBin = null
+		for (const candidate of ['python3', 'python']) {
+			try {
+				execFileSync(candidate, ['--version'], { stdio: 'ignore' })
+				pythonBin = candidate
+				break
+			} catch (_) {
+				// try next python binary
 			}
+		}
+		assert.ok(pythonBin, 'Python interpreter is required to merge l10n-fallback into runtime l10n')
+
+		const tempL10nDir = mkdtempSync(join(tmpdir(), 'dupfinder-issue193-l10n-'))
+		try {
+			for (const fileName of readdirSync(trackedL10nDir)) {
+				if (fileName.endsWith('.json') || fileName.endsWith('.js')) {
+					copyFileSync(resolve(trackedL10nDir, fileName), join(tempL10nDir, fileName))
+				}
+			}
+			execFileSync(pythonBin, [
+				resolve(root, 'scripts/merge_l10n_fallback.py'),
+				'--target-dir',
+				tempL10nDir,
+				'--fallback-dir',
+				resolve(root, 'l10n-fallback'),
+			])
+
+			const fallbackFiles = readdirSync(resolve(root, 'l10n-fallback')).filter(name => name.endsWith('.json'))
+			assert.ok(fallbackFiles.length > 0, 'l10n-fallback must contain locale files')
+			for (const fileName of fallbackFiles) {
+				const locale = basename(fileName, '.json')
+				const rawJson = readFileSync(join(tempL10nDir, `${locale}.json`), 'utf8')
+				const rawJs = readFileSync(join(tempL10nDir, `${locale}.js`), 'utf8')
+
+				const parsedJson = JSON.parse(rawJson).translations
+				let parsedJs = null
+				vm.runInNewContext(rawJs, {
+					OC: {
+						L10N: {
+							register(appId, translations) {
+								assert.equal(appId, 'duplicatefinder')
+								parsedJs = translations
+							},
+						},
+					},
+				})
+				assert.ok(parsedJs, `merged l10n/${locale}.js must register translations`)
+
+				for (const key of issue193Keys) {
+					assert.ok(
+						typeof parsedJson[key] === 'string' && parsedJson[key].trim().length > 0,
+						`merged l10n/${locale}.json missing Issue 193 key "${key}"`
+					)
+					assert.equal(
+						/[\u2013\u2014]/.test(parsedJson[key]),
+						false,
+						`merged l10n/${locale}.json Issue 193 key "${key}" must not contain U+2013/U+2014`
+					)
+					assert.equal(
+						parsedJs[key],
+						parsedJson[key],
+						`merged l10n/${locale}.js missing/mismatched Issue 193 key "${key}"`
+					)
+				}
+			}
+		} finally {
+			rmSync(tempL10nDir, { recursive: true, force: true })
 		}
 	})
 

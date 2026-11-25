@@ -1,63 +1,65 @@
 <template>
-  <div class="step-container">
-    <h2 class="step-title">{{ t('duplicatefinder', 'Excluded Folders') }}</h2>
-    <div class="info-section">
-      <div class="info-block">
-        <h3>{{ t('duplicatefinder', 'Why Exclude Folders?') }}</h3>
-        <ul>
-          <li>{{ t('duplicatefinder', 'Files in these folders (and subfolders) will be ignored during duplicate detection') }}</li>
-          <li>{{ t('duplicatefinder', 'Improves scanning performance by skipping unnecessary locations') }}</li>
-          <li>{{ t('duplicatefinder', 'Useful for folders that intentionally contain duplicates') }}</li>
-        </ul>
-      </div>
+	<div class="step-container">
+		<h2 class="step-title">
+			{{ t('duplicatefinder', 'Excluded Folders') }}
+		</h2>
+		<div class="info-section">
+			<div class="info-block">
+				<h3>{{ t('duplicatefinder', 'Why Exclude Folders?') }}</h3>
+				<ul>
+					<li>{{ t('duplicatefinder', 'Files in these folders (and subfolders) will be ignored during duplicate detection') }}</li>
+					<li>{{ t('duplicatefinder', 'Improves scanning performance by skipping unnecessary locations') }}</li>
+					<li>{{ t('duplicatefinder', 'Useful for folders that intentionally contain duplicates') }}</li>
+				</ul>
+			</div>
 
-      <div class="info-block">
-        <h3>{{ t('duplicatefinder', 'Common Use Cases') }}</h3>
-        <div class="use-cases">
-          <div class="use-case">
-            <span class="use-case-title">{{ t('duplicatefinder', 'Backup Folders') }}</span>
-            <span class="use-case-desc">{{ t('duplicatefinder', 'Skip scanning backup directories that naturally contain duplicates') }}</span>
-          </div>
-          <div class="use-case">
-            <span class="use-case-title">{{ t('duplicatefinder', 'Cache Directories') }}</span>
-            <span class="use-case-desc">{{ t('duplicatefinder', 'Exclude temporary and cache folders') }}</span>
-          </div>
-          <div class="use-case">
-            <span class="use-case-title">{{ t('duplicatefinder', 'Version Control') }}</span>
-            <span class="use-case-desc">{{ t('duplicatefinder', 'Skip .git and other version control directories') }}</span>
-          </div>
-        </div>
-      </div>
+			<div class="info-block">
+				<h3>{{ t('duplicatefinder', 'Common Use Cases') }}</h3>
+				<div class="use-cases">
+					<div class="use-case">
+						<span class="use-case-title">{{ t('duplicatefinder', 'Backup Folders') }}</span>
+						<span class="use-case-desc">{{ t('duplicatefinder', 'Skip scanning backup directories that naturally contain duplicates') }}</span>
+					</div>
+					<div class="use-case">
+						<span class="use-case-title">{{ t('duplicatefinder', 'Cache Directories') }}</span>
+						<span class="use-case-desc">{{ t('duplicatefinder', 'Exclude temporary and cache folders') }}</span>
+					</div>
+					<div class="use-case">
+						<span class="use-case-title">{{ t('duplicatefinder', 'Version Control') }}</span>
+						<span class="use-case-desc">{{ t('duplicatefinder', 'Skip .git and other version control directories') }}</span>
+					</div>
+				</div>
+			</div>
 
-      <div class="info-block">
-        <h3>{{ t('duplicatefinder', 'How to Configure') }}</h3>
-        <div class="settings-list">
-          <div class="setting-item">
-            <span class="setting-name">{{ t('duplicatefinder', '1. Open Settings') }}</span>
-            <span class="setting-desc">{{ t('duplicatefinder', 'Go to Settings > Excluded Folders') }}</span>
-          </div>
-          <div class="setting-item">
-            <span class="setting-name">{{ t('duplicatefinder', '2. Select Folders') }}</span>
-            <span class="setting-desc">{{ t('duplicatefinder', 'Use the file picker to choose folders to exclude') }}</span>
-          </div>
-          <div class="setting-item">
-            <span class="setting-name">{{ t('duplicatefinder', '3. Review List') }}</span>
-            <span class="setting-desc">{{ t('duplicatefinder', 'Manage your excluded folders list as needed') }}</span>
-          </div>
-        </div>
-      </div>
+			<div class="info-block">
+				<h3>{{ t('duplicatefinder', 'How to Configure') }}</h3>
+				<div class="settings-list">
+					<div class="setting-item">
+						<span class="setting-name">{{ t('duplicatefinder', '1. Open Settings') }}</span>
+						<span class="setting-desc">{{ t('duplicatefinder', 'Go to Settings > Excluded Folders') }}</span>
+					</div>
+					<div class="setting-item">
+						<span class="setting-name">{{ t('duplicatefinder', '2. Select Folders') }}</span>
+						<span class="setting-desc">{{ t('duplicatefinder', 'Use the file picker to choose folders to exclude') }}</span>
+					</div>
+					<div class="setting-item">
+						<span class="setting-name">{{ t('duplicatefinder', '3. Review List') }}</span>
+						<span class="setting-desc">{{ t('duplicatefinder', 'Manage your excluded folders list as needed') }}</span>
+					</div>
+				</div>
+			</div>
 
-      <div class="note">
-        <strong>{{ t('duplicatefinder', 'Note:') }}</strong>
-        {{ t('duplicatefinder', 'Excluding too many folders might cause you to miss actual duplicates. Use this feature judiciously.') }}
-      </div>
-    </div>
-  </div>
+			<div class="note">
+				<strong>{{ t('duplicatefinder', 'Note:') }}</strong>
+				{{ t('duplicatefinder', 'Excluding too many folders might cause you to miss actual duplicates. Use this feature judiciously.') }}
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
 export default {
-  name: 'ExcludedFoldersStep'
+	name: 'ExcludedFoldersStep',
 }
 </script>
 
@@ -198,4 +200,4 @@ export default {
   color: var(--color-warning);
   margin-inline-end: 8px;
 }
-</style> 
+</style>
