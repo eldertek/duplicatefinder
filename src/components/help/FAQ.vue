@@ -1,73 +1,70 @@
 <template>
-	<div class="faq-container">
-		<!-- Search Bar -->
-		<div class="search-section">
-			<NcTextField
-				:value="searchQuery"
-				:label="t('duplicatefinder', 'Search FAQ')"
-				:placeholder="t('duplicatefinder', 'Type to search...')"
-				type="search"
-				@update:value="updateSearch">
-				<template #right>
-					<Magnify :size="20" />
-				</template>
-			</NcTextField>
-		</div>
+  <div class="faq-container">
+    <!-- Search Bar -->
+    <div class="search-section">
+      <NcTextField
+        :value="searchQuery"
+        @update:value="updateSearch"
+        :label="t('duplicatefinder', 'Search FAQ')"
+        :placeholder="t('duplicatefinder', 'Type to search...')"
+        type="search">
+        <template #right>
+          <Magnify :size="20" />
+        </template>
+      </NcTextField>
+    </div>
 
-		<!-- Empty State -->
-		<div v-if="filteredSections.length === 0" class="empty-state">
-			<h3>{{ t('duplicatefinder', 'No results found') }}</h3>
-			<p>{{ t('duplicatefinder', 'Try adjusting your search terms') }}</p>
-		</div>
+    <!-- Empty State -->
+    <div v-if="filteredSections.length === 0" class="empty-state">
+      <h3>{{ t('duplicatefinder', 'No results found') }}</h3>
+      <p>{{ t('duplicatefinder', 'Try adjusting your search terms') }}</p>
+    </div>
 
-		<!-- FAQ Sections -->
-		<div v-else class="faq-sections">
-			<div v-for="(section, index) in filteredSections"
-				:key="index"
-				class="faq-section">
-				<h2 class="section-title">
-					{{ section.title }}
-				</h2>
+    <!-- FAQ Sections -->
+    <div v-else class="faq-sections">
+      <div v-for="(section, index) in filteredSections"
+           :key="index"
+           class="faq-section">
+        <h2 class="section-title">{{ section.title }}</h2>
 
-				<div class="questions-list">
-					<div v-for="(qa, qaIndex) in section.items"
-						:key="qaIndex"
-						class="qa-item"
-						:class="{ 'expanded': expandedItems.includes(qa.id) }">
-						<button
-							type="button"
-							class="question"
-							:aria-expanded="expandedItems.includes(qa.id) ? 'true' : 'false'"
-							:aria-controls="`faq-answer-${qa.id}`"
-							@click="toggleItem(qa.id)">
-							<span class="question-text">{{ qa.question }}</span>
-							<ChevronDown :size="20"
-								class="expand-icon"
-								:class="{ 'rotated': expandedItems.includes(qa.id) }" />
-						</button>
+        <div class="questions-list">
+          <div v-for="(qa, qaIndex) in section.items"
+               :key="qaIndex"
+               class="qa-item"
+               :class="{ 'expanded': expandedItems.includes(qa.id) }">
 
-						<div v-show="expandedItems.includes(qa.id)"
-							:id="`faq-answer-${qa.id}`"
-							class="answer">
-							<template v-for="(part, partIndex) in parseAnswer(qa.answer)">
-								<br v-if="part.type === 'br'" :key="`br-${partIndex}`">
-								<strong v-else-if="part.type === 'strong'" :key="`strong-${partIndex}`">{{ part.text }}</strong>
-								<a
-									v-else-if="part.type === 'link'"
-									:key="`link-${partIndex}`"
-									:href="part.href"
-									target="_blank"
-									rel="noopener noreferrer">{{ part.text }}</a>
-								<template v-else>
-									{{ part.text }}
-								</template>
-							</template>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+            <button
+              type="button"
+              class="question"
+              :aria-expanded="expandedItems.includes(qa.id) ? 'true' : 'false'"
+              :aria-controls="`faq-answer-${qa.id}`"
+              @click="toggleItem(qa.id)">
+              <span class="question-text">{{ qa.question }}</span>
+              <ChevronDown :size="20"
+                          class="expand-icon"
+                          :class="{ 'rotated': expandedItems.includes(qa.id) }" />
+            </button>
+
+            <div v-show="expandedItems.includes(qa.id)"
+                 :id="`faq-answer-${qa.id}`"
+                 class="answer">
+              <template v-for="(part, partIndex) in parseAnswer(qa.answer)">
+                <br v-if="part.type === 'br'" :key="`br-${partIndex}`">
+                <strong v-else-if="part.type === 'strong'" :key="`strong-${partIndex}`">{{ part.text }}</strong>
+                <a
+                  v-else-if="part.type === 'link'"
+                  :key="`link-${partIndex}`"
+                  :href="part.href"
+                  target="_blank"
+                  rel="noopener noreferrer">{{ part.text }}</a>
+                <template v-else>{{ part.text }}</template>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -77,203 +74,203 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown'
 import { extractFaqPlainText, parseFaqAnswer } from '@/tools/faqParser'
 
 export default {
-	name: 'FAQ',
-	components: {
-		NcTextField,
-		Magnify,
-		ChevronDown,
-	},
-	data() {
-		return {
-			searchQuery: '',
-			expandedItems: [],
-			sections: [
-				{
-					title: t('duplicatefinder', 'General Questions'),
-					items: [
-						{
-							id: 'what-is',
-							question: t('duplicatefinder', 'What is Duplicate Finder?'),
-							answer: t('duplicatefinder', 'Duplicate Finder is a Nextcloud app that helps you find and manage duplicate files in your cloud storage. It automatically scans your files and identifies duplicates based on their content.'),
-						},
-						{
-							id: 'how-works',
-							question: t('duplicatefinder', 'How does it detect duplicates?'),
-							answer: t('duplicatefinder', 'The app uses file content hashing to identify duplicates. This means files with identical content are detected as duplicates, regardless of their names or locations.'),
-						},
-					],
-				},
-				{
-					title: t('duplicatefinder', 'Features & Usage'),
-					items: [
-						{
-							id: 'protect-files',
-							question: t('duplicatefinder', 'How can I protect important files from deletion?'),
-							answer: t('duplicatefinder', 'Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected.'),
-						},
-						{
-							id: 'exclude-folders',
-							question: t('duplicatefinder', 'How can I exclude folders from scanning?'),
-							answer: t('duplicatefinder', 'You can exclude folders in two ways:\n\n'
-                + '1. Add them to Excluded Folders in settings\n'
-                + '2. Place a .nodupefinder file in any folder you want to exclude'),
-						},
-						{
-							id: 'projects',
-							question: t('duplicatefinder', 'What are Projects and how do I use them?'),
-							answer: t('duplicatefinder', 'Projects allow you to scan specific folders for duplicates instead of your entire storage. To use projects:\n\n'
-                + '1. Go to Settings → Projects\n'
-                + '2. Create a new project with a name\n'
-                + '3. Select the folders you want to include in the scan\n'
-                + '4. Start the scan and view results\n\n'
-                + 'Projects are perfect for focusing on cleaning up specific areas of your storage without scanning everything.'),
-						},
-						{
-							id: 'recover-files',
-							question: t('duplicatefinder', 'Can I recover deleted files?'),
-							answer: t('duplicatefinder', 'Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator.'),
-						},
-						{
-							id: 'prevent-scan',
-							question: t('duplicatefinder', 'How can I prevent specific files from being scanned?'),
-							answer: t('duplicatefinder', 'There are several ways to exclude files from scanning:\n\n'
-                + '1. Use File Hash Filters: Add specific file hashes in the settings to ignore exact files.\n'
-                + '2. Use File Name Patterns: Add patterns like "*.tmp" or "backup_*" to ignore files matching these patterns.\n'
-                + '3. Place a .nodupefinder file: Add this file in a folder to exclude the entire folder and its subfolders.\n'
-                + '4. Configure Origin Folders: Mark folders as origin folders to protect their files.\n'
-                + '5. Use Excluded Folders: Explicitly exclude specific folders from scanning.\n\n'
-                + 'You can manage filters in Settings → Filters.'),
-						},
-						{
-							id: 'filter-work',
-							question: t('duplicatefinder', 'How do file filters work?'),
-							answer: t('duplicatefinder', 'File filters work in two ways:\n\n'
-                + '1. Hash Filters: These match exact files by their content hash. Use this when you want to ignore specific files regardless of their name or location.\n'
-                + '2. Name Pattern Filters: These use wildcards to match file names. For example:\n'
-                + '   - *.tmp: Ignores all files ending with .tmp\n'
-                + '   - backup_*: Ignores all files starting with "backup_"\n'
-                + '   - *cache*: Ignores all files containing "cache"\n\n'
-                + 'Filters are user-specific and persist across scans.'),
-						},
-					],
-				},
-				{
-					title: t('duplicatefinder', 'Technical & Performance'),
-					items: [
-						{
-							id: 'performance-impact',
-							question: t('duplicatefinder', 'Does it impact server performance?'),
-							answer: t('duplicatefinder', 'The app is designed to minimize performance impact. It uses background jobs and can be configured to ignore mounted files. You can also adjust scanning intervals in settings.'),
-						},
-						{
-							id: 'storage-req',
-							question: t('duplicatefinder', 'What are the storage requirements?'),
-							answer: t('duplicatefinder', 'The app maintains a small database of file hashes. The storage impact is minimal and scales efficiently with your file count.'),
-						},
-					],
-				},
-				{
-					title: t('duplicatefinder', 'Project & Support'),
-					items: [
-						{
-							id: 'report-issue',
-							question: t('duplicatefinder', 'How do I report issues or suggest features?'),
-							answer: t('duplicatefinder', 'You can report issues and suggest features through our <a href="https://github.com/eldertek/duplicatefinder/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a> page.'),
-						},
-						{
-							id: 'contribute',
-							question: t('duplicatefinder', 'Can I contribute to the project?'),
-							answer: t('duplicatefinder', 'Yes! The project is open source under the AGPL license. Visit our <a href="https://github.com/eldertek/duplicatefinder" target="_blank" rel="noopener noreferrer">GitHub repository</a> to contribute.'),
-						},
-					],
-				},
-				{
-					title: t('duplicatefinder', 'Search & Navigation'),
-					items: [
-						{
-							id: 'search-features',
-							question: t('duplicatefinder', 'How can I efficiently search for specific duplicates?'),
-							answer: t('duplicatefinder', 'The app offers three powerful search modes:<br><br>'
-                + '<strong>1. Simple Search:</strong><br>'
-                + '• Perfect for basic text searches<br>'
-                + '• Just type any part of the filename<br>'
-                + '• Example: typing "vacation" finds all files containing that word<br><br>'
-                + '<strong>2. Wildcard Search:</strong><br>'
-                + '• Use * for multiple characters and ? for a single character<br>'
-                + '• Great for finding patterns in filenames<br>'
-                + '• Examples:<br>'
-                + '  - IMG*.jpg finds all JPG files starting with IMG<br>'
-                + '  - DSC_????.NEF finds NEF files with exactly 4 characters after DSC_<br><br>'
-                + '<strong>3. Regular Expression Search:</strong><br>'
-                + '• For advanced pattern matching<br>'
-                + '• Supports full regex syntax<br>'
-                + '• Examples:<br>'
-                + '  - ^IMG_\\d{4}\\.jpg$ matches IMG_ followed by exactly 4 digits and .jpg<br>'
-                + '  - \\.(jpg|jpeg|png)$ finds files ending in .jpg, .jpeg, or .png'),
-						},
-						{
-							id: 'search-tips',
-							question: t('duplicatefinder', 'What are some tips for effective searching?'),
-							answer: t('duplicatefinder', '• Start with simple search for basic queries<br>'
-                + '• Use wildcards when you know part of the filename pattern<br>'
-                + '• Switch to regex for complex pattern matching needs<br>'
-                + '• Combine with filters to narrow down results<br>'
-                + '• Check the help modal for pattern examples<br>'
-                + '• Remember that search is case-insensitive'),
-						},
-					],
-				},
-			],
-		}
-	},
-	computed: {
-		filteredSections() {
-			const query = this.searchQuery.trim().toLowerCase()
+  name: 'FAQ',
+  components: {
+    NcTextField,
+    Magnify,
+    ChevronDown
+  },
+  data() {
+    return {
+      searchQuery: '',
+      expandedItems: [],
+      sections: [
+        {
+          title: t('duplicatefinder', 'General Questions'),
+          items: [
+            {
+              id: 'what-is',
+              question: t('duplicatefinder', 'What is Duplicate Finder?'),
+              answer: t('duplicatefinder', 'Duplicate Finder is a Nextcloud app that helps you find and manage duplicate files in your cloud storage. It automatically scans your files and identifies duplicates based on their content.')
+            },
+            {
+              id: 'how-works',
+              question: t('duplicatefinder', 'How does it detect duplicates?'),
+              answer: t('duplicatefinder', 'The app uses file content hashing to identify duplicates. This means files with identical content are detected as duplicates, regardless of their names or locations.')
+            }
+          ]
+        },
+        {
+          title: t('duplicatefinder', 'Features & Usage'),
+          items: [
+            {
+              id: 'protect-files',
+              question: t('duplicatefinder', 'How can I protect important files from deletion?'),
+              answer: t('duplicatefinder', 'Use the Origin Folders feature in settings. Files in these folders will never be marked as duplicates for deletion, ensuring your original files are always protected.')
+            },
+            {
+              id: 'exclude-folders',
+              question: t('duplicatefinder', 'How can I exclude folders from scanning?'),
+              answer: t('duplicatefinder', 'You can exclude folders in two ways:\n\n' +
+                '1. Add them to Excluded Folders in settings\n' +
+                '2. Place a .nodupefinder file in any folder you want to exclude')
+            },
+            {
+              id: 'projects',
+              question: t('duplicatefinder', 'What are Projects and how do I use them?'),
+              answer: t('duplicatefinder', 'Projects allow you to scan specific folders for duplicates instead of your entire storage. To use projects:\n\n' +
+                '1. Go to Settings → Projects\n' +
+                '2. Create a new project with a name\n' +
+                '3. Select the folders you want to include in the scan\n' +
+                '4. Start the scan and view results\n\n' +
+                'Projects are perfect for focusing on cleaning up specific areas of your storage without scanning everything.')
+            },
+            {
+              id: 'recover-files',
+              question: t('duplicatefinder', 'Can I recover deleted files?'),
+              answer: t('duplicatefinder', 'Yes, all files deleted through Duplicate Finder can be recovered from your Nextcloud trash bin during the retention period set by your administrator.')
+            },
+            {
+              id: 'prevent-scan',
+              question: t('duplicatefinder', 'How can I prevent specific files from being scanned?'),
+              answer: t('duplicatefinder', 'There are several ways to exclude files from scanning:\n\n' +
+                '1. Use File Hash Filters: Add specific file hashes in the settings to ignore exact files.\n' +
+                '2. Use File Name Patterns: Add patterns like "*.tmp" or "backup_*" to ignore files matching these patterns.\n' +
+                '3. Place a .nodupefinder file: Add this file in a folder to exclude the entire folder and its subfolders.\n' +
+                '4. Configure Origin Folders: Mark folders as origin folders to protect their files.\n' +
+                '5. Use Excluded Folders: Explicitly exclude specific folders from scanning.\n\n' +
+                'You can manage filters in Settings → Filters.')
+            },
+            {
+              id: 'filter-work',
+              question: t('duplicatefinder', 'How do file filters work?'),
+              answer: t('duplicatefinder', 'File filters work in two ways:\n\n' +
+                '1. Hash Filters: These match exact files by their content hash. Use this when you want to ignore specific files regardless of their name or location.\n' +
+                '2. Name Pattern Filters: These use wildcards to match file names. For example:\n' +
+                '   - *.tmp: Ignores all files ending with .tmp\n' +
+                '   - backup_*: Ignores all files starting with "backup_"\n' +
+                '   - *cache*: Ignores all files containing "cache"\n\n' +
+                'Filters are user-specific and persist across scans.')
+            }
+          ]
+        },
+        {
+          title: t('duplicatefinder', 'Technical & Performance'),
+          items: [
+            {
+              id: 'performance-impact',
+              question: t('duplicatefinder', 'Does it impact server performance?'),
+              answer: t('duplicatefinder', 'The app is designed to minimize performance impact. It uses background jobs and can be configured to ignore mounted files. You can also adjust scanning intervals in settings.')
+            },
+            {
+              id: 'storage-req',
+              question: t('duplicatefinder', 'What are the storage requirements?'),
+              answer: t('duplicatefinder', 'The app maintains a small database of file hashes. The storage impact is minimal and scales efficiently with your file count.')
+            }
+          ]
+        },
+        {
+          title: t('duplicatefinder', 'Project & Support'),
+          items: [
+            {
+              id: 'report-issue',
+              question: t('duplicatefinder', 'How do I report issues or suggest features?'),
+              answer: t('duplicatefinder', 'You can report issues and suggest features through our <a href="https://github.com/eldertek/duplicatefinder/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a> page.')
+            },
+            {
+              id: 'contribute',
+              question: t('duplicatefinder', 'Can I contribute to the project?'),
+              answer: t('duplicatefinder', 'Yes! The project is open source under the AGPL license. Visit our <a href="https://github.com/eldertek/duplicatefinder" target="_blank" rel="noopener noreferrer">GitHub repository</a> to contribute.')
+            }
+          ]
+        },
+        {
+          title: t('duplicatefinder', 'Search & Navigation'),
+          items: [
+            {
+              id: 'search-features',
+              question: t('duplicatefinder', 'How can I efficiently search for specific duplicates?'),
+              answer: t('duplicatefinder', 'The app offers three powerful search modes:<br><br>' +
+                '<strong>1. Simple Search:</strong><br>' +
+                '• Perfect for basic text searches<br>' +
+                '• Just type any part of the filename<br>' +
+                '• Example: typing "vacation" finds all files containing that word<br><br>' +
+                '<strong>2. Wildcard Search:</strong><br>' +
+                '• Use * for multiple characters and ? for a single character<br>' +
+                '• Great for finding patterns in filenames<br>' +
+                '• Examples:<br>' +
+                '  - IMG*.jpg finds all JPG files starting with IMG<br>' +
+                '  - DSC_????.NEF finds NEF files with exactly 4 characters after DSC_<br><br>' +
+                '<strong>3. Regular Expression Search:</strong><br>' +
+                '• For advanced pattern matching<br>' +
+                '• Supports full regex syntax<br>' +
+                '• Examples:<br>' +
+                '  - ^IMG_\\d{4}\\.jpg$ matches IMG_ followed by exactly 4 digits and .jpg<br>' +
+                '  - \\.(jpg|jpeg|png)$ finds files ending in .jpg, .jpeg, or .png')
+            },
+            {
+              id: 'search-tips',
+              question: t('duplicatefinder', 'What are some tips for effective searching?'),
+              answer: t('duplicatefinder', '• Start with simple search for basic queries<br>' +
+                '• Use wildcards when you know part of the filename pattern<br>' +
+                '• Switch to regex for complex pattern matching needs<br>' +
+                '• Combine with filters to narrow down results<br>' +
+                '• Check the help modal for pattern examples<br>' +
+                '• Remember that search is case-insensitive')
+            }
+          ]
+        }
+      ]
+    }
+  },
+  computed: {
+    filteredSections() {
+      const query = this.searchQuery.trim().toLowerCase()
 
-			if (!query) {
-				return this.sections
-			}
+      if (!query) {
+        return this.sections
+      }
 
-			const searchInText = (text) => {
-				return text.toLowerCase().includes(query)
-			}
+      const searchInText = (text) => {
+        return text.toLowerCase().includes(query)
+      }
 
-			return this.sections
-				.map(section => {
-					const matchedItems = section.items.filter(item => {
-						return searchInText(item.question)
-                   || searchInText(extractFaqPlainText(item.answer))
-					})
+      return this.sections
+        .map(section => {
+          const matchedItems = section.items.filter(item => {
+            return searchInText(item.question) ||
+                   searchInText(extractFaqPlainText(item.answer))
+          })
 
-					if (matchedItems.length === 0) {
-						return null
-					}
+          if (matchedItems.length === 0) {
+            return null
+          }
 
-					return {
-						...section,
-						items: matchedItems,
-					}
-				})
-				.filter(section => section !== null)
-		},
-	},
-	methods: {
-		parseAnswer(answer) {
-			return parseFaqAnswer(answer)
-		},
-		updateSearch(value) {
-			// Ensure we're working with a string
-			this.searchQuery = typeof value === 'string' ? value : ''
-		},
-		toggleItem(id) {
-			const index = this.expandedItems.indexOf(id)
-			if (index === -1) {
-				this.expandedItems.push(id)
-			} else {
-				this.expandedItems.splice(index, 1)
-			}
-		},
-	},
+          return {
+            ...section,
+            items: matchedItems
+          }
+        })
+        .filter(section => section !== null)
+    }
+  },
+  methods: {
+    parseAnswer(answer) {
+      return parseFaqAnswer(answer)
+    },
+    updateSearch(value) {
+      // Ensure we're working with a string
+      this.searchQuery = typeof value === 'string' ? value : ''
+    },
+    toggleItem(id) {
+      const index = this.expandedItems.indexOf(id)
+      if (index === -1) {
+        this.expandedItems.push(id)
+      } else {
+        this.expandedItems.splice(index, 1)
+      }
+    }
+  }
 }
 </script>
 

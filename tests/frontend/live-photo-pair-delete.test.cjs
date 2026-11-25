@@ -75,7 +75,6 @@ describe('Confirmed deletion of complete duplicate Live Photo pairs', () => {
 		const component = loadComponent('src/components/DuplicateFileDisplay.vue', {
 			'@/tools/api': { deleteFile: async () => false },
 			'@/tools/clipboardHelper': { copyTextSafely: async () => false },
-			'@/tools/duplicatePathDiff': { formatFileModifiedTime: () => '' },
 			'@/tools/utils': { getPreviewImage() {}, normalizeItemPath: path => path, getParentFolderPath() {} },
 			'@nextcloud/router': { generateUrl: path => path },
 		})

@@ -1,92 +1,90 @@
 <template>
-	<div class="step-container">
-		<div class="step-content">
-			<h2 class="step-title">
-				{{ t('duplicatefinder', 'Working with Projects') }}
-			</h2>
+  <div class="step-container">
+    <div class="step-content">
+      <h2 class="step-title">{{ t('duplicatefinder', 'Working with Projects') }}</h2>
+      
+      <div class="info-block">
+        <h3>{{ t('duplicatefinder', 'What are Projects?') }}</h3>
+        <p>{{ t('duplicatefinder', 'Projects allow you to scan specific folders for duplicates instead of your entire storage. This is useful when you want to focus on cleaning up duplicates in particular areas of your Nextcloud.') }}</p>
+      </div>
 
-			<div class="info-block">
-				<h3>{{ t('duplicatefinder', 'What are Projects?') }}</h3>
-				<p>{{ t('duplicatefinder', 'Projects allow you to scan specific folders for duplicates instead of your entire storage. This is useful when you want to focus on cleaning up duplicates in particular areas of your Nextcloud.') }}</p>
-			</div>
+      <div class="feature-block">
+        <h3>{{ t('duplicatefinder', 'Creating a Project') }}</h3>
+        <ol class="steps-list">
+          <li>{{ t('duplicatefinder', 'Go to Settings → Projects') }}</li>
+          <li>{{ t('duplicatefinder', 'Click "Create New Project"') }}</li>
+          <li>{{ t('duplicatefinder', 'Enter a name for your project') }}</li>
+          <li>{{ t('duplicatefinder', 'Add one or more folders to include in the scan') }}</li>
+          <li>{{ t('duplicatefinder', 'Click "Create Project"') }}</li>
+        </ol>
+        <div class="note">
+          {{ t('duplicatefinder', 'You can select any folders from your Nextcloud storage. The scan will only look for duplicates within these folders.') }}
+        </div>
+      </div>
 
-			<div class="feature-block">
-				<h3>{{ t('duplicatefinder', 'Creating a Project') }}</h3>
-				<ol class="steps-list">
-					<li>{{ t('duplicatefinder', 'Go to Settings → Projects') }}</li>
-					<li>{{ t('duplicatefinder', 'Click "Create New Project"') }}</li>
-					<li>{{ t('duplicatefinder', 'Enter a name for your project') }}</li>
-					<li>{{ t('duplicatefinder', 'Add one or more folders to include in the scan') }}</li>
-					<li>{{ t('duplicatefinder', 'Click "Create Project"') }}</li>
-				</ol>
-				<div class="note">
-					{{ t('duplicatefinder', 'You can select any folders from your Nextcloud storage. The scan will only look for duplicates within these folders.') }}
-				</div>
-			</div>
+      <div class="feature-block">
+        <h3>{{ t('duplicatefinder', 'Running a Project Scan') }}</h3>
+        <ol class="steps-list">
+          <li>{{ t('duplicatefinder', 'From the Projects section in Settings, click "Start Scan" on your project') }}</li>
+          <li>{{ t('duplicatefinder', 'Alternatively, select your project from the navigation sidebar and click "Start Scan"') }}</li>
+          <li>{{ t('duplicatefinder', 'Wait for the scan to complete - this may take some time depending on the number of files') }}</li>
+        </ol>
+      </div>
 
-			<div class="feature-block">
-				<h3>{{ t('duplicatefinder', 'Running a Project Scan') }}</h3>
-				<ol class="steps-list">
-					<li>{{ t('duplicatefinder', 'From the Projects section in Settings, click "Start Scan" on your project') }}</li>
-					<li>{{ t('duplicatefinder', 'Alternatively, select your project from the navigation sidebar and click "Start Scan"') }}</li>
-					<li>{{ t('duplicatefinder', 'Wait for the scan to complete - this may take some time depending on the number of files') }}</li>
-				</ol>
-			</div>
+      <div class="feature-block">
+        <h3>{{ t('duplicatefinder', 'Viewing Project Results') }}</h3>
+        <ul class="feature-list">
+          <li>{{ t('duplicatefinder', 'Click "View Results" on your project or select it from the navigation sidebar') }}</li>
+          <li>{{ t('duplicatefinder', 'Browse through the duplicates found within your selected folders') }}</li>
+          <li>{{ t('duplicatefinder', 'Use the same tools as with regular duplicates to manage and delete files') }}</li>
+          <li>{{ t('duplicatefinder', 'Filter results by acknowledged/unacknowledged status') }}</li>
+        </ul>
+      </div>
 
-			<div class="feature-block">
-				<h3>{{ t('duplicatefinder', 'Viewing Project Results') }}</h3>
-				<ul class="feature-list">
-					<li>{{ t('duplicatefinder', 'Click "View Results" on your project or select it from the navigation sidebar') }}</li>
-					<li>{{ t('duplicatefinder', 'Browse through the duplicates found within your selected folders') }}</li>
-					<li>{{ t('duplicatefinder', 'Use the same tools as with regular duplicates to manage and delete files') }}</li>
-					<li>{{ t('duplicatefinder', 'Filter results by acknowledged/unacknowledged status') }}</li>
-				</ul>
-			</div>
+      <div class="feature-block">
+        <h3>{{ t('duplicatefinder', 'Managing Projects') }}</h3>
+        <ul class="feature-list">
+          <li>{{ t('duplicatefinder', 'Edit a project to change its name or included folders') }}</li>
+          <li>{{ t('duplicatefinder', 'Delete a project when you no longer need it') }}</li>
+          <li>{{ t('duplicatefinder', 'Create multiple projects for different areas of your storage') }}</li>
+        </ul>
+        <div class="note">
+          {{ t('duplicatefinder', 'Deleting a project only removes the project configuration, not any of your files.') }}
+        </div>
+      </div>
 
-			<div class="feature-block">
-				<h3>{{ t('duplicatefinder', 'Managing Projects') }}</h3>
-				<ul class="feature-list">
-					<li>{{ t('duplicatefinder', 'Edit a project to change its name or included folders') }}</li>
-					<li>{{ t('duplicatefinder', 'Delete a project when you no longer need it') }}</li>
-					<li>{{ t('duplicatefinder', 'Create multiple projects for different areas of your storage') }}</li>
-				</ul>
-				<div class="note">
-					{{ t('duplicatefinder', 'Deleting a project only removes the project configuration, not any of your files.') }}
-				</div>
-			</div>
+      <div class="benefits-block">
+        <h3>{{ t('duplicatefinder', 'Benefits of Using Projects') }}</h3>
+        <ul class="benefits-list">
+          <li>
+            <span class="benefit-title">{{ t('duplicatefinder', 'Focused Scanning') }}</span>
+            <span class="benefit-desc">{{ t('duplicatefinder', 'Target specific areas instead of your entire storage') }}</span>
+          </li>
+          <li>
+            <span class="benefit-title">{{ t('duplicatefinder', 'Faster Results') }}</span>
+            <span class="benefit-desc">{{ t('duplicatefinder', 'Scanning fewer files means quicker completion') }}</span>
+          </li>
+          <li>
+            <span class="benefit-title">{{ t('duplicatefinder', 'Better Organization') }}</span>
+            <span class="benefit-desc">{{ t('duplicatefinder', 'Organize your duplicate cleanup by projects') }}</span>
+          </li>
+          <li>
+            <span class="benefit-title">{{ t('duplicatefinder', 'Targeted Cleanup') }}</span>
+            <span class="benefit-desc">{{ t('duplicatefinder', 'Focus on cleaning up specific collections or folders') }}</span>
+          </li>
+        </ul>
+      </div>
 
-			<div class="benefits-block">
-				<h3>{{ t('duplicatefinder', 'Benefits of Using Projects') }}</h3>
-				<ul class="benefits-list">
-					<li>
-						<span class="benefit-title">{{ t('duplicatefinder', 'Focused Scanning') }}</span>
-						<span class="benefit-desc">{{ t('duplicatefinder', 'Target specific areas instead of your entire storage') }}</span>
-					</li>
-					<li>
-						<span class="benefit-title">{{ t('duplicatefinder', 'Faster Results') }}</span>
-						<span class="benefit-desc">{{ t('duplicatefinder', 'Scanning fewer files means quicker completion') }}</span>
-					</li>
-					<li>
-						<span class="benefit-title">{{ t('duplicatefinder', 'Better Organization') }}</span>
-						<span class="benefit-desc">{{ t('duplicatefinder', 'Organize your duplicate cleanup by projects') }}</span>
-					</li>
-					<li>
-						<span class="benefit-title">{{ t('duplicatefinder', 'Targeted Cleanup') }}</span>
-						<span class="benefit-desc">{{ t('duplicatefinder', 'Focus on cleaning up specific collections or folders') }}</span>
-					</li>
-				</ul>
-			</div>
-
-			<div class="navigation-buttons">
-				<NcButton type="primary" @click="$emit('next')">
-					{{ t('duplicatefinder', 'Next: Managing Duplicates') }}
-					<template #icon>
-						<ArrowRight :size="20" />
-					</template>
-				</NcButton>
-			</div>
-		</div>
-	</div>
+      <div class="navigation-buttons">
+        <NcButton type="primary" @click="$emit('next')">
+          {{ t('duplicatefinder', 'Next: Managing Duplicates') }}
+          <template #icon>
+            <ArrowRight :size="20" />
+          </template>
+        </NcButton>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -94,11 +92,11 @@ import { NcButton } from '@nextcloud/vue'
 import ArrowRight from 'vue-material-design-icons/ArrowRight'
 
 export default {
-	name: 'ProjectsStep',
-	components: {
-		NcButton,
-		ArrowRight,
-	},
+  name: 'ProjectsStep',
+  components: {
+    NcButton,
+    ArrowRight
+  }
 }
 </script>
 

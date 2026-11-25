@@ -1,19 +1,15 @@
 <template>
-	<div class="welcome-container">
-		<div class="welcome-content">
-			<h1 class="welcome-title">
-				{{ t('duplicatefinder', 'Welcome to Duplicate Finder!') }}
-			</h1>
-			<p class="welcome-description">
-				{{ t('duplicatefinder', 'This guide will help you get started with finding and managing duplicate files.') }}
-			</p>
-		</div>
-	</div>
+  <div class="welcome-container">
+    <div class="welcome-content">
+      <h1 class="welcome-title">{{ t('duplicatefinder', 'Welcome to Duplicate Finder!') }}</h1>
+      <p class="welcome-description">{{ t('duplicatefinder', 'This guide will help you get started with finding and managing duplicate files.') }}</p>
+    </div>
+  </div>
 </template>
 
 <script>
 export default {
-	name: 'WelcomeStep',
+  name: 'WelcomeStep'
 }
 </script>
 
@@ -51,4 +47,4 @@ export default {
   line-height: 1.6;
   color: var(--color-text-maxcontrast);
 }
-</style>
+</style> 

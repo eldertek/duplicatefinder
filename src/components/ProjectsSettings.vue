@@ -1,153 +1,150 @@
 <template>
-	<div class="projects-settings">
-		<div class="description">
-			<div class="header">
-				<FolderMultiple :size="20" />
-				{{ t('duplicatefinder', 'Create and manage projects to scan specific folders for duplicates. Projects allow you to focus on deduplicating files in particular areas without scanning your entire storage.') }}
-			</div>
-		</div>
+    <div class="projects-settings">
+        <div class="description">
+            <div class="header">
+                <FolderMultiple :size="20" />
+                {{ t('duplicatefinder', 'Create and manage projects to scan specific folders for duplicates. Projects allow you to focus on deduplicating files in particular areas without scanning your entire storage.') }}
+            </div>
+        </div>
 
-		<div v-if="projects.length > 0" class="projects-list">
-			<h3>{{ t('duplicatefinder', 'Your Projects') }}</h3>
-			<div v-for="project in projects" :key="project.id" class="project-item">
-				<div class="project-header">
-					<div class="project-title">
-						<h4>{{ project.name }}</h4>
-						<span v-if="project.lastScan" class="project-date">
-							{{ t('duplicatefinder', 'Last scan: {date}', { date: formatDate(project.lastScan) }) }}
-						</span>
-						<span v-else class="project-date">
-							{{ t('duplicatefinder', 'Never scanned') }}
-						</span>
-					</div>
-					<div class="project-actions">
-						<NcButton type="tertiary" :aria-label="t('duplicatefinder', 'Edit project')" @click="editProject(project)">
-							<template #icon>
-								<Pencil :size="20" />
-							</template>
-							{{ t('duplicatefinder', 'Edit') }}
-						</NcButton>
-						<NcButton type="tertiary" :aria-label="t('duplicatefinder', 'Delete project')" @click="confirmDeleteProject(project)">
-							<template #icon>
-								<Delete :size="20" />
-							</template>
-							{{ t('duplicatefinder', 'Delete') }}
-						</NcButton>
-						<NcButton type="primary" :aria-label="t('duplicatefinder', 'Start project scan')" @click="startProjectScan(project.id)">
-							<template #icon>
-								<Magnify :size="20" />
-							</template>
-							{{ t('duplicatefinder', 'Start Scan') }}
-						</NcButton>
-						<NcButton v-if="project.lastScan"
-							type="primary"
-							:aria-label="t('duplicatefinder', 'View project results')"
-							@click="viewProjectResults(project.id)">
-							<template #icon>
-								<Eye :size="20" />
-							</template>
-							{{ t('duplicatefinder', 'View Results') }}
-						</NcButton>
-					</div>
-				</div>
-				<div class="project-folders">
-					<h5>{{ t('duplicatefinder', 'Included Folders:') }}</h5>
-					<ul>
-						<li v-for="(folder, index) in project.folders" :key="index">
-							{{ folder }}
-						</li>
-					</ul>
-				</div>
-			</div>
-		</div>
+        <div class="projects-list" v-if="projects.length > 0">
+            <h3>{{ t('duplicatefinder', 'Your Projects') }}</h3>
+            <div v-for="project in projects" :key="project.id" class="project-item">
+                <div class="project-header">
+                    <div class="project-title">
+                        <h4>{{ project.name }}</h4>
+                        <span class="project-date" v-if="project.lastScan">
+                            {{ t('duplicatefinder', 'Last scan: {date}', { date: formatDate(project.lastScan) }) }}
+                        </span>
+                        <span class="project-date" v-else>
+                            {{ t('duplicatefinder', 'Never scanned') }}
+                        </span>
+                    </div>
+                    <div class="project-actions">
+                        <NcButton type="tertiary" @click="editProject(project)" :aria-label="t('duplicatefinder', 'Edit project')">
+                            <template #icon>
+                                <Pencil :size="20" />
+                            </template>
+                            {{ t('duplicatefinder', 'Edit') }}
+                        </NcButton>
+                        <NcButton type="tertiary" @click="confirmDeleteProject(project)" :aria-label="t('duplicatefinder', 'Delete project')">
+                            <template #icon>
+                                <Delete :size="20" />
+                            </template>
+                            {{ t('duplicatefinder', 'Delete') }}
+                        </NcButton>
+                        <NcButton type="primary" @click="startProjectScan(project.id)" :aria-label="t('duplicatefinder', 'Start project scan')">
+                            <template #icon>
+                                <Magnify :size="20" />
+                            </template>
+                            {{ t('duplicatefinder', 'Start Scan') }}
+                        </NcButton>
+                        <NcButton type="primary" @click="viewProjectResults(project.id)" v-if="project.lastScan" :aria-label="t('duplicatefinder', 'View project results')">
+                            <template #icon>
+                                <Eye :size="20" />
+                            </template>
+                            {{ t('duplicatefinder', 'View Results') }}
+                        </NcButton>
+                    </div>
+                </div>
+                <div class="project-folders">
+                    <h5>{{ t('duplicatefinder', 'Included Folders:') }}</h5>
+                    <ul>
+                        <li v-for="(folder, index) in project.folders" :key="index">
+                            {{ folder }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-		<div v-else class="empty-state">
-			<div class="icon-folder" />
-			<h3>{{ t('duplicatefinder', 'No projects yet') }}</h3>
-			<p>{{ t('duplicatefinder', 'Create a project to scan specific folders for duplicates') }}</p>
-		</div>
+        <div class="empty-state" v-else>
+            <div class="icon-folder"></div>
+            <h3>{{ t('duplicatefinder', 'No projects yet') }}</h3>
+            <p>{{ t('duplicatefinder', 'Create a project to scan specific folders for duplicates') }}</p>
+        </div>
 
-		<div class="add-project">
-			<NcButton :aria-label="t('duplicatefinder', 'Create new project')" @click="showCreateProjectModal = true">
-				<template #icon>
-					<Plus :size="20" />
-				</template>
-				{{ t('duplicatefinder', 'Create New Project') }}
-			</NcButton>
-		</div>
+        <div class="add-project">
+            <NcButton @click="showCreateProjectModal = true" :aria-label="t('duplicatefinder', 'Create new project')">
+                <template #icon>
+                    <Plus :size="20" />
+                </template>
+                {{ t('duplicatefinder', 'Create New Project') }}
+            </NcButton>
+        </div>
 
-		<!-- Create/Edit Project Modal -->
-		<NcModal v-if="showCreateProjectModal"
-			:title="editingProject ? t('duplicatefinder', 'Edit Project') : t('duplicatefinder', 'Create New Project')"
-			@close="cancelProjectModal">
-			<div class="project-form">
-				<div class="form-group">
-					<NcInputField id="project-name"
-						:value="projectForm.name"
-						:label="t('duplicatefinder', 'Project Name')"
-						:placeholder="t('duplicatefinder', 'Enter a name for your project')"
-						@update:value="projectForm.name = $event" />
-				</div>
+        <!-- Create/Edit Project Modal -->
+        <NcModal v-if="showCreateProjectModal"
+                 :title="editingProject ? t('duplicatefinder', 'Edit Project') : t('duplicatefinder', 'Create New Project')"
+                 @close="cancelProjectModal">
+            <div class="project-form">
+                <div class="form-group">
+                    <NcInputField id="project-name"
+                                 :value="projectForm.name"
+                                 @update:value="projectForm.name = $event"
+                                 :label="t('duplicatefinder', 'Project Name')"
+                                 :placeholder="t('duplicatefinder', 'Enter a name for your project')" />
+                </div>
 
-				<div class="form-group">
-					<label>{{ t('duplicatefinder', 'Selected Folders') }}</label>
-					<div class="selected-folders">
-						<div v-for="(folder, index) in projectForm.folders" :key="index" class="selected-folder">
-							<span>{{ folder }}</span>
-							<NcButton type="tertiary" :aria-label="t('duplicatefinder', 'Remove folder')" @click="removeFolder(index)">
-								<template #icon>
-									<Close :size="16" />
-								</template>
-							</NcButton>
-						</div>
-						<div v-if="projectForm.folders.length === 0" class="no-folders">
-							{{ t('duplicatefinder', 'No folders selected') }}
-						</div>
-					</div>
-				</div>
+                <div class="form-group">
+                    <label>{{ t('duplicatefinder', 'Selected Folders') }}</label>
+                    <div class="selected-folders">
+                        <div v-for="(folder, index) in projectForm.folders" :key="index" class="selected-folder">
+                            <span>{{ folder }}</span>
+                            <NcButton type="tertiary" @click="removeFolder(index)" :aria-label="t('duplicatefinder', 'Remove folder')">
+                                <template #icon>
+                                    <Close :size="16" />
+                                </template>
+                            </NcButton>
+                        </div>
+                        <div v-if="projectForm.folders.length === 0" class="no-folders">
+                            {{ t('duplicatefinder', 'No folders selected') }}
+                        </div>
+                    </div>
+                </div>
 
-				<div class="form-actions">
-					<NcButton :aria-label="t('duplicatefinder', 'Add folder to project')" @click="pickFolder">
-						<template #icon>
-							<FolderPlus :size="20" />
-						</template>
-						{{ t('duplicatefinder', 'Add Folder') }}
-					</NcButton>
+                <div class="form-actions">
+                    <NcButton @click="pickFolder" :aria-label="t('duplicatefinder', 'Add folder to project')">
+                        <template #icon>
+                            <FolderPlus :size="20" />
+                        </template>
+                        {{ t('duplicatefinder', 'Add Folder') }}
+                    </NcButton>
 
-					<div class="modal-buttons">
-						<NcButton type="tertiary" :aria-label="t('duplicatefinder', 'Cancel project creation')" @click="cancelProjectModal">
-							{{ t('duplicatefinder', 'Cancel') }}
-						</NcButton>
-						<NcButton type="primary"
-							:disabled="!projectForm.name || projectForm.folders.length === 0"
-							:aria-label="editingProject ? t('duplicatefinder', 'Update project') : t('duplicatefinder', 'Create project')"
-							@click="saveProject">
-							{{ editingProject ? t('duplicatefinder', 'Update Project') : t('duplicatefinder', 'Create Project') }}
-						</NcButton>
-					</div>
-				</div>
-			</div>
-		</NcModal>
+                    <div class="modal-buttons">
+                        <NcButton type="tertiary" @click="cancelProjectModal" :aria-label="t('duplicatefinder', 'Cancel project creation')">
+                            {{ t('duplicatefinder', 'Cancel') }}
+                        </NcButton>
+                        <NcButton type="primary"
+                                  @click="saveProject"
+                                  :disabled="!projectForm.name || projectForm.folders.length === 0"
+                                  :aria-label="editingProject ? t('duplicatefinder', 'Update project') : t('duplicatefinder', 'Create project')">
+                            {{ editingProject ? t('duplicatefinder', 'Update Project') : t('duplicatefinder', 'Create Project') }}
+                        </NcButton>
+                    </div>
+                </div>
+            </div>
+        </NcModal>
 
-		<!-- Delete Confirmation Modal -->
-		<NcModal v-if="showDeleteModal"
-			:title="t('duplicatefinder', 'Delete Project')"
-			@close="showDeleteModal = false">
-			<div class="delete-confirmation">
-				<p>{{ t('duplicatefinder', 'Are you sure you want to delete the project "{name}"?', { name: projectToDelete?.name }) }}</p>
-				<p>{{ t('duplicatefinder', 'This action cannot be undone.') }}</p>
+        <!-- Delete Confirmation Modal -->
+        <NcModal v-if="showDeleteModal"
+                 :title="t('duplicatefinder', 'Delete Project')"
+                 @close="showDeleteModal = false">
+            <div class="delete-confirmation">
+                <p>{{ t('duplicatefinder', 'Are you sure you want to delete the project "{name}"?', { name: projectToDelete?.name }) }}</p>
+                <p>{{ t('duplicatefinder', 'This action cannot be undone.') }}</p>
 
-				<div class="modal-buttons">
-					<NcButton type="tertiary" :aria-label="t('duplicatefinder', 'Cancel project deletion')" @click="showDeleteModal = false">
-						{{ t('duplicatefinder', 'Cancel') }}
-					</NcButton>
-					<NcButton type="error" :aria-label="t('duplicatefinder', 'Confirm project deletion')" @click="deleteProjectConfirmed">
-						{{ t('duplicatefinder', 'Delete Project') }}
-					</NcButton>
-				</div>
-			</div>
-		</NcModal>
-	</div>
+                <div class="modal-buttons">
+                    <NcButton type="tertiary" @click="showDeleteModal = false" :aria-label="t('duplicatefinder', 'Cancel project deletion')">
+                        {{ t('duplicatefinder', 'Cancel') }}
+                    </NcButton>
+                    <NcButton type="error" @click="deleteProjectConfirmed" :aria-label="t('duplicatefinder', 'Confirm project deletion')">
+                        {{ t('duplicatefinder', 'Delete Project') }}
+                    </NcButton>
+                </div>
+            </div>
+        </NcModal>
+    </div>
 </template>
 
 <script>
@@ -162,166 +159,166 @@ import Close from 'vue-material-design-icons/Close'
 import Magnify from 'vue-material-design-icons/Magnify'
 import Eye from 'vue-material-design-icons/Eye'
 import {
-	fetchProjects,
-	createProject,
-	updateProject,
-	deleteProject,
-	scanProject,
+    fetchProjects,
+    createProject,
+    updateProject,
+    deleteProject,
+    scanProject
 } from '@/tools/api'
 
 export default {
-	name: 'ProjectsSettings',
-	components: {
-		NcButton,
-		NcModal,
-		NcInputField,
-		Delete,
-		Plus,
-		Pencil,
-		FolderMultiple,
-		FolderPlus,
-		Close,
-		Magnify,
-		Eye,
-	},
-	data() {
-		return {
-			projects: [],
-			showCreateProjectModal: false,
-			showDeleteModal: false,
-			editingProject: null,
-			projectToDelete: null,
-			projectForm: {
-				name: '',
-				folders: [],
-			},
-		}
-	},
-	mounted() {
-		this.loadProjects()
-	},
-	methods: {
-		async loadProjects() {
-			try {
-				this.projects = await fetchProjects()
-			} catch (error) {
-				console.error('Error loading projects:', error)
-				showError(t('duplicatefinder', 'Failed to load projects'))
-			}
-		},
+    name: 'ProjectsSettings',
+    components: {
+        NcButton,
+        NcModal,
+        NcInputField,
+        Delete,
+        Plus,
+        Pencil,
+        FolderMultiple,
+        FolderPlus,
+        Close,
+        Magnify,
+        Eye
+    },
+    data() {
+        return {
+            projects: [],
+            showCreateProjectModal: false,
+            showDeleteModal: false,
+            editingProject: null,
+            projectToDelete: null,
+            projectForm: {
+                name: '',
+                folders: []
+            }
+        }
+    },
+    methods: {
+        async loadProjects() {
+            try {
+                this.projects = await fetchProjects()
+            } catch (error) {
+                console.error('Error loading projects:', error)
+                showError(t('duplicatefinder', 'Failed to load projects'))
+            }
+        },
 
-		editProject(project) {
-			this.editingProject = project
-			this.projectForm = {
-				name: project.name,
-				folders: [...project.folders],
-			}
-			this.showCreateProjectModal = true
-		},
+        editProject(project) {
+            this.editingProject = project
+            this.projectForm = {
+                name: project.name,
+                folders: [...project.folders]
+            }
+            this.showCreateProjectModal = true
+        },
 
-		async pickFolder() {
-			const picker = getFilePickerBuilder(t('duplicatefinder', 'Select Folder for Project'))
-				.setMultiSelect(false)
-				.setMimeTypeFilter(['httpd/unix-directory'])
-				.setType(1)
-				.allowDirectories()
-				.build()
+        async pickFolder() {
+            const picker = getFilePickerBuilder(t('duplicatefinder', 'Select Folder for Project'))
+                .setMultiSelect(false)
+                .setMimeTypeFilter(['httpd/unix-directory'])
+                .setType(1)
+                .allowDirectories()
+                .build()
 
-			try {
-				const path = await picker.pick()
-				if (path) {
-					// Check if folder is already selected
-					if (this.projectForm.folders.includes(path)) {
-						showError(t('duplicatefinder', 'This folder is already selected'))
-						return
-					}
+            try {
+                const path = await picker.pick()
+                if (path) {
+                    // Check if folder is already selected
+                    if (this.projectForm.folders.includes(path)) {
+                        showError(t('duplicatefinder', 'This folder is already selected'))
+                        return
+                    }
 
-					this.projectForm.folders.push(path)
-				}
-			} catch (error) {
-				console.error('Error picking folder:', error)
-			}
-		},
+                    this.projectForm.folders.push(path)
+                }
+            } catch (error) {
+                console.error('Error picking folder:', error)
+            }
+        },
 
-		removeFolder(index) {
-			this.projectForm.folders.splice(index, 1)
-		},
+        removeFolder(index) {
+            this.projectForm.folders.splice(index, 1)
+        },
 
-		async saveProject() {
-			try {
-				if (this.editingProject) {
-					// Update existing project
-					await updateProject(
-						this.editingProject.id,
-						this.projectForm.name,
-						this.projectForm.folders
-					)
-				} else {
-					// Create new project
-					await createProject(
-						this.projectForm.name,
-						this.projectForm.folders
-					)
-				}
+        async saveProject() {
+            try {
+                if (this.editingProject) {
+                    // Update existing project
+                    await updateProject(
+                        this.editingProject.id,
+                        this.projectForm.name,
+                        this.projectForm.folders
+                    )
+                } else {
+                    // Create new project
+                    await createProject(
+                        this.projectForm.name,
+                        this.projectForm.folders
+                    )
+                }
 
-				// Refresh projects list
-				await this.loadProjects()
+                // Refresh projects list
+                await this.loadProjects()
 
-				// Close modal
-				this.cancelProjectModal()
-			} catch (error) {
-				console.error('Error saving project:', error)
-			}
-		},
+                // Close modal
+                this.cancelProjectModal()
+            } catch (error) {
+                console.error('Error saving project:', error)
+            }
+        },
 
-		cancelProjectModal() {
-			this.showCreateProjectModal = false
-			this.editingProject = null
-			this.projectForm = {
-				name: '',
-				folders: [],
-			}
-		},
+        cancelProjectModal() {
+            this.showCreateProjectModal = false
+            this.editingProject = null
+            this.projectForm = {
+                name: '',
+                folders: []
+            }
+        },
 
-		confirmDeleteProject(project) {
-			this.projectToDelete = project
-			this.showDeleteModal = true
-		},
+        confirmDeleteProject(project) {
+            this.projectToDelete = project
+            this.showDeleteModal = true
+        },
 
-		async deleteProjectConfirmed() {
-			if (!this.projectToDelete) return
+        async deleteProjectConfirmed() {
+            if (!this.projectToDelete) return
 
-			try {
-				await deleteProject(this.projectToDelete.id)
-				await this.loadProjects()
-				this.showDeleteModal = false
-				this.projectToDelete = null
-			} catch (error) {
-				console.error('Error deleting project:', error)
-			}
-		},
+            try {
+                await deleteProject(this.projectToDelete.id)
+                await this.loadProjects()
+                this.showDeleteModal = false
+                this.projectToDelete = null
+            } catch (error) {
+                console.error('Error deleting project:', error)
+            }
+        },
 
-		async startProjectScan(projectId) {
-			try {
-				await scanProject(projectId)
-				showSuccess(t('duplicatefinder', 'Project scan initiated. This may take a while.'))
-			} catch (error) {
-				console.error('Error starting project scan:', error)
-			}
-		},
+        async startProjectScan(projectId) {
+            try {
+                await scanProject(projectId)
+                showSuccess(t('duplicatefinder', 'Project scan initiated. This may take a while.'))
+            } catch (error) {
+                console.error('Error starting project scan:', error)
+            }
+        },
 
-		viewProjectResults(projectId) {
-			// Emit event to parent component to show project results
-			this.$emit('view-project', projectId)
-		},
+        viewProjectResults(projectId) {
+            // Emit event to parent component to show project results
+            this.$emit('view-project', projectId)
+        },
 
-		formatDate(dateString) {
-			if (!dateString) return ''
+        formatDate(dateString) {
+            if (!dateString) return ''
 
-			const date = new Date(dateString)
-			return date.toLocaleString()
-		},
-	},
+            const date = new Date(dateString)
+            return date.toLocaleString()
+        }
+    },
+    mounted() {
+        this.loadProjects()
+    }
 }
 </script>
 

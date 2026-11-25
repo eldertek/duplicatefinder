@@ -1,47 +1,45 @@
 <template>
-	<div class="step-container">
-		<h2 class="step-title">
-			{{ t('duplicatefinder', 'Protected Folders (Origin Folders)') }}
-		</h2>
-		<div class="info-section">
-			<div class="info-block">
-				<h3>{{ t('duplicatefinder', 'What are Origin Folders?') }}</h3>
-				<ul>
-					<li>{{ t('duplicatefinder', 'Files in origin folders will never be marked as duplicates to be deleted') }}</li>
-					<li>{{ t('duplicatefinder', 'Use this for folders containing your original or master files') }}</li>
-					<li>{{ t('duplicatefinder', 'Ensures important files are always preserved') }}</li>
-				</ul>
-			</div>
+  <div class="step-container">
+    <h2 class="step-title">{{ t('duplicatefinder', 'Protected Folders (Origin Folders)') }}</h2>
+    <div class="info-section">
+      <div class="info-block">
+        <h3>{{ t('duplicatefinder', 'What are Origin Folders?') }}</h3>
+        <ul>
+          <li>{{ t('duplicatefinder', 'Files in origin folders will never be marked as duplicates to be deleted') }}</li>
+          <li>{{ t('duplicatefinder', 'Use this for folders containing your original or master files') }}</li>
+          <li>{{ t('duplicatefinder', 'Ensures important files are always preserved') }}</li>
+        </ul>
+      </div>
 
-			<div class="info-block">
-				<h3>{{ t('duplicatefinder', 'How to Configure') }}</h3>
-				<div class="settings-list">
-					<div class="setting-item">
-						<span class="setting-name">{{ t('duplicatefinder', '1. Access Settings') }}</span>
-						<span class="setting-desc">{{ t('duplicatefinder', 'Navigate to Settings > Origin Folders') }}</span>
-					</div>
-					<div class="setting-item">
-						<span class="setting-name">{{ t('duplicatefinder', '2. Add Folders') }}</span>
-						<span class="setting-desc">{{ t('duplicatefinder', 'Use the file picker to select important folders') }}</span>
-					</div>
-					<div class="setting-item">
-						<span class="setting-name">{{ t('duplicatefinder', '3. Manage List') }}</span>
-						<span class="setting-desc">{{ t('duplicatefinder', 'Add or remove folders as needed') }}</span>
-					</div>
-				</div>
-			</div>
+      <div class="info-block">
+        <h3>{{ t('duplicatefinder', 'How to Configure') }}</h3>
+        <div class="settings-list">
+          <div class="setting-item">
+            <span class="setting-name">{{ t('duplicatefinder', '1. Access Settings') }}</span>
+            <span class="setting-desc">{{ t('duplicatefinder', 'Navigate to Settings > Origin Folders') }}</span>
+          </div>
+          <div class="setting-item">
+            <span class="setting-name">{{ t('duplicatefinder', '2. Add Folders') }}</span>
+            <span class="setting-desc">{{ t('duplicatefinder', 'Use the file picker to select important folders') }}</span>
+          </div>
+          <div class="setting-item">
+            <span class="setting-name">{{ t('duplicatefinder', '3. Manage List') }}</span>
+            <span class="setting-desc">{{ t('duplicatefinder', 'Add or remove folders as needed') }}</span>
+          </div>
+        </div>
+      </div>
 
-			<div class="tip-box">
-				<strong>{{ t('duplicatefinder', 'Pro Tip:') }}</strong>
-				{{ t('duplicatefinder', 'Consider using origin folders for your photo library, important documents, or any other irreplaceable files.') }}
-			</div>
-		</div>
-	</div>
+      <div class="tip-box">
+        <strong>{{ t('duplicatefinder', 'Pro Tip:') }}</strong>
+        {{ t('duplicatefinder', 'Consider using origin folders for your photo library, important documents, or any other irreplaceable files.') }}
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 export default {
-	name: 'OriginFoldersStep',
+  name: 'OriginFoldersStep'
 }
 </script>
 
@@ -153,4 +151,4 @@ export default {
   color: var(--color-success);
   margin-inline-end: 8px;
 }
-</style>
+</style> 

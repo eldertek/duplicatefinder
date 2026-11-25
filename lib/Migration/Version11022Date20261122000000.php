@@ -89,13 +89,23 @@ class Version11022Date20261122000000 extends SimpleMigrationStep
         return \OC::$server->get(IDBConnection::class);
     }
 
-    private function hasUniquePathHashIndex(\Doctrine\DBAL\Schema\Table $table): bool
+    /**
+     * @param object $table Doctrine\DBAL\Schema\Table (NC <= 34) or OC\DB\Schema\Table (NC 35+)
+     */
+    private function hasUniquePathHashIndex(object $table): bool
     {
-        if ($table->hasIndex('duplicatefinder_ph_uniq_idx')) {
+        if (method_exists($table, 'hasIndex') && $table->hasIndex('duplicatefinder_ph_uniq_idx')) {
             return true;
         }
 
+        if (!method_exists($table, 'getIndexes')) {
+            return false;
+        }
+
         foreach ($table->getIndexes() as $index) {
+            if (!method_exists($index, 'getColumns') || !method_exists($index, 'isUnique')) {
+                continue;
+            }
             $columns = array_map('strtolower', $index->getColumns());
             if ($index->isUnique() && $columns === ['path_hash']) {
                 return true;

@@ -1,3 +1,10 @@
+## 1.10.45 - 2026-11-25
+### Fixed
+- **Database integrity (#248)**: Batched migration (`Version11022Date20261122000000`) deduplicates existing `path_hash` rows in `oc_duplicatefinder_finfo` and enforces a unique index (`duplicatefinder_ph_uniq_idx`), with atomic upsert handling in `FileInfoService` and distinct-path deduplication in `occ duplicates:list-all`.
+- **Duplicate folder management (#193)**: Full `Keep this folder` bulk UI workflow, `GET /api/duplicates/folders` API, and `occ duplicates:folders` CLI command with origin-folder and Live Photo protections.
+- **Security & reliability hardening**: Enforced CSRF checks on mutating API endpoints, hardened origin/excluded/empty-folder authorization and path-traversal checks, added scoped share scanning guards, removed global lock-table wipes in favor of scoped concurrency locks for scans and DB repair passes, and eliminated raw `v-html` rendering sinks.
+- **Lean frontend bundle**: Removed unused experimental frontend workbench panels so the compiled Nextcloud bundle stays lean and fast (~3.6 MB) while preserving triage filters, reclaimable-space sorting, CWE-1236-safe CSV/JSON exports, and keyboard shortcuts.
+
 ## 1.10.44 - 2026-11-23
 ### Added
 - **Toggle Bulk Delete view keyboard shortcut (`b`)** (`src/tools/keyboardShortcuts.js`, `src/App.vue`). Registered the `b` (`toggle-bulk-delete-view`) shortcut in `SHORTCUT_DEFINITIONS`, `SINGLE_KEY_ACTIONS`, and the `?` keyboard shortcuts `<dialog>`, wired `App.vue` (`toggleBulkDeleteView()`) to switch cleanly between the `details` triage view (when `hasDuplicates` is true) and the `bulk-delete` review view without triggering any deletion when `b` is pressed outside editable controls and open modal dialogs, and annotated the Bulk Delete / Back to duplicates topbar buttons with `aria-keyshortcuts="b"`.

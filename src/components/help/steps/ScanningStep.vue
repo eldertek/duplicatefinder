@@ -1,51 +1,49 @@
 <template>
-	<div class="step-container">
-		<h2 class="step-title">
-			{{ t('duplicatefinder', 'Scanning for Duplicates') }}
-		</h2>
-		<div class="info-section">
-			<div class="info-block">
-				<h3>1. {{ t('duplicatefinder', 'Using OCC command (admin only):') }}</h3>
-				<div class="code-block">
-					<div class="code-line">
-						<span class="code-label">{{ t('duplicatefinder', 'Full scan:') }}</span>
-						<code>occ duplicates:find-all</code>
-					</div>
-					<div class="code-line">
-						<span class="code-label">{{ t('duplicatefinder', 'Scan specific user:') }}</span>
-						<code>occ duplicates:find-all -u username</code>
-					</div>
-				</div>
-			</div>
+  <div class="step-container">
+    <h2 class="step-title">{{ t('duplicatefinder', 'Scanning for Duplicates') }}</h2>
+    <div class="info-section">
+      <div class="info-block">
+        <h3>1. {{ t('duplicatefinder', 'Using OCC command (admin only):') }}</h3>
+        <div class="code-block">
+          <div class="code-line">
+            <span class="code-label">{{ t('duplicatefinder', 'Full scan:') }}</span>
+            <code>occ duplicates:find-all</code>
+          </div>
+          <div class="code-line">
+            <span class="code-label">{{ t('duplicatefinder', 'Scan specific user:') }}</span>
+            <code>occ duplicates:find-all -u username</code>
+          </div>
+        </div>
+      </div>
 
-			<div class="info-block">
-				<h3>2. {{ t('duplicatefinder', 'Using Duplicate Finder Settings (admin only):') }}</h3>
-				<div class="settings-list">
-					<div class="setting-item">
-						<span class="setting-name">{{ t('duplicatefinder', '"Find all duplicates"') }}</span>
-						<span class="setting-desc">{{ t('duplicatefinder', 'button in Advanced Settings') }}</span>
-					</div>
-					<div class="setting-item">
-						<span class="setting-name">{{ t('duplicatefinder', '"Background Job Find Duplicates Interval"') }}</span>
-						<span class="setting-desc">{{ t('duplicatefinder', 'configure automatic scanning interval') }}</span>
-					</div>
-					<div class="setting-item">
-						<span class="setting-name">{{ t('duplicatefinder', '"Ignore Mounted Files"') }}</span>
-						<span class="setting-desc">{{ t('duplicatefinder', 'exclude external storage from scanning') }}</span>
-					</div>
-					<div class="setting-item">
-						<span class="setting-name">{{ t('duplicatefinder', '"Disable Filesystem Events"') }}</span>
-						<span class="setting-desc">{{ t('duplicatefinder', 'turn off automatic scanning on file changes') }}</span>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+      <div class="info-block">
+        <h3>2. {{ t('duplicatefinder', 'Using Duplicate Finder Settings (admin only):') }}</h3>
+        <div class="settings-list">
+          <div class="setting-item">
+            <span class="setting-name">{{ t('duplicatefinder', '"Find all duplicates"') }}</span>
+            <span class="setting-desc">{{ t('duplicatefinder', 'button in Advanced Settings') }}</span>
+          </div>
+          <div class="setting-item">
+            <span class="setting-name">{{ t('duplicatefinder', '"Background Job Find Duplicates Interval"') }}</span>
+            <span class="setting-desc">{{ t('duplicatefinder', 'configure automatic scanning interval') }}</span>
+          </div>
+          <div class="setting-item">
+            <span class="setting-name">{{ t('duplicatefinder', '"Ignore Mounted Files"') }}</span>
+            <span class="setting-desc">{{ t('duplicatefinder', 'exclude external storage from scanning') }}</span>
+          </div>
+          <div class="setting-item">
+            <span class="setting-name">{{ t('duplicatefinder', '"Disable Filesystem Events"') }}</span>
+            <span class="setting-desc">{{ t('duplicatefinder', 'turn off automatic scanning on file changes') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 export default {
-	name: 'ScanningStep',
+  name: 'ScanningStep'
 }
 </script>
 
@@ -151,4 +149,4 @@ export default {
   margin-inline-start: 16px;
   line-height: 1.4;
 }
-</style>
+</style> 

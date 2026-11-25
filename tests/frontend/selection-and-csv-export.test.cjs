@@ -23,7 +23,6 @@ function createDetailsComponent() {
 	const Display = loadComponent('src/components/DuplicateFileDisplay.vue', {
 		'@/tools/api': { deleteFile: async () => true },
 		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
-		'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 		'@/tools/utils': utils,
 		'@nextcloud/router': { generateUrl: url => url },
 	})
@@ -42,14 +41,11 @@ function createDetailsComponent() {
 		'@/tools/duplicateSortHelper': loadModule('src/tools/duplicateSortHelper.js'),
 		'@/tools/duplicateStats': loadModule('src/tools/duplicateStats.js'),
 		'@/tools/duplicateMetadataBadges': metadataBadges,
-		'@/tools/duplicatePathDiff': loadModule('src/tools/duplicatePathDiff.js'),
 		'@/tools/deleteSafetyGuard': deleteSafetyGuard,
 		'@/tools/duplicateGroupSummary': loadModule('src/tools/duplicateGroupSummary.js'),
 		'@/tools/duplicateHashHelper': loadModule('src/tools/duplicateHashHelper.js'),
-		'@/tools/visualMediaInspector': loadModule('src/tools/visualMediaInspector.js'),
 		'@/tools/clipboardHelper': loadModule('src/tools/clipboardHelper.js'),
 		'@nextcloud/dialogs': { showSuccess() {}, showError() {} },
-		'./DuplicateCompareView.vue': { __esModule: true, default: { render: h => h('div') } },
 		'./DuplicateFileDisplay.vue': { __esModule: true, default: Display },
 	})
 }
