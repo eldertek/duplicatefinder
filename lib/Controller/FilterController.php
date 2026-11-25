@@ -56,7 +56,6 @@ class FilterController extends Controller
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function create(string $type, string $value): JSONResponse
     {
@@ -77,7 +76,6 @@ class FilterController extends Controller
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function destroy(int $id): JSONResponse
     {

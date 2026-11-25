@@ -305,7 +305,6 @@ class DuplicateApiController extends AbstractAPIController
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function acknowledge(string $hash): DataResponse
     {
@@ -326,7 +325,6 @@ class DuplicateApiController extends AbstractAPIController
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function unacknowledge(string $hash): DataResponse
     {
@@ -345,29 +343,30 @@ class DuplicateApiController extends AbstractAPIController
         return new DataResponse(['status' => 'success']);
     }
 
-    /**
-     * @NoCSRFRequired
-     */
     public function clear(): DataResponse
     {
         try {
+            $this->getUserId();
             $this->fileDuplicateService->clear();
             $this->fileInfoService->clear();
 
             return new DataResponse(['status' => 'success']);
+        } catch (NotAuthenticatedException $e) {
+            return $this->handleException($e);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occured', ['app' => Application::ID, 'exception' => $e]);
 
-            return new DataResponse(['status' => 'error', 'message' => $e->getMessage()]);
+            return new DataResponse(
+                ['status' => 'error', 'message' => 'Failed to clear duplicates'],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
         }
     }
 
-    /**
-     * @NoCSRFRequired
-     */
     public function find(): DataResponse
     {
         try {
+            $this->getUserId();
             if ($this->session !== null) {
                 $this->session->close();
             }
@@ -388,6 +387,8 @@ class DuplicateApiController extends AbstractAPIController
             }
 
             return new DataResponse(['status' => 'success']);
+        } catch (NotAuthenticatedException $e) {
+            return $this->handleException($e);
         } catch (\Exception $e) {
             $this->logger->error('A unknown exception occurred', ['app' => Application::ID, 'exception' => $e]);
 

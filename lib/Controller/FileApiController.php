@@ -45,7 +45,6 @@ class FileApiController extends Controller
      * Delete one or multiple files
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      * @return JSONResponse
      */
     public function delete(): JSONResponse

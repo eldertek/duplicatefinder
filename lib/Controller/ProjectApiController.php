@@ -108,7 +108,6 @@ class ProjectApiController extends Controller
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function create(string $name, array $folders): DataResponse
     {
@@ -131,7 +130,6 @@ class ProjectApiController extends Controller
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function update(int $id, string $name, array $folders): DataResponse
     {
@@ -154,7 +152,6 @@ class ProjectApiController extends Controller
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function destroy(int $id): DataResponse
     {
@@ -177,7 +174,6 @@ class ProjectApiController extends Controller
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function scan(int $id): DataResponse
     {

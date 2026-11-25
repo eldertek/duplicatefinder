@@ -285,11 +285,15 @@ class ListAllDuplicates extends Command
         }
         $prefixes = [];
         if ($this->shareService !== null) {
-            foreach ($this->shareService->getShares($user) as $share) {
-                $target = trim((string)$share->getTarget(), '/');
-                if ($target !== '') {
-                    $prefixes[] = '/' . $user . '/files/' . $target;
+            try {
+                foreach ($this->shareService->getShares($user) as $share) {
+                    $target = trim((string)$share->getTarget(), '/');
+                    if ($target !== '') {
+                        $prefixes[] = '/' . $user . '/files/' . $target;
+                    }
                 }
+            } catch (\Throwable $e) {
+                // Vanished user or inaccessible share metadata must not abort the report
             }
         }
         $this->receivedSharePrefixesByUser[$user] = array_values(array_unique($prefixes));

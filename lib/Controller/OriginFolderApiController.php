@@ -69,7 +69,6 @@ class OriginFolderApiController extends Controller
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function create(array $folders): JSONResponse
     {
@@ -128,7 +127,6 @@ class OriginFolderApiController extends Controller
 
     /**
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function destroy(int $id): JSONResponse
     {

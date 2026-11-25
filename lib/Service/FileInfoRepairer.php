@@ -5,6 +5,8 @@ namespace OCA\DuplicateFinder\Service;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\FileInfoMapper;
 use OCP\IConfig;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 
 /**
  * Repairs the table of the file infos without ever loading it in memory, a little at a time: gives a path hash to the
@@ -28,6 +30,8 @@ class FileInfoRepairer
     private const CURSOR_KEY = 'repair_file_infos_cursor_v2';
     private const DONE_KEY = 'repair_file_infos_done_v2';
 
+    private const LOCK_KEY = 'df-repair/file-infos';
+
     /** Ids looked at by one query: it bounds the work of a query and how far the time budget can be overrun. */
     private const WINDOW = 5000;
 
@@ -35,11 +39,17 @@ class FileInfoRepairer
     private $mapper;
     /** @var IConfig */
     private $config;
+    /** @var ?ILockingProvider */
+    private $lockingProvider;
 
-    public function __construct(FileInfoMapper $mapper, IConfig $config)
-    {
+    public function __construct(
+        FileInfoMapper $mapper,
+        IConfig $config,
+        ?ILockingProvider $lockingProvider = null
+    ) {
         $this->mapper = $mapper;
         $this->config = $config;
+        $this->lockingProvider = $lockingProvider;
     }
 
     /**
@@ -54,47 +64,71 @@ class FileInfoRepairer
             return ['pathHashes' => 0, 'removed' => 0, 'done' => true];
         }
 
-        // hrtime() is monotonic: a change of the clock of the server cannot cut the work short or stretch it
-        $deadline = hrtime(true) + (int)($timeBudget * 1e9);
-        $window = max(1, $window);
-        $cursor = max(0, (int)$this->config->getAppValue(Application::ID, self::CURSOR_KEY, '0'));
-        $maxId = $this->mapper->getMaxId();
-        $pathHashes = 0;
-        $removed = 0;
-        $savedAt = hrtime(true);
+        $lockAcquired = false;
+        if ($this->lockingProvider !== null) {
+            try {
+                $this->lockingProvider->acquireLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+                $lockAcquired = true;
+            } catch (LockedException $e) {
+                return ['pathHashes' => 0, 'removed' => 0, 'done' => false];
+            }
+        }
 
         try {
-            while ($cursor < $maxId) {
-                $until = min($cursor + $window, $maxId);
-                $pathHashes += $this->mapper->repairPathHashes($cursor, $until);
-                $removed += $this->mapper->removeSurplusRows($cursor, $until);
-                $cursor = $until;
+            if ($this->config->getAppValue(Application::ID, self::DONE_KEY, '') === '1') {
+                return ['pathHashes' => 0, 'removed' => 0, 'done' => true];
+            }
 
-                $now = hrtime(true);
-                if ($now >= $deadline) {
-                    break;
+            // hrtime() is monotonic: a change of the clock of the server cannot cut the work short or stretch it
+            $deadline = hrtime(true) + max(0, (int)($timeBudget * 1e9));
+            $window = max(1, $window);
+            $cursor = max(0, (int)$this->config->getAppValue(Application::ID, self::CURSOR_KEY, '0'));
+            $maxId = $this->mapper->getMaxId();
+            $pathHashes = 0;
+            $removed = 0;
+            $savedAt = hrtime(true);
+
+            try {
+                while ($cursor < $maxId) {
+                    $until = min($cursor + $window, $maxId);
+                    $pathHashes += $this->mapper->repairPathHashes($cursor, $until);
+                    $removed += $this->mapper->removeSurplusRows($cursor, $until);
+                    $cursor = $until;
+
+                    $now = hrtime(true);
+                    if ($now >= $deadline) {
+                        break;
+                    }
+                    // a pass that is killed halfway goes on from here, not from the start of the table
+                    if ($now - $savedAt >= 1e9) {
+                        $this->config->setAppValue(Application::ID, self::CURSOR_KEY, (string)$cursor);
+                        $savedAt = $now;
+                    }
                 }
-                // a pass that is killed halfway goes on from here, not from the start of the table
-                if ($now - $savedAt >= 1e9) {
-                    $this->config->setAppValue(Application::ID, self::CURSOR_KEY, (string)$cursor);
-                    $savedAt = $now;
+            } catch (\Throwable $e) {
+                // keep what was done: the next call goes on after the last window that was completed
+                $this->config->setAppValue(Application::ID, self::CURSOR_KEY, (string)$cursor);
+
+                throw $e;
+            }
+
+            $finished = $cursor >= $maxId;
+            if ($finished) {
+                $this->config->deleteAppValue(Application::ID, self::CURSOR_KEY);
+                $this->config->setAppValue(Application::ID, self::DONE_KEY, '1');
+            } else {
+                $this->config->setAppValue(Application::ID, self::CURSOR_KEY, (string)$cursor);
+            }
+
+            return ['pathHashes' => $pathHashes, 'removed' => $removed, 'done' => $finished];
+        } finally {
+            if ($lockAcquired && $this->lockingProvider !== null) {
+                try {
+                    $this->lockingProvider->releaseLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+                } catch (\Throwable $ignore) {
+                    // Best-effort lock release
                 }
             }
-        } catch (\Throwable $e) {
-            // keep what was done: the next call goes on after the last window that was completed
-            $this->config->setAppValue(Application::ID, self::CURSOR_KEY, (string)$cursor);
-
-            throw $e;
         }
-
-        $finished = $cursor >= $maxId;
-        if ($finished) {
-            $this->config->deleteAppValue(Application::ID, self::CURSOR_KEY);
-            $this->config->setAppValue(Application::ID, self::DONE_KEY, '1');
-        } else {
-            $this->config->setAppValue(Application::ID, self::CURSOR_KEY, (string)$cursor);
-        }
-
-        return ['pathHashes' => $pathHashes, 'removed' => $removed, 'done' => $finished];
     }
 }

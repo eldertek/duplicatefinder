@@ -85,9 +85,11 @@ class FileDuplicateMapper extends EQBMapper
      */
     public function mergeSurplusRows(float $timeBudget = 20.0, int $afterId = 0, int $batchSize = 1000): array
     {
-        $deadline = microtime(true) + $timeBudget;
+        $budgetNs = max(0, (int)($timeBudget * 1e9));
+        $deadline = hrtime(true) + $budgetNs;
         $removed = 0;
-        $lastId = $afterId;
+        $lastId = max(0, $afterId);
+        $safeBatchSize = max(1, $batchSize);
 
         while (true) {
             $older = $this->db->getQueryBuilder();
@@ -103,7 +105,7 @@ class FileDuplicateMapper extends EQBMapper
                 ->where($qb->expr()->gt('d.id', $qb->createNamedParameter($lastId, IQueryBuilder::PARAM_INT)))
                 ->andWhere($qb->createFunction('EXISTS (' . $older->getSQL() . ')'))
                 ->orderBy('d.id', 'ASC')
-                ->setMaxResults($batchSize);
+                ->setMaxResults($safeBatchSize);
             $result = $qb->executeQuery();
             $ids = array_map('intval', $result->fetchAll(\PDO::FETCH_COLUMN));
             $result->closeCursor();
@@ -117,7 +119,7 @@ class FileDuplicateMapper extends EQBMapper
             $removed += $delete->executeStatement();
             $lastId = max($ids);
 
-            if (microtime(true) >= $deadline) {
+            if (hrtime(true) >= $deadline) {
                 return ['removed' => $removed, 'lastId' => $lastId, 'finished' => false];
             }
         }

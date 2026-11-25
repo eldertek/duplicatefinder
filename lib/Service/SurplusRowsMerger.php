@@ -5,6 +5,8 @@ namespace OCA\DuplicateFinder\Service;
 use OCA\DuplicateFinder\AppInfo\Application;
 use OCA\DuplicateFinder\Db\FileDuplicateMapper;
 use OCP\IConfig;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 
 /**
  * Removes the surplus rows that issue 178 left in the table of the duplicate groups (several rows for one hash),
@@ -18,16 +20,23 @@ class SurplusRowsMerger
 {
     private const CURSOR_KEY = 'merge_surplus_cursor';
     private const DONE_KEY = 'merge_surplus_done';
+    private const LOCK_KEY = 'df-repair/surplus-rows';
 
     /** @var FileDuplicateMapper */
     private $mapper;
     /** @var IConfig */
     private $config;
+    /** @var ?ILockingProvider */
+    private $lockingProvider;
 
-    public function __construct(FileDuplicateMapper $mapper, IConfig $config)
-    {
+    public function __construct(
+        FileDuplicateMapper $mapper,
+        IConfig $config,
+        ?ILockingProvider $lockingProvider = null
+    ) {
         $this->mapper = $mapper;
         $this->config = $config;
+        $this->lockingProvider = $lockingProvider;
     }
 
     /**
@@ -40,16 +49,40 @@ class SurplusRowsMerger
             return ['removed' => 0, 'done' => true];
         }
 
-        $cursor = max(0, (int)$this->config->getAppValue(Application::ID, self::CURSOR_KEY, '0'));
-        $step = $this->mapper->mergeSurplusRows($timeBudget, $cursor);
-
-        if ($step['finished']) {
-            $this->config->deleteAppValue(Application::ID, self::CURSOR_KEY);
-            $this->config->setAppValue(Application::ID, self::DONE_KEY, '1');
-        } else {
-            $this->config->setAppValue(Application::ID, self::CURSOR_KEY, (string)$step['lastId']);
+        $lockAcquired = false;
+        if ($this->lockingProvider !== null) {
+            try {
+                $this->lockingProvider->acquireLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+                $lockAcquired = true;
+            } catch (LockedException $e) {
+                return ['removed' => 0, 'done' => false];
+            }
         }
 
-        return ['removed' => $step['removed'], 'done' => $step['finished']];
+        try {
+            if ($this->config->getAppValue(Application::ID, self::DONE_KEY, '') === '1') {
+                return ['removed' => 0, 'done' => true];
+            }
+
+            $cursor = max(0, (int)$this->config->getAppValue(Application::ID, self::CURSOR_KEY, '0'));
+            $step = $this->mapper->mergeSurplusRows($timeBudget, $cursor);
+
+            if ($step['finished']) {
+                $this->config->deleteAppValue(Application::ID, self::CURSOR_KEY);
+                $this->config->setAppValue(Application::ID, self::DONE_KEY, '1');
+            } else {
+                $this->config->setAppValue(Application::ID, self::CURSOR_KEY, (string)$step['lastId']);
+            }
+
+            return ['removed' => $step['removed'], 'done' => $step['finished']];
+        } finally {
+            if ($lockAcquired && $this->lockingProvider !== null) {
+                try {
+                    $this->lockingProvider->releaseLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+                } catch (\Throwable $ignore) {
+                    // Best-effort lock release
+                }
+            }
+        }
     }
 }

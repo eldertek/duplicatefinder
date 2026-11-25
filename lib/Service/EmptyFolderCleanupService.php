@@ -117,12 +117,17 @@ class EmptyFolderCleanupService
 
         foreach ($paths as $rawPath) {
             if (!is_string($rawPath)) {
+                $errors[] = [
+                    'path' => is_scalar($rawPath) ? (string)$rawPath : '',
+                    'error' => 'INVALID_PATH',
+                    'message' => 'Invalid or root folder path cannot be deleted',
+                ];
                 continue;
             }
             $normalized = $this->normalizeUserRelativePath($userId, $rawPath);
             if ($normalized === null || $normalized === '/') {
                 $errors[] = [
-                    'path' => (string)$rawPath,
+                    'path' => $rawPath,
                     'error' => 'INVALID_PATH',
                     'message' => 'Invalid or root folder path cannot be deleted',
                 ];
@@ -183,15 +188,15 @@ class EmptyFolderCleanupService
                 }
 
                 $resolvedRelative = $this->normalizeResolvedRelativePath($userFolder->getRelativePath($node->getPath()));
-                if ($resolvedRelative !== null && $resolvedRelative !== $folderPath) {
-                    if ($resolvedRelative === '/') {
-                        $errors[] = [
-                            'path' => $folderPath,
-                            'error' => 'INVALID_PATH',
-                            'message' => 'Root folder cannot be deleted',
-                        ];
-                        continue;
-                    }
+                if ($resolvedRelative === null || $resolvedRelative === '/') {
+                    $errors[] = [
+                        'path' => $folderPath,
+                        'error' => 'INVALID_PATH',
+                        'message' => 'Folder path resolves outside user root or to root folder',
+                    ];
+                    continue;
+                }
+                if ($resolvedRelative !== $folderPath) {
                     if ($this->isInsideOriginFolder($resolvedRelative, $originPaths)) {
                         $errors[] = [
                             'path' => $folderPath,
@@ -268,7 +273,20 @@ class EmptyFolderCleanupService
                             continue;
                         }
                         $subNode = $userFolder->get($subPath);
-                        if ($subNode instanceof Folder && $subNode->getDirectoryListing() === []) {
+                        if (!($subNode instanceof Folder)) {
+                            continue;
+                        }
+                        $resolvedSub = $this->normalizeResolvedRelativePath($userFolder->getRelativePath($subNode->getPath()));
+                        if ($resolvedSub === null
+                            || $resolvedSub === '/'
+                            || $this->isInsideOriginFolder($resolvedSub, $originPaths)
+                            || $this->excludedFolderService->isPathExcluded($resolvedSub)
+                            || $subNode->isMounted()
+                            || !$subNode->isDeletable()
+                        ) {
+                            continue;
+                        }
+                        if ($subNode->getDirectoryListing() === []) {
                             $subNode->delete();
                             $deleted[] = $subPath;
                             $deletedLookup[$subPath] = true;
@@ -386,7 +404,13 @@ class EmptyFolderCleanupService
                 continue;
             }
 
-            $childPath = ($isRoot ? '' : $relativePath) . '/' . $child->getName();
+            $childName = $child->getName();
+            if (!$this->isSafeChildName($childName)) {
+                $allSubfoldersEmpty = false;
+                continue;
+            }
+
+            $childPath = ($isRoot ? '' : $relativePath) . '/' . $childName;
             if ($this->isInsideOriginFolder($childPath, $originPaths)
                 || $this->excludedFolderService->isPathExcluded($childPath)
                 || $child->isMounted()
@@ -541,7 +565,14 @@ class EmptyFolderCleanupService
                 return false;
             }
 
-            $childPath = $relativePath . '/' . $child->getName();
+            $childName = $child->getName();
+            if (!$this->isSafeChildName($childName)) {
+                $memo[$relativePath] = false;
+
+                return false;
+            }
+
+            $childPath = $relativePath . '/' . $childName;
             if (!$this->isFolderEligible($child, $childPath, $originPaths)) {
                 $memo[$relativePath] = false;
 
@@ -709,6 +740,16 @@ class EmptyFolderCleanupService
         $trimmed = trim($resolvedPath, '/');
 
         return $trimmed === '' ? '/' : '/' . $trimmed;
+    }
+
+    private function isSafeChildName(string $name): bool
+    {
+        return $name !== ''
+            && $name !== '.'
+            && $name !== '..'
+            && !str_contains($name, '/')
+            && !str_contains($name, '\\')
+            && !str_contains($name, "\0");
     }
 
     private function parentRelativePath(string $relativePath): string

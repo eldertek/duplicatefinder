@@ -72,12 +72,22 @@ class ProjectMapper extends QBMapper
      */
     public function addFolders(int $projectId, array $folderPaths): void
     {
+        $seen = [];
         foreach ($folderPaths as $folderPath) {
+            if (!is_string($folderPath)) {
+                continue;
+            }
+            $trimmed = trim($folderPath);
+            if ($trimmed === '' || isset($seen[$trimmed])) {
+                continue;
+            }
+            $seen[$trimmed] = true;
+
             $qb = $this->db->getQueryBuilder();
             $qb->insert('df_folders')
                ->values([
                    'project_id' => $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT),
-                   'folder_path' => $qb->createNamedParameter($folderPath, IQueryBuilder::PARAM_STR),
+                   'folder_path' => $qb->createNamedParameter($trimmed, IQueryBuilder::PARAM_STR),
                ])
                ->executeStatement();
         }
