@@ -712,6 +712,7 @@ describe('Cycle 196: Publishing, Prepress, Print-Ready PDF/X & Font Licensing Va
 			'./components/WineEnologyHaccpVaultWorkbench.vue': { __esModule: true, default: stub('wine-enology-haccp-vault-auditor') },
 			'./components/XrSpatialNerfSplatVaultWorkbench.vue': { __esModule: true, default: stub('xr-spatial-nerf-splat-vault-auditor') },
 			'./components/YachtRacingFoilingNmeaVaultWorkbench.vue': { __esModule: true, default: stub('yacht-racing-foiling-nmea-vault-auditor') },
+			'./components/ZoologyWildlifeCamtrapEdnaVaultWorkbench.vue': { __esModule: true, default: stub('zoology-wildlife-camtrap-edna-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },

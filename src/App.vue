@@ -3272,6 +3272,31 @@
 							<span>{{ t('duplicatefinder', 'Yacht & NMEA/VDR') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-zoology-wildlife-camtrap-edna-vault-button"
+							:class="{ 'is-active': zoologyWildlifeCamtrapEdnaVaultOpen }"
+							:aria-pressed="zoologyWildlifeCamtrapEdnaVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+Z"
+							:title="t('duplicatefinder', 'Toggle Zoology, Wildlife Camera-Trap, GPS Collar and Biodiversity eDNA Vault auditor')"
+							@click="toggleZoologyWildlifeCamtrapEdnaVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+								<circle cx="12" cy="13" r="4" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Wildlife & eDNA') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -4335,6 +4360,15 @@
 						@compare-duplicate="onYachtRacingFoilingNmeaVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="yachtRacingFoilingNmeaVaultOpen = false" />
+					<ZoologyWildlifeCamtrapEdnaVaultWorkbench
+						v-if="zoologyWildlifeCamtrapEdnaVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onZoologyWildlifeCamtrapEdnaVaultSelectDuplicate"
+						@compare-duplicate="onZoologyWildlifeCamtrapEdnaVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="zoologyWildlifeCamtrapEdnaVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4874,6 +4908,7 @@ import VeterinaryEquineGenomicsVaultWorkbench from './components/VeterinaryEquin
 import WineEnologyHaccpVaultWorkbench from './components/WineEnologyHaccpVaultWorkbench.vue'
 import XrSpatialNerfSplatVaultWorkbench from './components/XrSpatialNerfSplatVaultWorkbench.vue'
 import YachtRacingFoilingNmeaVaultWorkbench from './components/YachtRacingFoilingNmeaVaultWorkbench.vue'
+import ZoologyWildlifeCamtrapEdnaVaultWorkbench from './components/ZoologyWildlifeCamtrapEdnaVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -5042,6 +5077,7 @@ export default {
 		WineEnologyHaccpVaultWorkbench,
 		XrSpatialNerfSplatVaultWorkbench,
 		YachtRacingFoilingNmeaVaultWorkbench,
+		ZoologyWildlifeCamtrapEdnaVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -5177,6 +5213,7 @@ export default {
 			wineEnologyHaccpVaultOpen: false,
 			xrSpatialNerfSplatVaultOpen: false,
 			yachtRacingFoilingNmeaVaultOpen: false,
+			zoologyWildlifeCamtrapEdnaVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -5455,6 +5492,7 @@ export default {
 				'toggle-wine-enology-haccp-vault-auditor': t('duplicatefinder', 'Toggle Wine Enology, Brewery Fermentation and Food-Safety HACCP Vault auditor'),
 				'toggle-xr-spatial-nerf-splat-vault-auditor': t('duplicatefinder', 'Toggle XR Spatial Computing, Photorealistic NeRF/Gaussian Splatting and Volumetric Video Vault auditor'),
 				'toggle-yacht-racing-foiling-nmea-vault-auditor': t('duplicatefinder', 'Toggle Yacht Racing, Foil Hydrodynamics and Maritime NMEA/VDR Telemetry Vault auditor'),
+				'toggle-zoology-wildlife-camtrap-edna-vault-auditor': t('duplicatefinder', 'Toggle Zoology, Wildlife Camera-Trap, GPS Collar and Biodiversity eDNA Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -7431,6 +7469,22 @@ export default {
 		onYachtRacingFoilingNmeaVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleZoologyWildlifeCamtrapEdnaVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.zoologyWildlifeCamtrapEdnaVaultOpen = !this.zoologyWildlifeCamtrapEdnaVaultOpen
+			return true
+		},
+		onZoologyWildlifeCamtrapEdnaVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onZoologyWildlifeCamtrapEdnaVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -8536,6 +8590,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-zoology-wildlife-camtrap-edna-vault-auditor') {
+				if (this.toggleZoologyWildlifeCamtrapEdnaVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -9541,7 +9602,8 @@ export default {
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button,
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button,
-.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button {
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button,
+.app-content-topbar .topbar-zoology-wildlife-camtrap-edna-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -9634,7 +9696,8 @@ export default {
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button,
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button,
-.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button {
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button,
+.app-content-topbar .topbar-zoology-wildlife-camtrap-edna-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -9746,7 +9809,8 @@ export default {
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button svg,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button svg,
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button svg,
-.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button svg {
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button svg,
+.app-content-topbar .topbar-zoology-wildlife-camtrap-edna-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -9966,7 +10030,9 @@ export default {
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-zoology-wildlife-camtrap-edna-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-zoology-wildlife-camtrap-edna-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -10076,7 +10142,8 @@ export default {
 .app-content-topbar .topbar-veterinary-equine-genomics-vault-button.is-active,
 .app-content-topbar .topbar-wine-enology-haccp-vault-button.is-active,
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button.is-active,
-.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button.is-active {
+.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button.is-active,
+.app-content-topbar .topbar-zoology-wildlife-camtrap-edna-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -10329,6 +10396,7 @@ export default {
 .app-content-topbar .topbar-wine-enology-haccp-vault-button > *,
 .app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button > *,
 .app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button > *,
+.app-content-topbar .topbar-zoology-wildlife-camtrap-edna-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -10520,6 +10588,7 @@ export default {
 	.app-content-topbar .topbar-wine-enology-haccp-vault-button,
 	.app-content-topbar .topbar-xr-spatial-nerf-splat-vault-button,
 	.app-content-topbar .topbar-yacht-racing-foiling-nmea-vault-button,
+	.app-content-topbar .topbar-zoology-wildlife-camtrap-edna-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

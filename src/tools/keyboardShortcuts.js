@@ -599,6 +599,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-yacht-racing-foiling-nmea-vault-auditor',
 	},
 	{
+		id: 'toggle-zoology-wildlife-camtrap-edna-vault-auditor',
+		keys: ['Alt+Shift+Z'],
+		action: 'toggle-zoology-wildlife-camtrap-edna-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -858,6 +863,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'Y' || key === 'y')) {
 			return 'toggle-yacht-racing-foiling-nmea-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'Z' || key === 'z')) {
+			return 'toggle-zoology-wildlife-camtrap-edna-vault-auditor'
 		}
 		return null
 	}

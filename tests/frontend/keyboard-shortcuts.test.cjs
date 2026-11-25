@@ -281,6 +281,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/WineEnologyHaccpVaultWorkbench.vue': { __esModule: true, default: stub('wine-enology-haccp-vault-auditor') },
 			'./components/XrSpatialNerfSplatVaultWorkbench.vue': { __esModule: true, default: stub('xr-spatial-nerf-splat-vault-auditor') },
 			'./components/YachtRacingFoilingNmeaVaultWorkbench.vue': { __esModule: true, default: stub('yacht-racing-foiling-nmea-vault-auditor') },
+			'./components/ZoologyWildlifeCamtrapEdnaVaultWorkbench.vue': { __esModule: true, default: stub('zoology-wildlife-camtrap-edna-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -5131,5 +5132,32 @@ describe('Cycle 225: Alt+Shift+Y shortcut for Yacht Racing, Foil Hydrodynamics &
 		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'Y', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 226: Alt+Shift+Z shortcut for Zoology, Wildlife Camera-Trap, GPS Collar & Biodiversity eDNA Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+Z cleanly and preserves Shift+Z and z while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-zoology-wildlife-camtrap-edna-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-zoology-wildlife-camtrap-edna-vault-auditor',
+			keys: ['Alt+Shift+Z'],
+			action: 'toggle-zoology-wildlife-camtrap-edna-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'Z', altKey: true, shiftKey: true }), 'toggle-zoology-wildlife-camtrap-edna-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'z', altKey: true, shiftKey: true }), 'toggle-zoology-wildlife-camtrap-edna-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'Z', shiftKey: true }), 'toggle-gis-map-archive-auditor')
+		assert.equal(resolveShortcutAction({ key: 'z', shiftKey: true }), 'toggle-gis-map-archive-auditor')
+		assert.equal(resolveShortcutAction({ key: 'z', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'z' }), 'toggle-storage-footprint')
+		assert.equal(resolveShortcutAction({ key: 'Z', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Z', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Z', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Z', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Z', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

@@ -635,6 +635,7 @@ describe('Cycle 223: Wine Enology, Brewery Fermentation & Food-Safety HACCP Vaul
 			'./components/WineEnologyHaccpVaultWorkbench.vue': { __esModule: true, default: Workbench },
 			'./components/XrSpatialNerfSplatVaultWorkbench.vue': { __esModule: true, default: stub('xr-spatial-nerf-splat-vault-auditor') },
 			'./components/YachtRacingFoilingNmeaVaultWorkbench.vue': { __esModule: true, default: stub('yacht-racing-foiling-nmea-vault-auditor') },
+			'./components/ZoologyWildlifeCamtrapEdnaVaultWorkbench.vue': { __esModule: true, default: stub('zoology-wildlife-camtrap-edna-vault-auditor') },
 			'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 			'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 			'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
