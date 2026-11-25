@@ -321,12 +321,14 @@ describe('Cycle 38: smart keep-rule selection and CWE-1236-safe CSV export', () 
 	})
 
 	test('DuplicateNavigation Export CSV button disables when empty and exports filtered list via Blob + <a download>', async () => {
+		window.localStorage.clear()
 		const DuplicateNavigation = createNavigationComponent()
 
-		// Empty state -> Export CSV disabled
+		// Empty state -> Export CSV hidden in normal mode, visible & disabled in advanced mode
 		const emptyVm = new Vue({
 			render(h) {
 				return h(DuplicateNavigation, {
+					ref: 'nav',
 					props: {
 						acknowledgedDuplicates: [],
 						unacknowledgedDuplicates: [],
@@ -336,12 +338,16 @@ describe('Cycle 38: smart keep-rule selection and CWE-1236-safe CSV export', () 
 		}).$mount()
 		await settle()
 
+		assert.equal(emptyVm.$el.querySelector('button.export-csv-button'), null, 'Export CSV button is hidden in default normal mode')
+		emptyVm.$refs.nav.setUiLevel('advanced')
+		await settle()
+
 		const emptyExportBtn = emptyVm.$el.querySelector('button.export-csv-button')
-		assert.ok(emptyExportBtn, 'Export CSV button exists')
+		assert.ok(emptyExportBtn, 'Export CSV button exists in advanced mode')
 		assert.equal(emptyExportBtn.disabled, true, 'Export CSV button is disabled when filtered list is empty')
 		emptyVm.$destroy()
 
-		// Populated + filtered state
+		// Populated + filtered state (advanced mode persisted via setUiLevel)
 		const unacknowledged = [
 			{
 				id: 1,
@@ -366,6 +372,7 @@ describe('Cycle 38: smart keep-rule selection and CWE-1236-safe CSV export', () 
 		const vm = new Vue({
 			render(h) {
 				return h(DuplicateNavigation, {
+					ref: 'nav',
 					props: {
 						acknowledgedDuplicates: [],
 						unacknowledgedDuplicates: unacknowledged,
@@ -376,6 +383,7 @@ describe('Cycle 38: smart keep-rule selection and CWE-1236-safe CSV export', () 
 		await settle()
 
 		const exportBtn = vm.$el.querySelector('button.export-csv-button')
+		assert.ok(exportBtn, 'Export CSV button renders in restored advanced mode')
 		assert.equal(exportBtn.disabled, false)
 
 		// Filter to Images only before exporting
@@ -426,6 +434,7 @@ describe('Cycle 38: smart keep-rule selection and CWE-1236-safe CSV export', () 
 		assert.equal(exportBtn.disabled, true)
 
 		vm.$destroy()
+		window.localStorage.clear()
 	})
 
 	test('Cycle 38 UI styles enforce >= 44px targets, focus-visible, logical CSS, and zero XSS/dashes', () => {
@@ -595,6 +604,7 @@ describe('Cycle 77: structured JSON report export', () => {
 		const emptyVm = new Vue({
 			render(h) {
 				return h(DuplicateNavigation, {
+					ref: 'nav',
 					props: {
 						acknowledgedDuplicates: [],
 						unacknowledgedDuplicates: [],
@@ -604,8 +614,12 @@ describe('Cycle 77: structured JSON report export', () => {
 		}).$mount()
 		await settle()
 
+		assert.equal(emptyVm.$el.querySelector('button.export-json-button'), null, 'Export JSON button is hidden in default normal mode')
+		emptyVm.$refs.nav.setUiLevel('advanced')
+		await settle()
+
 		const emptyJsonBtn = emptyVm.$el.querySelector('button.export-json-button')
-		assert.ok(emptyJsonBtn, 'Export JSON button exists')
+		assert.ok(emptyJsonBtn, 'Export JSON button exists in advanced mode')
 		assert.equal(emptyJsonBtn.disabled, true, 'Export JSON button is disabled when filtered list is empty')
 		emptyVm.$destroy()
 

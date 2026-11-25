@@ -1890,9 +1890,15 @@ describe('Cycle 96: keyboard shortcut g (jump-to-largest-group)', () => {
 			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
 			assert.equal(vm.currentDuplicate.id, 401)
 
+			// In default normal mode, jump button is hidden while shortcut g still works; in advanced mode it renders with aria-keyshortcuts="g"
+			assert.equal(navVm.$el.querySelector('button.largest-group-jump-button'), null)
+			navVm.setUiLevel('advanced')
+			await settle()
 			const jumpBtn = navVm.$el.querySelector('button.largest-group-jump-button')
-			assert.ok(jumpBtn, 'largest group jump button is rendered')
+			assert.ok(jumpBtn, 'largest group jump button is rendered in advanced mode')
 			assert.equal(jumpBtn.getAttribute('aria-keyshortcuts'), 'g')
+			navVm.setUiLevel('normal')
+			await settle()
 
 			// 1. Typing g inside editable fields must NOT jump
 			const searchInput = navVm.$el.querySelector('input.search-input')
@@ -2189,9 +2195,15 @@ describe('Cycle 99: keyboard shortcut e (export-csv-report)', () => {
 			assert.ok(navVm, 'DuplicateNavigation ref is mounted')
 			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
 
+			// In default normal mode, Export CSV button is hidden while shortcut e still works; in advanced mode it renders with aria-keyshortcuts="e"
+			assert.equal(navVm.$el.querySelector('button.export-csv-button'), null)
+			navVm.setUiLevel('advanced')
+			await settle()
 			const exportCsvBtn = navVm.$el.querySelector('button.export-csv-button')
-			assert.ok(exportCsvBtn, 'Export CSV button is rendered')
+			assert.ok(exportCsvBtn, 'Export CSV button is rendered in advanced mode')
 			assert.equal(exportCsvBtn.getAttribute('aria-keyshortcuts'), 'e')
+			navVm.setUiLevel('normal')
+			await settle()
 
 			// 1. Typing e inside editable fields must NOT export
 			const searchInput = navVm.$el.querySelector('input.search-input')
@@ -2504,9 +2516,15 @@ describe('Cycle 102: keyboard shortcut x (export-json-report)', () => {
 			assert.ok(navVm, 'DuplicateNavigation ref is mounted')
 			assert.ok(detailsVm, 'DuplicateDetails ref is mounted')
 
+			// In default normal mode, Export JSON button is hidden while shortcut x still works; in advanced mode it renders with aria-keyshortcuts="x"
+			assert.equal(navVm.$el.querySelector('button.export-json-button'), null)
+			navVm.setUiLevel('advanced')
+			await settle()
 			const exportJsonBtn = navVm.$el.querySelector('button.export-json-button')
-			assert.ok(exportJsonBtn, 'Export JSON button is rendered')
+			assert.ok(exportJsonBtn, 'Export JSON button is rendered in advanced mode')
 			assert.equal(exportJsonBtn.getAttribute('aria-keyshortcuts'), 'x')
+			navVm.setUiLevel('normal')
+			await settle()
 
 			// 1. Typing x inside editable fields must NOT export
 			const searchInput = navVm.$el.querySelector('input.search-input')

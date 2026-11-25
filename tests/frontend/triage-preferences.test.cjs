@@ -107,6 +107,7 @@ describe('Cycle 42: triage preferences persistence, folder prefix filter, and re
 		const saved = saveTriagePreferences(mockStorage, {
 			category: 'images',
 			sortKey: 'size-desc',
+			uiLevel: 'advanced',
 			folderQuery: '/Private/Payroll',
 			apiToken: 'secret-token-123',
 			userEmail: 'alice@example.test',
@@ -114,14 +115,15 @@ describe('Cycle 42: triage preferences persistence, folder prefix filter, and re
 		}, {
 			allowedCategories: ['all', 'images', 'videos'],
 			allowedSortKeys: ['none', 'size-desc', 'size-asc'],
+			allowedUiLevels: ['normal', 'advanced', 'expert'],
 		})
 		assert.equal(saved, true)
 
 		const key = getTriagePreferencesStorageKey()
 		const rawJson = memoryMap.get(key)
 		const parsed = JSON.parse(rawJson)
-		assert.deepEqual(parsed, { category: 'images', sortKey: 'size-desc' })
-		assert.equal(Object.keys(parsed).length, 2)
+		assert.deepEqual(parsed, { category: 'images', sortKey: 'size-desc', uiLevel: 'advanced' })
+		assert.equal(Object.keys(parsed).length, 3)
 		assert.equal(rawJson.includes('Payroll'), false)
 		assert.equal(rawJson.includes('secret-token'), false)
 
@@ -129,24 +131,28 @@ describe('Cycle 42: triage preferences persistence, folder prefix filter, and re
 			loadTriagePreferences(mockStorage, {
 				allowedCategories: ['all', 'images', 'videos'],
 				allowedSortKeys: ['none', 'size-desc', 'size-asc'],
+				allowedUiLevels: ['normal', 'advanced', 'expert'],
 			}),
-			{ category: 'images', sortKey: 'size-desc' },
+			{ category: 'images', sortKey: 'size-desc', uiLevel: 'advanced' },
 		)
 
 		// Reject disallowed values via custom whitelists
 		saveTriagePreferences(mockStorage, {
 			category: '<script>alert(1)</script>',
 			sortKey: 'invalid-sort',
+			uiLevel: 'godmode',
 		}, {
 			allowedCategories: ['all', 'images'],
 			allowedSortKeys: ['none', 'size-asc'],
+			allowedUiLevels: ['normal', 'advanced'],
 		})
 		assert.deepEqual(
 			loadTriagePreferences(mockStorage, {
 				allowedCategories: ['all', 'images'],
 				allowedSortKeys: ['none', 'size-asc'],
+				allowedUiLevels: ['normal', 'advanced'],
 			}),
-			{ category: 'all', sortKey: 'none' },
+			{ category: 'all', sortKey: 'none', uiLevel: 'normal' },
 		)
 	})
 
@@ -167,23 +173,25 @@ describe('Cycle 42: triage preferences persistence, folder prefix filter, and re
 			assert.deepEqual(loadTriagePreferences(corruptStorage), {
 				category: 'all',
 				sortKey: 'none',
+				uiLevel: 'normal',
 			})
 		}
 
 		// Storage returning invalid whitelisted values directly from storage
 		const tamperedStorage = {
-			getItem: k => (k === key ? JSON.stringify({ category: 'videos', sortKey: 'size-asc', extra: 'leak' }) : null),
+			getItem: k => (k === key ? JSON.stringify({ category: 'videos', sortKey: 'size-asc', uiLevel: 'expert', extra: 'leak' }) : null),
 		}
 		assert.deepEqual(
 			loadTriagePreferences(tamperedStorage, {
 				allowedCategories: ['all', 'images'],
 				allowedSortKeys: ['none'],
+				allowedUiLevels: ['normal'],
 			}),
-			{ category: 'all', sortKey: 'none' },
+			{ category: 'all', sortKey: 'none', uiLevel: 'normal' },
 		)
 
 		// Unavailable storage (null) and throwing storage
-		assert.deepEqual(loadTriagePreferences(null), { category: 'all', sortKey: 'none' })
+		assert.deepEqual(loadTriagePreferences(null), { category: 'all', sortKey: 'none', uiLevel: 'normal' })
 		assert.equal(saveTriagePreferences(null, { category: 'images', sortKey: 'size-desc' }), false)
 
 		const throwingStorage = {
@@ -194,7 +202,7 @@ describe('Cycle 42: triage preferences persistence, folder prefix filter, and re
 				throw new Error('QuotaExceededError')
 			},
 		}
-		assert.deepEqual(loadTriagePreferences(throwingStorage), { category: 'all', sortKey: 'none' })
+		assert.deepEqual(loadTriagePreferences(throwingStorage), { category: 'all', sortKey: 'none', uiLevel: 'normal' })
 		assert.equal(saveTriagePreferences(throwingStorage, { category: 'images', sortKey: 'size-desc' }), false)
 	})
 
@@ -350,21 +358,26 @@ describe('Cycle 42: triage preferences persistence, folder prefix filter, and re
 		assert.equal(vm.$el.querySelector('button.reset-filters-button'), null, 'Reset filters hides when inactive')
 		assert.deepEqual(
 			JSON.parse(window.localStorage.getItem(storageKey)),
-			{ category: 'all', sortKey: 'none' },
+			{ category: 'all', sortKey: 'none', uiLevel: 'normal' },
 		)
 		assert.deepEqual(emittedQueryChanges[emittedQueryChanges.length - 1], {
 			sortBy: 'none',
 			minSize: 0,
 		})
 
-		// Clicking a category chip saves immediately
-		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
-		chips[4].click() // Documents
+		// Selecting Documents from the More popover saves immediately and highlights More trigger
+		const moreTrigger = vm.$el.querySelector('button.category-more-trigger')
+		assert.ok(moreTrigger, 'More category trigger is rendered')
+		moreTrigger.click()
+		await settle()
+		const docsOption = vm.$el.querySelector('button.category-more-option[data-category="documents"]')
+		assert.ok(docsOption, 'Documents option renders inside More popover')
+		docsOption.click()
 		await settle()
 		assert.equal(nav.selectedCategory, 'documents')
 		assert.deepEqual(
 			JSON.parse(window.localStorage.getItem(storageKey)),
-			{ category: 'documents', sortKey: 'none' },
+			{ category: 'documents', sortKey: 'none', uiLevel: 'normal' },
 		)
 		assert.ok(vm.$el.querySelector('button.reset-filters-button'), 'Reset filters reappears when category filter is active')
 
@@ -424,9 +437,10 @@ describe('Cycle 42: triage preferences persistence, folder prefix filter, and re
 		assert.equal(nav.unacknowledgedEmptyState, 'populated')
 		assert.equal(nav.acknowledgedEmptyState, 'initial-empty')
 
-		// Filter to Documents so unacknowledged raw list (> 0) becomes filtered-empty (State A)
-		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
-		chips[4].click() // Documents
+		// Filter to Documents via More popover so unacknowledged raw list (> 0) becomes filtered-empty (State A)
+		vm.$el.querySelector('button.category-more-trigger').click()
+		await settle()
+		vm.$el.querySelector('button.category-more-option[data-category="documents"]').click()
 		await settle()
 
 		assert.equal(nav.unacknowledgedEmptyState, 'filtered-empty')

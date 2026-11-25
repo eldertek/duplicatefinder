@@ -252,6 +252,7 @@ describe('Cycle 48: duplicate extension breakdown stats and navigation insights 
 	})
 
 	test('DuplicateNavigation renders Top-3 extension insights, toggles extension filter, and jumps to largest group', async () => {
+		window.localStorage.clear()
 		const DuplicateNavigation = createNavigationComponent()
 		const MB = 1024 * 1024
 
@@ -308,8 +309,16 @@ describe('Cycle 48: duplicate extension breakdown stats and navigation insights 
 		await settle()
 
 		const nav = vm.$refs.nav
+		// Hidden in clean default normal mode
+		assert.equal(nav.uiLevel, 'normal')
+		assert.equal(vm.$el.querySelector('.extension-insights-bar'), null, 'extension insights bar is hidden in normal mode')
+
+		// Switch to advanced mode to inspect Top-3 extension insights and largest jump button
+		nav.setUiLevel('advanced')
+		await settle()
+
 		const bar = vm.$el.querySelector('.extension-insights-bar')
-		assert.ok(bar, 'extension insights bar is rendered when duplicates exist')
+		assert.ok(bar, 'extension insights bar is rendered in advanced mode when duplicates exist')
 
 		const extChips = Array.from(vm.$el.querySelectorAll('button.extension-insight-chip'))
 		assert.equal(extChips.length, 3, 'renders Top-3 extensions only')
@@ -359,6 +368,7 @@ describe('Cycle 48: duplicate extension breakdown stats and navigation insights 
 		assert.equal(nav.filteredUnacknowledgedDuplicates.length, 3)
 
 		vm.$destroy()
+		window.localStorage.clear()
 	})
 
 	test('DuplicateNavigation hides insights bar when empty and adheres to logical CSS, 44px targets, focus-visible, and zero XSS/dashes', async () => {

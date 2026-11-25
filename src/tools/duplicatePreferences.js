@@ -1,7 +1,8 @@
 /**
  * Pure triage preference persistence and folder-prefix filtering helpers.
  * Stores only strictly whitelisted non-sensitive UI preferences (active category
- * filter and sort key) with resilient try/catch storage handling.
+ * filter, sort key, and interface complexity level) with resilient try/catch
+ * storage handling.
  */
 
 export const TRIAGE_PREFERENCES_STORAGE_KEY = 'duplicatefinder:triage-preferences'
@@ -23,9 +24,16 @@ export const DEFAULT_ALLOWED_SORT_KEYS = Object.freeze([
 	'size-asc',
 ])
 
+export const DEFAULT_ALLOWED_UI_LEVELS = Object.freeze([
+	'normal',
+	'advanced',
+	'expert',
+])
+
 export const DEFAULT_TRIAGE_PREFERENCES = Object.freeze({
 	category: 'all',
 	sortKey: 'none',
+	uiLevel: 'normal',
 })
 
 /**
@@ -103,11 +111,13 @@ export function getTriagePreferencesStorageKey(options = {}) {
  * @param {object} [options] - Whitelist options.
  * @param {string[]} [options.allowedCategories] - Allowed category identifiers.
  * @param {string[]} [options.allowedSortKeys] - Allowed sort key identifiers.
- * @return {{ category: string, sortKey: string }} Sanitized preferences object.
+ * @param {string[]} [options.allowedUiLevels] - Allowed interface complexity levels.
+ * @return {{ category: string, sortKey: string, uiLevel: string }} Sanitized preferences object.
  */
 export function sanitizeTriagePreferences(raw, options = {}) {
 	const allowedCategories = resolveWhitelist(options && options.allowedCategories, DEFAULT_ALLOWED_CATEGORIES)
 	const allowedSortKeys = resolveWhitelist(options && options.allowedSortKeys, DEFAULT_ALLOWED_SORT_KEYS)
+	const allowedUiLevels = resolveWhitelist(options && options.allowedUiLevels, DEFAULT_ALLOWED_UI_LEVELS)
 
 	const defaultCategory = allowedCategories.has(DEFAULT_TRIAGE_PREFERENCES.category)
 		? DEFAULT_TRIAGE_PREFERENCES.category
@@ -115,11 +125,15 @@ export function sanitizeTriagePreferences(raw, options = {}) {
 	const defaultSortKey = allowedSortKeys.has(DEFAULT_TRIAGE_PREFERENCES.sortKey)
 		? DEFAULT_TRIAGE_PREFERENCES.sortKey
 		: Array.from(allowedSortKeys)[0]
+	const defaultUiLevel = allowedUiLevels.has(DEFAULT_TRIAGE_PREFERENCES.uiLevel)
+		? DEFAULT_TRIAGE_PREFERENCES.uiLevel
+		: Array.from(allowedUiLevels)[0]
 
 	if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
 		return {
 			category: defaultCategory,
 			sortKey: defaultSortKey,
+			uiLevel: defaultUiLevel,
 		}
 	}
 
@@ -129,20 +143,24 @@ export function sanitizeTriagePreferences(raw, options = {}) {
 	const sortKey = typeof raw.sortKey === 'string' && allowedSortKeys.has(raw.sortKey)
 		? raw.sortKey
 		: defaultSortKey
+	const uiLevel = typeof raw.uiLevel === 'string' && allowedUiLevels.has(raw.uiLevel)
+		? raw.uiLevel
+		: defaultUiLevel
 
 	return {
 		category,
 		sortKey,
+		uiLevel,
 	}
 }
 
 /**
- * Safely load triage preferences (category and sortKey) from storage.
+ * Safely load triage preferences (category, sortKey, and uiLevel) from storage.
  * Falls back to defaults when storage is unavailable, throws, or contains corrupted JSON.
  *
  * @param {Storage|object|null|undefined} [storage] - Storage instance (defaults to window.localStorage).
  * @param {object} [options] - Whitelist and storageKey options.
- * @return {{ category: string, sortKey: string }} Validated triage preferences.
+ * @return {{ category: string, sortKey: string, uiLevel: string }} Validated triage preferences.
  */
 export function loadTriagePreferences(storage, options = {}) {
 	try {
@@ -163,7 +181,7 @@ export function loadTriagePreferences(storage, options = {}) {
 }
 
 /**
- * Safely persist whitelisted triage preferences (category and sortKey) to storage.
+ * Safely persist whitelisted triage preferences (category, sortKey, and uiLevel) to storage.
  * Ignores unknown/sensitive fields and catches any storage errors.
  *
  * @param {Storage|object|null|undefined} storage - Storage instance (defaults to window.localStorage).
@@ -182,6 +200,7 @@ export function saveTriagePreferences(storage, prefs, options = {}) {
 		target.setItem(key, JSON.stringify({
 			category: sanitized.category,
 			sortKey: sanitized.sortKey,
+			uiLevel: sanitized.uiLevel,
 		}))
 		return true
 	} catch (error) {

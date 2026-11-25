@@ -1,3 +1,11 @@
+## 1.10.46 - 2026-11-26
+### Changed
+- **Cleaner, more flexible sidebar (#249)**:
+  - Introduced persisted **Interface mode** levels (`Normal`, `Advanced`, `Expert`) inside the Sort & Filter menu so normal users get an uncluttered sidebar while power users keep full controls (`Export CSV/JSON`, `Top extensions`, inline size/copy selectors).
+  - Grouped **Minimum copies** (`Any count`, `3+ copies`, `5+ copies`) directly inside the Sort & Filter dropdown alongside **Sort order** and **Minimum file size**, removing duplicate controls from the default sidebar and making the dropdown scrollable cleanly.
+  - Replaced the multi-row file-type pills with a compact single-row segmented bar (`All | Images | Videos | More`) opening a popover for `Audio`, `Documents`, `Archives`, and `> 10 MB`, keeping the **Folder filter** visible right underneath.
+- **Complete German (`de`, `de_DE`) and French (`fr`) sidebar translations**: Translated all 44 newly added sidebar and sort-menu labels to eliminate mixed-language text.
+
 ## 1.10.45 - 2026-11-25
 ### Fixed
 - **Database integrity (#248)**: Batched migration (`Version11022Date20261122000000`) deduplicates existing `path_hash` rows in `oc_duplicatefinder_finfo` and enforces a unique index (`duplicatefinder_ph_uniq_idx`), with atomic upsert handling in `FileInfoService` and distinct-path deduplication in `occ duplicates:list-all`.

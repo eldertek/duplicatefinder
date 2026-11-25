@@ -4,7 +4,10 @@
             <!-- Search Bar and Sort in One Line -->
             <div class="search-sort-container">
                 <SearchBar ref="searchBar" @search="handleSearch" />
-                <div class="sort-dropdown" @keydown.esc="showSortMenu = false">
+                <div
+                    ref="sortDropdown"
+                    class="sort-dropdown"
+                    @keydown.esc="closeSortMenu">
                     <button
                         type="button"
                         class="icon-only-button"
@@ -13,7 +16,7 @@
                         :aria-label="t('duplicatefinder', 'Sort and filter by size')"
                         :aria-expanded="showSortMenu ? 'true' : 'false'"
                         aria-haspopup="true"
-                        @click="toggleSortMenu">
+                        @click.stop="toggleSortMenu">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M11 9h9"></path>
                             <path d="M6 9h2"></path>
@@ -24,6 +27,26 @@
                         <span v-if="hasActiveSortOrFilter" class="active-filter-dot"></span>
                     </button>
                     <div v-if="showSortMenu" class="sort-menu">
+                        <div class="sort-menu-section-title">
+                            {{ t('duplicatefinder', 'Interface mode') }}
+                        </div>
+                        <div
+                            class="ui-level-switcher"
+                            role="group"
+                            :aria-label="t('duplicatefinder', 'Interface mode')">
+                            <button
+                                v-for="level in uiLevelOptions"
+                                :key="level.id"
+                                type="button"
+                                class="ui-level-option"
+                                :class="{ 'active': uiLevel === level.id }"
+                                :data-ui-level="level.id"
+                                :aria-pressed="uiLevel === level.id ? 'true' : 'false'"
+                                @click.stop="setUiLevel(level.id)">
+                                {{ level.label }}
+                            </button>
+                        </div>
+                        <div class="sort-menu-divider"></div>
                         <div class="sort-menu-section-title">
                             {{ t('duplicatefinder', 'Sort order') }}
                         </div>
@@ -87,6 +110,21 @@
                                 {{ t('duplicatefinder', 'Apply') }}
                             </button>
                         </div>
+                        <div class="sort-menu-divider"></div>
+                        <div class="sort-menu-section-title">
+                            {{ t('duplicatefinder', 'Minimum copies') }}
+                        </div>
+                        <button
+                            v-for="option in minCopiesSelectOptions"
+                            :key="option.id"
+                            type="button"
+                            class="sort-option min-copies-menu-option"
+                            :class="{ 'active': selectedMinCopiesPreset === option.id }"
+                            :data-min-copies="option.id"
+                            :aria-pressed="selectedMinCopiesPreset === option.id ? 'true' : 'false'"
+                            @click="setMinCopiesPreset(option.id); toggleSortMenu()">
+                            {{ option.label }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -199,25 +237,94 @@
                 </div>
             </div>
 
-            <!-- Quick File-Type Filter Chips & Live Reclaimable Summary -->
+            <!-- Quick File-Type Filter Bar & Live Reclaimable Summary -->
             <div class="quick-filter-panel">
                 <div
-                    class="quick-filter-chips"
-                    role="group"
-                    :aria-label="t('duplicatefinder', 'Filter duplicates by file type')">
-                    <button
-                        v-for="chip in categoryFilterChips"
-                        :key="chip.id"
-                        type="button"
-                        class="filter-chip"
-                        :class="{ 'active': selectedCategory === chip.id }"
-                        :aria-pressed="selectedCategory === chip.id ? 'true' : 'false'"
-                        @click="setCategoryFilter(chip.id)">
-                        <span class="filter-chip-label">{{ chip.label }}</span>
-                        <span class="filter-chip-count">({{ chip.count }})</span>
-                    </button>
+                    ref="categoryMoreDropdown"
+                    class="category-segmented-wrapper"
+                    @keydown.esc="closeMoreCategoriesMenu(true)">
+                    <div
+                        class="category-segmented-bar"
+                        role="group"
+                        :aria-label="t('duplicatefinder', 'Filter duplicates by file type')">
+                        <button
+                            v-for="chip in primaryCategoryChips"
+                            :key="chip.id"
+                            type="button"
+                            class="category-segment filter-chip"
+                            :class="{ 'active': selectedCategory === chip.id }"
+                            :data-category="chip.id"
+                            :data-count="chip.count"
+                            :title="`${chip.label} (${chip.count})`"
+                            :aria-label="`${chip.label} (${chip.count})`"
+                            :aria-pressed="selectedCategory === chip.id ? 'true' : 'false'"
+                            @click="selectPrimaryCategory(chip.id)">
+                            <span class="filter-chip-label">{{ chip.label }}</span>
+                            <span v-if="chip.id === 'all'" class="filter-chip-count">({{ chip.count }})</span>
+                        </button>
+                        <button
+                            ref="categoryMoreTrigger"
+                            type="button"
+                            class="category-segment category-more-trigger"
+                            :class="{ 'active': isMoreCategoryActive, 'is-open': showMoreCategoriesMenu }"
+                            :aria-expanded="showMoreCategoriesMenu ? 'true' : 'false'"
+                            aria-haspopup="true"
+                            :title="moreCategoryButtonTitle"
+                            :aria-label="moreCategoryButtonAriaLabel"
+                            @click.stop="toggleMoreCategoriesMenu">
+                            <span class="filter-chip-label">{{ moreCategoryButtonLabel }}</span>
+                            <svg
+                                class="category-more-chevron"
+                                :class="{ 'is-open': showMoreCategoriesMenu }"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div
+                        v-if="showMoreCategoriesMenu"
+                        class="category-more-menu"
+                        role="group"
+                        :aria-label="t('duplicatefinder', 'More file types')">
+                        <button
+                            v-for="chip in secondaryCategoryChips"
+                            :key="chip.id"
+                            type="button"
+                            class="category-more-option"
+                            :class="{ 'active': selectedCategory === chip.id }"
+                            :data-category="chip.id"
+                            :data-count="chip.count"
+                            :aria-pressed="selectedCategory === chip.id ? 'true' : 'false'"
+                            @click="selectSecondaryCategory(chip.id)">
+                            <span class="filter-chip-label">{{ chip.label }}</span>
+                            <span class="filter-chip-count">({{ chip.count }})</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="folder-filter-row">
+                    <svg
+                        class="folder-filter-icon"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
                     <input
                         v-model="folderQuery"
                         type="text"
@@ -226,48 +333,50 @@
                         :aria-label="t('duplicatefinder', 'Filter by folder prefix (e.g. /Photos or !/Backups)')"
                         @keydown.esc="folderQuery = ''" />
                 </div>
-                <div class="min-size-filter-row">
-                    <label
-                        for="duplicate-min-size-select"
-                        class="min-size-filter-label">
-                        {{ t('duplicatefinder', 'Minimum file size') }}
-                    </label>
-                    <select
-                        id="duplicate-min-size-select"
-                        v-model="selectedMinSizePreset"
-                        class="min-size-filter-select"
-                        :aria-label="t('duplicatefinder', 'Minimum file size')">
-                        <option
-                            v-for="option in minSizeSelectOptions"
-                            :key="option.id"
-                            :value="option.id">
-                            {{ option.label }}
-                        </option>
-                        <option
-                            v-if="selectedMinSizePreset === 'custom'"
-                            value="custom">
-                            {{ customMinSizeOptionLabel }}
-                        </option>
-                    </select>
-                </div>
-                <div class="min-copies-filter-row">
-                    <label
-                        for="duplicate-min-copies-select"
-                        class="min-copies-filter-label">
-                        {{ t('duplicatefinder', 'Minimum copies') }}
-                    </label>
-                    <select
-                        id="duplicate-min-copies-select"
-                        v-model="selectedMinCopiesPreset"
-                        class="min-copies-filter-select"
-                        :aria-label="t('duplicatefinder', 'Minimum copies')">
-                        <option
-                            v-for="option in minCopiesSelectOptions"
-                            :key="option.id"
-                            :value="option.id">
-                            {{ option.label }}
-                        </option>
-                    </select>
+                <div v-if="isExpertMode" class="expert-inline-filters-row">
+                    <div class="min-size-filter-row">
+                        <label
+                            for="duplicate-min-size-select"
+                            class="min-size-filter-label">
+                            {{ t('duplicatefinder', 'Minimum file size') }}
+                        </label>
+                        <select
+                            id="duplicate-min-size-select"
+                            v-model="selectedMinSizePreset"
+                            class="min-size-filter-select"
+                            :aria-label="t('duplicatefinder', 'Minimum file size')">
+                            <option
+                                v-for="option in minSizeSelectOptions"
+                                :key="option.id"
+                                :value="option.id">
+                                {{ option.label }}
+                            </option>
+                            <option
+                                v-if="selectedMinSizePreset === 'custom'"
+                                value="custom">
+                                {{ customMinSizeOptionLabel }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="min-copies-filter-row">
+                        <label
+                            for="duplicate-min-copies-select"
+                            class="min-copies-filter-label">
+                            {{ t('duplicatefinder', 'Minimum copies') }}
+                        </label>
+                        <select
+                            id="duplicate-min-copies-select"
+                            v-model="selectedMinCopiesPreset"
+                            class="min-copies-filter-select"
+                            :aria-label="t('duplicatefinder', 'Minimum copies')">
+                            <option
+                                v-for="option in minCopiesSelectOptions"
+                                :key="option.id"
+                                :value="option.id">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                    </div>
                 </div>
                 <div
                     class="reclaimable-summary-badge"
@@ -285,7 +394,7 @@
                     </span>
                 </div>
                 <div
-                    v-if="extensionBreakdown.length > 0"
+                    v-if="isAdvancedOrHigher && extensionBreakdown.length > 0"
                     class="extension-insights-bar"
                     role="group"
                     :aria-label="t('duplicatefinder', 'Top duplicate file extensions by reclaimable space')">
@@ -344,7 +453,7 @@
                         <span class="active-filter-chip-remove" aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="quick-filter-actions">
+                <div v-if="hasActiveFilters || isAdvancedOrHigher" class="quick-filter-actions">
                     <button
                         v-if="hasActiveFilters"
                         type="button"
@@ -356,36 +465,38 @@
                         @click="resetFilters">
                         {{ resetFiltersButtonLabel }}
                     </button>
-                    <button
-                        type="button"
-                        class="export-csv-button"
-                        aria-keyshortcuts="e"
-                        :disabled="filteredDuplicatesForExport.length === 0"
-                        :title="t('duplicatefinder', 'Export filtered duplicates as CSV')"
-                        :aria-label="t('duplicatefinder', 'Export CSV')"
-                        @click="exportFilteredCsv">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span>{{ t('duplicatefinder', 'Export CSV') }}</span>
-                    </button>
-                    <button
-                        type="button"
-                        class="export-json-button"
-                        aria-keyshortcuts="x"
-                        :disabled="filteredDuplicatesForExport.length === 0"
-                        :title="t('duplicatefinder', 'Export filtered duplicates as JSON')"
-                        :aria-label="t('duplicatefinder', 'Export JSON')"
-                        @click="exportFilteredJson">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span>{{ t('duplicatefinder', 'Export JSON') }}</span>
-                    </button>
+                    <div v-if="isAdvancedOrHigher" class="export-actions-row">
+                        <button
+                            type="button"
+                            class="export-csv-button"
+                            aria-keyshortcuts="e"
+                            :disabled="filteredDuplicatesForExport.length === 0"
+                            :title="t('duplicatefinder', 'Export filtered duplicates as CSV')"
+                            :aria-label="t('duplicatefinder', 'Export CSV')"
+                            @click="exportFilteredCsv">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>{{ t('duplicatefinder', 'Export CSV') }}</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="export-json-button"
+                            aria-keyshortcuts="x"
+                            :disabled="filteredDuplicatesForExport.length === 0"
+                            :title="t('duplicatefinder', 'Export filtered duplicates as JSON')"
+                            :aria-label="t('duplicatefinder', 'Export JSON')"
+                            @click="exportFilteredJson">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>{{ t('duplicatefinder', 'Export JSON') }}</span>
+                        </button>
+                    </div>
                 </div>
                 <div
                     class="sr-only filtered-groups-live-status"
@@ -545,6 +656,7 @@ import {
 } from '@/tools/duplicateFilters';
 import {
     DEFAULT_ALLOWED_SORT_KEYS,
+    DEFAULT_ALLOWED_UI_LEVELS,
     filterDuplicatesByFolderPrefix,
     loadTriagePreferences,
     saveTriagePreferences,
@@ -645,6 +757,8 @@ export default {
             showSortMenu: false,
             showProjectsMenu: false,
             showHelpMenu: false,
+            showMoreCategoriesMenu: false,
+            uiLevel: 'normal',
             selectedCategory: 'all',
             selectedExtension: '',
             folderQuery: '',
@@ -660,9 +774,15 @@ export default {
     },
     mounted() {
         this.setupSentinelObservers();
+        if (typeof document !== 'undefined') {
+            document.addEventListener('click', this.handleDocumentClick);
+        }
     },
     beforeDestroy() {
         this.teardownSentinelObservers();
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('click', this.handleDocumentClick);
+        }
     },
     watch: {
         initialSortOption(newValue) {
@@ -730,7 +850,22 @@ export default {
             );
         },
         hasActiveSortOrFilter() {
-            return this.sortOption !== 'none' || this.minSizeBytes > 0;
+            return this.sortOption !== 'none'
+                || this.minSizeBytes > 0
+                || this.selectedMinCopiesPreset !== 'any';
+        },
+        uiLevelOptions() {
+            return [
+                { id: 'normal', label: t('duplicatefinder', 'Normal') },
+                { id: 'advanced', label: t('duplicatefinder', 'Advanced') },
+                { id: 'expert', label: t('duplicatefinder', 'Expert') },
+            ];
+        },
+        isAdvancedOrHigher() {
+            return this.uiLevel === 'advanced' || this.uiLevel === 'expert';
+        },
+        isExpertMode() {
+            return this.uiLevel === 'expert';
         },
         hasActiveFilters() {
             return this.selectedCategory !== 'all'
@@ -769,9 +904,16 @@ export default {
                 Archives: t('duplicatefinder', 'Archives'),
                 '> 10 MB': t('duplicatefinder', '> 10 MB'),
             };
+            const localizedMinCopies = {
+                '3+ copies': t('duplicatefinder', '3+ copies'),
+                '5+ copies': t('duplicatefinder', '5+ copies'),
+            };
             return chips.map(chip => {
                 if (chip.key === 'category' && Object.prototype.hasOwnProperty.call(localizedCategories, chip.label)) {
                     return { ...chip, label: localizedCategories[chip.label] };
+                }
+                if (chip.key === 'minCopies' && Object.prototype.hasOwnProperty.call(localizedMinCopies, chip.label)) {
+                    return { ...chip, label: localizedMinCopies[chip.label] };
                 }
                 return chip;
             });
@@ -810,6 +952,35 @@ export default {
                 { id: 'archives', label: t('duplicatefinder', 'Archives'), count: counts.archives },
                 { id: 'large', label: t('duplicatefinder', '> 10 MB'), count: counts.large },
             ];
+        },
+        primaryCategoryChips() {
+            return this.categoryFilterChips.slice(0, 3);
+        },
+        secondaryCategoryChips() {
+            return this.categoryFilterChips.slice(3);
+        },
+        activeMoreCategory() {
+            return this.secondaryCategoryChips.find(chip => chip.id === this.selectedCategory) || null;
+        },
+        isMoreCategoryActive() {
+            return Boolean(this.activeMoreCategory);
+        },
+        moreCategoryButtonLabel() {
+            return this.activeMoreCategory
+                ? this.activeMoreCategory.label
+                : t('duplicatefinder', 'More');
+        },
+        moreCategoryButtonTitle() {
+            if (this.activeMoreCategory) {
+                return `${this.activeMoreCategory.label} (${this.activeMoreCategory.count})`;
+            }
+            return t('duplicatefinder', 'More file types');
+        },
+        moreCategoryButtonAriaLabel() {
+            if (this.activeMoreCategory) {
+                return `${this.activeMoreCategory.label} (${this.activeMoreCategory.count})`;
+            }
+            return t('duplicatefinder', 'More file types');
         },
         selectedMinSizePreset: {
             get() {
@@ -1030,6 +1201,60 @@ export default {
             if (this.showSortMenu) {
                 this.showProjectsMenu = false;
                 this.showHelpMenu = false;
+                this.showMoreCategoriesMenu = false;
+            }
+        },
+        closeSortMenu() {
+            this.showSortMenu = false;
+        },
+        toggleMoreCategoriesMenu() {
+            this.showMoreCategoriesMenu = !this.showMoreCategoriesMenu;
+            if (this.showMoreCategoriesMenu) {
+                this.showSortMenu = false;
+                this.showProjectsMenu = false;
+                this.showHelpMenu = false;
+            }
+        },
+        closeMoreCategoriesMenu(restoreFocus = false) {
+            if (!this.showMoreCategoriesMenu) {
+                return;
+            }
+            this.showMoreCategoriesMenu = false;
+            if (restoreFocus && this.$refs.categoryMoreTrigger && typeof this.$refs.categoryMoreTrigger.focus === 'function') {
+                this.$refs.categoryMoreTrigger.focus();
+            }
+        },
+        selectPrimaryCategory(category) {
+            this.setCategoryFilter(category);
+            this.showMoreCategoriesMenu = false;
+        },
+        selectSecondaryCategory(category) {
+            this.setCategoryFilter(category);
+            this.showMoreCategoriesMenu = false;
+        },
+        setUiLevel(level) {
+            const normalized = DEFAULT_ALLOWED_UI_LEVELS.includes(level) ? level : 'normal';
+            if (this.uiLevel === normalized) {
+                return;
+            }
+            this.uiLevel = normalized;
+            this.persistTriagePreferences();
+        },
+        handleDocumentClick(event) {
+            const target = event && event.target;
+            if (
+                this.showSortMenu
+                && this.$refs.sortDropdown
+                && (!target || !this.$refs.sortDropdown.contains(target))
+            ) {
+                this.showSortMenu = false;
+            }
+            if (
+                this.showMoreCategoriesMenu
+                && this.$refs.categoryMoreDropdown
+                && (!target || !this.$refs.categoryMoreDropdown.contains(target))
+            ) {
+                this.showMoreCategoriesMenu = false;
             }
         },
         toggleProjectsMenu() {
@@ -1037,6 +1262,7 @@ export default {
             if (this.showProjectsMenu) {
                 this.showSortMenu = false;
                 this.showHelpMenu = false;
+                this.showMoreCategoriesMenu = false;
             }
         },
         toggleHelpMenu() {
@@ -1044,6 +1270,7 @@ export default {
             if (this.showHelpMenu) {
                 this.showSortMenu = false;
                 this.showProjectsMenu = false;
+                this.showMoreCategoriesMenu = false;
             }
         },
         getSafeLocalStorage() {
@@ -1057,8 +1284,10 @@ export default {
             const restored = loadTriagePreferences(this.getSafeLocalStorage(), {
                 allowedCategories: DUPLICATE_FILTER_CATEGORIES,
                 allowedSortKeys: DEFAULT_ALLOWED_SORT_KEYS,
+                allowedUiLevels: DEFAULT_ALLOWED_UI_LEVELS,
             });
             this.selectedCategory = restored.category;
+            this.uiLevel = restored.uiLevel;
             if (!this.initialSortOption || this.initialSortOption === 'none') {
                 this.sortOption = restored.sortKey;
             }
@@ -1069,10 +1298,12 @@ export default {
                 {
                     category: this.selectedCategory,
                     sortKey: this.sortOption,
+                    uiLevel: this.uiLevel,
                 },
                 {
                     allowedCategories: DUPLICATE_FILTER_CATEGORIES,
                     allowedSortKeys: DEFAULT_ALLOWED_SORT_KEYS,
+                    allowedUiLevels: DEFAULT_ALLOWED_UI_LEVELS,
                 },
             );
         },
@@ -1742,11 +1973,15 @@ export default {
 }
 
 .icon-only-button:focus-visible,
+.ui-level-option:focus-visible,
 .sort-option:focus-visible,
 .custom-size-input:focus-visible,
 .custom-size-apply:focus-visible,
 .fixed-nav-button:focus-visible,
 .filter-chip:focus-visible,
+.category-segment:focus-visible,
+.category-more-trigger:focus-visible,
+.category-more-option:focus-visible,
 .menu-item:focus-visible,
 .action-button:focus-visible,
 .menu-close-button:focus-visible,
@@ -1775,8 +2010,11 @@ export default {
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
     z-index: 2000;
-    min-inline-size: 220px;
+    min-inline-size: 248px;
     max-inline-size: calc(100vw - 24px);
+    max-block-size: min(75vh, 560px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding-block: 6px;
     padding-inline: 0;
     box-sizing: border-box;
@@ -1800,6 +2038,58 @@ export default {
     margin-block: 4px;
     margin-inline: 0;
     background-color: var(--color-border);
+}
+
+.ui-level-switcher {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding-block: 4px 6px;
+    padding-inline: 10px;
+    box-sizing: border-box;
+}
+
+.ui-level-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    max-inline-size: 100%;
+    padding-block: 6px;
+    padding-inline: 6px;
+    margin-block: 0;
+    margin-inline: 0;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 6px;
+    background-color: var(--color-main-background);
+    color: var(--color-main-text);
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ui-level-option:hover {
+    background-color: var(--color-background-hover);
+}
+
+.ui-level-option.active {
+    background-color: var(--color-primary-element);
+    border-color: var(--color-primary-element);
+    color: var(--color-primary-text);
+    font-weight: 600;
+}
+
+.ui-level-option.active:hover {
+    background-color: var(--color-primary-element-hover);
+    border-color: var(--color-primary-element-hover);
 }
 
 .sort-option {
@@ -2055,68 +2345,179 @@ export default {
     box-sizing: border-box;
 }
 
-.quick-filter-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+.category-segmented-wrapper {
+    position: relative;
+    inline-size: 100%;
     max-inline-size: 100%;
     box-sizing: border-box;
 }
 
-.filter-chip {
+.category-segmented-bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 8px;
+    background-color: var(--color-main-background);
+    box-sizing: border-box;
+}
+
+.category-segment {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
+    inline-size: 100%;
     max-inline-size: 100%;
     min-inline-size: 44px;
     min-block-size: 44px;
     padding-block: 6px;
-    padding-inline: 12px;
-    border: 1px solid var(--color-border-dark, var(--color-border));
-    border-radius: 999px;
-    background-color: var(--color-main-background);
+    padding-inline: 4px;
+    margin-block: 0;
+    margin-inline: 0;
+    border: none;
+    border-inline-end: 1px solid var(--color-border);
+    border-radius: 0;
+    background-color: transparent;
     color: var(--color-main-text);
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 500;
     line-height: 1.2;
     cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease;
     box-sizing: border-box;
 }
 
+.category-segment:first-child {
+    border-start-start-radius: 7px;
+    border-end-start-radius: 7px;
+}
+
+.category-segment:last-child {
+    border-inline-end: none;
+    border-start-end-radius: 7px;
+    border-end-end-radius: 7px;
+}
+
+.filter-chip-label {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .filter-chip-count {
-    font-size: 0.78em;
+    flex-shrink: 0;
+    font-size: 0.76em;
     color: var(--color-text-maxcontrast);
     font-variant-numeric: tabular-nums;
 }
 
-.filter-chip.active .filter-chip-count {
-    color: var(--color-primary-text);
-}
-
-.filter-chip:hover {
+.category-segment:hover {
     background-color: var(--color-background-hover);
 }
 
-.filter-chip.active {
+.category-segment.active {
     background-color: var(--color-primary-element);
-    border-color: var(--color-primary-element);
     color: var(--color-primary-text);
     font-weight: 600;
 }
 
-.filter-chip.active:hover {
+.category-segment.active:hover {
     background-color: var(--color-primary-element-hover);
-    border-color: var(--color-primary-element-hover);
+}
+
+.category-segment.active .filter-chip-count {
+    color: var(--color-primary-text);
+}
+
+.category-more-chevron {
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+}
+
+.category-more-chevron.is-open {
+    transform: rotate(180deg);
+}
+
+.category-more-menu {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: calc(100% + 4px);
+    z-index: 1900;
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 184px;
+    max-inline-size: calc(100vw - 24px);
+    padding-block: 4px;
+    padding-inline: 0;
+    border: 1px solid var(--color-border-dark, var(--color-border));
+    border-radius: 8px;
+    background-color: var(--color-main-background, #ffffff);
+    background-image: linear-gradient(var(--color-main-background, #ffffff), var(--color-main-background, #ffffff)), linear-gradient(#22262c, #22262c);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    box-sizing: border-box;
+    opacity: 1;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.category-more-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-block: 8px;
+    padding-inline: 12px;
+    margin-block: 0;
+    margin-inline: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-main-text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: start;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.category-more-option:hover {
+    background-color: var(--color-background-hover);
+}
+
+.category-more-option.active {
+    background-color: var(--color-primary-element-light);
+    color: var(--color-primary-element);
+    font-weight: 600;
+}
+
+.category-more-option.active .filter-chip-count {
+    color: var(--color-primary-element);
 }
 
 .folder-filter-row {
+    position: relative;
     display: flex;
     align-items: center;
     inline-size: 100%;
     max-inline-size: 100%;
     box-sizing: border-box;
+}
+
+.folder-filter-icon {
+    position: absolute;
+    inset-inline-start: 10px;
+    color: var(--color-text-maxcontrast);
+    pointer-events: none;
+    flex-shrink: 0;
 }
 
 .folder-filter-input {
@@ -2125,7 +2526,8 @@ export default {
     min-inline-size: 0;
     min-block-size: 44px;
     padding-block: 6px;
-    padding-inline: 10px;
+    padding-inline-start: 32px;
+    padding-inline-end: 10px;
     margin: 0;
     border: 1px solid var(--color-border-dark, var(--color-border));
     border-radius: 6px;
@@ -2141,12 +2543,22 @@ export default {
     outline-offset: 2px;
 }
 
+.expert-inline-filters-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
 .min-size-filter-row,
 .min-copies-filter-row {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-inline-size: 0;
     inline-size: 100%;
     max-inline-size: 100%;
     box-sizing: border-box;
@@ -2154,29 +2566,32 @@ export default {
 
 .min-size-filter-label,
 .min-copies-filter-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--color-text-maxcontrast);
-    line-height: 1.3;
+    line-height: 1.25;
     margin-block: 0;
     margin-inline: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .min-size-filter-select,
 .min-copies-filter-select {
-    flex: 1 1 140px;
+    inline-size: 100%;
     max-inline-size: 100%;
     min-inline-size: 44px;
     min-block-size: 44px;
     padding-block: 6px;
-    padding-inline: 10px;
+    padding-inline: 8px;
     margin-block: 0;
     margin-inline: 0;
     border: 1px solid var(--color-border-dark, var(--color-border));
     border-radius: 6px;
     background-color: var(--color-main-background);
     color: var(--color-main-text);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     line-height: 1.3;
     cursor: pointer;
     box-sizing: border-box;
@@ -2409,7 +2824,16 @@ export default {
 
 .quick-filter-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 6px;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+}
+
+.export-actions-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
     inline-size: 100%;
     max-inline-size: 100%;
@@ -2420,7 +2844,7 @@ export default {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 1 1 110px;
+    inline-size: 100%;
     min-inline-size: 44px;
     min-block-size: 44px;
     padding-block: 6px;
@@ -2456,18 +2880,18 @@ export default {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    flex: 1 1 110px;
+    inline-size: 100%;
     max-inline-size: 100%;
     min-inline-size: 44px;
     min-block-size: 44px;
     padding-block: 6px;
-    padding-inline: 12px;
+    padding-inline: 8px;
     margin: 0;
     border: 1px solid var(--color-border-dark, var(--color-border));
     border-radius: 6px;
     background-color: var(--color-main-background);
     color: var(--color-main-text);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
     line-height: 1.2;
     cursor: pointer;

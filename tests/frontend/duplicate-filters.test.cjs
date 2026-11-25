@@ -233,7 +233,10 @@ describe('Cycle 37: duplicate file-type filters & reclaimable space summary', ()
 
 		const nav = vm.$refs.nav
 		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
-		assert.equal(chips.length, 7)
+		assert.equal(chips.length, 3, 'renders 3 primary segments (All, Images, Videos) in a single row')
+		const moreTrigger = vm.$el.querySelector('button.category-more-trigger')
+		assert.ok(moreTrigger, 'renders 4th More trigger segment in the same row')
+		assert.equal(moreTrigger.getAttribute('aria-expanded'), 'false')
 		assert.equal(chips[0].getAttribute('aria-pressed'), 'true')
 		assert.equal(chips[1].getAttribute('aria-pressed'), 'false')
 
@@ -244,7 +247,7 @@ describe('Cycle 37: duplicate file-type filters & reclaimable space summary', ()
 		// Total initially: 4 MB (images) + 15 MB (archive) + 1 KB (pdf) = 19 MB
 		assert.ok(badge.textContent.includes('19 MB'), `expected 19 MB in "${badge.textContent}"`)
 
-		// Click Images chip (index 1)
+		// Click Images segment (index 1)
 		chips[1].click()
 		await settle()
 		assert.equal(nav.selectedCategory, 'images')
@@ -256,21 +259,30 @@ describe('Cycle 37: duplicate file-type filters & reclaimable space summary', ()
 		assert.ok(badge.textContent.includes('4 MB'), `expected 4 MB in "${badge.textContent}"`)
 		assert.ok(badge.textContent.includes('1 groups, 2 extra'))
 
-		// Click > 10 MB chip (index 6)
-		chips[6].click()
+		// Open More popover and click > 10 MB option
+		moreTrigger.click()
+		await settle()
+		assert.equal(moreTrigger.getAttribute('aria-expanded'), 'true')
+		const moreOptions = Array.from(vm.$el.querySelectorAll('button.category-more-option'))
+		assert.equal(moreOptions.length, 4, 'More popover contains Audio, Documents, Archives, > 10 MB')
+		moreOptions[3].click()
 		await settle()
 		assert.equal(nav.selectedCategory, 'large')
+		assert.equal(moreTrigger.getAttribute('aria-expanded'), 'false')
+		assert.equal(moreTrigger.classList.contains('active'), true)
+		assert.ok(moreTrigger.textContent.includes('> 10 MB'))
 		assert.equal(nav.filteredUnacknowledgedDuplicates.length, 1)
 		assert.equal(nav.filteredUnacknowledgedDuplicates[0].id, 2)
 		assert.ok(badge.textContent.includes('15 MB'), `expected 15 MB in "${badge.textContent}"`)
 
-		// Click Videos chip (index 2) -> empty results show 0 B
+		// Click Videos segment (index 2) -> empty results show 0 B
 		chips[2].click()
 		await settle()
 		assert.equal(nav.filteredUnacknowledgedDuplicates.length, 0)
+		assert.equal(moreTrigger.classList.contains('active'), false)
 		assert.ok(badge.textContent.includes('0 B'), `expected 0 B in "${badge.textContent}"`)
 
-		// Click All chip (index 0) -> restores all groups
+		// Click All segment (index 0) -> restores all groups
 		chips[0].click()
 		await settle()
 		assert.equal(nav.filteredUnacknowledgedDuplicates.length, 2)
@@ -432,10 +444,23 @@ describe('Cycle 62: computeCategoryCounts & live chip counts in DuplicateNavigat
 		await settle()
 
 		const nav = vm.$refs.nav
-		const readChipTexts = () => Array.from(vm.$el.querySelectorAll('button.filter-chip'))
-			.map(btn => btn.textContent.replace(/\s+/g, ' ').trim())
+		const moreTrigger = vm.$el.querySelector('button.category-more-trigger')
+		moreTrigger.click()
+		await settle()
 
-		assert.deepEqual(readChipTexts(), [
+		const readAllCategoryCounts = () => {
+			const primary = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
+				.map(btn => btn.getAttribute('aria-label'))
+			const secondary = Array.from(vm.$el.querySelectorAll('button.category-more-option'))
+				.map(btn => btn.textContent.replace(/\s+/g, ' ').trim())
+			return [...primary, ...secondary]
+		}
+
+		assert.equal(
+			vm.$el.querySelector('button.filter-chip[data-category="all"]').textContent.replace(/\s+/g, ' ').trim(),
+			'All (3)',
+		)
+		assert.deepEqual(readAllCategoryCounts(), [
 			'All (3)',
 			'Images (1)',
 			'Videos (0)',
@@ -445,12 +470,14 @@ describe('Cycle 62: computeCategoryCounts & live chip counts in DuplicateNavigat
 			'> 10 MB (1)',
 		])
 
-		// Selecting a category keeps all category chip counts intact for quick switching
+		// Selecting a category keeps all category counts intact for quick switching
 		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
 		chips[1].click()
 		await settle()
 		assert.equal(nav.selectedCategory, 'images')
-		assert.deepEqual(readChipTexts(), [
+		moreTrigger.click()
+		await settle()
+		assert.deepEqual(readAllCategoryCounts(), [
 			'All (3)',
 			'Images (1)',
 			'Videos (0)',
@@ -460,10 +487,10 @@ describe('Cycle 62: computeCategoryCounts & live chip counts in DuplicateNavigat
 			'> 10 MB (1)',
 		])
 
-		// Applying a folder prefix filter updates chip counts live
+		// Applying a folder prefix filter updates counts live
 		nav.folderQuery = '/Backups'
 		await settle()
-		assert.deepEqual(readChipTexts(), [
+		assert.deepEqual(readAllCategoryCounts(), [
 			'All (2)',
 			'Images (0)',
 			'Videos (0)',
@@ -473,11 +500,11 @@ describe('Cycle 62: computeCategoryCounts & live chip counts in DuplicateNavigat
 			'> 10 MB (1)',
 		])
 
-		// Applying minSizeBytes updates chip counts live
+		// Applying minSizeBytes updates counts live
 		nav.folderQuery = ''
 		nav.setMinSizeBytes(10 * 1024 * 1024)
 		await settle()
-		assert.deepEqual(readChipTexts(), [
+		assert.deepEqual(readAllCategoryCounts(), [
 			'All (1)',
 			'Images (0)',
 			'Videos (0)',
@@ -630,9 +657,14 @@ describe('Cycle 65: MIN_SIZE_PRESETS, filterDuplicatesByMinSize, and accessible 
 		await settle()
 
 		const nav = vm.$refs.nav
+		// Hidden inline in clean normal mode, visible inline in expert mode
+		assert.equal(vm.$el.querySelector('select.min-size-filter-select'), null, 'inline min-size select is hidden in normal mode')
+		nav.setUiLevel('expert')
+		await settle()
+
 		const select = vm.$el.querySelector('select.min-size-filter-select')
 		const label = vm.$el.querySelector('label.min-size-filter-label')
-		assert.ok(select, 'minimum size select is rendered')
+		assert.ok(select, 'minimum size select is rendered in expert mode')
 		assert.ok(label, 'minimum size label is rendered')
 		assert.equal(label.getAttribute('for'), select.getAttribute('id'))
 		assert.ok(select.getAttribute('aria-label'))
@@ -704,6 +736,8 @@ describe('Cycle 65: MIN_SIZE_PRESETS, filterDuplicatesByMinSize, and accessible 
 		}).$mount()
 		await settle()
 
+		vm.$refs.nav.setUiLevel('expert')
+		await settle()
 		const select = vm.$el.querySelector('select.min-size-filter-select')
 		assert.equal(vm.$refs.nav.selectedMinSizePreset, 'custom')
 		assert.equal(select.value, 'custom')
@@ -863,9 +897,14 @@ describe('Cycle 68: MIN_COPIES_PRESETS, filterDuplicatesByMinCopies, and accessi
 		await settle()
 
 		const nav = vm.$refs.nav
+		// Hidden inline in clean normal mode, available inline in expert mode
+		assert.equal(vm.$el.querySelector('select.min-copies-filter-select'), null, 'inline min-copies select is hidden in normal mode')
+		nav.setUiLevel('expert')
+		await settle()
+
 		const select = vm.$el.querySelector('select.min-copies-filter-select')
 		const label = vm.$el.querySelector('label.min-copies-filter-label')
-		assert.ok(select, 'minimum copies select is rendered')
+		assert.ok(select, 'minimum copies select is rendered in expert mode')
 		assert.ok(label, 'minimum copies label is rendered')
 		assert.equal(label.getAttribute('for'), select.getAttribute('id'))
 		assert.ok(select.getAttribute('aria-label'))
@@ -881,13 +920,18 @@ describe('Cycle 68: MIN_COPIES_PRESETS, filterDuplicatesByMinCopies, and accessi
 		await settle()
 
 		assert.equal(nav.selectedMinCopiesPreset, '3plus')
+		assert.equal(nav.hasActiveSortOrFilter, true)
 		assert.deepEqual(nav.filteredUnacknowledgedDuplicates.map(d => d.id), [2, 3])
 		assert.deepEqual(nav.filteredAcknowledgedDuplicates.map(d => d.id), [100])
 		assert.equal(emittedQueryChanges.length, 0)
 
-		const readChipTexts = () => Array.from(vm.$el.querySelectorAll('button.filter-chip'))
-			.map(btn => btn.textContent.replace(/\s+/g, ' ').trim())
-		assert.deepEqual(readChipTexts(), [
+		vm.$el.querySelector('button.category-more-trigger').click()
+		await settle()
+		const readCategoryCounts = () => [
+			...Array.from(vm.$el.querySelectorAll('button.filter-chip')).map(btn => btn.getAttribute('aria-label')),
+			...Array.from(vm.$el.querySelectorAll('button.category-more-option')).map(btn => btn.textContent.replace(/\s+/g, ' ').trim()),
+		]
+		assert.deepEqual(readCategoryCounts(), [
 			'All (3)',
 			'Images (1)',
 			'Videos (0)',
@@ -957,6 +1001,8 @@ describe('Cycle 68: MIN_COPIES_PRESETS, filterDuplicatesByMinCopies, and accessi
 		await settle()
 
 		const nav = vm.$refs.nav
+		nav.setUiLevel('expert')
+		await settle()
 		const select = vm.$el.querySelector('select.min-copies-filter-select')
 		const chips = Array.from(vm.$el.querySelectorAll('button.filter-chip'))
 

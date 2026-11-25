@@ -334,6 +334,7 @@ describe('Cycle 59: deterministic duplicate sorting helper and reclaimable sort 
 		assert.deepEqual(JSON.parse(window.localStorage.getItem(storageKey)), {
 			category: 'all',
 			sortKey: 'reclaimable-desc',
+			uiLevel: 'normal',
 		})
 
 		vm.$destroy()
