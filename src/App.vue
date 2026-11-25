@@ -2975,6 +2975,41 @@
 							<span>{{ t('duplicatefinder', 'Orbital & CCSDS') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-particle-physics-hep-vault-button"
+							:class="{ 'is-active': particlePhysicsHepVaultOpen }"
+							:aria-pressed="particlePhysicsHepVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+P"
+							:title="t('duplicatefinder', 'Toggle Particle Physics, HEP Detector and Synchrotron Beamline Vault auditor')"
+							@click="toggleParticlePhysicsHepVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<circle
+									cx="12"
+									cy="12"
+									r="9" />
+								<circle
+									cx="12"
+									cy="12"
+									r="2.5" />
+								<path d="M12 3v4" />
+								<path d="M12 17v4" />
+								<path d="M4.5 7.5l3.5 2" />
+								<path d="M16 14.5l3.5 2" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Particle & HEP') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -3948,6 +3983,15 @@
 						@compare-duplicate="onOrbitalSpacecraftVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="orbitalSpacecraftVaultOpen = false" />
+					<ParticlePhysicsHepVaultWorkbench
+						v-if="particlePhysicsHepVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onParticlePhysicsHepVaultSelectDuplicate"
+						@compare-duplicate="onParticlePhysicsHepVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="particlePhysicsHepVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4477,6 +4521,7 @@ import LidarPhotogrammetryVaultWorkbench from './components/LidarPhotogrammetryV
 import MocapBiomechanicsVaultWorkbench from './components/MocapBiomechanicsVaultWorkbench.vue'
 import NeuroscienceElectrophysVaultWorkbench from './components/NeuroscienceElectrophysVaultWorkbench.vue'
 import OrbitalSpacecraftVaultWorkbench from './components/OrbitalSpacecraftVaultWorkbench.vue'
+import ParticlePhysicsHepVaultWorkbench from './components/ParticlePhysicsHepVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4635,6 +4680,7 @@ export default {
 		MocapBiomechanicsVaultWorkbench,
 		NeuroscienceElectrophysVaultWorkbench,
 		OrbitalSpacecraftVaultWorkbench,
+		ParticlePhysicsHepVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4760,6 +4806,7 @@ export default {
 			mocapBiomechanicsVaultOpen: false,
 			neuroscienceElectrophysVaultOpen: false,
 			orbitalSpacecraftVaultOpen: false,
+			particlePhysicsHepVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -5028,6 +5075,7 @@ export default {
 				'toggle-mocap-biomechanics-vault-auditor': t('duplicatefinder', 'Toggle Motion Capture, Biomechanics and Optical Tracking Vault auditor'),
 				'toggle-neuroscience-electrophys-vault-auditor': t('duplicatefinder', 'Toggle Neuroscience, Electrophysiology and BIDS Vault auditor'),
 				'toggle-orbital-spacecraft-vault-auditor': t('duplicatefinder', 'Toggle Orbital Spaceflight, CCSDS and Satellite Telemetry Vault auditor'),
+				'toggle-particle-physics-hep-vault-auditor': t('duplicatefinder', 'Toggle Particle Physics, HEP Detector and Synchrotron Beamline Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -6844,6 +6892,22 @@ export default {
 		onOrbitalSpacecraftVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleParticlePhysicsHepVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.particlePhysicsHepVaultOpen = !this.particlePhysicsHepVaultOpen
+			return true
+		},
+		onParticlePhysicsHepVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onParticlePhysicsHepVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -7879,6 +7943,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-particle-physics-hep-vault-auditor') {
+				if (this.toggleParticlePhysicsHepVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -8874,7 +8945,8 @@ export default {
 .app-content-topbar .topbar-lidar-photogrammetry-vault-button,
 .app-content-topbar .topbar-mocap-biomechanics-vault-button,
 .app-content-topbar .topbar-neuroscience-electrophys-vault-button,
-.app-content-topbar .topbar-orbital-spacecraft-vault-button {
+.app-content-topbar .topbar-orbital-spacecraft-vault-button,
+.app-content-topbar .topbar-particle-physics-hep-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -8957,7 +9029,8 @@ export default {
 .app-content-topbar .topbar-lidar-photogrammetry-vault-button,
 .app-content-topbar .topbar-mocap-biomechanics-vault-button,
 .app-content-topbar .topbar-neuroscience-electrophys-vault-button,
-.app-content-topbar .topbar-orbital-spacecraft-vault-button {
+.app-content-topbar .topbar-orbital-spacecraft-vault-button,
+.app-content-topbar .topbar-particle-physics-hep-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -9059,7 +9132,8 @@ export default {
 .app-content-topbar .topbar-lidar-photogrammetry-vault-button svg,
 .app-content-topbar .topbar-mocap-biomechanics-vault-button svg,
 .app-content-topbar .topbar-neuroscience-electrophys-vault-button svg,
-.app-content-topbar .topbar-orbital-spacecraft-vault-button svg {
+.app-content-topbar .topbar-orbital-spacecraft-vault-button svg,
+.app-content-topbar .topbar-particle-physics-hep-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -9259,7 +9333,9 @@ export default {
 .app-content-topbar .topbar-neuroscience-electrophys-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-neuroscience-electrophys-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-orbital-spacecraft-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-orbital-spacecraft-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-orbital-spacecraft-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-particle-physics-hep-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-particle-physics-hep-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -9359,7 +9435,8 @@ export default {
 .app-content-topbar .topbar-lidar-photogrammetry-vault-button.is-active,
 .app-content-topbar .topbar-mocap-biomechanics-vault-button.is-active,
 .app-content-topbar .topbar-neuroscience-electrophys-vault-button.is-active,
-.app-content-topbar .topbar-orbital-spacecraft-vault-button.is-active {
+.app-content-topbar .topbar-orbital-spacecraft-vault-button.is-active,
+.app-content-topbar .topbar-particle-physics-hep-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -9602,6 +9679,7 @@ export default {
 .app-content-topbar .topbar-mocap-biomechanics-vault-button > *,
 .app-content-topbar .topbar-neuroscience-electrophys-vault-button > *,
 .app-content-topbar .topbar-orbital-spacecraft-vault-button > *,
+.app-content-topbar .topbar-particle-physics-hep-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -9783,6 +9861,7 @@ export default {
 	.app-content-topbar .topbar-mocap-biomechanics-vault-button,
 	.app-content-topbar .topbar-neuroscience-electrophys-vault-button,
 	.app-content-topbar .topbar-orbital-spacecraft-vault-button,
+	.app-content-topbar .topbar-particle-physics-hep-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}
