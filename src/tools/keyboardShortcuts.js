@@ -554,6 +554,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-particle-physics-hep-vault-auditor',
 	},
 	{
+		id: 'toggle-quantum-qubit-pulse-vault-auditor',
+		keys: ['Alt+Shift+Q'],
+		action: 'toggle-quantum-qubit-pulse-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -786,6 +791,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'P' || key === 'p')) {
 			return 'toggle-particle-physics-hep-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'Q' || key === 'q')) {
+			return 'toggle-quantum-qubit-pulse-vault-auditor'
 		}
 		return null
 	}

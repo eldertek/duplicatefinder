@@ -272,6 +272,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/NeuroscienceElectrophysVaultWorkbench.vue': { __esModule: true, default: stub('neuroscience-electrophys-vault-auditor') },
 			'./components/OrbitalSpacecraftVaultWorkbench.vue': { __esModule: true, default: stub('orbital-spacecraft-vault-auditor') },
 			'./components/ParticlePhysicsHepVaultWorkbench.vue': { __esModule: true, default: stub('particle-physics-hep-vault-auditor') },
+			'./components/QuantumQubitPulseVaultWorkbench.vue': { __esModule: true, default: stub('quantum-qubit-pulse-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4885,5 +4886,31 @@ describe('Cycle 216: Alt+Shift+P shortcut for Particle Physics, HEP Detector & S
 		assert.equal(resolveShortcutAction({ key: 'P', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'P', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'P', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 217: Alt+Shift+Q shortcut for Quantum Computing, Cryogenic Qubit & Pulse-Control Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+Q cleanly and preserves Shift+Q and q while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-quantum-qubit-pulse-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-quantum-qubit-pulse-vault-auditor',
+			keys: ['Alt+Shift+Q'],
+			action: 'toggle-quantum-qubit-pulse-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true }), 'toggle-quantum-qubit-pulse-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'q', altKey: true, shiftKey: true }), 'toggle-quantum-qubit-pulse-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'Q', shiftKey: true }), 'toggle-database-dump-log-auditor')
+		assert.equal(resolveShortcutAction({ key: 'q', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'q' }), 'toggle-recovery-safety')
+		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'Q', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })
