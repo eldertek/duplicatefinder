@@ -3144,6 +3144,30 @@
 							<span>{{ t('duplicatefinder', 'Traffic & V2X') }}</span>
 						</button>
 						<button
+							v-if="activeView === 'details'"
+							type="button"
+							class="topbar-urban-water-utility-pipeline-vault-button"
+							:class="{ 'is-active': urbanWaterUtilityPipelineVaultOpen }"
+							:aria-pressed="urbanWaterUtilityPipelineVaultOpen ? 'true' : 'false'"
+							aria-keyshortcuts="Alt+Shift+U"
+							:title="t('duplicatefinder', 'Toggle Urban Water Utility, Hydraulic Network and Pipeline Telemetry Vault auditor')"
+							@click="toggleUrbanWaterUtilityPipelineVault">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true">
+								<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+							</svg>
+							<span>{{ t('duplicatefinder', 'Water & Pipeline') }}</span>
+						</button>
+						<button
 							v-if="activeView !== 'bulk-delete'"
 							type="button"
 							class="topbar-bulk-delete-button"
@@ -4162,6 +4186,15 @@
 						@compare-duplicate="onTrafficItsV2xVaultCompareDuplicate"
 						@start-scan="triggerScan"
 						@close="trafficItsV2xVaultOpen = false" />
+					<UrbanWaterUtilityPipelineVaultWorkbench
+						v-if="urbanWaterUtilityPipelineVaultOpen"
+						:duplicates="treemapSourceDuplicates"
+						:all-duplicates="allLoadedDuplicates"
+						:current-duplicate-id="currentDuplicate ? currentDuplicate.id : null"
+						@select-duplicate="onUrbanWaterUtilityPipelineVaultSelectDuplicate"
+						@compare-duplicate="onUrbanWaterUtilityPipelineVaultCompareDuplicate"
+						@start-scan="triggerScan"
+						@close="urbanWaterUtilityPipelineVaultOpen = false" />
 					<DuplicateTreemap
 						v-if="treemapOpen"
 						:duplicates="treemapSourceDuplicates"
@@ -4696,6 +4729,7 @@ import QuantumQubitPulseVaultWorkbench from './components/QuantumQubitPulseVault
 import RailwaySignalingTelemetryVaultWorkbench from './components/RailwaySignalingTelemetryVaultWorkbench.vue'
 import SpeechAsrBioacousticsVaultWorkbench from './components/SpeechAsrBioacousticsVaultWorkbench.vue'
 import TrafficItsV2xVaultWorkbench from './components/TrafficItsV2xVaultWorkbench.vue'
+import UrbanWaterUtilityPipelineVaultWorkbench from './components/UrbanWaterUtilityPipelineVaultWorkbench.vue'
 import OriginFoldersSettings from './components/OriginFoldersSettings.vue';
 import ExcludedFoldersSettings from './components/ExcludedFoldersSettings.vue';
 import BulkDeletionSettings from './components/BulkDeletionSettings.vue';
@@ -4859,6 +4893,7 @@ export default {
 		RailwaySignalingTelemetryVaultWorkbench,
 		SpeechAsrBioacousticsVaultWorkbench,
 		TrafficItsV2xVaultWorkbench,
+		UrbanWaterUtilityPipelineVaultWorkbench,
 		OriginFoldersSettings,
 		ExcludedFoldersSettings,
 		BulkDeletionSettings,
@@ -4989,6 +5024,7 @@ export default {
 			railwaySignalingTelemetryVaultOpen: false,
 			speechAsrBioacousticsVaultOpen: false,
 			trafficItsV2xVaultOpen: false,
+			urbanWaterUtilityPipelineVaultOpen: false,
 			reclamationHistory: loadReclamationHistory(),
 			filteredDuplicatesForTreemap: null,
 			treemapSyncedFolder: '',
@@ -5262,6 +5298,7 @@ export default {
 				'toggle-railway-signaling-telemetry-vault-auditor': t('duplicatefinder', 'Toggle Railway, ETCS/CBTC Signaling, Wayside Diagnostics and Rolling Stock Telemetry Vault auditor'),
 				'toggle-speech-asr-bioacoustics-vault-auditor': t('duplicatefinder', 'Toggle Speech, Bioacoustics and Multilingual ASR Alignment Vault auditor'),
 				'toggle-traffic-its-v2x-vault-auditor': t('duplicatefinder', 'Toggle Traffic ITS, V2X Connected Mobility and Corridor Signal Vault auditor'),
+				'toggle-urban-water-utility-pipeline-vault-auditor': t('duplicatefinder', 'Toggle Urban Water Utility, Hydraulic Network and Pipeline Telemetry Vault auditor'),
 				'toggle-acknowledge': t('duplicatefinder', 'Acknowledge or unacknowledge active group'),
 				'focus-search': t('duplicatefinder', 'Focus duplicate search bar'),
 				'cycle-min-size-filter': t('duplicatefinder', 'Cycle minimum file size filter'),
@@ -7158,6 +7195,22 @@ export default {
 		onTrafficItsV2xVaultCompareDuplicate(duplicate) {
 			this.onSimilarityCompareDuplicate(duplicate)
 		},
+		toggleUrbanWaterUtilityPipelineVault() {
+			if (this.activeView !== 'details') {
+				return false
+			}
+			this.urbanWaterUtilityPipelineVaultOpen = !this.urbanWaterUtilityPipelineVaultOpen
+			return true
+		},
+		onUrbanWaterUtilityPipelineVaultSelectDuplicate(duplicate) {
+			if (!duplicate) {
+				return
+			}
+			this.onTreemapSelectDuplicate(duplicate)
+		},
+		onUrbanWaterUtilityPipelineVaultCompareDuplicate(duplicate) {
+			this.onSimilarityCompareDuplicate(duplicate)
+		},
 		onUpdateIgnoredEmptyFolders(list) {
 			this.ignoredEmptyFolders = Array.isArray(list) ? [...list] : []
 			saveUiPreferences({ ignoredEmptyFolders: this.ignoredEmptyFolders })
@@ -8228,6 +8281,13 @@ export default {
 				return
 			}
 
+			if (action === 'toggle-urban-water-utility-pipeline-vault-auditor') {
+				if (this.toggleUrbanWaterUtilityPipelineVault() && typeof event.preventDefault === 'function') {
+					event.preventDefault()
+				}
+				return
+			}
+
 			if (action === 'toggle-acknowledge') {
 				const detailsComponent = this.getActiveDuplicateDetailsComponent()
 				if (
@@ -9228,7 +9288,8 @@ export default {
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
-.app-content-topbar .topbar-traffic-its-v2x-vault-button {
+.app-content-topbar .topbar-traffic-its-v2x-vault-button,
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
@@ -9316,7 +9377,8 @@ export default {
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
-.app-content-topbar .topbar-traffic-its-v2x-vault-button {
+.app-content-topbar .topbar-traffic-its-v2x-vault-button,
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button {
 	min-height: 44px;
 	min-width: 44px;
 }
@@ -9423,7 +9485,8 @@ export default {
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button svg,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button svg,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button svg,
-.app-content-topbar .topbar-traffic-its-v2x-vault-button svg {
+.app-content-topbar .topbar-traffic-its-v2x-vault-button svg,
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button svg {
 	display: block !important;
 	flex-shrink: 0;
 }
@@ -9633,7 +9696,9 @@ export default {
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button:hover:not(:disabled),
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button:focus-visible:not(:disabled),
 .app-content-topbar .topbar-traffic-its-v2x-vault-button:hover:not(:disabled),
-.app-content-topbar .topbar-traffic-its-v2x-vault-button:focus-visible:not(:disabled) {
+.app-content-topbar .topbar-traffic-its-v2x-vault-button:focus-visible:not(:disabled),
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button:hover:not(:disabled),
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button:focus-visible:not(:disabled) {
 	background-color: var(--color-background-dark);
 	border-color: var(--color-primary-element);
 }
@@ -9738,7 +9803,8 @@ export default {
 .app-content-topbar .topbar-quantum-qubit-pulse-vault-button.is-active,
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button.is-active,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button.is-active,
-.app-content-topbar .topbar-traffic-its-v2x-vault-button.is-active {
+.app-content-topbar .topbar-traffic-its-v2x-vault-button.is-active,
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button.is-active {
 	background-color: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	color: var(--color-primary-element-light-text, var(--color-main-text));
@@ -9986,6 +10052,7 @@ export default {
 .app-content-topbar .topbar-railway-signaling-telemetry-vault-button > *,
 .app-content-topbar .topbar-speech-asr-bioacoustics-vault-button > *,
 .app-content-topbar .topbar-traffic-its-v2x-vault-button > *,
+.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button > *,
 .app-content-topbar .topbar-bulk-delete-button > * {
 	pointer-events: none;
 }
@@ -10172,6 +10239,7 @@ export default {
 	.app-content-topbar .topbar-railway-signaling-telemetry-vault-button,
 	.app-content-topbar .topbar-speech-asr-bioacoustics-vault-button,
 	.app-content-topbar .topbar-traffic-its-v2x-vault-button,
+	.app-content-topbar .topbar-urban-water-utility-pipeline-vault-button,
 	.app-content-topbar .topbar-bulk-delete-button {
 		min-height: 44px;
 	}

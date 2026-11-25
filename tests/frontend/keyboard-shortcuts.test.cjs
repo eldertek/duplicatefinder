@@ -276,6 +276,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/RailwaySignalingTelemetryVaultWorkbench.vue': { __esModule: true, default: stub('railway-signaling-telemetry-vault-auditor') },
 			'./components/SpeechAsrBioacousticsVaultWorkbench.vue': { __esModule: true, default: stub('speech-asr-bioacoustics-vault-auditor') },
 			'./components/TrafficItsV2xVaultWorkbench.vue': { __esModule: true, default: stub('traffic-its-v2x-vault-auditor') },
+			'./components/UrbanWaterUtilityPipelineVaultWorkbench.vue': { __esModule: true, default: stub('urban-water-utility-pipeline-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -4993,5 +4994,31 @@ describe('Cycle 220: Alt+Shift+T shortcut for Traffic ITS, V2X Connected Mobilit
 		assert.equal(resolveShortcutAction({ key: 'T', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'T', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'T', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 221: Alt+Shift+U shortcut for Urban Water Utility, Hydraulic Network & Pipeline Telemetry Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+U cleanly and preserves Shift+U and u while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-urban-water-utility-pipeline-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-urban-water-utility-pipeline-vault-auditor',
+			keys: ['Alt+Shift+U'],
+			action: 'toggle-urban-water-utility-pipeline-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'U', altKey: true, shiftKey: true }), 'toggle-urban-water-utility-pipeline-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'u', altKey: true, shiftKey: true }), 'toggle-urban-water-utility-pipeline-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'U', shiftKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'u', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'u' }), 'toggle-acknowledge')
+		assert.equal(resolveShortcutAction({ key: 'U', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'U', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'U', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'U', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'U', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

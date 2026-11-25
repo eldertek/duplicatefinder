@@ -574,6 +574,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-traffic-its-v2x-vault-auditor',
 	},
 	{
+		id: 'toggle-urban-water-utility-pipeline-vault-auditor',
+		keys: ['Alt+Shift+U'],
+		action: 'toggle-urban-water-utility-pipeline-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -818,6 +823,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'T' || key === 't')) {
 			return 'toggle-traffic-its-v2x-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'U' || key === 'u')) {
+			return 'toggle-urban-water-utility-pipeline-vault-auditor'
 		}
 		return null
 	}
