@@ -278,6 +278,7 @@ function createAppHarness({ acknowledged = [], unacknowledged = [], useRealDetai
 			'./components/TrafficItsV2xVaultWorkbench.vue': { __esModule: true, default: stub('traffic-its-v2x-vault-auditor') },
 			'./components/UrbanWaterUtilityPipelineVaultWorkbench.vue': { __esModule: true, default: stub('urban-water-utility-pipeline-vault-auditor') },
 			'./components/VeterinaryEquineGenomicsVaultWorkbench.vue': { __esModule: true, default: stub('veterinary-equine-genomics-vault-auditor') },
+			'./components/WineEnologyHaccpVaultWorkbench.vue': { __esModule: true, default: stub('wine-enology-haccp-vault-auditor') },
 		'./components/OriginFoldersSettings.vue': { __esModule: true, default: stub('origin') },
 		'./components/ExcludedFoldersSettings.vue': { __esModule: true, default: stub('excluded') },
 		'./components/BulkDeletionSettings.vue': { __esModule: true, default: stub('bulk') },
@@ -5047,5 +5048,32 @@ describe('Cycle 222: Alt+Shift+V shortcut for Veterinary Imaging, Equine Biomech
 		assert.equal(resolveShortcutAction({ key: 'V', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'V', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
 		assert.equal(resolveShortcutAction({ key: 'V', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
+	})
+})
+
+describe('Cycle 223: Alt+Shift+W shortcut for Wine Enology, Brewery Fermentation & Food-Safety HACCP Vault Auditor', () => {
+	test('resolveShortcutAction maps Alt+Shift+W cleanly and preserves Shift+W and w while ignoring ctrl/meta modifiers, single Alt, editable fields, and open modals', () => {
+		const {
+			SHORTCUT_DEFINITIONS,
+			resolveShortcutAction,
+		} = loadModule('src/tools/keyboardShortcuts.js')
+
+		const def = SHORTCUT_DEFINITIONS.find(d => d.id === 'toggle-wine-enology-haccp-vault-auditor')
+		assert.deepEqual(def, {
+			id: 'toggle-wine-enology-haccp-vault-auditor',
+			keys: ['Alt+Shift+W'],
+			action: 'toggle-wine-enology-haccp-vault-auditor',
+		})
+		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true }), 'toggle-wine-enology-haccp-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'w', altKey: true, shiftKey: true }), 'toggle-wine-enology-haccp-vault-auditor')
+		assert.equal(resolveShortcutAction({ key: 'W', shiftKey: true }), 'toggle-ml-dataset-artifact-auditor')
+		assert.equal(resolveShortcutAction({ key: 'w', shiftKey: true }), 'toggle-ml-dataset-artifact-auditor')
+		assert.equal(resolveShortcutAction({ key: 'w', altKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'w' }), 'toggle-batch-auto-select')
+		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true, ctrlKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true, metaKey: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true }, { isHelpOpen: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true }, { hasBlockingModal: true }), null)
+		assert.equal(resolveShortcutAction({ key: 'W', altKey: true, shiftKey: true, target: document.createElement('input') }), null)
 	})
 })

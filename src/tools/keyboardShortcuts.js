@@ -584,6 +584,11 @@ export const SHORTCUT_DEFINITIONS = Object.freeze([
 		action: 'toggle-veterinary-equine-genomics-vault-auditor',
 	},
 	{
+		id: 'toggle-wine-enology-haccp-vault-auditor',
+		keys: ['Alt+Shift+W'],
+		action: 'toggle-wine-enology-haccp-vault-auditor',
+	},
+	{
 		id: 'toggle-acknowledge',
 		keys: ['u'],
 		action: 'toggle-acknowledge',
@@ -834,6 +839,9 @@ export function resolveShortcutAction(event, options = {}) {
 		}
 		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'V' || key === 'v')) {
 			return 'toggle-veterinary-equine-genomics-vault-auditor'
+		}
+		if (event.shiftKey && !isHelpOpen && !hasBlockingModal && (key === 'W' || key === 'w')) {
+			return 'toggle-wine-enology-haccp-vault-auditor'
 		}
 		return null
 	}
