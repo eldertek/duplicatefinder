@@ -62,6 +62,15 @@ class FolderService
      */
     public function getNodeByFileInfo(FileInfo $fileInfo, ?string $fallbackUID = null): ?Node
     {
+        $filePath = $fileInfo->getPath();
+        if (!$this->isSafePath($filePath)) {
+            $this->logger->warning('Rejected unsafe file path in FolderService::getNodeByFileInfo', [
+                'path' => $filePath,
+            ]);
+
+            return null;
+        }
+
         $userFolder = null;
         if ($fileInfo->getOwner()) {
             // Owner may not exist as a regular user (Team/group folders, deleted accounts):
@@ -73,7 +82,7 @@ class FolderService
         }
         if (!is_null($userFolder)) {
             try {
-                if ($this->isPathInsideFolder($fileInfo->getPath(), $userFolder->getPath())) {
+                if ($this->isPathInsideFolder($filePath, $userFolder->getPath())) {
                     if (!is_null($fallbackUID) && $fileInfo->getOwner() !== $fallbackUID) {
                         $fileInfo->setOwner($fallbackUID);
                     }
@@ -90,10 +99,10 @@ class FolderService
 
         // Last resort: try with root folder
         try {
-            return $this->rootFolder->get($fileInfo->getPath());
+            return $this->rootFolder->get($filePath);
         } catch (NotFoundException $e) {
             $this->logger->debug('File not found even with root folder access', [
-                'path' => $fileInfo->getPath(),
+                'path' => $filePath,
                 'error' => $e->getMessage(),
             ]);
 
@@ -101,7 +110,7 @@ class FolderService
         } catch (\OC\User\NoUserException $e) {
             // Group folders / Team folders paths whose "user" segment is not a real user (#158)
             $this->logger->debug('No user object for path, skipping', [
-                'path' => $fileInfo->getPath(),
+                'path' => $filePath,
                 'error' => $e->getMessage(),
             ]);
 
@@ -121,8 +130,13 @@ class FolderService
      */
     public function isNodeGone(FileInfo $fileInfo): bool
     {
+        $filePath = $fileInfo->getPath();
+        if (!$this->isSafePath($filePath)) {
+            return false;
+        }
+
         try {
-            $this->rootFolder->get($fileInfo->getPath());
+            $this->rootFolder->get($filePath);
 
             return false;
         } catch (NotFoundException $e) {
@@ -134,8 +148,29 @@ class FolderService
 
     private function isPathInsideFolder(string $path, string $folderPath): bool
     {
-        $folderPath = rtrim($folderPath, '/');
+        if (!$this->isSafePath($path)) {
+            return false;
+        }
 
-        return $path === $folderPath || str_starts_with($path, $folderPath . '/');
+        $normalizedPath = rtrim(str_replace('\\', '/', $path), '/');
+        $normalizedFolder = rtrim(str_replace('\\', '/', $folderPath), '/');
+
+        return $normalizedPath === $normalizedFolder
+            || str_starts_with($normalizedPath, $normalizedFolder . '/');
+    }
+
+    private function isSafePath(string $path): bool
+    {
+        if ($path === '' || str_contains($path, "\0")) {
+            return false;
+        }
+
+        foreach (explode('/', str_replace('\\', '/', $path)) as $segment) {
+            if ($segment === '..') {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

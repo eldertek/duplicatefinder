@@ -20,6 +20,11 @@ class PathConversionUtils
         if (str_contains($filePath, "\0")) {
             throw new \InvalidArgumentException('Invalid file path');
         }
+        foreach (explode('/', str_replace('\\', '/', $filePath)) as $segment) {
+            if ($segment === '..') {
+                throw new \InvalidArgumentException('Invalid file path');
+            }
+        }
 
         $userRoot = rtrim($userFolder->getPath(), '/');
         if ($filePath === $userRoot) {

@@ -147,15 +147,32 @@ class ListFolderDuplicates extends Command
         $all = [];
         $page = 1;
         $pageSize = 100;
+        $offset = 0;
 
         do {
-            $batch = $this->fileDuplicateService->findAll('all', $userId, $page, $pageSize, true);
+            $batch = $offset === 0
+                ? $this->fileDuplicateService->findAll('all', $userId, $page, $pageSize, true)
+                : $this->fileDuplicateService->findAll('all', $userId, 1, $pageSize, true, [['hash'], ['type']], 0, $offset);
             foreach ($batch['entities'] ?? [] as $entity) {
                 $all[] = $entity;
             }
             $isLastFetched = !empty($batch['isLastFetched']);
-            $page++;
-        } while (!$isLastFetched);
+            if ($isLastFetched) {
+                break;
+            }
+            if (isset($batch['nextOffset'])) {
+                $nextOffset = (int)$batch['nextOffset'];
+                if ($nextOffset <= $offset) {
+                    break;
+                }
+                $offset = $nextOffset;
+            } else {
+                if (empty($batch['entities'])) {
+                    break;
+                }
+                $page++;
+            }
+        } while (true);
 
         return $all;
     }

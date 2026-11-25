@@ -88,12 +88,20 @@ class FileDuplicateService
 
             $seenNodeIds[$files[$key]->getNodeId()] = true;
 
-            // Normalize the path for the origin folder check
-            $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $fileInfo->getPath());
-
-            // Check if file is in an origin folder
-            $protectionInfo = $this->originFolderService->isPathProtected($normalizedPath);
-            $files[$key]->setIsInOriginFolder($protectionInfo['isProtected']);
+            if ($this->currentUserId !== null && $this->currentUserId !== '') {
+                $rawPath = $fileInfo->getPath();
+                $isForeignUserTree = preg_match('#^/([^/]+)/files/#', $rawPath, $pathMatches) === 1
+                    && $pathMatches[1] !== $this->currentUserId;
+                if ($isForeignUserTree) {
+                    $files[$key]->setIsInOriginFolder(false);
+                } else {
+                    $normalizedPath = preg_replace('#^/[^/]+/files/#', '/', $rawPath);
+                    $protectionInfo = $this->originFolderService->isPathProtected($normalizedPath);
+                    $files[$key]->setIsInOriginFolder($protectionInfo['isProtected']);
+                }
+            } else {
+                $files[$key]->setIsInOriginFolder(false);
+            }
 
             $uniqueFiles[] = $files[$key];
         }
@@ -134,9 +142,8 @@ class FileDuplicateService
         int $minSize = 0,
         ?int $startOffset = null
     ): array {
-        if ($user !== null) {
-            $this->setCurrentUserId($user);
-        }
+        $pageSize = max(1, $pageSize);
+        $this->setCurrentUserId($user);
         $this->logger->debug('Finding duplicates with parameters: type={type}, user={user}, page={page}, pageSize={pageSize}, enrich={enrich}', [
             'type' => $type ?? 'all',
             'user' => $user ?? 'none',

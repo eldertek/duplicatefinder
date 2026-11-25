@@ -101,7 +101,33 @@ class ScannerUtil
                 }
             }
             $userFolder = $this->folderService->getUserFolder($user);
-            $relativePath = trim(str_replace($userFolder->getPath(), '', $path), '/');
+            $userRoot = rtrim(str_replace('\\', '/', $userFolder->getPath()), '/');
+            $normalizedPath = rtrim(str_replace('\\', '/', $path), '/');
+            if ($this->hasUnsafePathSegments($path)) {
+                $this->logger->warning('Rejected unsafe scan path containing traversal or null byte', [
+                    'app' => Application::ID,
+                    'user' => $user,
+                ]);
+                $this->showOutput('<e>Skipped invalid scan path.</e>');
+
+                return;
+            }
+            if (!$isShared && $userRoot !== '' && $normalizedPath !== $userRoot && !str_starts_with($normalizedPath, $userRoot . '/')) {
+                $this->logger->warning('Rejected scan path outside user folder', [
+                    'app' => Application::ID,
+                    'user' => $user,
+                ]);
+                $this->showOutput('<e>Skipped scan path outside user folder.</e>');
+
+                return;
+            }
+            if ($normalizedPath === $userRoot) {
+                $relativePath = '';
+            } elseif ($userRoot !== '' && str_starts_with($normalizedPath, $userRoot . '/')) {
+                $relativePath = trim(substr($normalizedPath, strlen($userRoot)), '/');
+            } else {
+                $relativePath = trim($normalizedPath, '/');
+            }
 
             if (!$isShared && $this->scanStatusService !== null) {
                 $existing = $this->scanStatusService->getStatus($user);
@@ -150,7 +176,7 @@ class ScannerUtil
             $this->walkNode($node, $user, $isShared);
 
             if (!$isShared) {
-                $this->scanSharedFiles($user, $path);
+                $this->scanSharedFiles($user, $normalizedPath, $userRoot);
                 $this->showOutput('Finished searching files');
             }
         } catch (LockedException $e) {
@@ -301,9 +327,15 @@ class ScannerUtil
 
     private function scanSharedFiles(
         string $user,
-        ?string $path
+        ?string $path,
+        string $userRoot = ''
     ): void {
         $shares = $this->shareService->getShares($user);
+        $normalizedUserRoot = rtrim(str_replace('\\', '/', $userRoot), '/');
+        $normalizedScanPath = $path !== null ? rtrim(str_replace('\\', '/', $path), '/') : null;
+        $isFullScan = $normalizedScanPath === null
+            || $normalizedScanPath === ''
+            || ($normalizedUserRoot !== '' && $normalizedScanPath === $normalizedUserRoot);
 
         foreach ($shares as $share) {
             try {
@@ -311,12 +343,13 @@ class ScannerUtil
                 if ($node === null) {
                     continue;
                 }
-                if (is_null($path) || strpos($node->getPath(), $path) == 0) {
-                    if ($node->getType() === \OCP\Files\FileInfo::TYPE_FILE) {
-                        $this->saveScannedFile($node->getPath(), $user);
-                    } else {
-                        $this->walkNode($node, $user, true);
-                    }
+                if (!$isFullScan && !$this->isShareInScanScope($node, $share, $normalizedScanPath, $normalizedUserRoot)) {
+                    continue;
+                }
+                if ($node->getType() === \OCP\Files\FileInfo::TYPE_FILE) {
+                    $this->saveScannedFile($node->getPath(), $user);
+                } else {
+                    $this->walkNode($node, $user, true);
                 }
             } catch (\Throwable $e) {
                 $this->logger->warning('Could not scan shared node: {error}', [
@@ -327,6 +360,51 @@ class ScannerUtil
             }
         }
         unset($share);
+    }
+
+    private function isShareInScanScope(
+        Node $node,
+        \OCP\Share\IShare $share,
+        string $normalizedScanPath,
+        string $normalizedUserRoot
+    ): bool {
+        $nodePath = rtrim(str_replace('\\', '/', (string)$node->getPath()), '/');
+        if ($this->isPathEqualOrDescendant($nodePath, $normalizedScanPath)) {
+            return true;
+        }
+
+        $rawTarget = trim(str_replace('\\', '/', (string)$share->getTarget()), '/');
+        if ($normalizedUserRoot === '' || $rawTarget === '' || $this->hasUnsafePathSegments($rawTarget)) {
+            return false;
+        }
+
+        $targetPath = $normalizedUserRoot . '/' . $rawTarget;
+
+        return $this->isPathEqualOrDescendant($targetPath, $normalizedScanPath);
+    }
+
+    private function isPathEqualOrDescendant(string $candidatePath, string $scopePath): bool
+    {
+        if ($candidatePath === '' || $scopePath === '') {
+            return false;
+        }
+
+        return $candidatePath === $scopePath || str_starts_with($candidatePath, $scopePath . '/');
+    }
+
+    private function hasUnsafePathSegments(string $path): bool
+    {
+        if (str_contains($path, "\0")) {
+            return true;
+        }
+
+        foreach (explode('/', str_replace('\\', '/', $path)) as $segment) {
+            if ($segment === '..') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function showOutput(string $message, bool $isVerbose = false): void

@@ -24,10 +24,14 @@ class CMDUtils
         $currentPage = 1; // Start from the first page
         $isLastFetched = false;
         $hasCustomOrder = $orderBy !== [['hash'], ['type']];
+        $offset = null;
+        $safePageSize = max(1, $pageSize);
 
         do {
             // Pass the current page and page size to the findAll method
-            if ($minSize > 0) {
+            if ($offset !== null) {
+                $duplicates = $fileDuplicateService->findAll('all', $user, 1, $pageSize, true, $orderBy, $minSize, $offset);
+            } elseif ($minSize > 0) {
                 $duplicates = $fileDuplicateService->findAll('all', $user, $currentPage, $pageSize, true, $orderBy, $minSize);
             } elseif ($hasCustomOrder) {
                 $duplicates = $fileDuplicateService->findAll('all', $user, $currentPage, $pageSize, true, $orderBy);
@@ -38,11 +42,27 @@ class CMDUtils
             self::processDuplicates($output, $duplicates);
             $abortIfInterrupted();
 
-            $isLastFetched = $duplicates['isLastFetched'];
-            if (isset($duplicates['pageKey']) && $pageSize > 0) {
-                $currentPage = max($currentPage + 1, ((int)floor($duplicates['pageKey'] / $pageSize)) + 2);
+            $isLastFetched = !empty($duplicates['isLastFetched']);
+            if ($isLastFetched) {
+                break;
+            }
+
+            if (isset($duplicates['nextOffset'])) {
+                $nextOffset = (int)$duplicates['nextOffset'];
+                $prevOffset = $offset ?? (($currentPage - 1) * $safePageSize);
+                if ($nextOffset <= $prevOffset) {
+                    break;
+                }
+                $offset = $nextOffset;
             } else {
-                $currentPage++; // Increment to fetch the next page in the next iteration
+                if (empty($duplicates['entities'])) {
+                    break;
+                }
+                if (isset($duplicates['pageKey']) && $safePageSize > 0) {
+                    $currentPage = max($currentPage + 1, ((int)floor($duplicates['pageKey'] / $safePageSize)) + 2);
+                } else {
+                    $currentPage++; // Increment to fetch the next page in the next iteration
+                }
             }
         } while (!$isLastFetched); // Continue until the last page is fetched
     }
