@@ -113,6 +113,30 @@ export default {
     outline-offset: -2px;
 }
 
+:deep(.app-navigation-entry) {
+    display: flex;
+    align-items: center;
+}
+
+:deep(.app-navigation-entry-link) {
+    display: flex;
+    align-items: center;
+    line-height: 1.25;
+}
+
+:deep(.app-navigation-entry-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+:deep(.app-navigation-entry__name) {
+    display: block;
+    min-width: 0;
+    line-height: 1.25;
+}
+
 .is-active .file-size {
     color: var(--color-primary-element-light-text, var(--color-text-maxcontrast));
     font-weight: 600;
@@ -125,13 +149,20 @@ export default {
     background-position: center;
     border-radius: 4px;
     display: inline-block;
-    margin-inline-end: 8px;
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .file-size {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    align-self: center;
     font-size: 0.8rem;
+    line-height: 1.2;
     color: var(--color-text-maxcontrast);
     white-space: nowrap;
-    margin-inline-start: 4px;
+    padding-inline-end: 8px;
+    margin-inline-start: 6px;
 }
 </style>

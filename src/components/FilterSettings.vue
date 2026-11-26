@@ -169,6 +169,7 @@ export default {
 }
 
 .header :deep(svg) {
+    flex-shrink: 0;
     color: var(--color-primary-element);
 }
 
@@ -198,6 +199,10 @@ export default {
 }
 
 .filter-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.2;
     padding: 2px 8px;
     background-color: var(--color-primary-element-light);
     border-radius: var(--border-radius);

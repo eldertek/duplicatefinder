@@ -421,7 +421,11 @@ export default {
 }
 
 .file-name-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.8rem;
+  line-height: 1.2;
   color: var(--color-text-maxcontrast);
   background-color: var(--color-background-dark);
   border: 1px solid var(--color-border);
@@ -567,7 +571,7 @@ export default {
   color: var(--color-main-text);
   font-size: 0.76rem;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.2;
   max-inline-size: 100%;
   box-sizing: border-box;
 }
@@ -609,6 +613,7 @@ export default {
 }
 
 .metadata-badge__text {
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -635,8 +640,10 @@ export default {
 .file-status-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   font-size: 0.84rem;
   font-weight: 600;
+  line-height: 1.2;
 }
 
 .file-status-badge.is-original {

@@ -245,7 +245,7 @@ export default {
   width: 100% !important;
   min-height: 44px !important;
   margin: 0 !important;
-  padding: 8px 14px !important;
+  padding: 4px 14px !important;
   border: none !important;
   border-radius: 0 !important;
   background: transparent !important;
@@ -255,6 +255,7 @@ export default {
   font-family: inherit !important;
   font-size: var(--df-font-size-base, 0.9375rem) !important;
   font-weight: 500 !important;
+  line-height: 1.15 !important;
   cursor: pointer;
   color: var(--color-main-text) !important;
   transition: background-color 0.15s ease;

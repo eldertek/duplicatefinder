@@ -2111,7 +2111,7 @@ export default {
     max-inline-size: 100% !important;
     min-inline-size: 44px !important;
     min-block-size: 44px !important;
-    padding-block: 8px !important;
+    padding-block: 4px !important;
     padding-inline: 14px !important;
     margin-block: 0 !important;
     margin-inline: 0 !important;
@@ -2128,7 +2128,7 @@ export default {
     font-family: inherit !important;
     font-size: var(--df-font-size-base, 0.9375rem) !important;
     font-weight: 500 !important;
-    line-height: 1.3 !important;
+    line-height: 1.15 !important;
     overflow-wrap: anywhere;
     box-sizing: border-box;
 }
@@ -2283,7 +2283,8 @@ export default {
     margin: 0 !important;
     padding: 10px 16px !important;
     display: flex !important;
-    align-items: flex-start;
+    align-items: center;
+    gap: 10px;
     text-align: start !important;
     background: transparent !important;
     background-image: none !important;
@@ -2296,9 +2297,10 @@ export default {
     font-family: inherit !important;
     font-size: var(--df-font-size-base, 0.9375rem) !important;
     font-weight: 500;
+    line-height: 1.25;
     cursor: pointer;
     transition: background-color 0.2s;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     box-sizing: border-box;
 }
 
@@ -2306,16 +2308,48 @@ export default {
     color: var(--color-primary-element) !important;
 }
 
-.menu-item span {
-    margin-inline-start: 10px;
+.menu-item :deep(.material-design-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-inline-start: 0;
+}
+
+.menu-item > span {
+    margin-inline-start: 0;
+}
+
+.help-menu .menu-item {
+    display: grid !important;
+    grid-template-columns: 16px minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 4px;
+    align-items: center;
+}
+
+.help-menu .menu-item :deep(.material-design-icon) {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+}
+
+.help-menu .menu-item > span:not(.material-design-icon):not(.menu-item-description) {
+    grid-column: 2;
+    grid-row: 1;
+    margin-inline-start: 0;
+    line-height: 1.25;
 }
 
 .menu-item-description {
-    margin-inline-start: 26px !important;
+    grid-column: 2;
+    grid-row: 2;
+    margin-inline-start: 0 !important;
     font-size: var(--df-font-size-xs, 0.75rem);
+    line-height: 1.3;
     color: var(--color-text-maxcontrast);
-    width: 100%;
-    margin-top: 4px;
+    width: auto;
+    margin-top: 0;
 }
 
 .menu-item:hover, .menu-item.active {
@@ -2574,7 +2608,7 @@ export default {
     max-inline-size: 100% !important;
     min-inline-size: 0 !important;
     min-block-size: 44px !important;
-    padding-block: 8px !important;
+    padding-block: 4px !important;
     padding-inline: 14px !important;
     margin-block: 0 !important;
     margin-inline: 0 !important;
@@ -2587,7 +2621,7 @@ export default {
     font-family: inherit !important;
     font-size: var(--df-font-size-base, 0.9375rem) !important;
     font-weight: 500 !important;
-    line-height: 1.3 !important;
+    line-height: 1.15 !important;
     text-align: start !important;
     cursor: pointer;
     box-sizing: border-box;
@@ -2721,7 +2755,7 @@ export default {
 .reclaimable-summary-badge {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 4px 8px;
     padding-block: 8px;
@@ -3106,6 +3140,37 @@ export default {
 }
 
 /* Consistent highlighting and full-row clickability for Acknowledged / Unacknowledged sections */
+.duplicate-section-nav :deep(.app-navigation-entry) {
+    display: flex;
+    align-items: center;
+}
+
+.duplicate-section-nav :deep(.app-navigation-entry-link) {
+    display: flex;
+    align-items: center;
+    line-height: 1.25;
+}
+
+.duplicate-section-nav :deep(.app-navigation-entry-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.duplicate-section-nav :deep(.app-navigation-entry__name) {
+    display: block;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.duplicate-section-nav :deep(.button-vue.icon-collapse) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+}
+
 .duplicate-section-nav :deep(.app-navigation-entry.active .button-vue.icon-collapse) {
     color: var(--color-primary-element-text);
 }

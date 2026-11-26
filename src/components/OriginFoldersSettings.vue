@@ -133,6 +133,7 @@ export default {
 }
 
 .header :deep(svg) {
+    flex-shrink: 0;
     color: var(--color-primary-element);
 }
 

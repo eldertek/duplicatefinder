@@ -1,3 +1,12 @@
+## 1.10.48 - 2026-11-26
+### Fixed
+- **UI centering polish across navigation, menus, details, and settings (#251)**:
+  - Centered `Confirmed` and `Not confirmed` section navigation headers, chevron collapse toggles, and `DuplicateListItem` rows, thumbnails, and file-size slots via `:deep()` flex rules in `DuplicateNavigation.vue` and `DuplicateListItem.vue`.
+  - Balanced vertical centering and padding across `.sort-option` (including `.sort-option.active`), `.category-more-option`, and `.search-type-option` in `DuplicateNavigation.vue` and `SearchBar.vue`, and aligned `.reclaimable-summary-badge` vertically.
+  - Aligned Projects and Help `.menu-item` entries (`DuplicateNavigation.vue`), using CSS grid for Help entries with multi-line descriptions so icons stay centered.
+  - Centered `.group-status-pill`, `.toolbar-button`, `.dropdown-menu button`, table column headers (`.col-preview`, `.col-name`, `.col-size`, `.col-status`, `.col-actions`), `.file-name-badge`, `.metadata-badge`, and `.file-status-badge` in `DuplicateDetails.vue` and `DuplicateFileDisplay.vue`.
+  - Protected settings header SVG icons (`flex-shrink: 0`) across `FilterSettings.vue`, `OriginFoldersSettings.vue`, `ExcludedFoldersSettings.vue`, and `ProjectsSettings.vue`, centered `.filter-type` badges, and added clean path wrapping on `.selected-folder span`.
+
 ## 1.10.47 - 2026-11-26
 ### Fixed
 - **UI polish and visual consistency (#250)**:

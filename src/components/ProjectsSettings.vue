@@ -339,6 +339,7 @@ export default {
 }
 
 .header :deep(svg) {
+    flex-shrink: 0;
     color: var(--color-primary-element);
 }
 
@@ -441,6 +442,11 @@ export default {
     margin-bottom: 5px;
     background-color: var(--color-background-hover);
     border-radius: var(--border-radius);
+}
+
+.selected-folder span {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .no-folders {

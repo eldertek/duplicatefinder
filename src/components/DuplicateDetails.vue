@@ -882,11 +882,14 @@ export default {
 .group-status-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
+  line-height: 1.2;
   letter-spacing: 0.02em;
+  text-align: center;
 }
 
 .group-status-pill.is-acknowledged {
@@ -1203,7 +1206,7 @@ export default {
   color: var(--color-main-text);
   font-size: 0.86rem;
   font-weight: 600;
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
@@ -1215,6 +1218,11 @@ export default {
 .toolbar-button svg,
 .toolbar-button span {
   pointer-events: none;
+}
+
+.toolbar-button span {
+  display: inline-flex;
+  align-items: center;
 }
 
 .toolbar-button svg {
@@ -1303,6 +1311,9 @@ export default {
 }
 
 .col-preview {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 92px;
   flex-shrink: 0;
   padding-inline-start: 12px;
@@ -1312,6 +1323,9 @@ export default {
 }
 
 .col-name {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   flex: 1 1 220px;
   min-width: 0;
   padding-inline-start: 12px;
@@ -1321,6 +1335,9 @@ export default {
 }
 
 .col-size {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 108px;
   flex-shrink: 0;
   padding-inline-start: 12px;
@@ -1330,6 +1347,9 @@ export default {
 }
 
 .col-status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 118px;
   flex-shrink: 0;
   padding-inline-start: 12px;
@@ -1339,6 +1359,9 @@ export default {
 }
 
 .col-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 172px;
   flex-shrink: 0;
   padding-inline-start: 12px;
@@ -1611,15 +1634,20 @@ button:disabled *,
 }
 
 .dropdown-menu button {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 100%;
-  padding: 9px 14px;
+  min-height: 44px;
+  padding: 8px 14px;
+  line-height: 1.2;
   text-align: start;
   background: none;
   border: none;
   color: var(--color-main-text);
   font-size: 0.88rem;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .dropdown-menu button:hover {
