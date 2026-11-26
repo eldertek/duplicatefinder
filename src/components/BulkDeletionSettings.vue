@@ -1411,14 +1411,14 @@ export default {
 
 .loading-info {
   color: var(--color-text-maxcontrast);
-  font-size: 0.9em;
+  font-size: var(--df-font-size-sm, 0.85rem);
   margin: 10px 0;
 }
 
 .protected-info {
   color: var(--color-warning);
   font-weight: normal;
-  font-size: 0.9em;
+  font-size: var(--df-font-size-sm, 0.85rem);
 }
 
 .protected-only-notice {
@@ -1434,7 +1434,7 @@ export default {
 }
 
 .merge-explanation {
-  font-size: 0.9em;
+  font-size: var(--df-font-size-sm, 0.85rem);
   color: var(--color-text-maxcontrast);
   margin-bottom: 15px;
 }
@@ -1502,7 +1502,7 @@ export default {
   padding: 2px 8px;
   border-radius: 999px;
   border: 1px solid var(--color-primary-element, #00679e);
-  font-size: 0.78rem;
+  font-size: var(--df-font-size-xs, 0.75rem);
   font-weight: 600;
   background-color: var(--color-primary-element-light, #e5eff5);
   color: var(--color-primary-element-light-text, var(--color-main-text, #222222));
@@ -1707,14 +1707,14 @@ export default {
 
 .nc-confirm-dialog__title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--df-font-size-md, 1.05rem);
   font-weight: 600;
   color: var(--color-main-text);
 }
 
 .nc-confirm-dialog__message {
   margin: 0 0 18px;
-  font-size: 0.92rem;
+  font-size: var(--df-font-size-base, 0.9375rem);
   line-height: 1.48;
   color: var(--color-text-maxcontrast, var(--color-main-text));
 }
@@ -1735,7 +1735,8 @@ export default {
   border-radius: var(--border-radius-large, 8px) !important;
   background-image: none !important;
   box-shadow: none !important;
-  font-size: 0.9rem;
+  font-family: inherit !important;
+  font-size: var(--df-font-size-sm, 0.85rem) !important;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;

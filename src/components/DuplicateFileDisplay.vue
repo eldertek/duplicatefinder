@@ -461,22 +461,26 @@ export default {
 }
 
 .copy-path-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   gap: 6px;
   min-inline-size: 44px;
   min-block-size: 44px;
   max-inline-size: 100%;
-  padding-block: 6px;
-  padding-inline: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark));
-  background-color: var(--color-background-hover);
-  color: var(--color-main-text);
-  font-size: 0.8rem;
-  font-weight: 600;
-  line-height: 1.2;
+  margin: 0 !important;
+  padding-block: 6px !important;
+  padding-inline: 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--color-border-maxcontrast, var(--color-border-dark)) !important;
+  background-color: var(--color-background-hover) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--color-main-text) !important;
+  font-family: inherit !important;
+  font-size: var(--df-font-size-sm, 0.85rem) !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
   cursor: pointer;
   box-sizing: border-box;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;

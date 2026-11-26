@@ -1644,26 +1644,40 @@ button:disabled *,
 }
 
 .action-buttons button {
-  padding: 8px 16px;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--color-border);
-  background: var(--color-background-dark);
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 8px 16px !important;
+  border-radius: var(--border-radius-large, 8px) !important;
+  border: 1px solid var(--color-border-dark, var(--color-border)) !important;
+  background-color: var(--color-background-hover) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--color-main-text) !important;
+  font-family: inherit !important;
+  font-size: var(--df-font-size-sm, 0.85rem) !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
   cursor: pointer;
-  transition: background 0.2s ease;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .action-buttons button:hover {
-  background: var(--color-background-hover);
+  background-color: var(--color-background-dark) !important;
 }
 
 .action-buttons button.primary {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border-color: var(--color-primary-element);
+  background-color: var(--color-primary-element, #0082c9) !important;
+  color: var(--color-primary-element-text, var(--color-primary-text, #ffffff)) !important;
+  border-color: var(--color-primary-element, #0082c9) !important;
 }
 
 .action-buttons button.primary:hover {
-  background: var(--color-primary-element-hover);
+  background-color: var(--color-primary-element-hover, #006aa3) !important;
+  border-color: var(--color-primary-element-hover, #006aa3) !important;
 }
 
 dialog.nc-confirm-dialog {

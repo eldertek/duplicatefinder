@@ -201,7 +201,7 @@ export default {
     padding: 2px 8px;
     background-color: var(--color-primary-element-light);
     border-radius: var(--border-radius);
-    font-size: 0.8em;
+    font-size: var(--df-font-size-xs, 0.75rem);
 }
 
 .input-group {
@@ -211,7 +211,7 @@ export default {
 }
 
 .helper-text {
-    font-size: 0.9em;
+    font-size: var(--df-font-size-sm, 0.85rem);
     color: var(--color-text-maxcontrast);
 }
 </style> 

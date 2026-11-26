@@ -166,14 +166,18 @@ export default {
   width: 100%;
   height: 44px;
   box-sizing: border-box;
-  padding-block: 0;
-  padding-inline: 12px 44px;
-  border: 1px solid var(--color-border);
+  margin: 0 !important;
+  padding-block: 0 !important;
+  padding-inline: 12px 44px !important;
+  border: 1px solid var(--color-border-dark, var(--color-border)) !important;
   border-radius: var(--border-radius-pill);
-  background-color: var(--color-main-background);
-  color: var(--color-main-text);
-  font-size: var(--default-font-size);
-  transition: all 0.2s ease;
+  background-color: var(--color-main-background) !important;
+  box-shadow: none !important;
+  color: var(--color-main-text) !important;
+  font-family: inherit !important;
+  font-size: var(--df-font-size-sm, 0.85rem) !important;
+  line-height: 1.3 !important;
+  transition: border-color 0.15s ease;
 }
 
 .search-input:hover, .search-input:focus {
@@ -195,20 +199,23 @@ export default {
   height: 40px;
   min-width: 40px;
   min-height: 40px;
-  border: none;
-  background: transparent;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
   cursor: pointer;
-  color: var(--color-text-maxcontrast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border-radius: 50%;
+  color: var(--color-text-maxcontrast) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
   transition: background-color 0.2s ease;
 }
 
 .search-type-toggle:hover {
-  background-color: var(--color-background-hover);
+  background-color: var(--color-background-hover) !important;
 }
 
 .search-type-toggle:focus-visible,
@@ -222,36 +229,45 @@ export default {
   top: calc(100% + 4px);
   inset-inline-end: 0;
   background-color: var(--color-main-background);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-dark, var(--color-border));
   border-radius: var(--border-radius-large);
-  box-shadow: 0 2px 8px var(--color-box-shadow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   z-index: 9999;
-  min-width: 200px;
+  min-width: 220px;
   max-width: calc(100vw - 24px);
   overflow: hidden;
 }
 
 .search-type-option {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 44px;
-  padding: 8px 12px;
-  border: none;
-  background: transparent;
-  text-align: start;
-  font-size: inherit;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 8px 14px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  text-align: start !important;
+  font-family: inherit !important;
+  font-size: var(--df-font-size-base, 0.9375rem) !important;
+  font-weight: 500 !important;
   cursor: pointer;
-  color: var(--color-main-text);
-  transition: background-color 0.2s ease;
+  color: var(--color-main-text) !important;
+  transition: background-color 0.15s ease;
+  box-sizing: border-box;
 }
 
 .search-type-option:hover {
-  background-color: var(--color-background-hover);
+  background-color: var(--color-background-hover) !important;
 }
 
 .search-type-option.active {
-  background-color: var(--color-primary-element-light);
-  color: var(--color-primary-text);
+  background-color: var(--color-primary-element-light) !important;
+  color: var(--color-primary-element, #0082c9) !important;
+  font-weight: 600 !important;
 }
 </style> 

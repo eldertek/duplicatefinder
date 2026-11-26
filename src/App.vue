@@ -1961,6 +1961,33 @@ export default {
 </script>
 
 <style>
+:root {
+	--df-font-family: var(--font-face, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif);
+	--df-font-size-xs: 0.75rem;
+	--df-font-size-sm: 0.85rem;
+	--df-font-size-base: 0.9375rem;
+	--df-font-size-md: 1.0625rem;
+	--df-font-size-lg: 1.25rem;
+}
+
+#content.app-duplicatefinder,
+.app-duplicatefinder {
+	font-family: var(--df-font-family);
+	font-size: var(--df-font-size-base);
+	line-height: 1.45;
+}
+
+#content.app-duplicatefinder button,
+#content.app-duplicatefinder input,
+#content.app-duplicatefinder select,
+#content.app-duplicatefinder textarea,
+.app-duplicatefinder button,
+.app-duplicatefinder input,
+.app-duplicatefinder select,
+.app-duplicatefinder textarea {
+	font-family: var(--df-font-family);
+}
+
 .app-loading-container {
 	display: flex;
 	align-items: center;

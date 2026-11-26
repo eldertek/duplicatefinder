@@ -1,3 +1,11 @@
+## 1.10.47 - 2026-11-26
+### Fixed
+- **UI polish and visual consistency (#250)**:
+  - Centered `Normal`, `Advanced`, and `Expert` interface mode buttons (`display: inline-flex`, zero core margin/border bleed) and aligned active border color with the primary fill to remove visual artifacts in dark and light themes.
+  - Eliminated the unintended horizontal scrollbar and left-edge clipping in the Sort & Filter dropdown across English and German (`de`, `de_DE`) locales (`overflow-x: hidden`, sidebar-safe width, zero-margin options).
+  - Made active segments in the category segmented bar (`All | Images | Videos | More`) fill flush edge-to-edge with zero dark bottom gap and zero light right-border seam.
+  - Unified typography tokens (`--df-font-family`, `--df-font-size-*`) and inherited font rules across buttons, inputs, selects, sidebar controls, details view, and dialogs.
+
 ## 1.10.46 - 2026-11-26
 ### Changed
 - **Cleaner, more flexible sidebar (#249)**:
